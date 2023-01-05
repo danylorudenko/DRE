@@ -1,0 +1,12 @@
+[submodule "extern/SPIRV-Cross"]
+	path = extern/SPIRV-Cross
+	url = https://github.com/KhronosGroup/SPIRV-Cross.git
+	branch = sdk-1.3.236
+[submodule "extern/assimp"]
+	path = extern/assimp
+	url = https://github.com/assimp/assimp.git
+	branch = master
+[submodule "extern/glm"]
+	path = extern/glm
+	url = https://github.com/g-truc/glm.git
+	branch = master
