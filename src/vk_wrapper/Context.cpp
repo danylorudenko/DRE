@@ -1,13 +1,13 @@
-#include <vk_interface\Context.hpp>
-#include <vk_interface\ImportTable.hpp>
+#include <vk_wrapper\Context.hpp>
+#include <vk_wrapper\ImportTable.hpp>
 
-#include <vk_interface\resources\Resource.hpp>
-#include <vk_interface\pipeline\Pipeline.hpp>
-#include <vk_interface\pipeline\RenderPass.hpp>
-#include <vk_interface\descriptor\StandaloneDescriptorSet.hpp>
-#include <vk_interface\descriptor\DescriptorManager.hpp>
-#include <vk_interface\Helper.hpp>
-#include <vk_interface\pipeline\Dependency.hpp>
+#include <vk_wrapper\resources\Resource.hpp>
+#include <vk_wrapper\pipeline\Pipeline.hpp>
+#include <vk_wrapper\pipeline\RenderPass.hpp>
+#include <vk_wrapper\descriptor\StandaloneDescriptorSet.hpp>
+#include <vk_wrapper\descriptor\DescriptorManager.hpp>
+#include <vk_wrapper\Helper.hpp>
+#include <vk_wrapper\pipeline\Dependency.hpp>
 
 namespace VKW
 {

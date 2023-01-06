@@ -1,13 +1,13 @@
 #pragma once
 
-#include <class_features\NonCopyable.hpp>
-#include <class_features\NonMovable.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonMovable.hpp>
 
-#include <system\Window.hpp>
+#include <foundation\system\Window.hpp>
 
 #include <foundation\Container\ObjectPool.hpp>
 
-#include <vk_interface\Device.hpp>
+#include <vk_wrapper\Device.hpp>
 
 #include <gfx\FrameID.hpp>
 #include <gfx\buffer\TransientArena.hpp>
@@ -15,7 +15,7 @@
 #include <gfx\texture\TextureBank.hpp>
 #include <gfx\scheduling\RenderGraph.hpp>
 #include <gfx\scheduling\DependencyManager.hpp>
-#include <gfx\shaders\PipelineDB.hpp>
+#include <gfx\pipeline\PipelineDB.hpp>
 #include <gfx\view\RenderView.hpp>
 
 

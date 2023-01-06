@@ -1,12 +1,12 @@
 #pragma once
 
-#include <class_features\NonCopyable.hpp>
-#include <memory\Memory.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
+#include <foundation\memory\Memory.hpp>
 
 #include <foundation\Container\HashTable.hpp>
 #include <foundation\String\InplaceString.hpp>
 
-#include <data\Material.hpp>
+#include <engine\data\Material.hpp>
 
 namespace Data
 {

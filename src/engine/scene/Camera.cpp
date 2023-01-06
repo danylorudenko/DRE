@@ -1,4 +1,4 @@
-#include <scene\Camera.hpp>
+#include <engine\scene\Camera.hpp>
 
 namespace WORLD
 {

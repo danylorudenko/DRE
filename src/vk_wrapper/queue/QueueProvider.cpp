@@ -1,7 +1,7 @@
-#include <vk_interface\queue\QueueProvider.hpp>
+#include <vk_wrapper\queue\QueueProvider.hpp>
 
 #include <foundation\Common.hpp>
-#include <vk_interface\Tools.hpp>
+#include <vk_wrapper\Tools.hpp>
 
 namespace VKW
 {

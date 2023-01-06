@@ -1,5 +1,5 @@
-#include <vk_interface\Context.hpp>
-#include <vk_interface\queue\Queue.hpp>
+#include <vk_wrapper\Context.hpp>
+#include <vk_wrapper\queue\Queue.hpp>
 
 #include <gfx\buffer\TransientArena.hpp>
 

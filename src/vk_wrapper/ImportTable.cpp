@@ -1,4 +1,4 @@
-#include "ImportTable.hpp"
+#include <vk_wrapper\ImportTable.hpp>
 
 #define VKW_IMPORT_VULKAN_FUNCTION(name) name = vulkanLibrary.GetProcAddress<PFN_##name##>(#name)
 #define VKW_IMPORT_VULKAN_INSTANCE_FUNCTION(name) name = reinterpret_cast<PFN_##name##>(vkGetInstanceProcAddr(instance, #name))

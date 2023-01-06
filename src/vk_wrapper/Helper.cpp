@@ -1,8 +1,8 @@
-#include <vk_interface\Helper.hpp>
+#include <vk_wrapper\Helper.hpp>
 
 #include <foundation\Common.hpp>
-#include <vk_interface\Tools.hpp>
-#include <vk_interface\swapchain\Swapchain.hpp>
+#include <vk_wrapper\Tools.hpp>
+#include <vk_wrapper\swapchain\Swapchain.hpp>
 
 namespace VKW
 {

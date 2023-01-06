@@ -1,4 +1,4 @@
-#include "InputSystem.hpp"
+#include <foundation\input\InputSystem.hpp>
 
 #include <utility>
 #include <cstdint>

@@ -1,7 +1,7 @@
-#include <gfx\shaders\PipelineDB.hpp>
+#include <gfx\pipeline\PipelineDB.hpp>
 
-#include <vk_interface\Device.hpp>
-#include <vk_interface\descriptor\DescriptorManager.hpp>
+#include <vk_wrapper\Device.hpp>
+#include <vk_wrapper\descriptor\DescriptorManager.hpp>
 
 namespace GFX
 {

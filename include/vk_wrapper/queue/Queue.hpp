@@ -2,13 +2,13 @@
 
 #include <vulkan\vulkan.h>
 
-#include <class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
 #include <foundation\Container\ObjectPoolQueue.hpp>
 #include <foundation\Container\InplaceVector.hpp>
 
-#include <vk_interface\Constant.hpp>
-#include <vk_interface\LogicalDevice.hpp>
-#include <vk_interface\swapchain\PresentationController.hpp>
+#include <vk_wrapper\Constant.hpp>
+#include <vk_wrapper\LogicalDevice.hpp>
+#include <vk_wrapper\swapchain\PresentationController.hpp>
 
 namespace VKW
 {

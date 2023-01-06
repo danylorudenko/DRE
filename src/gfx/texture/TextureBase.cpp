@@ -2,9 +2,9 @@
 
 #include <foundation\Common.hpp>
 
-#include <vk_interface\Device.hpp>
-#include <vk_interface\resources\Resource.hpp>
-#include <vk_interface\resources\ResourcesController.hpp>
+#include <vk_wrapper\Device.hpp>
+#include <vk_wrapper\resources\Resource.hpp>
+#include <vk_wrapper\resources\ResourcesController.hpp>
 
 
 namespace GFX

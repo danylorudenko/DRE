@@ -1,8 +1,8 @@
-#include "Surface.hpp"
+#include <vk_wrapper\Surface.hpp>
 
-#include <vk_interface\LogicalDevice.hpp>
-#include <vk_interface\Tools.hpp>
-#include <vk_interface\Instance.hpp>
+#include <vk_wrapper\LogicalDevice.hpp>
+#include <vk_wrapper\Tools.hpp>
+#include <vk_wrapper\Instance.hpp>
 
 namespace VKW
 {

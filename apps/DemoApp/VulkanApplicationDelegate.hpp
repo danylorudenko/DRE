@@ -4,27 +4,27 @@
 #include <chrono>
 #include <future>
 
-#include <class_features\NonMovable.hpp>
+#include <foundation\class_features\NonMovable.hpp>
 
-#include <memory\AllocatorBuddy.hpp>
+#include <foundation\memory\AllocatorBuddy.hpp>
 
-#include <application\Application.hpp>
-#include <application\ImGuiHelper.hpp>
+#include <DemoApp\Application.hpp>
+#include <DemoApp\ImGuiHelper.hpp>
 
-#include <vk_interface\Context.hpp>
+#include <vk_wrapper\Context.hpp>
 
 #include <gfx\GraphicsManager.hpp>
 
-#include <system\Window.hpp>
-#include <system\DynamicLibrary.hpp>
-#include <input\InputSystem.hpp>
+#include <foundation\system\Window.hpp>
+#include <foundation\system\DynamicLibrary.hpp>
+#include <foundation\input\InputSystem.hpp>
 
-#include <transform\TransformationSystem.hpp>
+#include <engine\transform\TransformationSystem.hpp>
 
-#include <scene\Scene.hpp>
-#include <data\MaterialLibrary.hpp>
+#include <engine\scene\Scene.hpp>
+#include <engine\data\MaterialLibrary.hpp>
 
-#include <io\IOManager.hpp>
+#include <engine\io\IOManager.hpp>
 
 class VulkanApplicationDelegate
     : public Application::ApplicationDelegate

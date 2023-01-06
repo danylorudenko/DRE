@@ -1,6 +1,6 @@
-#include <vk_interface\Constant.hpp>
+#include <vk_wrapper\Constant.hpp>
 
-#include <vk_interface\Tools.hpp>
+#include <vk_wrapper\Tools.hpp>
 
 namespace VKW
 {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <foundation/Common.hpp>
-#include <memory/Pointer.hpp>
+#include <foundation\Common.hpp>
+#include <foundation\memory\Pointer.hpp>
 
 DRE_BEGIN_NAMESPACE
 

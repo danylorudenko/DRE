@@ -2,16 +2,16 @@
 
 #include <cstdint>
 
-#include <class_features\NonCopyable.hpp>
-#include <class_features\NonMovable.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonMovable.hpp>
 
-#include <memory\AllocatorLinear.hpp>
-#include <memory\ByteBuffer.hpp>
+#include <foundation\memory\AllocatorLinear.hpp>
+#include <foundation\memory\ByteBuffer.hpp>
 #include <foundation\Container\Vector.hpp>
 
-#include <vk_interface\queue\Queue.hpp>
-#include <vk_interface\descriptor\Descriptor.hpp>
-#include <vk_interface\pipeline\Dependency.hpp>
+#include <vk_wrapper\queue\Queue.hpp>
+#include <vk_wrapper\descriptor\Descriptor.hpp>
+#include <vk_wrapper\pipeline\Dependency.hpp>
 
 namespace VKW
 {

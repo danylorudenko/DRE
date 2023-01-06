@@ -7,7 +7,7 @@
 #include <glm\vec3.hpp>
 #include <glm\vec2.hpp>
 
-#include <data\Material.hpp>
+#include <engine\data\Material.hpp>
 
 namespace Data
 {

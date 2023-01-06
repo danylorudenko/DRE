@@ -1,12 +1,12 @@
-#include <io\IOManager.hpp>
+#include <engine\io\IOManager.hpp>
 
 #include <fstream>
 #include <iostream>
 #include <utility>
 #include <charconv>
 
-#include <memory\Memory.hpp>
-#include <memory\ByteBuffer.hpp>
+#include <foundation\memory\Memory.hpp>
+#include <foundation\memory\ByteBuffer.hpp>
 
 #include <assimp\Importer.hpp>
 #include <assimp\postprocess.h>
@@ -14,11 +14,11 @@
 
 #include <foundation\Container\HashTable.hpp>
 
-#include <data\MaterialLibrary.hpp>
+#include <engine\data\MaterialLibrary.hpp>
 
 #include <gfx\GraphicsManager.hpp>
 
-#include <scene\Scene.hpp>
+#include <engine\scene\Scene.hpp>
 
 #include <spirv_cross\spirv_cross.hpp>
 

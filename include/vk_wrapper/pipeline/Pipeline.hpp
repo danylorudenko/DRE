@@ -3,11 +3,11 @@
 #include <vulkan\vulkan.h>
 #include <cstdint>
 
-#include <class_features\NonMovable.hpp>
-#include <class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonMovable.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
 
-#include <vk_interface\descriptor\DescriptorLayout.hpp>
-#include <vk_interface\pipeline\RenderPass.hpp>
+#include <vk_wrapper\descriptor\DescriptorLayout.hpp>
+#include <vk_wrapper\pipeline\RenderPass.hpp>
 
 namespace VKW
 {

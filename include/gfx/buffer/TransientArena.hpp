@@ -2,19 +2,19 @@
 
 #include <cstdint>
 
-#include <class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
 
-#include <math\SimpleMath.hpp>
-#include <memory\Pointer.hpp>
+#include <foundation\math\SimpleMath.hpp>
+#include <foundation\memory\Pointer.hpp>
 #include <foundation\Common.hpp>
 
-#include <vk_interface\Device.hpp>
-#include <vk_interface\resources\Resource.hpp>
-#include <vk_interface\Constant.hpp>
-#include <vk_interface\Context.hpp>
-#include <vk_interface\memory\MemoryPage.hpp>
-#include <vk_interface\Tools.hpp>
-#include <vk_interface\descriptor\StandaloneDescriptorSet.hpp>
+#include <vk_wrapper\Device.hpp>
+#include <vk_wrapper\resources\Resource.hpp>
+#include <vk_wrapper\Constant.hpp>
+#include <vk_wrapper\Context.hpp>
+#include <vk_wrapper\memory\MemoryPage.hpp>
+#include <vk_wrapper\Tools.hpp>
+#include <vk_wrapper\descriptor\StandaloneDescriptorSet.hpp>
 
 #include <gfx\DeviceChild.hpp>
 #include <gfx\FrameID.hpp>

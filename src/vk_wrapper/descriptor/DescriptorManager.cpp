@@ -1,10 +1,10 @@
-#include <vk_interface\descriptor\DescriptorManager.hpp>
+#include <vk_wrapper\descriptor\DescriptorManager.hpp>
 
 #include <foundation\Common.hpp>
 #include <foundation\Container\InplaceVector.hpp>
 
 
-#include <vk_interface\resources\Resource.hpp>
+#include <vk_wrapper\resources\Resource.hpp>
 
 namespace VKW
 {

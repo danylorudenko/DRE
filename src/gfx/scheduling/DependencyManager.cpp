@@ -2,10 +2,10 @@
 
 #include <foundation\Common.hpp>
 
-#include <vk_interface\ImportTable.hpp>
-#include <vk_interface\Helper.hpp>
-#include <vk_interface\pipeline\Dependency.hpp>
-#include <vk_interface\Context.hpp>
+#include <vk_wrapper\ImportTable.hpp>
+#include <vk_wrapper\Helper.hpp>
+#include <vk_wrapper\pipeline\Dependency.hpp>
+#include <vk_wrapper\Context.hpp>
 
 #include <gfx\GraphicsManager.hpp>
 #include <gfx\pass\BasePass.hpp>

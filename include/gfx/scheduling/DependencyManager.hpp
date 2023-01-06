@@ -5,7 +5,7 @@
 #include <foundation\Container\InplaceVector.hpp>
 #include <foundation\Container\InplaceHashTable.hpp>
 
-#include <vk_interface\pipeline\Dependency.hpp>
+#include <vk_wrapper\pipeline\Dependency.hpp>
 
 namespace VKW
 {

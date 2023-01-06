@@ -1,4 +1,4 @@
-#include "ContinuousDataStorage.hpp"
+#include <foundation\class_features\ContiniousDataStorage.hpp>
 
 HandleTable::HandleTable(std::uint32_t reserve)
 {

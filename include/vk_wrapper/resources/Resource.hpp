@@ -4,8 +4,8 @@
 
 #include <limits>
 
-#include <vk_interface\Format.hpp>
-#include <vk_interface\memory\MemoryPage.hpp>
+#include <vk_wrapper\Format.hpp>
+#include <vk_wrapper\memory\MemoryPage.hpp>
 
 namespace VKW
 {

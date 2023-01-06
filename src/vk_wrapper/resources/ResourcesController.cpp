@@ -1,11 +1,11 @@
-#include "ResourcesController.hpp"
+#include <vk_wrapper\resources\ResourcesController.hpp>
 
 #include <algorithm>
 
-#include <vk_interface\memory\MemoryController.hpp>
-#include <vk_interface\LogicalDevice.hpp>
-#include <vk_interface\Helper.hpp>
-#include <vk_interface\Tools.hpp>
+#include <vk_wrapper\memory\MemoryController.hpp>
+#include <vk_wrapper\LogicalDevice.hpp>
+#include <vk_wrapper\Helper.hpp>
+#include <vk_wrapper\Tools.hpp>
 
 namespace VKW
 {

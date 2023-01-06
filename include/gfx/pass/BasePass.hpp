@@ -4,7 +4,7 @@
 
 #include <vulkan\vulkan.h>
 
-#include <vk_interface\Context.hpp>
+#include <vk_wrapper\Context.hpp>
 
 #include <gfx\pass\PassID.hpp>
 #include <gfx\scheduling\GraphResource.hpp>

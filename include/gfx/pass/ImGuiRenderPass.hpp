@@ -1,4 +1,4 @@
-#include <vk_interface\pipeline\Pipeline.hpp>
+#include <vk_wrapper\pipeline\Pipeline.hpp>
 
 #include <gfx\pass\BasePass.hpp>
 

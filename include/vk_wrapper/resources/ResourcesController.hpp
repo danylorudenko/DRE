@@ -1,7 +1,7 @@
 #pragma once
 
-#include <class_features\NonCopyable.hpp>
-#include <vk_interface\resources\Resource.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
+#include <vk_wrapper\resources\Resource.hpp>
 
 #include <vulkan\vulkan.h>
 #include <unordered_set>

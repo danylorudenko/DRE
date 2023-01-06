@@ -1,14 +1,14 @@
-#include <vk_interface\swapchain\PresentationController.hpp>
+#include <vk_wrapper\swapchain\PresentationController.hpp>
 
 #include <foundation\Common.hpp>
 
-#include <vk_interface\Context.hpp>
-#include <vk_interface\LogicalDevice.hpp>
-#include <vk_interface\Helper.hpp>
-#include <vk_interface\ImportTable.hpp>
-#include <vk_interface\Tools.hpp>
-#include <vk_interface\swapchain\Swapchain.hpp>
-#include <vk_interface\queue\Queue.hpp>
+#include <vk_wrapper\Context.hpp>
+#include <vk_wrapper\LogicalDevice.hpp>
+#include <vk_wrapper\Helper.hpp>
+#include <vk_wrapper\ImportTable.hpp>
+#include <vk_wrapper\Tools.hpp>
+#include <vk_wrapper\swapchain\Swapchain.hpp>
+#include <vk_wrapper\queue\Queue.hpp>
 
 namespace VKW
 {

@@ -1,6 +1,6 @@
-#include <application\VulkanApplicationDelegate.hpp>
+#include <DemoApp\VulkanApplicationDelegate.hpp>
 
-#include <memory\Memory.hpp>
+#include <foundation\memory\Memory.hpp>
 
 int main()
 {

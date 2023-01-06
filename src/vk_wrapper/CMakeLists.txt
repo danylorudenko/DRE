@@ -67,6 +67,11 @@ target_include_directories(vk_wrapper PUBLIC
 target_compile_features(vk_wrapper PUBLIC cxx_std_17)
 # TODO: disable exceptions
 
+target_compile_definitions(vk_wrapper PUBLIC 
+	VK_USE_PLATFORM_WIN32_KHR 
+	WIN32_LEAN_AND_MEAN 
+	NOMINMAX)
+
 target_link_libraries(vk_wrapper PUBLIC foundation)
 
 source_group(

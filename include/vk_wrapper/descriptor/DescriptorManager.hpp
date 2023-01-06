@@ -5,18 +5,18 @@
 #include <limits>
 #include <utility>
 
-#include <class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
 
 #include <vulkan\vulkan.h>
 
-#include <memory\ElementAllocator.hpp>
+#include <foundation\memory\ElementAllocator.hpp>
 
-#include <vk_interface\Constant.hpp>
-#include <vk_interface\ImportTable.hpp>
-#include <vk_interface\LogicalDevice.hpp>
-#include <vk_interface\Tools.hpp>
-#include <vk_interface\descriptor\Descriptor.hpp>
-#include <vk_interface\descriptor\DescriptorLayout.hpp>
+#include <vk_wrapper\Constant.hpp>
+#include <vk_wrapper\ImportTable.hpp>
+#include <vk_wrapper\LogicalDevice.hpp>
+#include <vk_wrapper\Tools.hpp>
+#include <vk_wrapper\descriptor\Descriptor.hpp>
+#include <vk_wrapper\descriptor\DescriptorLayout.hpp>
 
 /* 
 * This allocator implements "bind once, use always pattern" for

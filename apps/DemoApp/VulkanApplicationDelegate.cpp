@@ -1,9 +1,9 @@
 #include "VulkanApplicationDelegate.hpp"
 
-#include <vk_interface\Tools.hpp>
-#include <vk_interface\Helper.hpp>
-#include <vk_interface\resources\Framebuffer.hpp>
-#include <vk_interface\pipeline\ShaderModule.hpp>
+#include <vk_wrapper\Tools.hpp>
+#include <vk_wrapper\Helper.hpp>
+#include <vk_wrapper\resources\Framebuffer.hpp>
+#include <vk_wrapper\pipeline\ShaderModule.hpp>
 
 #include <transform\TansformComponent.hpp>
 

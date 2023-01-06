@@ -1,4 +1,4 @@
-#include "Resource.hpp"
+#include <vk_wrapper\resources\Resource.hpp>
 
 namespace VKW
 {

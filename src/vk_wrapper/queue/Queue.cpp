@@ -1,8 +1,8 @@
-#include <vk_interface\queue\Queue.hpp>
+#include <vk_wrapper\queue\Queue.hpp>
 
 #include <utility>
 
-#include <vk_interface\Tools.hpp>
+#include <vk_wrapper\Tools.hpp>
 
 namespace VKW
 {

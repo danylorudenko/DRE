@@ -1,12 +1,12 @@
-#include <vk_interface\descriptor\StandaloneDescriptorSet.hpp>
+#include <vk_wrapper\descriptor\StandaloneDescriptorSet.hpp>
 
 #include <foundation\Common.hpp>
 
-#include <vk_interface\Helper.hpp>
-#include <vk_interface\resources\Resource.hpp>
-#include <vk_interface\ImportTable.hpp>
-#include <vk_interface\LogicalDevice.hpp>
-#include <vk_interface\descriptor\DescriptorManager.hpp>
+#include <vk_wrapper\Helper.hpp>
+#include <vk_wrapper\resources\Resource.hpp>
+#include <vk_wrapper\ImportTable.hpp>
+#include <vk_wrapper\LogicalDevice.hpp>
+#include <vk_wrapper\descriptor\DescriptorManager.hpp>
 
 namespace VKW
 {

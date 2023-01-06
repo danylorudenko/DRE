@@ -1,7 +1,7 @@
 #pragma once
 
 #include <foundation\Container\InplaceVector.hpp>
-#include <vk_interface\descriptor\DescriptorLayout.hpp>
+#include <vk_wrapper\descriptor\DescriptorLayout.hpp>
 
 namespace VKW
 {

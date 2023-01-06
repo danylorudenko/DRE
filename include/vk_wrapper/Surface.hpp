@@ -4,7 +4,7 @@
 #include <vector>
 #include <Windows.h>
 
-#include <class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
 
 namespace VKW
 {

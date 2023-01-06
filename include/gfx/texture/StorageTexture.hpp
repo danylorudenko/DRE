@@ -1,8 +1,8 @@
 #pragma once
 
 #include <foundation\Container\InplaceVector.hpp>
-#include <vk_interface\Constant.hpp>
-#include <vk_interface\descriptor\DescriptorManager.hpp>
+#include <vk_wrapper\Constant.hpp>
+#include <vk_wrapper\descriptor\DescriptorManager.hpp>
 #include <gfx\texture\TextureBase.hpp>
 
 namespace VKW

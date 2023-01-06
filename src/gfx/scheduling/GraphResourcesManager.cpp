@@ -2,7 +2,7 @@
 
 #include <foundation\Common.hpp>
 
-#include <vk_interface\Device.hpp>
+#include <vk_wrapper\Device.hpp>
 
 #include <gfx\GraphicsManager.hpp>
 #include <gfx\pass\BasePass.hpp>

@@ -12,7 +12,7 @@
 
 #include <Windows.h>
 
-#include <vk_interface\Context.hpp>
+#include <vk_wrapper\Context.hpp>
 
 //#include <gfx\GraphicsManager.hpp>
 

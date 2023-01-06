@@ -2,10 +2,10 @@
 
 #include <cstdint>
 
-#include <class_features\NonCopyable.hpp>
-#include <class_features\NonMovable.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonMovable.hpp>
 
-#include <memory\AllocatorLinear.hpp>
+#include <foundation\memory\AllocatorLinear.hpp>
 #include <foundation\Container\Vector.hpp>
 
 namespace VKW

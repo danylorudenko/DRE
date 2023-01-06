@@ -1,11 +1,11 @@
 #pragma once
 
-#include <memory\Memory.hpp>
+#include <foundation\memory\Memory.hpp>
 #include <foundation\Container\InplaceVector.hpp>
 #include <foundation\Container\Vector.hpp>
 
-#include <scene\Camera.hpp>
-#include <scene\Entity.hpp>
+#include <engine\scene\Camera.hpp>
+#include <engine\scene\Entity.hpp>
 
 namespace WORLD
 {

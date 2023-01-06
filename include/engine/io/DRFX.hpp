@@ -4,7 +4,7 @@
 #include <foundation\String\InplaceString.hpp>
 #include <foundation\Container\InplaceVector.hpp>
 
-#include <vk_interface\Format.hpp>
+#include <vk_wrapper\Format.hpp>
 
 namespace DRFX
 {

@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vulkan\vulkan.h>
 
-#include <vk_interface\descriptor\Descriptor.hpp>
+#include <vk_wrapper\descriptor\Descriptor.hpp>
 
 namespace VKW
 {

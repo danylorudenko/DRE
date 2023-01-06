@@ -1,4 +1,4 @@
-#include "Window.hpp"
+#include <foundation\system\Window.hpp>
 
 WindowClass::WindowClass()
     : name_{}

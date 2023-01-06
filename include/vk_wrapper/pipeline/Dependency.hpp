@@ -3,16 +3,16 @@
 #include <cstdint>
 #include <vulkan\vulkan.h>
 
-#include <memory\AllocatorLinear.hpp>
+#include <foundation\memory\AllocatorLinear.hpp>
 
-#include <class_features\NonMovable.hpp>
-#include <class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonMovable.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
 
 #include <foundation\Container\Vector.hpp>
 
-#include <vk_interface\Tools.hpp>
-#include <vk_interface\descriptor\Descriptor.hpp>
-#include <vk_interface\resources\Resource.hpp>
+#include <vk_wrapper\Tools.hpp>
+#include <vk_wrapper\descriptor\Descriptor.hpp>
+#include <vk_wrapper\resources\Resource.hpp>
 
 namespace VKW
 {

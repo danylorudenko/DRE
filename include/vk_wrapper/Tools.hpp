@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cstdint>
+#include <limits>
 
 #define VK_FLAGS_NONE 0
 

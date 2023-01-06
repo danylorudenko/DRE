@@ -1,12 +1,12 @@
 #pragma once
 
-#include <class_features\NonMovable.hpp>
-#include <class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonMovable.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
 
 #include <foundation\Container\InplaceHashTable.hpp>
 #include <foundation\String\InplaceString.hpp>
 
-#include <vk_interface\pipeline\Pipeline.hpp>
+#include <vk_wrapper\pipeline\Pipeline.hpp>
 
 namespace VKW
 {

@@ -1,8 +1,8 @@
-#include "MemoryController.hpp"
+#include <vk_wrapper\memory\MemoryController.hpp>
 
-#include <vk_interface\LogicalDevice.hpp>
-#include <vk_interface\ImportTable.hpp>
-#include <vk_interface\Tools.hpp>
+#include <vk_wrapper\LogicalDevice.hpp>
+#include <vk_wrapper\ImportTable.hpp>
+#include <vk_wrapper\Tools.hpp>
 
 #include <algorithm>
 #include <limits>

@@ -1,13 +1,13 @@
-#include <vk_interface\resources\Framebuffer.hpp>
+#include <vk_wrapper\resources\Framebuffer.hpp>
 
 #include <foundation\Common.hpp>
 #include <foundation\Container\InplaceVector.hpp>
 
-#include <vk_interface\Constant.hpp>
-#include <vk_interface\pipeline\RenderPass.hpp>
-#include <vk_interface\ImportTable.hpp>
-#include <vk_interface\LogicalDevice.hpp>
-#include <vk_interface\Tools.hpp>
+#include <vk_wrapper\Constant.hpp>
+#include <vk_wrapper\pipeline\RenderPass.hpp>
+#include <vk_wrapper\ImportTable.hpp>
+#include <vk_wrapper\LogicalDevice.hpp>
+#include <vk_wrapper\Tools.hpp>
 
 namespace VKW
 {

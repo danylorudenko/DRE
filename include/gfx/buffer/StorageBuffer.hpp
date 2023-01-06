@@ -1,7 +1,7 @@
 #pragma once
 
 #include <gfx\buffer\BufferBase.hpp>
-#include <vk_interface\descriptor\DescriptorManager.hpp>
+#include <vk_wrapper\descriptor\DescriptorManager.hpp>
 
 namespace GFX
 {

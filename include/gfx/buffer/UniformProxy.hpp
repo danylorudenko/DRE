@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory\Pointer.hpp>
+#include <foundation\memory\Pointer.hpp>
 #include <gfx\buffer\TransientArena.hpp>
 
 namespace VKW

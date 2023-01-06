@@ -2,11 +2,11 @@
 
 #include <imgui\imgui.h>
 
-#include <class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
 
-#include <vk_interface\pipeline\RenderPass.hpp>
-#include <vk_interface\pipeline\Pipeline.hpp>
-#include <vk_interface\resources\Framebuffer.hpp>
+#include <vk_wrapper\pipeline\RenderPass.hpp>
+#include <vk_wrapper\pipeline\Pipeline.hpp>
+#include <vk_wrapper\resources\Framebuffer.hpp>
 
 #include <gfx\texture\ReadOnlyTexture.hpp>
 

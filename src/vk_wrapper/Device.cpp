@@ -1,6 +1,6 @@
-#include <vk_interface\Device.hpp>
+#include <vk_wrapper\Device.hpp>
 
-#include <vk_interface/Constant.hpp>
+#include <vk_wrapper\Constant.hpp>
 #include <iostream>
 #include <Windows.h>
 

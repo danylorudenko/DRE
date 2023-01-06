@@ -1,17 +1,17 @@
 #include <gfx\pass\ImGuiRenderPass.hpp>
 
-#include <vk_interface\pipeline\ShaderModule.hpp>
+#include <foundation\memory\ByteBuffer.hpp>
+
+#include <vk_wrapper\pipeline\ShaderModule.hpp>
 
 #include <gfx\GraphicsManager.hpp>
 #include <gfx\scheduling\RenderGraph.hpp>
-#include <gfx\shaders\PipelineDB.hpp>
+#include <gfx\pipeline\PipelineDB.hpp>
 
 #include <imgui\imgui.h>
 #include <glm\gtc\type_ptr.hpp>
 
-#include <memory\ByteBuffer.hpp>
-
-#include <io\IOManager.hpp>
+#include <engine\io\IOManager.hpp>
 
 #include <gfx\GraphicsManager.hpp>
 

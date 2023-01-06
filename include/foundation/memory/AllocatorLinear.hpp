@@ -1,8 +1,8 @@
 #pragma once
 
 #include <foundation\Common.hpp>
-#include <memory\Pointer.hpp>
-#include <math\SimpleMath.hpp>
+#include <foundation\memory\Pointer.hpp>
+#include <foundation\math\SimpleMath.hpp>
 
 DRE_BEGIN_NAMESPACE
 

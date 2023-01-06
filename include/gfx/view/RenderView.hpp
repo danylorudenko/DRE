@@ -2,7 +2,7 @@
 
 #include <foundation\Common.hpp>
 
-#include <memory\AllocatorLinear.hpp>
+#include <foundation\memory\AllocatorLinear.hpp>
 #include <foundation\Container\Vector.hpp>
 
 #include <glm\vec2.hpp>

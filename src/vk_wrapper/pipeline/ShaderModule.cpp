@@ -1,10 +1,10 @@
-#include <vk_interface/pipeline/ShaderModule.hpp>
+#include <vk_wrapper/pipeline/ShaderModule.hpp>
 
-#include <memory/ByteBuffer.hpp>
+#include <foundation/memory/ByteBuffer.hpp>
 
-#include <vk_interface/Tools.hpp>
-#include <vk_interface/ImportTable.hpp>
-#include <vk_interface/LogicalDevice.hpp>
+#include <vk_wrapper/Tools.hpp>
+#include <vk_wrapper/ImportTable.hpp>
+#include <vk_wrapper/LogicalDevice.hpp>
 
 namespace VKW
 {

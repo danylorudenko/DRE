@@ -2,12 +2,12 @@
 
 #include <vulkan\vulkan.h>
 
-#include <class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
 
 #include <foundation\Container\InplaceVector.hpp>
 
-#include <vk_interface\Format.hpp>
-#include <vk_interface\Constant.hpp>
+#include <vk_wrapper\Format.hpp>
+#include <vk_wrapper\Constant.hpp>
 
 namespace VKW
 {

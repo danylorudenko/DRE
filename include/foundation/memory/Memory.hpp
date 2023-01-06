@@ -1,8 +1,8 @@
 #pragma once
 
-#include <memory\AllocatorLinear.hpp>
-#include <memory\AllocatorScopeStack.hpp>
-#include <memory\AllocatorBuddy.hpp>
+#include <foundation\memory\AllocatorLinear.hpp>
+#include <foundation\memory\AllocatorScopeStack.hpp>
+#include <foundation\memory\AllocatorBuddy.hpp>
 
 
 #define DRE_MALLOC(size) std::malloc(size)

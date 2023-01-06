@@ -1,9 +1,9 @@
 #pragma once
 
-#include <class_features\NonMovable.hpp>
-#include <class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonMovable.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
 
-#include <memory\ByteBuffer.hpp>
+#include <foundation\memory\ByteBuffer.hpp>
 
 #include <foundation\String\InplaceString.hpp>
 #include <foundation\Container\InplaceHashTable.hpp>

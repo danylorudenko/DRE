@@ -3,7 +3,7 @@
 #include <vulkan\vulkan.h>
 #include <string>
 
-#include <class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
 
 namespace DRE
 {

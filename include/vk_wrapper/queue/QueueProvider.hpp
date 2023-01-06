@@ -3,10 +3,10 @@
 #include <memory>
 #include <utility>
 
-#include <class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
 
-#include <vk_interface\LogicalDevice.hpp>
-#include <vk_interface\queue\Queue.hpp>
+#include <vk_wrapper\LogicalDevice.hpp>
+#include <vk_wrapper\queue\Queue.hpp>
 
 namespace VKW
 {

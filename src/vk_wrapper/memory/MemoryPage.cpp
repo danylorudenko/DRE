@@ -1,10 +1,10 @@
-#include <vk_interface\memory\MemoryPage.hpp>
+#include <vk_wrapper\memory\MemoryPage.hpp>
 
-#include <vk_interface\ImportTable.hpp>
-#include <vk_interface\LogicalDevice.hpp>
-#include <vk_interface\Tools.hpp>
+#include <vk_wrapper\ImportTable.hpp>
+#include <vk_wrapper\LogicalDevice.hpp>
+#include <vk_wrapper\Tools.hpp>
 
-#include <memory\Pointer.hpp>
+#include <foundation\memory\Pointer.hpp>
 
 namespace VKW
 {

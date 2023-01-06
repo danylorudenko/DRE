@@ -1,13 +1,13 @@
 #include <gfx\pass\ForwardOpaquePass.hpp>
 
-#include <vk_interface\pipeline\ShaderModule.hpp>
+#include <vk_wrapper\pipeline\ShaderModule.hpp>
 
 #include <gfx\GraphicsManager.hpp>
 #include <gfx\scheduling\RenderGraph.hpp>
 #include <gfx\renderer\DrawBatcher.hpp>
 
-#include <io\IOManager.hpp>
-#include <scene\Scene.hpp>
+#include <engine\io\IOManager.hpp>
+#include <engine\scene\Scene.hpp>
 
 namespace GFX
 {

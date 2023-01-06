@@ -3,12 +3,12 @@
 #include <cstdint>
 #include <vulkan\vulkan.h>
 
-#include <class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
 
 #include <foundation\Container\InplaceVector.hpp>
 
-#include <vk_interface\Constant.hpp>
-#include <vk_interface\memory\MemoryPage.hpp>
+#include <vk_wrapper\Constant.hpp>
+#include <vk_wrapper\memory\MemoryPage.hpp>
 
 namespace VKW
 {

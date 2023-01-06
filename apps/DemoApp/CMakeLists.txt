@@ -12,6 +12,7 @@ set(DEMO_SOURCE_LIST
 add_executable(demo-app ${DEMO_HEADER_LIST} ${DEMO_SOURCE_LIST})
 
 target_compile_features(demo-app PRIVATE cxx_std_17)
+target_compile_definitions(gfx PUBLIC WIN32_LEAN_AND_MEAN NOMINMAX)
 
 target_include_directories(demo-app PRIVATE 
 	"${DRE_SOURCE_DIR}/include"

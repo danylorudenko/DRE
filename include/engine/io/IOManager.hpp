@@ -1,11 +1,11 @@
 #pragma once
 
-#include <class_features\NonCopyable.hpp>
-#include <class_features\NonMovable.hpp>
-#include <data\Model.hpp>
-#include <data\ModelMesh.hpp>
-#include <data\Texture2D.hpp>
-#include <data\MaterialLibrary.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonMovable.hpp>
+#include <engine\data\Model.hpp>
+#include <engine\data\ModelMesh.hpp>
+#include <engine\data\Texture2D.hpp>
+#include <engine\data\MaterialLibrary.hpp>
 
 namespace WORLD
 {

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <class_features\NonMovable.hpp>
-#include <class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonMovable.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
 
-#include <memory\ElementAllocator.hpp>
+#include <foundation\memory\ElementAllocator.hpp>
 
 #include <gfx\buffer\StorageBuffer.hpp>
 #include <gfx\buffer\TransientArena.hpp>

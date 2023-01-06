@@ -4,13 +4,13 @@
 #include <vulkan\vulkan.h>
 #include <limits>
 
-#include <class_features\NonCopyable.hpp>
-#include <class_features\NonMovable.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonMovable.hpp>
 
 #include <foundation\Common.hpp>
 
-#include <vk_interface\Constant.hpp>
-#include <vk_interface\descriptor\Descriptor.hpp>
+#include <vk_wrapper\Constant.hpp>
+#include <vk_wrapper\descriptor\Descriptor.hpp>
 
 #define DEBUG_LAYOUT_MEMBERS
 

@@ -1,4 +1,4 @@
-#include "ByteBuffer.hpp"
+#include <foundation\memory\ByteBuffer.hpp>
 
 DRE_BEGIN_NAMESPACE
 

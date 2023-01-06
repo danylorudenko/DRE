@@ -1,7 +1,7 @@
-#include <vk_interface\pipeline\Dependency.hpp>
+#include <vk_wrapper\pipeline\Dependency.hpp>
 
 #include <foundation\Common.hpp>
-#include <vk_interface\Helper.hpp>
+#include <vk_wrapper\Helper.hpp>
 
 namespace VKW
 {

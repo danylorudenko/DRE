@@ -1,12 +1,12 @@
 #include <gfx\scheduling\GraphDescriptorManager.hpp>
 
-#include <vk_interface\Device.hpp>
-#include <vk_interface\pipeline\Dependency.hpp>
+#include <vk_wrapper\Device.hpp>
+#include <vk_wrapper\pipeline\Dependency.hpp>
 
 #include <gfx\buffer\StorageBuffer.hpp>
 #include <gfx\texture\StorageTexture.hpp>
 #include <gfx\scheduling\GraphResourcesManager.hpp>
-#include <gfx\shaders\PipelineDB.hpp>
+#include <gfx\pipeline\PipelineDB.hpp>
 
 namespace GFX
 {

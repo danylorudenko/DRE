@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory\ByteBuffer.hpp>
+#include <foundation\memory\ByteBuffer.hpp>
 
 namespace Data
 {

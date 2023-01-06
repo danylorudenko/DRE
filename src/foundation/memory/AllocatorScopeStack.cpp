@@ -1,4 +1,4 @@
-#include <memory\AllocatorScopeStack.hpp>
+#include <foundation\memory\AllocatorScopeStack.hpp>
 
 
 DRE_BEGIN_NAMESPACE

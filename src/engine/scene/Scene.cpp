@@ -1,6 +1,6 @@
-#include <scene\Scene.hpp>
+#include <engine\scene\Scene.hpp>
 
-#include <memory\Memory.hpp>
+#include <foundation\memory\Memory.hpp>
 #include <gfx\GraphicsManager.hpp>
 
 

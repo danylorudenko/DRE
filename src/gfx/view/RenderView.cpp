@@ -3,7 +3,7 @@
 #include <glm\ext\matrix_transform.hpp>
 #include <glm\ext\matrix_clip_space.hpp>
 
-#include <memory\AllocatorLinear.hpp>
+#include <foundation\memory\AllocatorLinear.hpp>
 
 namespace GFX
 {

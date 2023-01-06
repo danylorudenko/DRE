@@ -1,8 +1,8 @@
 #pragma once
 
-#include <class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
 
-#include <input\Keyboard.hpp>
+#include <foundation\input\Keyboard.hpp>
 #include <cstdint>
 #include <Windows.h>
 

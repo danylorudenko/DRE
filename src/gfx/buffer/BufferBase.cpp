@@ -1,7 +1,7 @@
 #include <gfx\buffer\BufferBase.hpp>
 
 #include <foundation\Common.hpp>
-#include <vk_interface\Device.hpp>
+#include <vk_wrapper\Device.hpp>
 
 namespace GFX
 {

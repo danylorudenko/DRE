@@ -1,10 +1,10 @@
 #pragma once
 
 #include <foundation\String\InplaceString.hpp>
+#include <foundation\memory\ByteBuffer.hpp>
 
-#include <data\Texture2D.hpp>
-#include <memory\ByteBuffer.hpp>
-#include <vk_interface\pipeline\Pipeline.hpp>
+#include <engine\data\Texture2D.hpp>
+#include <vk_wrapper\pipeline\Pipeline.hpp>
 
 namespace Data
 {

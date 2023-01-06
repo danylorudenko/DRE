@@ -1,16 +1,16 @@
 #include <gfx\GraphicsManager.hpp>
 
-#include <system\Window.hpp>
+#include <foundation\system\Window.hpp>
 
-#include <io\IOManager.hpp>
 
-#include <vk_interface\Device.hpp>
-#include <vk_interface\pipeline\Pipeline.hpp>
-#include <vk_interface\pipeline\ShaderModule.hpp>
+#include <vk_wrapper\Device.hpp>
+#include <vk_wrapper\pipeline\Pipeline.hpp>
+#include <vk_wrapper\pipeline\ShaderModule.hpp>
 
 #include <gfx\pass\ForwardOpaquePass.hpp>
 #include <gfx\pass\ImGuiRenderPass.hpp>
 
+#include <engine\io\IOManager.hpp>
 #include <shader-src\global_uniform.h>
 
 namespace GFX

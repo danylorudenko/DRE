@@ -1,12 +1,12 @@
 #pragma once
 
-#include <class_features\NonMovable.hpp>
+#include <foundation\class_features\NonMovable.hpp>
 
 #include <foundation\Container\InplaceHashTable.hpp>
 #include <foundation\Container\InplaceVector.hpp>
 
-#include <vk_interface\descriptor\StandaloneDescriptorSet.hpp>
-#include <vk_interface\pipeline\Dependency.hpp>
+#include <vk_wrapper\descriptor\StandaloneDescriptorSet.hpp>
+#include <vk_wrapper\pipeline\Dependency.hpp>
 
 #include <gfx\DeviceChild.hpp>
 #include <gfx\pass\PassID.hpp>

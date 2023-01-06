@@ -2,7 +2,7 @@
 
 #include <foundation\Container\InplaceVector.hpp>
 
-#include <vk_interface\descriptor\Descriptor.hpp>
+#include <vk_wrapper\descriptor\Descriptor.hpp>
 
 #include <gfx\scheduling\GraphResourcesManager.hpp>
 #include <gfx\scheduling\GraphDescriptorManager.hpp>

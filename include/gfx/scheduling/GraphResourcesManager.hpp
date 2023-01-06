@@ -2,8 +2,8 @@
 
 #include <foundation\Container\InplaceHashTable.hpp>
 
-#include <vk_interface\Format.hpp>
-#include <vk_interface\pipeline\Dependency.hpp>
+#include <vk_wrapper\Format.hpp>
+#include <vk_wrapper\pipeline\Dependency.hpp>
 
 #include <gfx\pass\PassID.hpp>
 #include <gfx\scheduling\GraphResource.hpp>

@@ -2,19 +2,19 @@
 
 #include <memory>
 
-#include <class_features\NonCopyable.hpp>
-#include <system\DynamicLibrary.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
+#include <foundation\system\DynamicLibrary.hpp>
 
-#include <vk_interface\ImportTable.hpp>
-#include <vk_interface\Instance.hpp>
-#include <vk_interface\LogicalDevice.hpp>
-#include <vk_interface\Surface.hpp>
-#include <vk_interface\swapchain\Swapchain.hpp>
-#include <vk_interface\swapchain\PresentationController.hpp>
-#include <vk_interface\memory\MemoryController.hpp>
-#include <vk_interface\resources\ResourcesController.hpp>
-#include <vk_interface\descriptor\DescriptorManager.hpp>
-#include <vk_interface\queue\QueueProvider.hpp>
+#include <vk_wrapper\ImportTable.hpp>
+#include <vk_wrapper\Instance.hpp>
+#include <vk_wrapper\LogicalDevice.hpp>
+#include <vk_wrapper\Surface.hpp>
+#include <vk_wrapper\swapchain\Swapchain.hpp>
+#include <vk_wrapper\swapchain\PresentationController.hpp>
+#include <vk_wrapper\memory\MemoryController.hpp>
+#include <vk_wrapper\resources\ResourcesController.hpp>
+#include <vk_wrapper\descriptor\DescriptorManager.hpp>
+#include <vk_wrapper\queue\QueueProvider.hpp>
 
 namespace IO
 {
