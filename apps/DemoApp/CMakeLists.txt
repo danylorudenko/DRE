@@ -15,7 +15,7 @@ target_compile_features(demo-app PRIVATE cxx_std_17)
 
 target_include_directories(demo-app PRIVATE 
 	"${DRE_SOURCE_DIR}/include"
-	"${DRE_SOURCE_DIR}/apps"
+	"${DRE_SOURCE_DIR}/apps")
 
 target_link_libraries(demo-app PRIVATE 
 	foundation 

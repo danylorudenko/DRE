@@ -30,7 +30,7 @@ set(VK_WRAPPER_HEADER_LIST
 set(VK_WRAPPER_SOURCE_LIST
 	"${DRE_SOURCE_DIR}/src/vk_wrapper/Constant.cpp"
 	"${DRE_SOURCE_DIR}/src/vk_wrapper/Context.cpp"
-	"${DRE_SOURCE_DIR}/src/vk_wrapper/Device.hpp"
+	"${DRE_SOURCE_DIR}/src/vk_wrapper/Device.cpp"
 	"${DRE_SOURCE_DIR}/src/vk_wrapper/Format.cpp"
 	"${DRE_SOURCE_DIR}/src/vk_wrapper/Helper.cpp"
 	"${DRE_SOURCE_DIR}/src/vk_wrapper/ImportTable.cpp"
@@ -54,13 +54,15 @@ set(VK_WRAPPER_SOURCE_LIST
 	"${DRE_SOURCE_DIR}/src/vk_wrapper/swapchain/PresentationController.cpp"
 	"${DRE_SOURCE_DIR}/src/vk_wrapper/swapchain/Swapchain.cpp")
 	
-add_library(vk_wrapper STATIC ${VK_WRAPPER_HEADER_LIST} ${VK_WRAPPER_SOURCE_LIST})
+add_library(vk_wrapper STATIC 
+	${VK_WRAPPER_HEADER_LIST} 
+	${VK_WRAPPER_SOURCE_LIST})
 
 find_package(Vulkan REQUIRED)
 
 target_include_directories(vk_wrapper PUBLIC 
 	"${DRE_SOURCE_DIR}/include"
-	"${Vulkan_INCLUDE_DIR})
+	"${Vulkan_INCLUDE_DIR}")
 
 target_compile_features(vk_wrapper PUBLIC cxx_std_17)
 # TODO: disable exceptions
@@ -71,5 +73,6 @@ source_group(
 	TREE "${DRE_SOURCE_DIR}/include"
 	PREFIX "Header Files"
 	FILES ${VK_WRAPPER_HEADER_LIST})
+	
 	
 	

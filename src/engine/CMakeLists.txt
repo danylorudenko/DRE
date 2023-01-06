@@ -10,7 +10,7 @@ set(ENGINE_HEADER_LIST
 	"${DRE_SOURCE_DIR}/include/engine/scene/Entity.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/scene/Scene.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/transform/TransformComponent.hpp"
-	"${DRE_SOURCE_DIR}/include/engine/transform/TransformationSystem.hpp"
+	"${DRE_SOURCE_DIR}/include/engine/transform/TransformationSystem.hpp")
 
 set(ENGINE_SOURCE_LIST
 	"${DRE_SOURCE_DIR}/src/engine/data/Material.cpp"
@@ -26,12 +26,14 @@ set(ENGINE_SOURCE_LIST
 	
 add_library(engine STATIC ${ENGINE_HEADER_LIST} ${ENGINE_SOURCE_LIST})
 
-target_include_directories(engine PUBLIC "${DRE_SOURCE_DIR}/include")
+target_include_directories(engine PUBLIC 
+	"${DRE_SOURCE_DIR}/include"
+	)
 
 target_compile_features(engine PUBLIC cxx_std_17)
 #TODO: disable exceptions
 
-target_link_libraries(engine PUBLIC foundation vk_wrapper)
+target_link_libraries(engine PUBLIC foundation vk_wrapper assimp)
 
 source_group(
 	TREE "${DRE_SOURCE_DIR}/include"

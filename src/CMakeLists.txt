@@ -1,0 +1,4 @@
+add_subdirectory(foundation)
+add_subdirectory(vk_wrapper)
+add_subdirectory(gfx)
+add_subdirectory(engine)
