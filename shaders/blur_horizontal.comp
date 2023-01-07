@@ -1,0 +1,22 @@
+#version 450 core
+
+layout (set=0, binding=0, rgba8) uniform readonly image2D imageInput;
+layout (set=0, binding=1, rgba8) uniform image2D imageOutput;
+
+layout (local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
+const float kernel[9] = { 0.106004, 0.109777, 0.112553, 0.114253, 0.114825, 0.114253, 0.112553, 0.109777, 0.106004 };
+
+shared vec4 intermediate_data[8 * 4];
+
+void main()
+{
+	ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
+	vec4 data = vec4(0.0, 0.0, 0.0, imageLoad(imageInput, ivec2(coords)).a);
+	//vec4 data = imageLoad(imageInput, ivec2(coords));
+	
+	for(int i = 0; i < 9; i++)
+	{
+		data.rgb += imageLoad(imageInput, ivec2(coords.x + i - 4, coords.y)).rgb * kernel[i];
+	}
+	imageStore(imageOutput, coords, data);
+}

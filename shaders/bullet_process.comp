@@ -1,0 +1,99 @@
+#version 450 core
+
+#extension GL_EXT_nonuniform_qualifier : enable
+
+struct BulletInstance
+{
+	vec3	pos;
+    float	speed;
+    vec3	dir;
+    float	timeLeft;
+};
+
+struct WallData
+{
+    vec4  positions;
+	float height;
+	uint  destroyed;
+};
+
+layout(set = 0, binding = 0, std140) buffer BulletBuffer
+{
+	BulletInstance bulletInstances[];
+} storageBufferHeap[];
+
+layout(set = 0, binding = 0,std140) buffer WallsBuffer
+{
+	WallData wallData[];
+} wallsBufferView[];
+
+layout(push_constant, std140) uniform PushConstants
+{
+	uint	bulletDataID;
+	uint	wallsDataID;
+	uint	bulletCount;
+	uint	wallCount;
+	uint	timeDeltaMicroseconds;
+
+} constants;
+
+layout(local_size_x = 32) in;
+void main()
+{
+	if(gl_GlobalInvocationID.x < constants.bulletCount)
+	{
+		BulletInstance instance = storageBufferHeap[nonuniformEXT(constants.bulletDataID)].bulletInstances[gl_GlobalInvocationID.x];
+		float timeDeltaSeconds = float(constants.timeDeltaMicroseconds) * 0.000001;
+		float distance = timeDeltaSeconds * instance.speed;
+		vec3 newPos = instance.pos + normalize(instance.dir) * distance;
+		
+		vec3 newDir = instance.dir;
+		uint wallsCount = constants.wallCount;
+		for(uint i = 0; i < wallsCount; i++)
+		{
+			vec4 wall = wallsBufferView[nonuniformEXT(constants.wallsDataID)].wallData[i].positions;
+
+			vec3 wallP0 = vec3(wall[0], 0.0, wall[1]);
+			vec3 wallP1 = vec3(wall[2], 0.0, wall[3]);
+			vec3 wallDir = wallP1 - wallP0;
+			vec3 wallNormal = normalize(cross(wallDir, vec3(0.0, 1.0, 0.0)));
+
+			vec3 V = newPos - instance.pos;
+			vec3 W = wallP0 - instance.pos;
+			float k = dot(W, wallNormal) / dot(V, wallNormal);
+			vec3 intersectionPoint = instance.pos + V * k;
+
+			bool planeIntersection = k >= 0.0 && k <= 1;
+			if(planeIntersection)
+			{
+				vec3 p = intersectionPoint;
+				
+				vec2 ab = wallP1.xz - wallP0.xz;
+				vec2 ac = p.xz - wallP0.xz;
+				float dot01 = dot(ab, ac);
+				float dot11 = dot(ab, ab);
+
+				float height = wallsBufferView[nonuniformEXT(constants.wallsDataID)].wallData[i].height;
+				bool heightIntersection = p.y < height / 2 && p.y > -height / 2;
+				bool segmentIntersection = 0 < dot01 && dot01 < dot11;
+				if(segmentIntersection && heightIntersection)
+				{
+					newDir = reflect(instance.dir, wallNormal);
+					newPos = instance.pos + normalize(newDir) * distance;
+
+					// destroy the wall
+					wallsBufferView[nonuniformEXT(constants.wallsDataID)].wallData[i].destroyed = 1;
+					break;
+				}
+				
+			}
+		}
+		
+		storageBufferHeap[nonuniformEXT(constants.bulletDataID)].bulletInstances[gl_GlobalInvocationID.x].pos = newPos;
+		storageBufferHeap[nonuniformEXT(constants.bulletDataID)].bulletInstances[gl_GlobalInvocationID.x].dir = newDir;
+
+		// calculate time in milliseconds to avoid precision errors
+		float newTimeLeft = ((float(instance.timeLeft) * 1000) - (float(constants.timeDeltaMicroseconds) * 0.001)) * 0.001;
+		storageBufferHeap[nonuniformEXT(constants.bulletDataID)].bulletInstances[gl_GlobalInvocationID.x].timeLeft = newTimeLeft;
+	}
+}
