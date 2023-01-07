@@ -34,7 +34,7 @@ target_compile_features(engine PUBLIC cxx_std_17)
 target_compile_definitions(gfx PUBLIC WIN32_LEAN_AND_MEAN NOMINMAX)
 #TODO: disable exceptions
 
-target_link_libraries(engine PUBLIC foundation vk_wrapper assimp glm::glm)
+target_link_libraries(engine PUBLIC foundation vk_wrapper assimp glm::glm imgui stb_image spirv-cross-cpp spirv-cross-reflect)
 
 source_group(
 	TREE "${DRE_SOURCE_DIR}/include"

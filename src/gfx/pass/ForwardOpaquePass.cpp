@@ -36,11 +36,11 @@ void ForwardOpaquePass::Initialize(RenderGraph& graph)
     // TODO: no free call
 
     DRE::ByteBuffer vertexBlob{};
-    IO::IOManager::ReadFileToBuffer("shader-src\\test-triangle-nodata.vert.spv", vertexBlob);
+    IO::IOManager::ReadFileToBuffer("shaders\\test-triangle-nodata.vert.spv", vertexBlob);
     VKW::ShaderModule vertexModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertexBlob, VKW::SHADER_MODULE_TYPE_VERTEX, "main"};
 
     DRE::ByteBuffer fragmentBlob{};
-    IO::IOManager::ReadFileToBuffer("shader-src\\test-triangle-nodata.frag.spv", fragmentBlob);
+    IO::IOManager::ReadFileToBuffer("shaders\\test-triangle-nodata.frag.spv", fragmentBlob);
     VKW::ShaderModule fragmentModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragmentBlob, VKW::SHADER_MODULE_TYPE_FRAGMENT, "main"};
 
     ///////////////////

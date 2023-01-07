@@ -22,7 +22,8 @@ target_link_libraries(demo-app PRIVATE
 	foundation 
 	vk_wrapper
 	gfx
-	engine)
+	engine
+	imgui)
 	
 source_group(
 	TREE "${DRE_SOURCE_DIR}/apps/DemoApp"

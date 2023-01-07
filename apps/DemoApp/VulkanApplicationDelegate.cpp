@@ -5,14 +5,14 @@
 #include <vk_wrapper\resources\Framebuffer.hpp>
 #include <vk_wrapper\pipeline\ShaderModule.hpp>
 
-#include <transform\TansformComponent.hpp>
+#include <engine\transform\TransformComponent.hpp>
 
 #include <utility>
 #include <cstdio>
 
 #include <glm/geometric.hpp>
 
-#include <imgui\imgui.h>
+#include <imgui.h>
 
 #include <assimp\Importer.hpp>
 
@@ -147,7 +147,7 @@ void VulkanApplicationDelegate::ImGuiUser()
     if (m_ImGuiEnabled) {
         IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context. Refer to examples app!");
 
-        ImGui::SetNextWindowContentWidth(150.0f);
+        ImGui::SetNextWindowContentSize(ImVec2{ 150.0f, 0.0f});
         ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), ImGuiCond_Always);
 
         ImGuiWindowFlags frameDataWindowFlags = 

@@ -19,5 +19,29 @@ add_subdirectory(extern/assimp)
 add_subdirectory(extern/glm)
 add_subdirectory(extern/SPIRV-Cross)
 
+#imgui and stb have no CMakeLists
+#==========
+add_library(stb_image INTERFACE "extern/stb/stb_image.h")
+target_include_directories(stb_image INTERFACE "extern/stb")
+
+#==========
+set(IMGUI_SOURCE_LIST 
+	"extern/imgui/imgui.cpp" 
+	"extern/imgui/imgui_draw.cpp"
+	"extern/imgui/imgui_tables.cpp"
+	"extern/imgui/imgui_widgets.cpp")
+	
+set(IMGUI_HEADER_LIST
+	"extern/imgui/imgui.h"
+	"extern/imgui/imgui_internal.h"
+	"extern/imgui/imstb_rectpack.h"
+	"extern/imgui/imstb_textedit.h"
+	"extern/imgui/imstb_truetype.h")
+	
+add_library(imgui STATIC ${IMGUI_HEADER_LIST} ${IMGUI_SOURCE_LIST})
+target_include_directories(imgui PUBLIC "extern/imgui")
+
+#==========
+
 add_subdirectory(src)
 add_subdirectory(apps/DemoApp)

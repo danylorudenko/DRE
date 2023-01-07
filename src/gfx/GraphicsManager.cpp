@@ -11,7 +11,7 @@
 #include <gfx\pass\ImGuiRenderPass.hpp>
 
 #include <engine\io\IOManager.hpp>
-#include <shader-src\global_uniform.h>
+#include <global_uniform.h>
 
 namespace GFX
 {

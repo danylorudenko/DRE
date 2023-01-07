@@ -8,7 +8,7 @@
 #include <gfx\scheduling\RenderGraph.hpp>
 #include <gfx\pipeline\PipelineDB.hpp>
 
-#include <imgui\imgui.h>
+#include <imgui.h>
 #include <glm\gtc\type_ptr.hpp>
 
 #include <engine\io\IOManager.hpp>
@@ -63,11 +63,11 @@ void ImGuiRenderPass::Initialize(RenderGraph& graph)
     pipelineDescriptor.AddVertexAttribute(VKW::FORMAT_R8G8B8A8_UNORM);
 
     DRE::ByteBuffer vertexModuleBuffer;
-    IO::IOManager::ReadFileToBuffer("shader-src\\imgui.vert.spv", vertexModuleBuffer);
+    IO::IOManager::ReadFileToBuffer("shaders\\imgui.vert.spv", vertexModuleBuffer);
     VKW::ShaderModule vertexModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertexModuleBuffer, VKW::SHADER_MODULE_TYPE_VERTEX, "main"};
 
     DRE::ByteBuffer fragmentModuleBuffer;
-    IO::IOManager::ReadFileToBuffer("shader-src\\imgui.frag.spv", fragmentModuleBuffer);
+    IO::IOManager::ReadFileToBuffer("shaders\\imgui.frag.spv", fragmentModuleBuffer);
     VKW::ShaderModule fragmentModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragmentModuleBuffer, VKW::SHADER_MODULE_TYPE_FRAGMENT, "main" };
 
     pipelineDescriptor.SetVertexShader(vertexModule);

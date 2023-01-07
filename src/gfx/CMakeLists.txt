@@ -55,13 +55,13 @@ set(GFX_SOURCE_LIST
 	
 add_library(gfx STATIC ${GFX_HEADER_LIST} ${GFX_SOURCE_LIST})
 
-target_include_directories(gfx PUBLIC "${DRE_SOURCE_DIR}/include")
+target_include_directories(gfx PUBLIC "${DRE_SOURCE_DIR}/include" "${DRE_SOURCE_DIR}/shaders")
 
 target_compile_features(gfx PUBLIC cxx_std_17)
 target_compile_definitions(gfx PUBLIC WIN32_LEAN_AND_MEAN NOMINMAX)
 #TODO: disable exceptions
 
-target_link_libraries(gfx PUBLIC foundation vk_wrapper glm::glm)
+target_link_libraries(gfx PUBLIC foundation vk_wrapper glm::glm imgui)
 
 source_group(
 	TREE "${DRE_SOURCE_DIR}/include"
