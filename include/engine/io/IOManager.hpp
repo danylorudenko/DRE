@@ -35,6 +35,8 @@ public:
 
     static std::uint64_t ReadFileToBuffer(char const* path, DRE::ByteBuffer& buffer);
 
+    void LoadShaders();
+
     Data::ModelMesh ReadModelMesh(char const* path);
     Data::Texture2D ReadTexture2D(char const* path, Data::TextureChannelVariations channels);
 
@@ -43,10 +45,9 @@ public:
     ~IOManager();
 
 private:
-    //using MaterialMap = DRE::HashTable<aiMesh const*, aiMaterial const*, DRE::MainAllocator>;
-    void ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, aiNode const* node, WORLD::Scene& targetScene/*, MaterialMap& meshMaterialMap*/);
+    void ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, aiNode const* node, WORLD::Scene& targetScene);
 
-    Data::Material* ParseMeshMaterial(aiMesh const* mesh, char const* assetPath, aiScene const* scene, Data::MaterialLibrary* materialLibrary/*, MaterialMap& meshMaterialMap*/);
+    Data::Material* ParseMeshMaterial(aiMesh const* mesh, char const* assetPath, aiScene const* scene, Data::MaterialLibrary* materialLibrary);
     void ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiMat, DRE::String256 const& assetFolderPath, Data::Material* material, Data::Material::TextureProperty::Slot slot, Data::TextureChannelVariations channels);
 
 private:

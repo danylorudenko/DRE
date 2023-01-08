@@ -4,6 +4,7 @@
 #include <iostream>
 #include <utility>
 #include <charconv>
+#include <filesystem>
 
 #include <foundation\memory\Memory.hpp>
 #include <foundation\memory\ByteBuffer.hpp>
@@ -27,16 +28,14 @@ namespace IO
 
 IOManager::IOManager(Data::MaterialLibrary* materialLibrary)
     : m_MaterialLibrary{ materialLibrary }
-{}
+{
+    LoadShaders();
+}
 
 IOManager::~IOManager() {}
 
 std::uint64_t IOManager::ReadFileToBuffer(char const* path, DRE::ByteBuffer& buffer)
 {
-    std::vector<std::uint32_t> check;
-    check.push_back(0);
-    spirv_cross::Compiler compiler{ DRE_MOVE(check) };
-
     std::ifstream istream{ path, std::ios_base::binary | std::ios_base::beg };
     if (!istream) {
         std::cerr << "Error opening file in path: " << path << std::endl;
@@ -156,7 +155,7 @@ void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiM
     }
 }
 
-Data::Material* IOManager::ParseMeshMaterial(aiMesh const* mesh, char const* assetPath, aiScene const* scene, Data::MaterialLibrary* materialLibrary/*, MaterialMap& meshMaterialMap*/)
+Data::Material* IOManager::ParseMeshMaterial(aiMesh const* mesh, char const* assetPath, aiScene const* scene, Data::MaterialLibrary* materialLibrary)
 {
     /*auto result = meshMaterialMap.Find(mesh);
     if (result.value != nullptr)
@@ -212,7 +211,7 @@ void WriteMemorySequence(void*& memory, void* data, std::uint32_t size)
     memory = DRE::PtrAdd(memory, size);
 }
 
-void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, aiNode const* node, WORLD::Scene& targetScene/*, MaterialMap& meshMaterialMap*/)
+void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, aiNode const* node, WORLD::Scene& targetScene)
 {
     for (std::uint32_t i = 0, count = node->mNumMeshes; i < count; i++)
     {
@@ -258,13 +257,13 @@ void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* a
 
         gfxContext.CmdResourceDependency(indexBuffer, VKW::RESOURCE_ACCESS_NONE, VKW::STAGE_TOP, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
 
-        Data::Material* material = ParseMeshMaterial(mesh, assetPath, scene, m_MaterialLibrary/*, meshMaterialMap*/);
+        Data::Material* material = ParseMeshMaterial(mesh, assetPath, scene, m_MaterialLibrary);
         WORLD::Entity& nodeEntity = targetScene.CreateEntity(material);
     }
 
     for (std::uint32_t i = 0; i < node->mNumChildren; i++)
     {
-        ParseAssimpNodeRecursive(gfxContext, assetPath, scene, node->mChildren[i], targetScene/*, meshMaterialMap*/);
+        ParseAssimpNodeRecursive(gfxContext, assetPath, scene, node->mChildren[i], targetScene);
     }
 }
 
@@ -278,8 +277,24 @@ void IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene)
     if (scene == nullptr)
         return;
 
-    //MaterialMap meshMaterialMap{ &DRE::g_MainAllocator };
-    ParseAssimpNodeRecursive(GFX::g_GraphicsManager->GetMainContext(), path, scene, scene->mRootNode, targetScene/*, meshMaterialMap*/);
+    ParseAssimpNodeRecursive(GFX::g_GraphicsManager->GetMainContext(), path, scene, scene->mRootNode, targetScene);
+}
+
+void IOManager::LoadShaders()
+{
+    std::filesystem::path currentDir = std::filesystem::current_path();
+    std::cout << currentDir.generic_u8string();
+    std::cout << std::endl;
+
+    std::filesystem::recursive_directory_iterator dir_iterator(currentDir, std::filesystem::directory_options::none);
+    for (auto const& dir : dir_iterator)
+    {
+        if (dir.path().has_extension() && dir.path().extension() == ".spv")
+        {
+            
+        }
+
+    }
 }
 
 

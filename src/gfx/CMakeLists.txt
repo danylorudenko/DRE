@@ -63,7 +63,9 @@ target_compile_definitions(gfx PUBLIC WIN32_LEAN_AND_MEAN NOMINMAX)
 
 target_link_libraries(gfx PUBLIC foundation vk_wrapper glm::glm imgui)
 
+add_dependencies(gfx shaders)
+
 source_group(
-	TREE "${DRE_SOURCE_DIR}/include"
+	TREE "${DRE_SOURCE_DIR}/include/gfx"
 	PREFIX "Header Files"
 	FILES ${GFX_HEADER_LIST})

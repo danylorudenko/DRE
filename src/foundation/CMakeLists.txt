@@ -55,6 +55,6 @@ target_compile_features(foundation PUBLIC cxx_std_17)
 # TODO: disable exceptions
 
 source_group(
-	TREE "${DRE_SOURCE_DIR}/include"
+	TREE "${DRE_SOURCE_DIR}/include/foundation"
 	PREFIX "Header Files"
 	FILES ${FOUNDATION_HEADER_LIST})

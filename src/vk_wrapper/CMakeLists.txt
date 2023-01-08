@@ -75,7 +75,7 @@ target_compile_definitions(vk_wrapper PUBLIC
 target_link_libraries(vk_wrapper PUBLIC foundation)
 
 source_group(
-	TREE "${DRE_SOURCE_DIR}/include"
+	TREE "${DRE_SOURCE_DIR}/include/vk_wrapper"
 	PREFIX "Header Files"
 	FILES ${VK_WRAPPER_HEADER_LIST})
 	

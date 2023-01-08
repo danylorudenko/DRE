@@ -42,7 +42,7 @@ public:
 
 private:
     ImportTable*        table_;
-    LogicalDevice*             device_;
+    LogicalDevice*      device_;
 
     VkShaderModule      handle_;
     ShaderModuleType    type_;

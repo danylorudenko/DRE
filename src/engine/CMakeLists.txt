@@ -37,6 +37,6 @@ target_compile_definitions(gfx PUBLIC WIN32_LEAN_AND_MEAN NOMINMAX)
 target_link_libraries(engine PUBLIC foundation vk_wrapper assimp glm::glm imgui stb_image spirv-cross-cpp spirv-cross-reflect)
 
 source_group(
-	TREE "${DRE_SOURCE_DIR}/include"
+	TREE "${DRE_SOURCE_DIR}/include/engine"
 	PREFIX "Header Files"
 	FILES ${ENGINE_HEADER_LIST})

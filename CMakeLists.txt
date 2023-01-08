@@ -42,6 +42,14 @@ add_library(imgui STATIC ${IMGUI_HEADER_LIST} ${IMGUI_SOURCE_LIST})
 target_include_directories(imgui PUBLIC "extern/imgui")
 
 #==========
+#copying shaders sources and binaries to build dir
+add_custom_target(shaders ALL
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${DRE_SOURCE_DIR}/shaders"
+        "${PROJECT_BINARY_DIR}/shaders"
+        COMMENT "Copying shaders into binary directory")
+#==========
+
 
 add_subdirectory(src)
 add_subdirectory(apps/DemoApp)
