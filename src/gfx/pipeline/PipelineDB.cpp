@@ -2,20 +2,49 @@
 
 #include <vk_wrapper\Device.hpp>
 #include <vk_wrapper\descriptor\DescriptorManager.hpp>
+#include <vk_wrapper\pipeline\ShaderModule.hpp>
+
+#include <engine\io\IOManager.hpp>
 
 namespace GFX
 {
 
-PipelineDB::PipelineDB(VKW::Device* device)
+PipelineDB::PipelineDB(VKW::Device* device, IO::IOManager* ioManager)
     : m_Device(device)
+    , m_IOManager{ ioManager }
 {
     VKW::PipelineLayout::Descriptor globalLayoutDescriptor;
     AddGlobalLayouts(globalLayoutDescriptor);
     m_GlobalLayout = VKW::PipelineLayout{ device->GetFuncTable(), device->GetLogicalDevice(), globalLayoutDescriptor };
+
+    CreateDefaultPipelines();
 }
 
 PipelineDB::~PipelineDB()
 {
+}
+
+void PipelineDB::CreateDefaultPipelines()
+{
+    // default plane material shader
+    {
+        IO::IOManager::ShaderData const* shaderData = m_IOManager->GetShaderData("plane.vert");
+        //shaderData->m_ReflResources.
+
+        /*
+        VKW::ShaderModule vModule = VKW::ShaderModule{ 
+            m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), 
+            *m_IOManager->GetShaderFileBuffer("plane.vert"), VKW::SHADER_MODULE_TYPE_VERTEX, "main" };
+
+        VKW::ShaderModule fModule = VKW::ShaderModule{
+            m_Device->GetFuncTable(), m_Device->GetLogicalDevice(),
+            *m_IOManager->GetShaderFileBuffer("plane.frag"), VKW::SHADER_MODULE_TYPE_FRAGMENT, "main" };
+
+        VKW::Pipeline::Descriptor pipeDesc;
+        pipeDesc.SetVertexShader(vModule);
+        pipeDesc.SetFragmentShader(fModule);
+        */
+    }
 }
 
 void PipelineDB::AddGlobalLayouts(VKW::PipelineLayout::Descriptor& descriptor)

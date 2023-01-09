@@ -8,8 +8,8 @@
 
 #include <foundation\memory\AllocatorBuddy.hpp>
 
-#include <DemoApp\Application.hpp>
-#include <DemoApp\ImGuiHelper.hpp>
+#include <demo_app\Application.hpp>
+#include <demo_app\ImGuiHelper.hpp>
 
 #include <vk_wrapper\Context.hpp>
 

@@ -13,6 +13,11 @@ namespace VKW
 class Device;
 }
 
+namespace IO
+{
+class IOManager;
+}
+
 namespace GFX
 {
 
@@ -21,13 +26,14 @@ class PipelineDB
     , public NonMovable
 {
 public:
-    PipelineDB(VKW::Device* device);
+    PipelineDB(VKW::Device* device, IO::IOManager* ioManager);
     ~PipelineDB();
 
     void                    AddGlobalLayouts(VKW::PipelineLayout::Descriptor& descriptor);
 
     VKW::PipelineLayout*    CreatePipelineLayout(char const* name, VKW::PipelineLayout::Descriptor const& descriptor);
     VKW::Pipeline*          CreatePipeline(char const* name, VKW::Pipeline::Descriptor& descriptor);
+    void                    CreateDefaultPipelines();
 
     VKW::PipelineLayout const*  GetGlobalLayout() const;
     VKW::PipelineLayout*        GetLayout(char const* name);
@@ -35,6 +41,7 @@ public:
 
 private:
     VKW::Device*        m_Device;
+    IO::IOManager*      m_IOManager;
 
     VKW::PipelineLayout m_GlobalLayout;
 

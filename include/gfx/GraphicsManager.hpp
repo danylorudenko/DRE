@@ -2,9 +2,7 @@
 
 #include <foundation\class_features\NonCopyable.hpp>
 #include <foundation\class_features\NonMovable.hpp>
-
 #include <foundation\system\Window.hpp>
-
 #include <foundation\Container\ObjectPool.hpp>
 
 #include <vk_wrapper\Device.hpp>
@@ -24,6 +22,11 @@ namespace VKW
 struct LoaderDesc;
 }
 
+namespace IO
+{
+class IOManager;
+}
+
 namespace GFX
 {
 
@@ -32,7 +35,7 @@ class GraphicsManager final
     , public NonMovable
 {
 public:
-    GraphicsManager(HINSTANCE hInstance, Window* window, bool debug = false);
+    GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOManager* ioManager, bool debug = false);
     ~GraphicsManager();
 
     inline Window*                      GetMainWindow() { return m_MainWindow; }
@@ -83,6 +86,7 @@ private:
 
 private:
     Window*                     m_MainWindow;
+    IO::IOManager*              m_IOManager;
 
     VKW::Device                 m_Device;
 

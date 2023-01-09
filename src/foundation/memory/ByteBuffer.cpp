@@ -65,6 +65,9 @@ void* ByteBuffer::Data() const
 
 void ByteBuffer::Resize(std::uint64_t newSize)
 {
+    if (newSize == size_)
+        return;
+    
     void* newBuffer = malloc(newSize);
 
     if (buffer_) {

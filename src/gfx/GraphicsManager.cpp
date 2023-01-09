@@ -23,8 +23,9 @@ static constexpr std::uint32_t C_GLOBAL_UNIFORM_SIZE            = 256;
 
 GraphicsManager* g_GraphicsManager = nullptr;
 
-GraphicsManager::GraphicsManager(HINSTANCE hInstance, Window* window, bool debug)
+GraphicsManager::GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOManager* ioManager, bool debug)
     : m_MainWindow{ window }
+    , m_IOManager{ ioManager }
     , m_Device{ hInstance, window->NativeHandle(), debug}
     , m_MainContext{ m_Device.table_.get(), m_Device.GetMainQueue() }
     , m_GraphicsFrame{ 0 }
@@ -32,7 +33,7 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, Window* window, bool debug
     , m_UniformArena{ &m_Device, C_DEFAULT_UNIFORM_ARENA_SIZE }
     , m_ReadbackArena{ &m_Device, C_DEFAULT_UNIFORM_ARENA_SIZE }
     , m_TextureBank{ &m_MainContext, m_Device.GetResourcesController(), m_Device.GetDescriptorAllocator() }
-    , m_PipelineDB{ &m_Device }
+    , m_PipelineDB{ &m_Device, ioManager }
     , m_PersistentStorage{ &m_Device }
     , m_RenderGraph{ this }
     , m_DependencyManager{ &m_RenderGraph.ResourcesManager() }

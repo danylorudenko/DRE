@@ -1,4 +1,4 @@
-#include <DemoApp\VulkanApplicationDelegate.hpp>
+#include <demo_app\VulkanApplicationDelegate.hpp>
 
 #include <foundation\memory\Memory.hpp>
 

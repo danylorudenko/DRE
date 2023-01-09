@@ -1,4 +1,4 @@
-#include <DemoApp\ImGuiHelper.hpp>
+#include <demo_app\ImGuiHelper.hpp>
 
 #include <foundation\input\InputSystem.hpp>
 #include <foundation\system\Window.hpp>

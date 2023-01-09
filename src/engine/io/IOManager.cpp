@@ -8,17 +8,17 @@
 
 #include <foundation\memory\Memory.hpp>
 #include <foundation\memory\ByteBuffer.hpp>
+#include <foundation\Container\HashTable.hpp>
 
 #include <assimp\Importer.hpp>
 #include <assimp\postprocess.h>
 #include <assimp\scene.h>
 
-#include <foundation\Container\HashTable.hpp>
-
-#include <engine\data\MaterialLibrary.hpp>
+#include <vk_wrapper\pipeline\ShaderModule.hpp>
 
 #include <gfx\GraphicsManager.hpp>
 
+#include <engine\data\MaterialLibrary.hpp>
 #include <engine\scene\Scene.hpp>
 
 #include <spirv_cross\spirv_cross.hpp>
@@ -28,14 +28,18 @@ namespace IO
 
 IOManager::IOManager(Data::MaterialLibrary* materialLibrary)
     : m_MaterialLibrary{ materialLibrary }
+    , m_ShaderBinaries{ &DRE::g_MainAllocator }
 {
-    LoadShaders();
+    LoadShaderFiles();
 }
 
 IOManager::~IOManager() {}
 
 std::uint64_t IOManager::ReadFileToBuffer(char const* path, DRE::ByteBuffer& buffer)
 {
+    std::filesystem::path currPath = std::filesystem::current_path();
+    std::cout << currPath.u8string() << std::endl;
+
     std::ifstream istream{ path, std::ios_base::binary | std::ios_base::beg };
     if (!istream) {
         std::cerr << "Error opening file in path: " << path << std::endl;
@@ -157,10 +161,6 @@ void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiM
 
 Data::Material* IOManager::ParseMeshMaterial(aiMesh const* mesh, char const* assetPath, aiScene const* scene, Data::MaterialLibrary* materialLibrary)
 {
-    /*auto result = meshMaterialMap.Find(mesh);
-    if (result.value != nullptr)
-        return ;*/
-
     //parse material
     aiMaterial* mat = scene->mMaterials[mesh->mMaterialIndex];
     aiString aiName = mat->GetName();
@@ -185,7 +185,6 @@ Data::Material* IOManager::ParseMeshMaterial(aiMesh const* mesh, char const* ass
 
     DRE_ASSERT(mat->GetTextureCount(aiTextureType_DIFFUSE) <= 1, "We don't support multiple textures of the same type per material (DIFFUSE).");
     DRE_ASSERT(mat->GetTextureCount(aiTextureType_NORMALS) <= 1, "We don't support multiple textures of the same type per material (NORMALS)");
-    //DRE_ASSERT(mat->GetTextureCount(aiTextureType_METALNESS) <= 1, "We don't support multiple textures of the same type per material (METALNESS)");
 
     // get folder with texture files
     DRE::String256 textureFilePath = assetPath;
@@ -200,7 +199,6 @@ Data::Material* IOManager::ParseMeshMaterial(aiMesh const* mesh, char const* ass
     // PROCESS TEXTURES
     ParseMaterialTexture(scene, mat, textureFilePath, material, Data::Material::TextureProperty::DIFFUSE, Data::TEXTURE_VARIATION_RGB);
     ParseMaterialTexture(scene, mat, textureFilePath, material, Data::Material::TextureProperty::NORMAL, Data::TEXTURE_VARIATION_RGB);
-    //ParseMaterialTexture(scene, mat, textureFilePath, material, Data::Material::TextureProperty::METALNESS, Data::TEXTURE_VARIATION_GRAY);
 
     return material;
 }
@@ -280,20 +278,91 @@ void IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene)
     ParseAssimpNodeRecursive(GFX::g_GraphicsManager->GetMainContext(), path, scene, scene->mRootNode, targetScene);
 }
 
-void IOManager::LoadShaders()
+void IOManager::ShaderInterface::Merge(IOManager::ShaderInterface const& rhs)
+{
+    for (std::uint32_t i = 0, size = rhs.m_Members.Size(); i < size; i++)
+    {
+        if (m_Members.Find(rhs.m_Members[i]) != m_Members.Size())
+            continue;
+
+        m_Members.EmplaceBack(rhs.m_Members[i]);
+    }
+}
+
+bool IOManager::ShaderInterface::Member::operator==(IOManager::ShaderInterface::Member const& rhs) const
+{
+    return 
+        (type == rhs.type) &&
+        //(stage == rhs.stage) && this will differ, because we're merging different stages
+        (set == rhs.set) &&
+        (binding == rhs.binding) &&
+        (arraySize == rhs.arraySize);
+}
+
+bool IOManager::ShaderInterface::Member::operator!=(IOManager::ShaderInterface::Member const& rhs) const
+{
+    return !operator==(rhs);
+}
+
+VKW::ShaderModuleType SPVExecutionModelToVKWType(spv::ExecutionModel executionModel)
+{
+    switch (executionModel)
+    {
+    case spv::ExecutionModelVertex:
+        return VKW::SHADER_MODULE_TYPE_VERTEX;
+    case spv::ExecutionModelFragment:
+        return VKW::SHADER_MODULE_TYPE_FRAGMENT;
+    case spv::ExecutionModelGLCompute:
+        return VKW::SHADER_MODULE_TYPE_COMPUTE;
+    default:
+        return VKW::SHADER_MODULE_TYPE_NONE;
+    }
+}
+
+void ParseShaderInterface(spirv_cross::Compiler& compiler, IOManager::ShaderInterface& resultInterface)
+{
+    spirv_cross::ShaderResources resources = compiler.get_shader_resources();
+
+    for (spirv_cross::Resource const& res : resources.storage_buffers)
+    {
+        auto& member = resultInterface.m_Members.EmplaceBack();
+        member.type         = VKW::DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        member.stage        = SPVExecutionModelToVKWType(compiler.get_execution_model());
+        member.set          = compiler.get_decoration(res.id, spv::DecorationDescriptorSet);
+        member.binding      = compiler.get_decoration(res.id, spv::DecorationBinding);
+
+        auto type           = compiler.get_type(res.type_id);
+        member.arraySize    = type.array.empty() ? 1 : type.array[0];
+
+        DRE_ASSERT(type.array.empty() || type.array.size() == 1, "Don't support multidimentional array relfection yet.");
+    }
+
+    OTHER TYPES
+}
+
+void IOManager::LoadShaderFiles()
 {
     std::filesystem::path currentDir = std::filesystem::current_path();
-    std::cout << currentDir.generic_u8string();
-    std::cout << std::endl;
+    //std::cout << currentDir.generic_u8string();
+    //std::cout << std::endl;
 
-    std::filesystem::recursive_directory_iterator dir_iterator(currentDir, std::filesystem::directory_options::none);
-    for (auto const& dir : dir_iterator)
+    std::filesystem::recursive_directory_iterator dir_iterator(".", std::filesystem::directory_options::none);
+    for (auto const& entry : dir_iterator)
     {
-        if (dir.path().has_extension() && dir.path().extension() == ".spv")
+        if (entry.path().has_extension() && entry.path().extension() == ".spv")
         {
-            
-        }
+            // .stem() is a filename without extension
+            ShaderData& shaderData = m_ShaderBinaries.Emplace(entry.path().stem().u8string().c_str());
 
+            DRE::ByteBuffer moduleBuffer{ static_cast<std::uint64_t>(entry.file_size()) };
+            ReadFileToBuffer(entry.path().u8string().c_str(), moduleBuffer);
+            shaderData.m_Binary = DRE_MOVE(moduleBuffer);
+            
+            spirv_cross::Compiler compiler{ reinterpret_cast<std::uint32_t const*>(shaderData.m_Binary.Data()), shaderData.m_Binary.Size() / sizeof(std::uint32_t) };
+            shaderData.m_ExecutionModel = compiler.get_execution_model();
+
+            ParseShaderInterface(compiler, shaderData.m_Interface); 
+        }
     }
 }
 

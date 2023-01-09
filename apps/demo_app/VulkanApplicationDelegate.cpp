@@ -29,7 +29,7 @@ VulkanApplicationDelegate::VulkanApplicationDelegate(HINSTANCE instance, char co
     , m_InputSystem{ m_MainWindow.NativeHandle() }
     , m_MaterialLibrary{}
     , m_IOManager{ &m_MaterialLibrary }
-    , m_GraphicsManager{ instance, &m_MainWindow, vkDebug }
+    , m_GraphicsManager{ instance, &m_MainWindow, &m_IOManager, vkDebug }
     , m_ImGuiEnabled{ imguiEnabled }
     , m_PrevFrameDeltaMicroseconds{ 0 }
     , m_AppStartTimeMicroseconds{ 0 }
@@ -39,8 +39,6 @@ VulkanApplicationDelegate::VulkanApplicationDelegate(HINSTANCE instance, char co
     WORLD::g_MainScene = &m_MainScene;
     auto startPoint = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now());
     m_AppStartTimeMicroseconds = static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(startPoint.time_since_epoch()).count());
-
-    Assimp::Importer* testAssimp = new Assimp::Importer();
 }
 
 //////////////////////////////////////////
@@ -94,7 +92,7 @@ void VulkanApplicationDelegate::start()
 
     m_GraphicsManager.Initialize();
 
-    m_IOManager.ParseModelFile("LFS\\Sponza\\Sponza.gltf", m_MainScene);
+    m_IOManager.ParseModelFile("data\\Sponza\\Sponza.gltf", m_MainScene);
 }
 
 //////////////////////////////////////////
