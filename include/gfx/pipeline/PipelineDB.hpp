@@ -40,6 +40,12 @@ public:
     VKW::Pipeline*              GetPipeline(char const* name);
 
 private:
+    // will find all modules with same name before '.' symbol (like "wall.vert.spv" + "wall.frag.spv") and combine all their layouts into one with name "wall_layout"
+    DRE::String128 const*    CreatePipelineLayoutFromShader(char const* shaderName);
+
+    DRE::String128 const*    CreateMaterialPipeline(char const* name);
+
+private:
     VKW::Device*        m_Device;
     IO::IOManager*      m_IOManager;
 

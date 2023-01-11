@@ -65,6 +65,7 @@ public:
     {
         DRE_ASSERT(size + m_Size < SIZE, "Inplace string overflow.");
         std::strcat(m_Data, str);
+        m_Size += size;
     }
 
 private:

@@ -15,8 +15,8 @@ StandaloneDescriptorSet::WriteDescriptor::WriteDescriptor()
 {
 }
 
-StandaloneDescriptorSet::Descriptor::Descriptor(DescriptorStage stages)
-    : layoutDescriptor_{ stages }
+StandaloneDescriptorSet::Descriptor::Descriptor(/*DescriptorStage stages*/)
+    : layoutDescriptor_{ /*stages*/ }
 {
 }
 
@@ -171,25 +171,25 @@ void StandaloneDescriptorSet::Descriptor::AddSamplers(VkSampler* samplers, std::
 
 void StandaloneDescriptorSet::Descriptor::AddStorageBuffer(BufferResource* buffer, std::uint32_t binding)
 {
-    layoutDescriptor_.Add(DESCRIPTOR_TYPE_STORAGE_BUFFER, binding);
+    layoutDescriptor_.Add(DESCRIPTOR_TYPE_STORAGE_BUFFER, binding, VKW::DESCRIPTOR_STAGE_ALL);
     WriteDescriptor::AddStorageBuffer(buffer, binding);
 }
 
 void StandaloneDescriptorSet::Descriptor::AddStorageImage(ImageResourceView* view, std::uint32_t binding)
 {
-    layoutDescriptor_.Add(DESCRIPTOR_TYPE_STORAGE_IMAGE, binding);
+    layoutDescriptor_.Add(DESCRIPTOR_TYPE_STORAGE_IMAGE, binding, VKW::DESCRIPTOR_STAGE_ALL);
     WriteDescriptor::AddStorageImage(view, binding);
 }
 
 void StandaloneDescriptorSet::Descriptor::AddSampledImage(ImageResourceView* view, std::uint32_t binding)
 {
-    layoutDescriptor_.Add(DESCRIPTOR_TYPE_TEXTURE, binding);
+    layoutDescriptor_.Add(DESCRIPTOR_TYPE_TEXTURE, binding, VKW::DESCRIPTOR_STAGE_ALL);
     WriteDescriptor::AddSampledImage(view, binding);
 }
 
 void StandaloneDescriptorSet::Descriptor::AddUniform(BufferResource* buffer, std::uint32_t offset, std::uint32_t size, std::uint32_t binding)
 {
-    layoutDescriptor_.Add(DESCRIPTOR_TYPE_UNIFORM_BUFFER, binding);
+    layoutDescriptor_.Add(DESCRIPTOR_TYPE_UNIFORM_BUFFER, binding, VKW::DESCRIPTOR_STAGE_ALL);
     WriteDescriptor::AddUniform(buffer, offset, size, binding);
 }
 

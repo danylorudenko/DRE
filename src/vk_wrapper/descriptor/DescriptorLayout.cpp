@@ -15,27 +15,31 @@
 namespace VKW
 {
 
-DescriptorSetLayout::Descriptor::Descriptor(DescriptorStage stages)
+DescriptorSetLayout::Descriptor::Descriptor(/*DescriptorStage stages*/)
     : count_{ 0 }
     , members_{ 0 }
-    , stagesMask_{ stages }
+    , stagesMask_{ /*stages*/VKW::DESCRIPTOR_STAGE_NONE }
     , isClosed_{ false }
 {}
 
-std::uint16_t DescriptorSetLayout::Descriptor::Add(DescriptorType type, std::uint32_t binding, std::uint32_t count)
+std::uint16_t DescriptorSetLayout::Descriptor::Add(DescriptorType type, std::uint32_t binding, VKW::DescriptorStage stage, std::uint32_t count)
 {
     DRE_ASSERT(!isClosed_, "Attempt to modify closed descriptor layout decorator.");
     DRE_ASSERT((count_ + 1 < CONSTANTS::MAX_SET_LAYOUT_MEMBERS), "Maximum count of descriptor bindings in set is MAX_SET_LAYOUT_MEMBERS");
     
     members_[count_].type_ = type;
     members_[count_].binding_ = binding;
+    members_[count_].stage_ = stage;
     members_[count_].count_ = count;
     members_[count_].variableCount_ = 0;
     members_[count_].updateAfterBind_ = 0;
+
+    stagesMask_ |= stage;
+
     return count_++;
 }
 
-std::uint16_t DescriptorSetLayout::Descriptor::AddVariableCount(DescriptorType type, std::uint32_t binding, std::uint32_t count)
+std::uint16_t DescriptorSetLayout::Descriptor::AddVariableCount(DescriptorType type, std::uint32_t binding, VKW::DescriptorStage stage, std::uint32_t count)
 {
     DRE_ASSERT(!isClosed_, "Attempt to modify closed descriptor layout decorator.");
     DRE_ASSERT((count_ + 1 < CONSTANTS::MAX_SET_LAYOUT_MEMBERS), "Maximum count of descriptor bindings in set is MAX_SET_LAYOUT_MEMBERS");
@@ -43,9 +47,12 @@ std::uint16_t DescriptorSetLayout::Descriptor::AddVariableCount(DescriptorType t
 
     members_[count_].type_ = type;
     members_[count_].binding_ = binding;
+    members_[count_].stage_ = stage;
     members_[count_].count_ = count;
     members_[count_].variableCount_ = 1;
     members_[count_].updateAfterBind_ = 1;
+
+    stagesMask_ |= stage;
 
     isClosed_ = true;
     return count_++;
@@ -71,7 +78,7 @@ DescriptorSetLayout::DescriptorSetLayout()
     : table_{ nullptr }
     , device_{ nullptr }
     , handle_{ VK_NULL_HANDLE }
-    , descriptor_{ VKW::DESCRIPTOR_STAGE_NONE }
+    , descriptor_{ /*VKW::DESCRIPTOR_STAGE_NONE*/ }
 {
 }
 
@@ -130,7 +137,7 @@ DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout&& rhs)
     : table_{ nullptr }
     , device_{ nullptr }
     , handle_{ VK_NULL_HANDLE }
-    , descriptor_{ VKW::DESCRIPTOR_STAGE_NONE }
+    , descriptor_{ /*VKW::DESCRIPTOR_STAGE_NONE*/ }
 {
     operator=(DRE_MOVE(rhs));
 }

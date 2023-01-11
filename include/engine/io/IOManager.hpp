@@ -2,6 +2,9 @@
 
 #include <foundation\class_features\NonCopyable.hpp>
 #include <foundation\class_features\NonMovable.hpp>
+
+#include <vk_wrapper\pipeline\ShaderModule.hpp>
+
 #include <engine\data\Model.hpp>
 #include <engine\data\ModelMesh.hpp>
 #include <engine\data\Texture2D.hpp>
@@ -47,7 +50,9 @@ public:
             bool operator!=(Member const& rhs) const;
         };
 
-        DRE::InplaceVector<Member, 12> m_Members;
+        DRE::InplaceVector<Member, 9> m_Members;
+        std::uint8_t m_PushBufferBinding : 7;
+        std::uint8_t m_PushBufferPresent : 1;
 
         void Merge(ShaderInterface const& rhs);
     };
@@ -55,7 +60,7 @@ public:
     struct ShaderData
     {
         DRE::ByteBuffer m_Binary;
-        spv::ExecutionModel m_ExecutionModel;
+        VKW::ShaderModuleType m_ModuleType;
         ShaderInterface m_Interface;
     };
 

@@ -125,17 +125,17 @@ DescriptorManager::~DescriptorManager()
 
 void DescriptorManager::CreateGlobalDescriptorLayouts()
 {
-    DescriptorSetLayout::Descriptor globalSampler_StorageSetLayoutDesc{ DESCRIPTOR_STAGE_ALL };
-    globalSampler_StorageSetLayoutDesc.Add(DESCRIPTOR_TYPE_SAMPLER, 0, std::uint32_t(SAMPLER_TYPE_MAX));
-    globalSampler_StorageSetLayoutDesc.Add(DESCRIPTOR_TYPE_STORAGE_BUFFER, 1);
+    DescriptorSetLayout::Descriptor globalSampler_StorageSetLayoutDesc{ /*DESCRIPTOR_STAGE_ALL*/ };
+    globalSampler_StorageSetLayoutDesc.Add(DESCRIPTOR_TYPE_SAMPLER, 0, DESCRIPTOR_STAGE_ALL, std::uint32_t(SAMPLER_TYPE_MAX));
+    globalSampler_StorageSetLayoutDesc.Add(DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, DESCRIPTOR_STAGE_ALL);
     globalSetLayouts_[0] = DescriptorSetLayout{ table_, device_, globalSampler_StorageSetLayoutDesc };
 
-    DescriptorSetLayout::Descriptor globalTexturesLayoutDesc{ DESCRIPTOR_STAGE_ALL };
-    globalTexturesLayoutDesc.AddVariableCount(DESCRIPTOR_TYPE_TEXTURE, 0, CONSTANTS::TEXTURE_DESCRIPTOR_HEAP_SIZE);
+    DescriptorSetLayout::Descriptor globalTexturesLayoutDesc{ /*DESCRIPTOR_STAGE_ALL */};
+    globalTexturesLayoutDesc.AddVariableCount(DESCRIPTOR_TYPE_TEXTURE, 0, DESCRIPTOR_STAGE_ALL, CONSTANTS::TEXTURE_DESCRIPTOR_HEAP_SIZE);
     globalSetLayouts_[1] = DescriptorSetLayout{ table_, device_, globalTexturesLayoutDesc };
 
-    DescriptorSetLayout::Descriptor globalUniformLayoutDesc{ DESCRIPTOR_STAGE_ALL };
-    globalUniformLayoutDesc.Add(DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0);
+    DescriptorSetLayout::Descriptor globalUniformLayoutDesc{ /*DESCRIPTOR_STAGE_ALL*/ };
+    globalUniformLayoutDesc.Add(DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0, DESCRIPTOR_STAGE_ALL);
     globalSetLayouts_[2] = DescriptorSetLayout{ table_, device_, globalUniformLayoutDesc };
 
     VKW::PipelineLayout::Descriptor layoutDesc;

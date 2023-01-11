@@ -31,20 +31,21 @@ public:
     public:
         struct BindingDesc
         {
-            DescriptorType  type_;
-            std::uint32_t   binding_;
-            std::uint32_t   count_ : 16;
-            std::uint32_t   variableCount_ : 1;
-            std::uint32_t   updateAfterBind_ : 1;
+            DescriptorType          type_;
+            std::uint32_t           binding_;
+            VKW::DescriptorStage    stage_;
+            std::uint32_t           count_ : 16;
+            std::uint32_t           variableCount_ : 1;
+            std::uint32_t           updateAfterBind_ : 1;
         };
 
 
     public:
-        Descriptor(DescriptorStage stages);
+        Descriptor(/*DescriptorStage stages*/);
 
         // returns binding
-        std::uint16_t Add(DescriptorType type, std::uint32_t binding, std::uint32_t count = 1);
-        std::uint16_t AddVariableCount(DescriptorType type, std::uint32_t binding, std::uint32_t count);
+        std::uint16_t Add(DescriptorType type, std::uint32_t binding, VKW::DescriptorStage stage, std::uint32_t count = 1);
+        std::uint16_t AddVariableCount(DescriptorType type, std::uint32_t binding, VKW::DescriptorStage stage, std::uint32_t count);
 
         std::uint16_t                   GetCount() const;
         BindingDesc const&              GetMember(std::uint16_t i) const;

@@ -45,6 +45,8 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOMana
         m_GlobalUniforms[i] = m_Device.GetResourcesController()->CreateBuffer(C_GLOBAL_UNIFORM_SIZE, VKW::BufferUsage::UNIFORM);
     }
     m_Device.GetDescriptorAllocator()->AllocateDefaultDescriptors(VKW::CONSTANTS::FRAMES_BUFFERING, m_GlobalUniforms, m_PersistentStorage.GetStorage().GetResource());
+
+    m_PipelineDB.CreateDefaultPipelines();
 }
 
 void GraphicsManager::Initialize()

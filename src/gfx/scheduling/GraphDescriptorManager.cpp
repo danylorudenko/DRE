@@ -61,7 +61,7 @@ void GraphDescriptorManager::InitDescriptors()
         VKW::DescriptorStage stages = VKW::DESCRIPTOR_STAGE_NONE;
         for (std::uint8_t i = 0, size = descriptorInfos.Size(); i < size; i++) { stages |= descriptorInfos[i].m_Stages; } // collect all stages
 
-        VKW::StandaloneDescriptorSet::Descriptor desc{ stages };
+        VKW::StandaloneDescriptorSet::Descriptor desc{/* stages */};
         for (std::uint8_t i = 0, size = descriptorInfos.Size(); i < size; i++)
         {
             DescriptorInfo const& info = descriptorInfos[i];

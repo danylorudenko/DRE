@@ -319,33 +319,45 @@ VKW::ShaderModuleType SPVExecutionModelToVKWType(spv::ExecutionModel executionMo
     }
 }
 
-void ParseShaderInterface(spirv_cross::Compiler& compiler, IOManager::ShaderInterface& resultInterface)
+template<typename TResourceArray>
+void ParseShaderInterfaceType(spirv_cross::Compiler& compiler, TResourceArray const& resources, VKW::DescriptorType type, IOManager::ShaderInterface& resultInterface)
 {
-    spirv_cross::ShaderResources resources = compiler.get_shader_resources();
-
-    for (spirv_cross::Resource const& res : resources.storage_buffers)
+    for (spirv_cross::Resource const& res : resources)
     {
-        auto& member = resultInterface.m_Members.EmplaceBack();
-        member.type         = VKW::DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        auto& member        = resultInterface.m_Members.EmplaceBack();
+        member.type         = type;
         member.stage        = SPVExecutionModelToVKWType(compiler.get_execution_model());
         member.set          = compiler.get_decoration(res.id, spv::DecorationDescriptorSet);
         member.binding      = compiler.get_decoration(res.id, spv::DecorationBinding);
 
-        auto type           = compiler.get_type(res.type_id);
-        member.arraySize    = type.array.empty() ? 1 : type.array[0];
+        spirv_cross::SPIRType const& spvType = compiler.get_type(res.type_id);
+        member.arraySize    = spvType.array.empty() ? 1 : spvType.array[0];
 
-        DRE_ASSERT(type.array.empty() || type.array.size() == 1, "Don't support multidimentional array relfection yet.");
+        DRE_ASSERT(spvType.array.size() <= 1, "Don't support multidimentional array relfection yet.");
     }
+}
 
-    OTHER TYPES
+void ParseShaderInterface(spirv_cross::Compiler& compiler, IOManager::ShaderInterface& resultInterface)
+{
+    spirv_cross::ShaderResources resources = compiler.get_shader_resources();
+
+    ParseShaderInterfaceType(compiler, resources.storage_images,    VKW::DESCRIPTOR_TYPE_STORAGE_IMAGE, resultInterface);
+    ParseShaderInterfaceType(compiler, resources.separate_images,   VKW::DESCRIPTOR_TYPE_TEXTURE, resultInterface);
+    ParseShaderInterfaceType(compiler, resources.separate_samplers, VKW::DESCRIPTOR_TYPE_SAMPLER, resultInterface);
+    ParseShaderInterfaceType(compiler, resources.uniform_buffers,   VKW::DESCRIPTOR_TYPE_UNIFORM_BUFFER, resultInterface);
+
+    DRE_ASSERT(resources.push_constant_buffers.size() <= 1, "Don't support multiple push buffers in reflection yet.");
+
+    if (!resources.push_constant_buffers.empty())
+    {
+        spirv_cross::Resource const& res = resources.push_constant_buffers[0];
+        resultInterface.m_PushBufferBinding = compiler.get_decoration(res.id, spv::DecorationBinding);
+        resultInterface.m_PushBufferPresent = 1;
+    }
 }
 
 void IOManager::LoadShaderFiles()
 {
-    std::filesystem::path currentDir = std::filesystem::current_path();
-    //std::cout << currentDir.generic_u8string();
-    //std::cout << std::endl;
-
     std::filesystem::recursive_directory_iterator dir_iterator(".", std::filesystem::directory_options::none);
     for (auto const& entry : dir_iterator)
     {
@@ -359,7 +371,7 @@ void IOManager::LoadShaderFiles()
             shaderData.m_Binary = DRE_MOVE(moduleBuffer);
             
             spirv_cross::Compiler compiler{ reinterpret_cast<std::uint32_t const*>(shaderData.m_Binary.Data()), shaderData.m_Binary.Size() / sizeof(std::uint32_t) };
-            shaderData.m_ExecutionModel = compiler.get_execution_model();
+            shaderData.m_ModuleType = SPVExecutionModelToVKWType(compiler.get_execution_model());
 
             ParseShaderInterface(compiler, shaderData.m_Interface); 
         }

@@ -9,7 +9,7 @@ set(DEMO_SOURCE_LIST
 	"${DRE_SOURCE_DIR}/apps/demo_app/main.cpp"
 	"${DRE_SOURCE_DIR}/apps/demo_app/VulkanApplicationDelegate.cpp")
 	
-add_executable(demo_app ${DEMO_HEADER_LIST} ${DEMO_SOURCE_LIST})
+add_executable(demo_app ${DEMO_HEADER_LIST} ${DEMO_SOURCE_LIST} "${DRE_SOURCE_DIR}/NatvisFile.natvis")
 
 target_compile_features(demo_app PRIVATE cxx_std_17)
 target_compile_definitions(demo_app PUBLIC WIN32_LEAN_AND_MEAN NOMINMAX)

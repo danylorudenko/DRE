@@ -172,6 +172,18 @@ public:
         return Size();
     }
 
+    template<typename TPredicate>
+    U32 FindIf(TPredicate const& predicate)
+    {
+        for (U32 i = 0; i < m_Size; i++)
+        {
+            if (predicate(operator[](i)))
+                return i;
+        }
+
+        return Size();
+    }
+
     void ResizeUnsafe(U32 newSize)
     {
         m_Size = newSize;

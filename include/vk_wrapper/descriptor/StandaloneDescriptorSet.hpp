@@ -47,7 +47,7 @@ public:
         : public WriteDescriptor
     {
     public:
-        Descriptor(DescriptorStage stages);
+        Descriptor(/*DescriptorStage stages*/);
 
         void AddSamplers(VkSampler* samplers, std::uint8_t count, std::uint32_t binding);
         void AddStorageBuffer(BufferResource* buffer, std::uint32_t binding);
