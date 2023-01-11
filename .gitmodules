@@ -18,3 +18,7 @@
 	path = extern/stb
 	url = https://github.com/nothings/stb.git
 	branch = master
+[submodule "extern/glTF-Sample-Models"]
+	path = extern/glTF-Sample-Models
+	url = https://github.com/KhronosGroup/glTF-Sample-Models.git
+	branch = master
