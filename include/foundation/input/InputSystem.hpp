@@ -8,14 +8,14 @@
 
 class InputSystem
 {
-private:
+public:
     struct MouseState
     {
         enum MouseButtonOffsets { Left, Right, Middle };
-        std::uint32_t mouseButtonStates_;
-        float xDelta_;
-        float yDelta_;
-        float mouseWheelDelta_;
+        std::uint32_t mouseButtonStates_ = 0;
+        float xDelta_ = 0.0f;
+        float yDelta_ = 0.0f;
+        float mouseWheelDelta_ = 0.0f;
     };
 
     struct KeyboardState
@@ -24,6 +24,7 @@ private:
         std::uint64_t keysBits[(std::uint32_t)Keys::END / 64 + 1];
     };
 
+private:
     MouseState pendingMouseState_;
     MouseState mouseState_;
     MouseState prevMouseState_;

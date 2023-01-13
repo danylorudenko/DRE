@@ -12,8 +12,6 @@
 namespace GFX
 {
 
-static DRE::AllocatorLinear gs_DrawsAllocator;
-
 PassID GFX::ForwardOpaquePass::GetID() const
 {
     return PassID::ForwardOpaque;
@@ -32,8 +30,6 @@ void ForwardOpaquePass::RegisterResources(RenderGraph& graph)
 void ForwardOpaquePass::Initialize(RenderGraph& graph)
 {
     std::uint64_t constexpr LINEAR_MEMORY_SIZE = 64 * 1024;
-    gs_DrawsAllocator = DRE::AllocatorLinear(std::malloc(LINEAR_MEMORY_SIZE), LINEAR_MEMORY_SIZE);
-    // TODO: no free call
 
     DRE::ByteBuffer vertexBlob{};
     IO::IOManager::ReadFileToBuffer("shaders\\test-triangle-nodata.vert.spv", vertexBlob);
@@ -73,8 +69,7 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
     testOffset = testOffset > 1.5f ? -1.5f : testOffset + 0.001f;
 
     // 1. take all RenderableObject's in main scene
-    gs_DrawsAllocator.Reset();
-    DrawBatcher batcher{ &gs_DrawsAllocator };
+    DrawBatcher batcher{ &DRE::g_FrameScratchAllocator };
     auto& allEntities = WORLD::g_MainScene->GetEntities();
     for (std::uint32_t i = 0, size = allEntities.Size(); i < size; i++)
     {

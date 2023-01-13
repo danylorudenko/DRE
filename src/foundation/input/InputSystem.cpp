@@ -1,5 +1,7 @@
 #include <foundation\input\InputSystem.hpp>
 
+#include <foundation\memory\Memory.hpp>
+
 #include <utility>
 #include <cstdint>
 #include <cstring>
@@ -25,7 +27,7 @@ InputSystem::InputSystem(HWND windowHandle)
 
     RAWINPUTDEVICELIST* list = NULL;
     if (inputDeviceCount > 0) {
-        list = (RAWINPUTDEVICELIST*)malloc(sizeof(RAWINPUTDEVICELIST) * inputDeviceCount);
+        list = (RAWINPUTDEVICELIST*)DRE::g_FrameScratchAllocator.Alloc(sizeof(RAWINPUTDEVICELIST) * inputDeviceCount, alignof(RAWINPUTDEVICELIST));
         {
             UINT err = GetRawInputDeviceList(list, &inputDeviceCount, sizeof(RAWINPUTDEVICELIST));
             if (err == (UINT)-1) {
@@ -72,9 +74,6 @@ InputSystem::InputSystem(HWND windowHandle)
         UINT err = GetLastError();
         std::cerr << "Input System: Failed to register raw input devices. Error code: " << err << std::endl;
     }
-
-    if (list != NULL)
-        std::free(list);
 }
 
 InputSystem::InputSystem(InputSystem&& rhs)
@@ -214,7 +213,7 @@ void InputSystem::ProcessSystemInput(HWND handle, WPARAM wparam, LPARAM lparam)
         return;
     }
 
-    void* data = malloc(dataSize);
+    void* data = DRE::g_FrameScratchAllocator.Alloc(dataSize, alignof(RAWINPUT));
     result = GetRawInputData((HRAWINPUT)lparam, RID_INPUT, data, &dataSize, sizeof(RAWINPUTHEADER));
     if (result < 0 || result != dataSize) {
         DWORD err = GetLastError();
@@ -262,8 +261,5 @@ void InputSystem::ProcessSystemInput(HWND handle, WPARAM wparam, LPARAM lparam)
             SetKeysBitflagValue(pendingKeyboardState_.keysBits, VKeyToKeys(keyboard.VKey), true);
         }
     }
-
-    if (data != NULL)
-        std::free(data);
 
 }

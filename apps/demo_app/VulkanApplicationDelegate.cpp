@@ -117,6 +117,8 @@ void VulkanApplicationDelegate::update()
     DRE::g_FrameScratchAllocator.Reset();
     m_GraphicsManager.GetMainRenderView().Reset();
 
+    m_InputSystem.Update();
+
     if (m_ImGuiEnabled)
     {
         m_ImGuiHelper->BeginFrame();
@@ -124,8 +126,6 @@ void VulkanApplicationDelegate::update()
         m_ImGuiHelper->EndFrame();
     }
 
-
-    m_InputSystem.Update();
     m_GraphicsManager.RenderFrame(m_EngineFrame, m_PrevFrameDeltaMicroseconds);
 
     m_EngineFrame++;
