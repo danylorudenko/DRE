@@ -128,7 +128,7 @@ public:
     void CmdEndRendering();
 
     void CmdBindVertexBuffer(VKW::BufferResource* vertexBuffer, std::uint32_t offset);
-    void CmdBindIndexBuffer(VKW::BufferResource* indexBuffer, std::uint32_t offset);
+    void CmdBindIndexBuffer(VKW::BufferResource* indexBuffer, std::uint32_t offset, std::uint8_t indexSize = 32);
 
     void CmdClearColorImage(VKW::ImageResource const* image, float color[4]);
     void CmdClearDepthStencilImage(VKW::ImageResource const* image, float depth, std::uint32_t stencil);

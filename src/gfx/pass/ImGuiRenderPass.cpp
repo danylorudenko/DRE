@@ -141,7 +141,7 @@ void ImGuiRenderPass::Render(RenderGraph& graph, VKW::Context& context)
         std::uint32_t indiciesRendered = 0;
 
         context.CmdBindVertexBuffer(vertexMemory.m_Buffer, vertexBindingOffset);
-        context.CmdBindIndexBuffer(indexMemory.m_Buffer, indexBindingOffset);
+        context.CmdBindIndexBuffer(indexMemory.m_Buffer, indexBindingOffset, sizeof(ImDrawIdx) * 8);
 
         for (int j = 0; j < drawList->CmdBuffer.size(); j++)
         {

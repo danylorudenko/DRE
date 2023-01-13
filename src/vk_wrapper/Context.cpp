@@ -419,9 +419,9 @@ void Context::CmdBindVertexBuffer(VKW::BufferResource* vertexBuffer, std::uint32
     m_ImportTable->vkCmdBindVertexBuffers(*m_CurrentCommandList, 0, 1, &vertexBuffer->handle_, &vkOffset);
 }
 
-void Context::CmdBindIndexBuffer(VKW::BufferResource* indexBuffer, std::uint32_t offset)
+void Context::CmdBindIndexBuffer(VKW::BufferResource* indexBuffer, std::uint32_t offset, std::uint8_t indexSize)
 {
-    m_ImportTable->vkCmdBindIndexBuffer(*m_CurrentCommandList, indexBuffer->handle_, static_cast<VkDeviceSize>(offset), VK_INDEX_TYPE_UINT32);
+    m_ImportTable->vkCmdBindIndexBuffer(*m_CurrentCommandList, indexBuffer->handle_, static_cast<VkDeviceSize>(offset), indexSize == 16 ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32);
 }
 
 void Context::CmdClearColorImage(VKW::ImageResource const* image, float color[4])
