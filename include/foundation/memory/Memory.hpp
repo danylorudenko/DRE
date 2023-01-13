@@ -26,12 +26,15 @@ void TerminateGlobalMemory();
 
 // To be used with all persistent stuff. WARNING, REQUIRES MANUAL DESTRUCTION
 extern AllocatorLinear                  g_PersistentDataAllocator;
+extern AllocatorLinear                  g_FrameScratchAllocator;
 
 
 U64 constexpr MAIN_ALLOCATOR_LEAF_SIZE  = 1024 * 64;
 U64 constexpr MAIN_ALLOCATOR_MAX_DEPTH  = 12;
 using  MainAllocator                    = AllocatorBuddy<MAIN_ALLOCATOR_LEAF_SIZE, MAIN_ALLOCATOR_MAX_DEPTH>;
 extern MainAllocator                    g_MainAllocator;
+
+
 
 
 

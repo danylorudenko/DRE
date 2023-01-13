@@ -18,6 +18,8 @@ Pipeline::Descriptor::Descriptor()
     , shaderStagesCount_{ 0 }
     , vertexAttributeCount_{ 0 }
     , viewportsCount_{ 0 }
+    , depthAttachmentFormat_{ VK_FORMAT_UNDEFINED }
+    , stencilAttachmentFormat_{ VK_FORMAT_UNDEFINED }
     , pipelineLayout_{ nullptr }
 {
     renderingCreateInfo_.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;

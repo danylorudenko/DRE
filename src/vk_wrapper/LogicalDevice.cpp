@@ -53,7 +53,7 @@ LogicalDevice::LogicalDevice(DeviceDesc const& desc)
                 validPhysicalDevices.emplace_back(physicalDevices[i]);
             }
 
-            PrintPhysicalDeviceData(*deviceProperties);
+            //PrintPhysicalDeviceData(*deviceProperties);
 
             *deviceProperties = PhysicalDeviceProperties{};
         }

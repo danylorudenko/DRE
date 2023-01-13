@@ -37,9 +37,6 @@ IOManager::~IOManager() {}
 
 std::uint64_t IOManager::ReadFileToBuffer(char const* path, DRE::ByteBuffer& buffer)
 {
-    std::filesystem::path currPath = std::filesystem::current_path();
-    std::cout << currPath.u8string() << std::endl;
-
     std::ifstream istream{ path, std::ios_base::binary | std::ios_base::beg };
     if (!istream) {
         std::cerr << "Error opening file in path: " << path << std::endl;
@@ -141,11 +138,18 @@ void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiM
     }
 
 
-    DRE_ASSERT(aiMat->GetTexture(aiType, 0, &aiTexturePath) == 0, "Failed to get diffuse texture");
+    if (aiMat->GetTexture(aiType, 0, &aiTexturePath) != aiReturn_SUCCESS)
+    {
+        std::cout << "Warning: failed to find material texture flor slot " << slot << std::endl;
+        return;
+    }
+
     aiTexture const* tex = scene->GetEmbeddedTexture(aiTexturePath.C_Str());
     if (tex == nullptr)
     {
         DRE::String256 textureFilePath = assetFolderPath;
+        char const separator[2] = { std::filesystem::path::preferred_separator, '\0' };
+        textureFilePath.Append(separator);
         textureFilePath.Append(aiTexturePath.C_Str(), DRE::U16(aiTexturePath.length));
 
         Data::Texture2D dataTexture = ReadTexture2D(textureFilePath, channels);
@@ -162,8 +166,8 @@ void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiM
 Data::Material* IOManager::ParseMeshMaterial(aiMesh const* mesh, char const* assetPath, aiScene const* scene, Data::MaterialLibrary* materialLibrary)
 {
     //parse material
-    aiMaterial* mat = scene->mMaterials[mesh->mMaterialIndex];
-    aiString aiName = mat->GetName();
+    aiMaterial* aiMat = scene->mMaterials[mesh->mMaterialIndex];
+    aiString aiName = aiMat->GetName();
 
     char name[32];
     if (aiName.length == 0)
@@ -183,8 +187,8 @@ Data::Material* IOManager::ParseMeshMaterial(aiMesh const* mesh, char const* ass
 
     material = m_MaterialLibrary->CreateMaterial(name);
 
-    DRE_ASSERT(mat->GetTextureCount(aiTextureType_DIFFUSE) <= 1, "We don't support multiple textures of the same type per material (DIFFUSE).");
-    DRE_ASSERT(mat->GetTextureCount(aiTextureType_NORMALS) <= 1, "We don't support multiple textures of the same type per material (NORMALS)");
+    DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_DIFFUSE) <= 1, "We don't support multiple textures of the same type per material (DIFFUSE).");
+    DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_NORMALS) <= 1, "We don't support multiple textures of the same type per material (NORMALS)");
 
     // get folder with texture files
     DRE::String256 textureFilePath = assetPath;
@@ -197,8 +201,8 @@ Data::Material* IOManager::ParseMeshMaterial(aiMesh const* mesh, char const* ass
     textureFilePath.Shrink(folderEnd + 1);
     
     // PROCESS TEXTURES
-    ParseMaterialTexture(scene, mat, textureFilePath, material, Data::Material::TextureProperty::DIFFUSE, Data::TEXTURE_VARIATION_RGB);
-    ParseMaterialTexture(scene, mat, textureFilePath, material, Data::Material::TextureProperty::NORMAL, Data::TEXTURE_VARIATION_RGB);
+    ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::DIFFUSE, Data::TEXTURE_VARIATION_RGB);
+    ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::NORMAL, Data::TEXTURE_VARIATION_RGB);
 
     return material;
 }

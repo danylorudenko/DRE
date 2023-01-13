@@ -133,7 +133,7 @@ public:
         if (m_Size + 1 > m_Capacity)
             Reserve(m_Capacity + m_Capacity / 2 + 1);
 
-        return *(new (m_Data + m_Size) T{ std::forward<TArgs>(args)... });
+        return *(new (m_Data + m_Size++) T{ std::forward<TArgs>(args)... });
     }
 
     void RemoveIndex(U32 index)

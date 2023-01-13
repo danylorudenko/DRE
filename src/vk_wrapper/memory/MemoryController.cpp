@@ -213,9 +213,15 @@ MemoryPage* MemoryController::AllocPage(MemoryClass memoryClass, std::uint64_t s
 
     assert(typeIndex != TOOL_INVALID_ID && "Failed to find approprieate memory type.");
 
+    VkMemoryAllocateFlagsInfo flagsInfo;
+    flagsInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
+    flagsInfo.pNext = nullptr;
+    flagsInfo.flags = memoryClass == MemoryClass::CpuStaging ? VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT : VK_FLAGS_NONE;
+    flagsInfo.deviceMask = 0;
+
     VkMemoryAllocateInfo info;
     info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    info.pNext = nullptr;
+    info.pNext = &flagsInfo;
     info.allocationSize = size;
     info.memoryTypeIndex = typeIndex;
 

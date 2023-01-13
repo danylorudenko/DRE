@@ -37,6 +37,7 @@ VulkanApplicationDelegate::VulkanApplicationDelegate(HINSTANCE instance, char co
     , m_BulletsEveryFrame{ false }
 {
     WORLD::g_MainScene = &m_MainScene;
+
     auto startPoint = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now());
     m_AppStartTimeMicroseconds = static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(startPoint.time_since_epoch()).count());
 }
@@ -90,6 +91,13 @@ void VulkanApplicationDelegate::start()
     if (m_ImGuiEnabled)
         InitImGui();
 
+    m_IOManager.LoadShaderFiles();
+
+    m_GraphicsManager.GetMainRenderView() = GFX::RenderView{
+        &DRE::g_FrameScratchAllocator,
+        glm::uvec2{ 0, 0 }, glm::uvec2{ m_GraphicsManager.GetMainDevice()->GetSwapchain()->GetWidth(), m_GraphicsManager.GetMainDevice()->GetSwapchain()->GetHeight() },
+        m_MainScene.GetMainCamera().GetPosition(), glm::vec3{1.0f, 0.0f, 0.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, m_MainScene.GetMainCamera().GetFOV()};
+
     m_GraphicsManager.Initialize();
 
     m_IOManager.ParseModelFile("data\\Sponza\\Sponza.gltf", m_MainScene);
@@ -105,6 +113,9 @@ void VulkanApplicationDelegate::update()
     m_PrevFrameTimePoint = currTime;
     m_PrevFrameDeltaMicroseconds = std::chrono::duration_cast<std::chrono::microseconds>(frameTime).count();
     ////////////////////////////////////////////////////
+
+    DRE::g_FrameScratchAllocator.Reset();
+    m_GraphicsManager.GetMainRenderView().Reset();
 
     if (m_ImGuiEnabled)
     {

@@ -10,13 +10,13 @@ int main()
 
     bool imguiEnabled = true;
 
-    auto* appDelegate = new VulkanApplicationDelegate{ instance, "Bullet Manager", 1600, 900, 2, DEBUG_OR_RELEASE(true, false), imguiEnabled };
-    auto* application = new Application{ appDelegate };
+    auto* appDelegate = DRE::g_PersistentDataAllocator.Alloc<VulkanApplicationDelegate>(instance, "Bullet Manager", 1600u, 900u, 2u, DEBUG_OR_RELEASE(true, false), imguiEnabled);
+    auto* application = DRE::g_PersistentDataAllocator.Alloc<Application>(appDelegate);
 
     application->run();
 
-    delete application;
-    delete appDelegate;
+    application->~Application();;
+    appDelegate->~VulkanApplicationDelegate();;
 
     DRE::TerminateGlobalMemory();
 

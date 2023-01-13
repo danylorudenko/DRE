@@ -304,7 +304,7 @@ QueueExecutionPoint Queue::ExecuteInternal(CommandList* commandList, std::uint8_
     VkSubmitInfo submitInfo;
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.pNext = &semaphoreInfo;
-    submitInfo.waitSemaphoreCount = waitPointCount;
+    submitInfo.waitSemaphoreCount = waitPointCount + binary;
     submitInfo.pWaitSemaphores = waitSemaphores;
     submitInfo.pWaitDstStageMask = waitStage;
     submitInfo.commandBufferCount = 1;

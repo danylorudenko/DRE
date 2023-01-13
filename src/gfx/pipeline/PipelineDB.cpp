@@ -61,7 +61,7 @@ DRE::String128 const* PipelineDB::CreateMaterialPipeline(char const* name)
     desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // btan
     desc.AddVertexAttribute(VKW::FORMAT_R32G32_FLOAT);    // uv
 
-    CreatePipeline(name, desc); validation errors here
+    CreatePipeline(name, desc);
     return m_Pipelines.Find(name).key;
 }
 

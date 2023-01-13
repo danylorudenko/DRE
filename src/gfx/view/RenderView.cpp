@@ -48,4 +48,9 @@ void RenderView::AddObject(RenderableObject* object)
     m_Objects.EmplaceBack(object);
 }
 
+void RenderView::Reset()
+{
+    m_Objects.Clear();
+}
+
 }

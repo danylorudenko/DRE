@@ -83,13 +83,11 @@ VKW::QueueExecutionPoint Context::SyncPoint(VKW::QueueExecutionPoint const& wait
 
 void Context::CmdDraw(std::uint32_t vertexCount, std::uint32_t instanceCount, std::uint32_t firstVertex, std::uint32_t firstInstance)
 {
-    FlushResourceDependencies();
     m_ImportTable->vkCmdDraw(*m_CurrentCommandList, vertexCount, instanceCount, firstVertex, firstInstance);
 }
 
 void Context::CmdDrawIndexed(std::uint32_t indexCount, std::uint32_t instanceCount, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
-    FlushResourceDependencies();
     m_ImportTable->vkCmdDrawIndexed(*m_CurrentCommandList, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }
 
@@ -263,7 +261,7 @@ void Context::CmdClearAttachments(AttachmentMask attachments, float color[4])
     DRE::InplaceVector<VkClearRect, VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS> rects;
     for (std::uint32_t i = 0; i < VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS; i++)
     {
-        if (attachments & ATTACHMENT_MASK_COLOR_0)
+        if (attachments & (ATTACHMENT_MASK_COLOR_0 << i))
         {
             VkClearAttachment& clear = clears.EmplaceBack();
             clear.aspectMask        = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -274,7 +272,6 @@ void Context::CmdClearAttachments(AttachmentMask attachments, float color[4])
         }
     }
 
-    FlushResourceDependencies();
     m_ImportTable->vkCmdClearAttachments(*m_CurrentCommandList, clears.Size(), clears.Data(), rects.Size(), rects.Data());
 }
 
@@ -305,7 +302,6 @@ void Context::CmdClearAttachments(AttachmentMask attachments, float depth, std::
         rects.EmplaceBack(m_RenderingRect, 0u, 1u);
     }
 
-    FlushResourceDependencies();
     m_ImportTable->vkCmdClearAttachments(*m_CurrentCommandList, clears.Size(), clears.Data(), rects.Size(), rects.Data());
 }
 
