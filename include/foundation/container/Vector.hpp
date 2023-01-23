@@ -24,6 +24,15 @@ public:
         //Reserve(12);
     }
 
+    Vector(TAllocator* allocator, std::uint32_t reserveSize)
+        : m_Allocator{ allocator }
+        , m_Data{ nullptr }
+        , m_Size{ 0 }
+        , m_Capacity{ 0 }
+    {
+        Reserve(reserveSize);
+    }
+
     Vector(Vector const& rhs)
         : m_Allocator{ rhs.m_Allocator }
         , m_Data{ nullptr }
@@ -68,8 +77,11 @@ public:
     }
     Vector& operator=(Vector&& rhs)
     {
-        Clear();
-        m_Allocator->Free(m_Data);
+        if (m_Data != nullptr)
+        {
+            Clear();
+            m_Allocator->Free(m_Data);
+        }
 
         m_Allocator = rhs.m_Allocator;
         m_Data = rhs.m_Data;
@@ -87,12 +99,14 @@ public:
 
     ~Vector()
     {
-        Clear();
+        if (m_Data == nullptr)
+            return;
 
+        Clear();
         m_Allocator->Free(m_Data);
     }
 
-    U32 Size() const
+    inline U32 Size() const
     {
         return m_Size;
     }
@@ -128,10 +142,10 @@ public:
     }
 
     template<typename... TArgs>
-    T& EmplaceBack(TArgs&&... args)
+    inline T& EmplaceBack(TArgs&&... args)
     {
         if (m_Size + 1 > m_Capacity)
-            Reserve(m_Capacity + m_Capacity / 2 + 1);
+            Reserve(m_Capacity == 0 ? 12 : m_Capacity + m_Capacity / 2 + 1);
 
         return *(new (m_Data + m_Size++) T{ std::forward<TArgs>(args)... });
     }
@@ -174,16 +188,6 @@ public:
 
         m_Data = newStorage;
         m_Capacity = capacity;
-    }
-
-    void Reset()
-    {
-        Clear();
-        m_Capacity = 0;
-        m_Allocator = nullptr;
-        m_Data = nullptr;
-
-        Reserve(12);
     }
 
     void Resize(U32 size)

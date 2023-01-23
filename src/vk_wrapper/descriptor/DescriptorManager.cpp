@@ -18,7 +18,6 @@ DescriptorManager::DescriptorManager(ImportTable* table, LogicalDevice* device)
 {
     std::uint32_t constexpr STANDALONE_DESCRIPTOR_COUNT = 20;
     std::uint32_t constexpr MAX_STANDALONE_SETS         = 20;
-    std::uint32_t constexpr PERSISTENT_DESCRIPTOR_COUNT = 20;
 
     VkDescriptorPoolSize sizes[4];
     sizes[0].type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
@@ -85,7 +84,7 @@ DescriptorManager::DescriptorManager(DescriptorManager&& rhs)
     : table_{ nullptr }
     , device_{ nullptr }
 {
-    operator=(std::move(rhs));
+    operator=(DRE_MOVE(rhs));
 }
 
 DescriptorManager& DescriptorManager::operator=(DescriptorManager&& rhs)
@@ -379,7 +378,7 @@ void DescriptorManager::FreeTextureDescriptor(GlobalDescriptorHandle& handle)
     handle.count_ = 0;
 }
 
-VkDescriptorSet DescriptorManager::AllocateStandaloneSet(DescriptorSetLayout const& layout)
+DescriptorSet DescriptorManager::AllocateStandaloneSet(DescriptorSetLayout const& layout)
 {
     VkDescriptorSetLayout vkLayout = layout.GetHandle();
 
@@ -393,12 +392,13 @@ VkDescriptorSet DescriptorManager::AllocateStandaloneSet(DescriptorSetLayout con
     VkDescriptorSet set = VK_NULL_HANDLE;
     VK_ASSERT(table_->vkAllocateDescriptorSets(device_->Handle(), &info, &set));
 
-    return set;
+    return DescriptorSet{ set, &layout };
 }
 
-void DescriptorManager::FreeStandaloneSet(VkDescriptorSet set)
+void DescriptorManager::FreeStandaloneSet(DescriptorSet& set)
 {
-    VK_ASSERT(table_->vkFreeDescriptorSets(device_->Handle(), standalonePool_, 1, &set));
+    VkDescriptorSet vkSet = set.GetHandle();
+    VK_ASSERT(table_->vkFreeDescriptorSets(device_->Handle(), standalonePool_, 1, &vkSet));
 }
 
 }

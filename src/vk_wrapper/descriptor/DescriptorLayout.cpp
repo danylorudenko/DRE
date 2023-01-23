@@ -237,7 +237,7 @@ PipelineLayout::PipelineLayout(ImportTable* table, LogicalDevice* device, Descri
     VkDescriptorSetLayout layouts[CONSTANTS::MAX_PIPELINE_LAYOUT_MEMBERS];
 
     for (std::uint16_t i = 0u; i < descriptor.GetSetCount(); ++i) {
-        DescriptorSetLayout const* layout = descriptor.GetLayout(i);
+        DescriptorSetLayout const* layout = members_.EmplaceBack(descriptor.GetLayout(i));
         layouts[i] = layout != nullptr ? layout->GetHandle() : VK_NULL_HANDLE;
     }
 

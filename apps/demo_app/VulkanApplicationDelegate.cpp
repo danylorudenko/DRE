@@ -27,13 +27,15 @@ VulkanApplicationDelegate::VulkanApplicationDelegate(HINSTANCE instance, char co
         VulkanApplicationDelegate::WinProc,
         this }
     , m_InputSystem{ m_MainWindow.NativeHandle() }
-    , m_MaterialLibrary{}
-    , m_IOManager{ &m_MaterialLibrary }
+    , m_MaterialLibrary{ &DRE::g_MainAllocator }
+    , m_GeometryLibrary{ &DRE::g_MainAllocator }
+    , m_IOManager{ &DRE::g_MainAllocator, &m_MaterialLibrary, &m_GeometryLibrary }
     , m_GraphicsManager{ instance, &m_MainWindow, &m_IOManager, vkDebug }
     , m_ImGuiEnabled{ imguiEnabled }
     , m_PrevFrameDeltaMicroseconds{ 0 }
     , m_AppStartTimeMicroseconds{ 0 }
     , m_EngineFrame{ 0 }
+    , m_MainScene{ &DRE::g_MainAllocator }
     , m_BulletsEveryFrame{ false }
 {
     WORLD::g_MainScene = &m_MainScene;
@@ -92,6 +94,7 @@ void VulkanApplicationDelegate::start()
         InitImGui();
 
     m_IOManager.LoadShaderFiles();
+    m_GraphicsManager.GetPipelineDB().CreateDefaultPipelines();
 
     m_GraphicsManager.GetMainRenderView() = GFX::RenderView{
         &DRE::g_FrameScratchAllocator,

@@ -2,8 +2,11 @@
 
 #include <foundation\class_features\NonCopyable.hpp>
 #include <foundation\class_features\NonMovable.hpp>
+
 #include <foundation\system\Window.hpp>
-#include <foundation\Container\ObjectPool.hpp>
+#include <foundation\container\ObjectPool.hpp>
+#include <foundation\container\InplaceHashTable.hpp>
+#include <foundation\container\HashTable.hpp>
 
 #include <vk_wrapper\Device.hpp>
 
@@ -16,6 +19,9 @@
 #include <gfx\pipeline\PipelineDB.hpp>
 #include <gfx\view\RenderView.hpp>
 
+#include <engine\data\Geometry.hpp>
+#include <engine\data\Material.hpp>
+
 
 namespace VKW
 {
@@ -25,6 +31,11 @@ struct LoaderDesc;
 namespace IO
 {
 class IOManager;
+}
+
+namespace Data
+{
+class Geometry;
 }
 
 namespace GFX
@@ -77,6 +88,9 @@ public:
     void    Initialize();
     void    RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS);
 
+    RenderableObject*                   CreateRenderableObject(VKW::Context& context, Data::Geometry* geometry, Data::Material* material);
+    void                                FreeRenderableObject(RenderableObject* obj);
+
 private:
     void    CreateAllPasses();
 
@@ -114,7 +128,16 @@ private:
     using RenderablePool        = DRE::InplaceObjectAllocator<RenderableObject, 2048>;
     RenderablePool              m_RenderableObjectPool;
 
+    using MaterialLayoutMap     = DRE::InplaceHashTable<Data::Material::RenderingProperties::MaterialType, VKW::DescriptorSetLayout>;
+    MaterialLayoutMap           m_MaterialLayoutMap; // store signature for similar materials
 
+    struct GeometryGPU
+    {
+        VKW::BufferResource* vertexBuffer;
+        VKW::BufferResource* indexBuffer;
+    };
+    using GeometryGPUMap        = DRE::HashTable<Data::Geometry*, GeometryGPU, DRE::DefaultAllocator>;
+    GeometryGPUMap              m_GeometryGPUMap;
 };
 
 extern GraphicsManager* g_GraphicsManager;

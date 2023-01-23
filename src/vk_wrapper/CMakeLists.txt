@@ -64,7 +64,7 @@ target_include_directories(vk_wrapper PUBLIC
 	"${DRE_SOURCE_DIR}/include"
 	"${Vulkan_INCLUDE_DIR}")
 
-target_compile_features(vk_wrapper PUBLIC cxx_std_17)
+target_compile_features(vk_wrapper PUBLIC cxx_std_20)
 # TODO: disable exceptions
 
 target_compile_definitions(vk_wrapper PUBLIC 

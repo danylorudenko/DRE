@@ -1,8 +1,8 @@
 set(ENGINE_HEADER_LIST
+	"${DRE_SOURCE_DIR}/include/engine/data/Geometry.hpp"
+	"${DRE_SOURCE_DIR}/include/engine/data/GeometryLibrary.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/data/Material.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/data/MaterialLibrary.hpp"
-	"${DRE_SOURCE_DIR}/include/engine/data/Model.hpp"
-	"${DRE_SOURCE_DIR}/include/engine/data/ModelMesh.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/data/Texture2D.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/io/DRFX.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/io/IOManager.hpp"
@@ -13,9 +13,10 @@ set(ENGINE_HEADER_LIST
 	"${DRE_SOURCE_DIR}/include/engine/transform/TransformationSystem.hpp")
 
 set(ENGINE_SOURCE_LIST
+	"${DRE_SOURCE_DIR}/src/engine/data/Geometry.cpp"
+	"${DRE_SOURCE_DIR}/src/engine/data/GeometryLibrary.cpp"
 	"${DRE_SOURCE_DIR}/src/engine/data/Material.cpp"
 	"${DRE_SOURCE_DIR}/src/engine/data/MaterialLibrary.cpp"
-	"${DRE_SOURCE_DIR}/src/engine/data/Model.cpp"
 	"${DRE_SOURCE_DIR}/src/engine/data/Texture2D.cpp"
 	"${DRE_SOURCE_DIR}/src/engine/io/DRFX.cpp"
 	"${DRE_SOURCE_DIR}/src/engine/io/IOManager.cpp"
@@ -30,7 +31,7 @@ target_include_directories(engine PUBLIC
 	"${DRE_SOURCE_DIR}/include"
 	)
 
-target_compile_features(engine PUBLIC cxx_std_17)
+target_compile_features(engine PUBLIC cxx_std_20)
 target_compile_definitions(gfx PUBLIC WIN32_LEAN_AND_MEAN NOMINMAX)
 #TODO: disable exceptions
 

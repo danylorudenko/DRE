@@ -75,7 +75,7 @@ void GraphDescriptorManager::InitDescriptors()
                     desc.AddStorageImage(m_ResourcesManager->GetStorageTexture(info.mu_TextureID)->GetShaderView(), info.m_Binding);
                     break;
                 case VKW::RESOURCE_ACCESS_SHADER_SAMPLE:
-                    desc.AddReadonlyImage(m_ResourcesManager->GetStorageTexture(info.mu_TextureID)->GetShaderView(), info.m_Binding);
+                    desc.AddSampledImage(m_ResourcesManager->GetStorageTexture(info.mu_TextureID)->GetShaderView(), info.m_Binding);
                     break;
                 }
             }

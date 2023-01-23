@@ -4,7 +4,6 @@
 #include <foundation\memory\Memory.hpp>
 
 #include <foundation\Container\HashTable.hpp>
-#include <foundation\String\InplaceString.hpp>
 
 #include <engine\data\Material.hpp>
 
@@ -16,17 +15,15 @@ class MaterialLibrary
     : public NonCopyable
 {
 public:
-    MaterialLibrary();
+    MaterialLibrary(DRE::DefaultAllocator* allocator);
 
     void InitDefaultMaterials();
 
-    Material* CreateMaterial(char const* name);
-
-
-    Material* GetMaterial(char const* name);
+    Material* CreateMaterial(std::uint32_t id, char const* name);
+    Material* GetMaterial(std::uint32_t id);
 
 private:
-    DRE::HashTable<DRE::String64, Material, DRE::MainAllocator> m_MaterialsMap;
+    DRE::HashTable<std::uint32_t, Material, DRE::DefaultAllocator> m_MaterialsMap;
 };
 
 }

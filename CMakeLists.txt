@@ -25,6 +25,13 @@ add_library(stb_image INTERFACE "extern/stb/stb_image.h")
 target_include_directories(stb_image INTERFACE "extern/stb")
 
 #==========
+#disable exceptions and rtti, cmake doesn't have built-in vars for this, so only ugly way
+if(MSVC)
+	string(REGEX REPLACE "/GR" "/GR-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+	string(REGEX REPLACE "/EHsc" "/EHs-c-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+	add_compile_definitions(_HAS_EXCEPTIONS=0)
+endif()
+#==========
 set(IMGUI_SOURCE_LIST 
 	"extern/imgui/imgui.cpp" 
 	"extern/imgui/imgui_draw.cpp"

@@ -58,19 +58,20 @@ public:
 
     //////////////////////////////////////
     // PipelineProperties
-    class PipelineProperties
+    class RenderingProperties
     {
     public:
-        void SetShader(char const* shaderName);
-        
-        VKW::Pipeline* GetPSO() const;
+        enum MaterialType
+        {
+            MATERIAL_TYPE_DEFAULT_LIT,
+            MATERIAL_TYPE_MAX
+        };
+
+        inline void SetMaterialType(MaterialType type) { m_Type = type; }
+        inline MaterialType GetMaterialType() const { return m_Type; }
 
     private:
-        DRE::String64 m_ShaderName;
-        bool m_Transparent;// examples. this to be translated into another Gfx object with pso
-        bool m_Emissive;   // examples. this to be translated into another Gfx object with pso
-
-        VKW::Pipeline* m_CachedPSO = nullptr;
+        MaterialType m_Type = MATERIAL_TYPE_MAX;
     };
 
 
@@ -83,15 +84,17 @@ public:
     template<typename T>
     void AssignData(T const& data) { m_DataProperty.AssignData(data); }
 
-    PipelineProperties& GetPipelineProperties() { return m_PipelineProperties; }
-    PipelineProperties const& GetPipelineProperties() const { return m_PipelineProperties; }
+    RenderingProperties& GetRenderingProperties() { return m_RenderingProperties; }
+    RenderingProperties const& GetRenderingProperties() const { return m_RenderingProperties; }
+
+    inline Texture2D const& GetTexture(TextureProperty::Slot slot) const { return m_TextureProperties[int(slot)].GetTexture(); }
 
 private:
     DRE::String32       m_Name;
 
     TextureProperty     m_TextureProperties[TextureProperty::Slot::MAX];
     DataProperty        m_DataProperty;
-    PipelineProperties  m_PipelineProperties;
+    RenderingProperties m_RenderingProperties;
 };
 
 }

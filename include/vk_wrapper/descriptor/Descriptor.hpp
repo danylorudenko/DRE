@@ -1,6 +1,9 @@
 #pragma once
 
+#include <vulkan\vulkan.h>
+
 #include <foundation\Common.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
 
 namespace VKW
 {
@@ -63,6 +66,47 @@ struct GlobalDescriptorHandle
 
     std::uint32_t   id_;
     std::uint32_t   count_;
+};
+
+///////////////////////////////
+// 
+class DescriptorSetLayout;
+// simple wrapper, doesn't own anything
+class DescriptorSet
+    : public NonCopyable
+{
+public:
+    DescriptorSet()
+        : set_{ VK_NULL_HANDLE }
+        , layout_{ nullptr }
+    {}
+
+    DescriptorSet(VkDescriptorSet set, DescriptorSetLayout const* layout)
+        : set_{ set }
+        , layout_{ layout }
+    {}
+
+    DescriptorSet(DescriptorSet&& rhs)
+        : set_{ rhs.set_ }
+        , layout_{ rhs.layout_ }
+    {
+        rhs.set_ = VK_NULL_HANDLE;
+        rhs.layout_ = nullptr;
+    }
+    DescriptorSet& operator=(DescriptorSet&& rhs)
+    {
+        set_ = rhs.set_;        rhs.set_ = VK_NULL_HANDLE;
+        layout_ = rhs.layout_;  rhs.layout_ = nullptr;
+    
+        return *this;
+    }
+
+    inline VkDescriptorSet GetHandle() const { return set_; }
+    inline DescriptorSetLayout const* GetLayout() const { return layout_; }
+
+private:
+    VkDescriptorSet set_;
+    DescriptorSetLayout const* layout_;
 };
 
 }

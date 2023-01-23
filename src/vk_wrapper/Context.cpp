@@ -162,9 +162,9 @@ void Context::CmdBindComputeDescriptorSets(
 void Context::CmdBindGlobalDescriptorSets(VKW::DescriptorManager& descriptorManager, std::uint8_t frameID)
 {
     VkDescriptorSet globalSets[3];
-    globalSets[0] = descriptorManager.GetGlobalSampler_StorageSet().handle_;
-    globalSets[1] = descriptorManager.GetGlobalTexturesSet().handle_;
-    globalSets[2] = descriptorManager.GetGlobalUniformSet(frameID).handle_;
+    globalSets[0] = descriptorManager.GetGlobalSampler_StorageSet().GetHandle();
+    globalSets[1] = descriptorManager.GetGlobalTexturesSet().GetHandle();
+    globalSets[2] = descriptorManager.GetGlobalUniformSet(frameID).GetHandle();
 
     m_ImportTable->vkCmdBindDescriptorSets(*m_CurrentCommandList, VK_PIPELINE_BIND_POINT_GRAPHICS, descriptorManager.GetGlobalPipelineLayout()->GetHandle(), 0, 3, globalSets, 0, nullptr);
     m_ImportTable->vkCmdBindDescriptorSets(*m_CurrentCommandList, VK_PIPELINE_BIND_POINT_COMPUTE, descriptorManager.GetGlobalPipelineLayout()->GetHandle(), 0, 3, globalSets, 0, nullptr);

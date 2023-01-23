@@ -3,8 +3,8 @@
 namespace Data
 {
 
-MaterialLibrary::MaterialLibrary()
-    : m_MaterialsMap{ &DRE::g_MainAllocator }
+MaterialLibrary::MaterialLibrary(DRE::DefaultAllocator* allocator)
+    : m_MaterialsMap{ allocator }
 {}
 
 void MaterialLibrary::InitDefaultMaterials()
@@ -18,14 +18,14 @@ void MaterialLibrary::InitDefaultMaterials()
     // maybe some kind of GfxCreationDelegate ?
 }
 
-Material* MaterialLibrary::GetMaterial(char const* name)
+Material* MaterialLibrary::GetMaterial(std::uint32_t id)
 {
-    return m_MaterialsMap.Find(name).value;
+    return m_MaterialsMap.Find(id).value;
 }
 
-Material* MaterialLibrary::CreateMaterial(char const* name)
+Material* MaterialLibrary::CreateMaterial(std::uint32_t id, char const* name)
 {
-    return &m_MaterialsMap.Emplace(name, name);
+    return &m_MaterialsMap.Emplace(id, name);
 }
 
 }

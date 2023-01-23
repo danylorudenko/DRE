@@ -7,23 +7,36 @@
 #include <engine\scene\Camera.hpp>
 #include <engine\scene\Entity.hpp>
 
+namespace Data
+{
+class Material;
+class Geometry;
+}
+
+namespace VKW
+{
+class Context;
+}
+
 namespace WORLD
 {
 
 class Scene
 {
 public:
-    Scene();
+    Scene(DRE::DefaultAllocator* allocator);
+    ~Scene();
+
 
     inline Camera& GetMainCamera() { return m_MainCamera; }
     inline auto& GetEntities() { return m_SceneEntities; }
 
-    Entity&     CreateEntity(Data::Material* material);
+    Entity&     CreateRenderableEntity(VKW::Context& context, Data::Geometry* geometry, Data::Material* material);
 
 private:
     Camera m_MainCamera;
 
-    DRE::Vector<Entity, DRE::MainAllocator> m_SceneEntities;
+    DRE::Vector<Entity, DRE::DefaultAllocator> m_SceneEntities;
 };
 
 extern Scene* g_MainScene;

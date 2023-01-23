@@ -5,9 +5,13 @@
 namespace GFX
 {
 
-RenderableObject::RenderableObject(VKW::Pipeline* pipeline)
-    : m_Material{ pipeline }
-    , m_ModelM{ glm::identity<glm::mat4>() }
+RenderableObject::RenderableObject(VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, VKW::BufferResource* indexBuffer, TexturesVector&& textures, DescriptorSetVector&& sets)
+    : m_ModelM{ glm::identity<glm::mat4>() }
+    , m_Pipeline{ pipeline }
+    , m_VertexBuffer{ nullptr }
+    , m_IndexBuffer{ nullptr }
+    , m_DescriptorSets{ DRE_MOVE(sets) }
+    , m_Textures{ DRE_MOVE(textures) }
 {
 }
 

@@ -117,29 +117,6 @@ void StandaloneDescriptorSet::WriteDescriptor::AddSampledImage(ImageResourceView
     }
 }
 
-void StandaloneDescriptorSet::WriteDescriptor::AddReadonlyImage(ImageResourceView* view, std::uint32_t binding)
-{
-    if(view != nullptr)
-    {
-        VkDescriptorImageInfo& info = imageInfos_.EmplaceBack();
-        info.sampler        = VK_NULL_HANDLE;
-        info.imageView      = view->handle_;
-        info.imageLayout    = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-        VkWriteDescriptorSet& write = writes_.EmplaceBack();
-        write.sType             = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write.pNext             = nullptr;
-        write.dstSet            = VK_NULL_HANDLE;
-        write.dstBinding        = binding;
-        write.dstArrayElement   = 0;
-        write.descriptorCount   = 1;
-        write.descriptorType    = HELPER::DescriptorTypeToVK(DESCRIPTOR_TYPE_TEXTURE);
-        write.pImageInfo        = &info;
-        write.pBufferInfo       = nullptr;
-        write.pTexelBufferView  = nullptr;
-    }
-}
-
 void StandaloneDescriptorSet::WriteDescriptor::AddUniform(BufferResource* buffer, std::uint32_t offset, std::uint32_t size, std::uint32_t binding)
 {
     if (buffer != nullptr)
@@ -207,7 +184,7 @@ StandaloneDescriptorSet::StandaloneDescriptorSet()
     , device_{ nullptr }
     , allocator_{ nullptr }
     , layout_{}
-    , set_{ VK_NULL_HANDLE }
+    , set_{ VK_NULL_HANDLE, nullptr }
 {}
 
 StandaloneDescriptorSet::StandaloneDescriptorSet(ImportTable* table, LogicalDevice* device, Descriptor& descriptor, DescriptorManager* allocator)
@@ -225,7 +202,7 @@ StandaloneDescriptorSet::StandaloneDescriptorSet(StandaloneDescriptorSet&& rhs)
     , device_{ nullptr }
     , allocator_{ nullptr }
     , layout_{}
-    , set_{ VK_NULL_HANDLE }
+    , set_{ VK_NULL_HANDLE, nullptr }
 {
     operator=(DRE_MOVE(rhs));
 }
@@ -245,7 +222,7 @@ StandaloneDescriptorSet& StandaloneDescriptorSet::operator=(StandaloneDescriptor
 
 void StandaloneDescriptorSet::Write(WriteDescriptor& descriptor)
 {
-    descriptor.SetTargetSet(set_);
+    descriptor.SetTargetSet(set_.GetHandle());
 
     table_->vkUpdateDescriptorSets(
         device_->Handle(),
@@ -257,7 +234,7 @@ void StandaloneDescriptorSet::Write(WriteDescriptor& descriptor)
 
 StandaloneDescriptorSet::~StandaloneDescriptorSet()
 {
-    if (set_ != VK_NULL_HANDLE)
+    if (set_.GetHandle() != VK_NULL_HANDLE)
     {
         allocator_->FreeStandaloneSet(set_);
     }

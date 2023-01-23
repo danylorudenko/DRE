@@ -31,8 +31,8 @@ extern AllocatorLinear                  g_FrameScratchAllocator;
 
 U64 constexpr MAIN_ALLOCATOR_LEAF_SIZE  = 1024 * 64;
 U64 constexpr MAIN_ALLOCATOR_MAX_DEPTH  = 12;
-using  MainAllocator                    = AllocatorBuddy<MAIN_ALLOCATOR_LEAF_SIZE, MAIN_ALLOCATOR_MAX_DEPTH>;
-extern MainAllocator                    g_MainAllocator;
+using  DefaultAllocator                 = AllocatorBuddy<MAIN_ALLOCATOR_LEAF_SIZE, MAIN_ALLOCATOR_MAX_DEPTH>;
+extern DefaultAllocator                 g_MainAllocator;
 
 
 

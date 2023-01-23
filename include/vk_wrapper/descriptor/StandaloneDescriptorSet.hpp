@@ -29,7 +29,6 @@ public:
         void AddStorageBuffer(BufferResource* buffer, std::uint32_t binding);
         void AddStorageImage(ImageResourceView* image, std::uint32_t binding);
         void AddSampledImage(ImageResourceView* image, std::uint32_t binding);
-        void AddReadonlyImage(ImageResourceView* image, std::uint32_t binding);
         void AddUniform(BufferResource* buffer, std::uint32_t offset, std::uint32_t size, std::uint32_t binding);
 
         void SetTargetSet(VkDescriptorSet target);
@@ -72,7 +71,7 @@ public:
     ~StandaloneDescriptorSet();
 
     inline DescriptorSetLayout const& GetLayout() const { return layout_; }
-    inline VkDescriptorSet GetSet() const { return set_; }
+    inline VkDescriptorSet GetSet() const { return set_.GetHandle(); }
 
     void Write(WriteDescriptor& descriptor);
 
@@ -83,7 +82,7 @@ private:
 
     DescriptorSetLayout layout_;
 
-    VkDescriptorSet     set_;
+    DescriptorSet       set_;
 };
 
 }

@@ -33,7 +33,7 @@ public:
 
 private:
     VKW::ResourcesController* m_ResourcesController;
-    VKW::DescriptorManager* m_DescriptorAllocator;
+    VKW::DescriptorManager*   m_DescriptorAllocator;
     VKW::Context*             m_LoadingContext;
 
     DRE::InplaceHashTable<DRE::String128, ReadOnlyTexture> m_DiscTextures;

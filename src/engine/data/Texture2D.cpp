@@ -6,9 +6,18 @@
 namespace Data
 {
 
+Texture2D::Texture2D()
+    : name_{}
+    , format_{ VKW::FORMAT_UNDEFINED }
+    , textureData_{}
+    , width_{ 0 }
+    , height_{ 0 }
+{}
+
+
 bool Texture2D::IsInitialized() const
 {
-    return textureChannelVariations_ != Data::TEXTURE_VARIATION_INVALID;
+    return format_ != VKW::FORMAT_UNDEFINED;
 }
 
 void Texture2D::ReadFromFile(char const* filePath, TextureChannelVariations channelVariations)
@@ -18,15 +27,19 @@ void Texture2D::ReadFromFile(char const* filePath, TextureChannelVariations chan
     {
     case Data::TEXTURE_VARIATION_GRAY:
         desiredChannels = STBI_grey;
+        format_ = VKW::FORMAT_R8_UNORM;
         break;
     case Data::TEXTURE_VARIATION_GRAY_ALPHA:
         desiredChannels = STBI_grey_alpha;
+        format_ = VKW::FORMAT_R8G8B8A8_UNORM;
         break;
     case Data::TEXTURE_VARIATION_RGB:
         desiredChannels = STBI_rgb;
+        format_ = VKW::FORMAT_R8G8_UNORM;
         break;
     case Data::TEXTURE_VARIATION_RGBA:
         desiredChannels = STBI_rgb_alpha;
+        format_ = VKW::FORMAT_R8G8B8A8_UNORM;
         break;
     default:
         assert(false && "Invalid TextureChannelVariations");
@@ -35,10 +48,8 @@ void Texture2D::ReadFromFile(char const* filePath, TextureChannelVariations chan
     int x, y, n;
     stbi_uc* stbiData = stbi_load(filePath, &x, &y, &n, desiredChannels);
     if (stbiData == NULL) {
-        textureChannelVariations_ = Data::TEXTURE_VARIATION_INVALID;
-        filePath_ = nullptr;
-        width_ = 0;
-        height_ = 0;
+        format_ = VKW::FORMAT_UNDEFINED;
+        DRE_ASSERT(stbiData != NULL, "stbi failed to load texture.");
         return;
     }
 
@@ -46,17 +57,16 @@ void Texture2D::ReadFromFile(char const* filePath, TextureChannelVariations chan
     textureData_.Resize(dataSize);
     std::memcpy(textureData_.Data(), stbiData, dataSize);
 
-    textureChannelVariations_ = channelVariations;
-    filePath_ = filePath;
+    name_ = filePath;
     width_ = x;
     height_ = y;
 
     stbi_image_free(stbiData);
 }
 
-TextureChannelVariations Texture2D::GetChannelVariations() const
+VKW::Format Texture2D::GetFormat() const
 {
-    return textureChannelVariations_;
+    return format_;
 }
 
 DRE::ByteBuffer const& Texture2D::GetBuffer() const

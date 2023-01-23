@@ -3,6 +3,8 @@
 #include <foundation\Common.hpp>
 #include <foundation\memory\Pointer.hpp>
 
+#include <type_traits>
+
 DRE_BEGIN_NAMESPACE
 
 
@@ -55,26 +57,26 @@ public:
         DRE_DEBUG_ONLY(m_Size = 0);
     }
 
-    InplaceVector(InplaceVector<T, STORAGE_SIZE> const& rhs)
+    InplaceVector(InplaceVector<T, STORAGE_SIZE> const& rhs) requires (std::is_copy_constructible<T>::value)
         : m_Size{ 0 }
     {
         operator=(rhs);
     }
 
-    InplaceVector(InplaceVector<T, STORAGE_SIZE>&& rhs)
+    InplaceVector(InplaceVector<T, STORAGE_SIZE>&& rhs) requires (std::is_move_constructible<T>::value)
         : m_Size{ 0 }
     {
         operator=(DRE_MOVE(rhs));
     }
 
-    InplaceVector<T, STORAGE_SIZE>& operator=(InplaceVector<T, STORAGE_SIZE> const& rhs)
+    InplaceVector<T, STORAGE_SIZE>& operator=(InplaceVector<T, STORAGE_SIZE> const& rhs) requires (std::is_copy_constructible<T>::value)
     {
         DRE_ASSERT(m_Size == 0, "Can't copy into non-empty InplaceVector.");
 
         U32 const count = rhs.Size();
         for (U32 i = 0; i < count; ++i)
         {
-            Data()[i] = rhs.Data()[i];
+            new (Data() + i) T{ rhs.Data()[i] };
         }
 
         m_Size = rhs.m_Size;
@@ -82,14 +84,14 @@ public:
         return *this;
     }
 
-    InplaceVector<T, STORAGE_SIZE>& operator=(InplaceVector<T, STORAGE_SIZE>&& rhs)
+    InplaceVector<T, STORAGE_SIZE>& operator=(InplaceVector<T, STORAGE_SIZE>&& rhs) requires (std::is_move_constructible<T>::value)
     {
         DRE_ASSERT(m_Size == 0, "Can't move into non-empty InplaceVector.");
         
         U32 const count = rhs.Size();
         for (U32 i = 0; i < count; ++i)
         {
-            Data()[i] = DRE_MOVE(rhs.Data()[i]);
+            new (Data() + i) T{ DRE_MOVE(rhs.Data()[i]) };
         }
 
         m_Size = rhs.m_Size;

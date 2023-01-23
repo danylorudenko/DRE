@@ -9,6 +9,7 @@
 #include <foundation\memory\Memory.hpp>
 #include <foundation\memory\ByteBuffer.hpp>
 #include <foundation\Container\HashTable.hpp>
+#include <foundation\util\Hash.hpp>
 
 #include <assimp\Importer.hpp>
 #include <assimp\postprocess.h>
@@ -18,6 +19,7 @@
 
 #include <gfx\GraphicsManager.hpp>
 
+#include <engine\data\GeometryLibrary.hpp>
 #include <engine\data\MaterialLibrary.hpp>
 #include <engine\scene\Scene.hpp>
 
@@ -26,11 +28,12 @@
 namespace IO
 {
 
-IOManager::IOManager(Data::MaterialLibrary* materialLibrary)
-    : m_MaterialLibrary{ materialLibrary }
-    , m_ShaderBinaries{ &DRE::g_MainAllocator }
+IOManager::IOManager(DRE::DefaultAllocator* allocator, Data::MaterialLibrary* materialLibrary, Data::GeometryLibrary* geometryLibrary)
+    : m_Allocator{ allocator }
+    , m_MaterialLibrary{ materialLibrary }
+    , m_GeometryLibrary{ geometryLibrary }
+    , m_ShaderBinaries{ allocator }
 {
-    LoadShaderFiles();
 }
 
 IOManager::~IOManager() {}
@@ -66,43 +69,6 @@ struct ModelHeader
     std::uint32_t indexSize_ = 0;
     std::uint32_t vertexContentFlags_ = 0;
 };
-
-Data::ModelMesh IOManager::ReadModelMesh(char const* path)
-{
-    std::ifstream istream{ path, std::ios_base::binary | std::ios_base::beg };
-    if (!istream) {
-        std::cerr << "Error opening ModelMesh in path: " << path << std::endl;
-        return Data::ModelMesh{};
-    }
-
-    auto const fileSize = istream.seekg(0, std::ios_base::end).tellg();
-    if (!istream) {
-        std::cerr << "Error measuring file size: " << path << std::endl;
-        return Data::ModelMesh();
-    }
-
-
-    ModelHeader modelHeader{};
-
-    istream.seekg(0, std::ios_base::beg);
-    istream.read(reinterpret_cast<char*>(&modelHeader), sizeof(modelHeader));
-
-    Data::ModelMesh model;
-
-    std::uint32_t const vertexDataSizeBytes = modelHeader.vertexCount_ * modelHeader.vertexSize_;
-    std::uint32_t const indexDataSizeBytes = modelHeader.indexCount_ * modelHeader.indexSize_;
-
-    model.vertexData_.resize(vertexDataSizeBytes);
-    model.indexData_.resize(indexDataSizeBytes);
-    model.vertexContentFlags_ = modelHeader.vertexContentFlags_;
-
-    istream.read(reinterpret_cast<char*>(model.vertexData_.data()), vertexDataSizeBytes);
-    istream.read(reinterpret_cast<char*>(model.indexData_.data()), indexDataSizeBytes);
-
-    istream.close();
-
-    return model;
-}
 
 Data::Texture2D IOManager::ReadTexture2D(char const* path, Data::TextureChannelVariations channelVariations)
 {
@@ -163,104 +129,15 @@ void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiM
     }
 }
 
-Data::Material* IOManager::ParseMeshMaterial(aiMesh const* mesh, char const* assetPath, aiScene const* scene, Data::MaterialLibrary* materialLibrary)
-{
-    //parse material
-    aiMaterial* aiMat = scene->mMaterials[mesh->mMaterialIndex];
-    aiString aiName = aiMat->GetName();
-
-    char name[32];
-    if (aiName.length == 0)
-    {
-        std::to_chars_result r = std::to_chars(name, name + 31, mesh->mMaterialIndex);
-        DRE_ASSERT(r.ec == std::errc{}, "Failed to convert int to string (std::to_chars).");
-        *r.ptr = '\0';
-    }
-    else
-    {
-        std::strcpy(name, aiName.C_Str());
-    }
-
-    Data::Material* material = m_MaterialLibrary->GetMaterial(name);
-    if (material != nullptr)
-        return material;
-
-    material = m_MaterialLibrary->CreateMaterial(name);
-
-    DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_DIFFUSE) <= 1, "We don't support multiple textures of the same type per material (DIFFUSE).");
-    DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_NORMALS) <= 1, "We don't support multiple textures of the same type per material (NORMALS)");
-
-    // get folder with texture files
-    DRE::String256 textureFilePath = assetPath;
-    std::uint16_t folderEnd = textureFilePath.GetSize() - 1;
-    while (textureFilePath[folderEnd] != '\\' && textureFilePath[folderEnd] != '/')
-    {
-        DRE_ASSERT(folderEnd != 0, "Unable to find file path separator!");
-        --folderEnd;
-    }
-    textureFilePath.Shrink(folderEnd + 1);
-    
-    // PROCESS TEXTURES
-    ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::DIFFUSE, Data::TEXTURE_VARIATION_RGB);
-    ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::NORMAL, Data::TEXTURE_VARIATION_RGB);
-
-    return material;
-}
-
-void WriteMemorySequence(void*& memory, void* data, std::uint32_t size)
-{
-    std::memcpy(memory, &data, size);
-    memory = DRE::PtrAdd(memory, size);
-}
-
 void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, aiNode const* node, WORLD::Scene& targetScene)
 {
     for (std::uint32_t i = 0, count = node->mNumMeshes; i < count; i++)
     {
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-        std::uint32_t const vertexMemoryRequirements 
-            = sizeof(aiVector3D) * mesh->mNumVertices * 4   // position + tangent space
-            + sizeof(aiVector2D) * mesh->mNumVertices;      // UV
 
-        std::uint32_t const indexMemoryRequirements = (sizeof(aiVector3D) * mesh->mNumFaces);
-
-        std::uint32_t const meshMemoryRequirements = vertexMemoryRequirements + indexMemoryRequirements;
-
-
-        auto meshMemory = GFX::g_GraphicsManager->GetUploadArena().AllocateTransientRegion(GFX::g_GraphicsManager->GetCurrentFrameID(), meshMemoryRequirements, 256);
-        void* memorySequence = meshMemory.m_MappedRange;
-
-        for (std::uint32_t v = 0, vCount = mesh->mNumVertices; v < vCount; v++)
-        {
-            WriteMemorySequence(memorySequence, mesh->mVertices[v]);
-            WriteMemorySequence(memorySequence, mesh->mNormals[v]);
-            WriteMemorySequence(memorySequence, mesh->mTangents[v]);
-            WriteMemorySequence(memorySequence, mesh->mBitangents[v]);
-            WriteMemorySequence(memorySequence, mesh->mTextureCoords[0][v]);
-        }
-
-        VKW::BufferResource* vertexBuffer = GFX::g_GraphicsManager->GetMainDevice()->GetResourcesController()->CreateBuffer(vertexMemoryRequirements, VKW::BufferUsage::VERTEX_INDEX);
-        VKW::BufferResource* indexBuffer = GFX::g_GraphicsManager->GetMainDevice()->GetResourcesController()->CreateBuffer(indexMemoryRequirements, VKW::BufferUsage::VERTEX_INDEX);
-
-        void* indexStart = memorySequence;
-
-        for (std::uint32_t f = 0, fCount = mesh->mNumFaces; f < fCount; f++)
-        {
-            WriteMemorySequence(memorySequence, mesh->mFaces[f].mIndices, sizeof(unsigned int));
-        }
-
-        meshMemory.FlushCaches();
-
-        gfxContext.CmdResourceDependency(meshMemory.m_Buffer, meshMemory.m_OffsetInBuffer, meshMemory.m_Size, VKW::RESOURCE_ACCESS_HOST_WRITE, VKW::STAGE_HOST, VKW::RESOURCE_ACCESS_TRANSFER_SRC, VKW::STAGE_TRANSFER);
-
-        // schedule copy
-        gfxContext.CmdResourceDependency(vertexBuffer, VKW::RESOURCE_ACCESS_NONE, VKW::STAGE_TOP, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
-        gfxContext.CmdCopyBufferToBuffer(vertexBuffer, 0, meshMemory.m_Buffer, meshMemory.m_OffsetInBuffer, vertexMemoryRequirements);
-
-        gfxContext.CmdResourceDependency(indexBuffer, VKW::RESOURCE_ACCESS_NONE, VKW::STAGE_TOP, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
-
-        Data::Material* material = ParseMeshMaterial(mesh, assetPath, scene, m_MaterialLibrary);
-        WORLD::Entity& nodeEntity = targetScene.CreateEntity(material);
+        Data::Material* material = m_MaterialLibrary->GetMaterial(mesh->mMaterialIndex);
+        Data::Geometry* geometry = m_GeometryLibrary->GetGeometry(node->mMeshes[i]);
+        WORLD::Entity& nodeEntity = targetScene.CreateRenderableEntity(gfxContext, geometry, material);
     }
 
     for (std::uint32_t i = 0; i < node->mNumChildren; i++)
@@ -273,13 +150,88 @@ void IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene)
 {
     Assimp::Importer importer = Assimp::Importer();
 
-    aiScene const* scene = importer.ReadFile(path, aiProcess_CalcTangentSpace | aiProcess_Triangulate);
+    aiScene const* scene = importer.ReadFile(path, aiProcessPreset_TargetRealtime_Fast);
 
     DRE_ASSERT(scene != nullptr, "Failed to load a model file.");
     if (scene == nullptr)
         return;
 
+    ParseAssimpMeshes(GFX::g_GraphicsManager->GetMainContext(), scene);
+    ParseAssimpMaterials(scene, path);
     ParseAssimpNodeRecursive(GFX::g_GraphicsManager->GetMainContext(), path, scene, scene->mRootNode, targetScene);
+    GFX::g_GraphicsManager->GetMainContext().FlushAll();
+}
+
+void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* path)
+{
+    // get folder with texture files
+    DRE::String256 textureFilePath = path;
+    std::uint8_t folderEnd = textureFilePath.GetSize() - 1;
+    while (textureFilePath[folderEnd] != '\\' && textureFilePath[folderEnd] != '/')
+    {
+        DRE_ASSERT(folderEnd != 0, "Unable to find file path separator!");
+        --folderEnd;
+    }
+    textureFilePath.Shrink(folderEnd + 1);
+
+    for (std::uint32_t i = 0, size = scene->mNumMaterials; i < size; i++)
+    {
+        aiMaterial* aiMat = scene->mMaterials[i];
+        Data::Material* material = m_MaterialLibrary->CreateMaterial(i, aiMat->GetName().C_Str());
+
+        DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_DIFFUSE) <= 1, "We don't support multiple textures of the same type per material (DIFFUSE).");
+        DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_NORMALS) <= 1, "We don't support multiple textures of the same type per material (NORMALS)");
+
+        // PROCESS TEXTURES
+        ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::DIFFUSE, Data::TEXTURE_VARIATION_RGB);
+        ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::NORMAL, Data::TEXTURE_VARIATION_RGB);
+
+        material->GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_DEFAULT_LIT);
+    }
+}
+
+void IOManager::ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene)
+{
+    for (std::uint32_t i = 0, size = scene->mNumMeshes; i < size; i++)
+    {
+        aiMesh* mesh = scene->mMeshes[i];
+
+        Data::Geometry geometry{ m_Allocator };
+        geometry.SetVertexCount(mesh->mNumVertices);
+        geometry.SetIndexCount(mesh->mNumFaces * 3);
+
+        for (std::uint32_t j = 0, jSize = mesh->mNumVertices; j < jSize; j++)
+        {
+            Data::Geometry::Vertex& v = geometry.GetVertex(j);
+            v.pos[0] = mesh->mVertices[j].x;
+            v.pos[1] = mesh->mVertices[j].y;
+            v.pos[2] = mesh->mVertices[j].z;
+
+            v.norm[0] = mesh->mNormals[j].x;
+            v.norm[1] = mesh->mNormals[j].y;
+            v.norm[2] = mesh->mNormals[j].z;
+
+            v.tan[0] = mesh->mTangents[j].x;
+            v.tan[1] = mesh->mTangents[j].y;
+            v.tan[2] = mesh->mTangents[j].z;
+
+            v.btan[0] = mesh->mBitangents[j].x;
+            v.btan[1] = mesh->mBitangents[j].y;
+            v.btan[2] = mesh->mBitangents[j].z;
+
+            v.uv0[0] = mesh->mTextureCoords[0][j].x;
+            v.uv0[1] = mesh->mTextureCoords[0][j].y;
+        }
+
+        for (std::uint32_t j = 0, jSize = mesh->mNumFaces; j < jSize; j++)
+        {
+            geometry.GetIndex(j*3 + 0) = mesh->mFaces[j].mIndices[0];
+            geometry.GetIndex(j*3 + 1) = mesh->mFaces[j].mIndices[1];
+            geometry.GetIndex(j*3 + 2) = mesh->mFaces[j].mIndices[2];
+        }
+
+        m_GeometryLibrary->AddGeometry(i, DRE_MOVE(geometry));
+    }
 }
 
 void IOManager::ShaderInterface::Merge(IOManager::ShaderInterface const& rhs)
@@ -368,10 +320,10 @@ void IOManager::LoadShaderFiles()
         if (entry.path().has_extension() && entry.path().extension() == ".spv")
         {
             // .stem() is a filename without extension
-            ShaderData& shaderData = m_ShaderBinaries.Emplace(entry.path().stem().u8string().c_str());
+            ShaderData& shaderData = m_ShaderBinaries.Emplace(entry.path().stem().generic_string().c_str());
 
             DRE::ByteBuffer moduleBuffer{ static_cast<std::uint64_t>(entry.file_size()) };
-            ReadFileToBuffer(entry.path().u8string().c_str(), moduleBuffer);
+            ReadFileToBuffer(entry.path().generic_string().c_str(), moduleBuffer);
             shaderData.m_Binary = DRE_MOVE(moduleBuffer);
             
             spirv_cross::Compiler compiler{ reinterpret_cast<std::uint32_t const*>(shaderData.m_Binary.Data()), shaderData.m_Binary.Size() / sizeof(std::uint32_t) };

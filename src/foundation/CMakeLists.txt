@@ -51,7 +51,7 @@ target_include_directories(foundation PUBLIC "${DRE_SOURCE_DIR}/include")
 
 target_compile_definitions(foundation PUBLIC WIN32_LEAN_AND_MEAN NOMINMAX)
 
-target_compile_features(foundation PUBLIC cxx_std_17)
+target_compile_features(foundation PUBLIC cxx_std_20)
 # TODO: disable exceptions
 
 source_group(

@@ -8,6 +8,7 @@
 #include <foundation\class_features\NonMovable.hpp>
 
 #include <foundation\Common.hpp>
+#include <foundation\container\InplaceVector.hpp>
 
 #include <vk_wrapper\Constant.hpp>
 #include <vk_wrapper\descriptor\Descriptor.hpp>
@@ -124,8 +125,9 @@ public:
     ~PipelineLayout();
 
 
-    inline VkPipelineLayout     GetHandle() const { return handle_; }
-    inline std::uint16_t        GetMemberCount() const { return memberCount_; }
+    inline VkPipelineLayout             GetHandle() const { return handle_; }
+    inline std::uint16_t                GetMemberCount() const { return memberCount_; }
+    inline DescriptorSetLayout const*   GetMember(std::uint8_t i) const { return members_[i]; }
 
 private:
     ImportTable*        table_;
@@ -133,6 +135,8 @@ private:
 
     VkPipelineLayout    handle_;
     std::uint16_t       memberCount_;
+
+    DRE::InplaceVector<DescriptorSetLayout const*, VKW::CONSTANTS::MAX_PIPELINE_LAYOUT_MEMBERS> members_;
 
 #ifdef DEBUG_LAYOUT_MEMBERS
     Descriptor descriptor_;

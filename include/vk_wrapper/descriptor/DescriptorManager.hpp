@@ -76,17 +76,17 @@ public:
     void                    WriteTextureDescriptor(VkDescriptorSet set, std::uint16_t descriptorID, ImageResourceView const* view);
     void                    FreeTextureDescriptor(GlobalDescriptorHandle& handle);
 
-    VkDescriptorSet         AllocateStandaloneSet(DescriptorSetLayout const& layout);
-    void                    FreeStandaloneSet(VkDescriptorSet set);
+    DescriptorSet           AllocateStandaloneSet(DescriptorSetLayout const& layout);
+    void                    FreeStandaloneSet(DescriptorSet& set);
 
     std::uint32_t               GetGlobalSetLayoutsCount() const { return (std::uint32_t)3; }
     DescriptorSetLayout const*  GetGlobalSetLayouts() const { return globalSetLayouts_; }
     DescriptorSetLayout&        GetGlobalSetLayout(std::uint32_t i) { return globalSetLayouts_[i]; }
     PipelineLayout*             GetGlobalPipelineLayout() { return &globalPipelineLayout_; }
 
-    HWDescriptorHandle          GetGlobalSampler_StorageSet() const { return HWDescriptorHandle{ globalSampler_StorageSet_ }; }
-    HWDescriptorHandle          GetGlobalTexturesSet() const { return HWDescriptorHandle{ globalTexturesSet_}; }
-    HWDescriptorHandle          GetGlobalUniformSet(std::uint8_t bufferingID) { return HWDescriptorHandle{ globalUniformSets_[bufferingID] }; }
+    DescriptorSet           GetGlobalSampler_StorageSet() const { return DescriptorSet{ globalSampler_StorageSet_, globalSetLayouts_ + 0}; }
+    DescriptorSet           GetGlobalTexturesSet() const { return DescriptorSet{ globalTexturesSet_, globalSetLayouts_ + 1}; }
+    DescriptorSet           GetGlobalUniformSet(std::uint8_t bufferingID) { return DescriptorSet{ globalUniformSets_[bufferingID], globalSetLayouts_ + 2}; }
 
     VkSampler               GetDefaultSampler(SamplerType type) const;
 

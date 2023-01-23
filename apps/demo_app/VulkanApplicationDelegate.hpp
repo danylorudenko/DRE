@@ -23,6 +23,7 @@
 
 #include <engine\scene\Scene.hpp>
 #include <engine\data\MaterialLibrary.hpp>
+#include <engine\data\GeometryLibrary.hpp>
 
 #include <engine\io\IOManager.hpp>
 
@@ -53,6 +54,7 @@ private:
     Window                              m_MainWindow;
     InputSystem                         m_InputSystem;
     Data::MaterialLibrary               m_MaterialLibrary;
+    Data::GeometryLibrary               m_GeometryLibrary;
     IO::IOManager                       m_IOManager;
 
     GFX::GraphicsManager                m_GraphicsManager;

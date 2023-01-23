@@ -3,14 +3,13 @@
 #include <foundation\class_features\NonCopyable.hpp>
 #include <foundation\class_features\NonMovable.hpp>
 
+#include <foundation\memory\Memory.hpp>
+#include <foundation\container\HashTable.hpp>
+
 #include <vk_wrapper\pipeline\ShaderModule.hpp>
 
-#include <engine\data\Model.hpp>
-#include <engine\data\ModelMesh.hpp>
 #include <engine\data\Texture2D.hpp>
-#include <engine\data\MaterialLibrary.hpp>
-
-#include <spirv_cross.hpp>
+#include <engine\data\Material.hpp>
 
 namespace WORLD
 {
@@ -21,6 +20,12 @@ class Entity;
 namespace VKW
 {
 class Context;
+}
+
+namespace Data
+{
+class MaterialLibrary;
+class GeometryLibrary;
 }
 
 struct aiScene;
@@ -65,12 +70,11 @@ public:
     };
 
 public:
-    IOManager(Data::MaterialLibrary* materialLibrary);
+    IOManager(DRE::DefaultAllocator* allocator, Data::MaterialLibrary* materialLibrary, Data::GeometryLibrary* geometryLibrary);
 
     void LoadShaderFiles();
     ShaderData* GetShaderData(char const* name) { return m_ShaderBinaries.Find(name).value; }
 
-    Data::ModelMesh ReadModelMesh(char const* path);
     Data::Texture2D ReadTexture2D(char const* path, Data::TextureChannelVariations channels);
 
     void            ParseModelFile(char const* path, WORLD::Scene& targetScene);
@@ -80,15 +84,19 @@ public:
     static std::uint64_t ReadFileToBuffer(char const* path, DRE::ByteBuffer& buffer);
 
 private:
+    void ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene);
+    void ParseAssimpMaterials(aiScene const* scene, char const* path);
     void ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, aiNode const* node, WORLD::Scene& targetScene);
 
-    Data::Material* ParseMeshMaterial(aiMesh const* mesh, char const* assetPath, aiScene const* scene, Data::MaterialLibrary* materialLibrary);
     void ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiMat, DRE::String256 const& assetFolderPath, Data::Material* material, Data::Material::TextureProperty::Slot slot, Data::TextureChannelVariations channels);
 
 private:
-    Data::MaterialLibrary* m_MaterialLibrary;
+    DRE::DefaultAllocator* m_Allocator;
 
-    DRE::HashTable<DRE::String64, ShaderData, DRE::MainAllocator> m_ShaderBinaries;
+    Data::MaterialLibrary* m_MaterialLibrary;
+    Data::GeometryLibrary* m_GeometryLibrary;
+
+    DRE::HashTable<DRE::String64, ShaderData, DRE::DefaultAllocator> m_ShaderBinaries;
 };
 
 }

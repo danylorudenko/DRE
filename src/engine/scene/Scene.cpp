@@ -2,6 +2,7 @@
 
 #include <foundation\memory\Memory.hpp>
 #include <gfx\GraphicsManager.hpp>
+#include <engine\data\Material.hpp>
 
 
 namespace WORLD
@@ -9,16 +10,12 @@ namespace WORLD
 
 Scene* g_MainScene = nullptr;
 
-Scene::Scene()
-    : m_SceneEntities{ &DRE::g_MainAllocator }
+Scene::Scene(DRE::DefaultAllocator* allocator)
+    : m_SceneEntities{ allocator }
 {
-    GFX::PipelineDB& db = GFX::g_GraphicsManager->GetPipelineDB();
-
-    //db.
-
 }
 
-Entity& Scene::CreateEntity(Data::Material* material)
+Entity& Scene::CreateRenderableEntity(VKW::Context& context, Data::Geometry* geometry, Data::Material* material)
 {
     // I guess here I have to tie Entity, RenderableObject and RenderView
     GFX::RenderView& mainView = GFX::g_GraphicsManager->GetMainRenderView();
@@ -28,12 +25,23 @@ Entity& Scene::CreateEntity(Data::Material* material)
     // fill descriptors for the material
     // pass it all to renderable object
 
-    //GFX::g_GraphicsManager->GetPipelineDB().
-    GFX::RenderableObject* renderable = GFX::g_GraphicsManager->GetRenderablePool().Alloc(nullptr); // need pipeline here
+    GFX::RenderableObject* renderable = GFX::g_GraphicsManager->CreateRenderableObject(context, geometry, material);
+    renderable->Transform(glm::vec3{ 0.0f }, glm::vec3{ 0.0f }, glm::vec3{ 1.0f });
     mainView.AddObject(renderable);
 
+    Entity& entity = m_SceneEntities.EmplaceBack(glm::vec3{0,0,0}, glm::vec3{0,0,0}, glm::vec3{1,1,1}, renderable);
 
-    return m_SceneEntities.EmplaceBack(glm::vec3{0,0,0}, glm::vec3{0,0,0}, glm::vec3{1,1,1}, renderable);
+    return entity;
+}
+
+Scene::~Scene()
+{
+    for (std::uint32_t i = 0, size = m_SceneEntities.Size(); i < size; i++)
+    {
+        Entity& entity = m_SceneEntities[i];
+        if (entity.GetRenderableObject() != nullptr)
+            GFX::g_GraphicsManager->FreeRenderableObject(entity.GetRenderableObject());
+    }
 }
 
 }
