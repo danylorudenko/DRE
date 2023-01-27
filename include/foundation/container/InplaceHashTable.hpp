@@ -25,6 +25,7 @@ public:
     InplaceHashTable()
         : m_Buckets{}
         , m_CollisionPool{}
+        , m_Size{ 0 }
     {}
 
     ~InplaceHashTable()
@@ -35,25 +36,28 @@ public:
     template<typename... TArgs>
     TValue& Emplace(TKey const& key, TArgs&&... args)
     {
-        TKey defaultKey{};
         Bucket* bucket = FindBaseBucketInternal(key);
-        if (bucket->m_Key == defaultKey)
+        if (bucket->m_Key.isEmpty)
         {
-            bucket->m_Key = key;
+            bucket->m_Key.key = key;
+            bucket->m_Key.isEmpty = false;
 
             new (bucket->m_Value.m_Storage) TValue{ std::forward<TArgs>(args)... };
 
+            ++m_Size;
             return bucket->m_Value;
         }
         else
         {
             Bucket* nextBucket = m_CollisionPool.Alloc();
-            nextBucket->m_Key    = key;
+            nextBucket->m_Key.key = key;
+            nextBucket->m_Key.isEmpty = false;
             new (nextBucket->m_Value.m_Storage) TValue{ std::forward<TArgs>(args)... };
             nextBucket->m_Next   = nullptr;
 
             bucket->m_Next = nextBucket;
 
+            ++m_Size;
             return nextBucket->m_Value;
         }
     }
@@ -61,10 +65,12 @@ public:
     void Erase(TKey const& key)
     {
         Bucket* bucket = FindBaseBucketInternal(key);
-        if (bucket->m_Key == key)
+        if (bucket->m_Key == key && (!bucket->m_Key.isEmpty))
         {
-            bucket->m_Key = TKey{};
+            bucket->m_Key.key = TKey{};
+            bucket->m_Key.isEmpty = true;
             bucket->m_Value.Destroy();
+            --m_Size;
             return;
         }
 
@@ -80,11 +86,13 @@ public:
         // if found -> patch linked list and return to pool
         if (targetBucket != nullptr)
         {
-            targetBucket->mKey = TKey{};
+            targetBucket->m_Key.key = TKey{};
+            targetBucket->m_Key.isEmpty = true;
             targetBucket->m_Value.Destroy();
 
             prevBucket->m_Next = targetBucket->m_Next;
 
+            --m_Size;
             m_CollisionPool.Free(targetBucket);
         }
     }
@@ -93,7 +101,7 @@ public:
     {
         Bucket* bucket = FindExactBucketInternal(key);
         if(bucket != nullptr)
-            return Pair{ &bucket->m_Key, bucket->m_Value.Ptr() };
+            return Pair{ &bucket->m_Key.key, bucket->m_Value.Ptr() };
         else
             return Pair{ nullptr, nullptr };
     }
@@ -113,9 +121,10 @@ public:
         for (U32 i = 0; i < BUCKET_COUNT; i++)
         {
             Bucket& bucket = m_Buckets[i];
-            if (bucket.m_Key != defaultKey)
+            if (!bucket.m_Key.isEmpty)
             {
-                bucket.m_Key = defaultKey;
+                bucket.m_Key.key = defaultKey;
+                bucket.m_Key.isEmpty = true;
                 bucket.m_Value.Destroy();
             }
 
@@ -124,7 +133,8 @@ public:
             Bucket* nextBucket = bucket.m_Next;
             while (nextBucket != nullptr)
             {
-                nextBucket->m_Key = defaultKey;
+                nextBucket->m_Key.key = defaultKey;
+                nextBucket->m_Key.isEmpty = true;
                 nextBucket->m_Value.Destroy();
                 m_CollisionPool.Free(nextBucket);
                 nextBucket = nextBucket->m_Next;
@@ -132,6 +142,8 @@ public:
 
             bucket.m_Next = nullptr;
         }
+
+        m_Size = 0;
     }
 
     // delegate parameter is InplaceHashTable<>::Pair
@@ -143,9 +155,9 @@ public:
         for (U32 i = 0; i < BUCKET_COUNT; i++)
         {
             Bucket& bucket = m_Buckets[i];
-            if (bucket.m_Key != defaultKey)
+            if (!bucket.m_Key.isEmpty)
             {
-                pair.key = &bucket.m_Key;
+                pair.key = &bucket.m_Key.key;
                 pair.value = bucket.m_Value.Ptr();
 
                 func(pair);
@@ -154,7 +166,7 @@ public:
             Bucket* nextBucket = bucket.m_Next;
             while (nextBucket != nullptr)
             {
-                pair.key = &nextBucket->m_Key;
+                pair.key = &nextBucket->m_Key.key;
                 pair.value = nextBucket->m_Value.Ptr();
 
                 func(pair);
@@ -165,9 +177,15 @@ public:
     }
 
 private:
+
+    struct KeyWrapper
+    {
+        TKey key     = TKey{};
+        bool isEmpty = true;
+    };
     struct Bucket
     {
-        TKey                    m_Key;
+        KeyWrapper              m_Key;
         AlignedStorage<TValue>  m_Value;
         Bucket*                 m_Next  = nullptr;
     };
@@ -185,15 +203,18 @@ private:
     {
         Bucket* targetBucket = FindBaseBucketInternal(key);
 
-        while (targetBucket != nullptr && targetBucket->m_Key != key)
+        if (targetBucket->m_Key.isEmpty && targetBucket->m_Next == nullptr)
+            return nullptr;
+
+        while (targetBucket != nullptr && targetBucket->m_Key.key != key)
             targetBucket = targetBucket->m_Next;
 
         return targetBucket;
     }
 
-    Bucket              m_Buckets[BUCKET_COUNT];
-
+    Bucket                                              m_Buckets[BUCKET_COUNT];
     InplaceObjectAllocator<Bucket, COLLISION_POOL_SIZE> m_CollisionPool;
+    U32                                                 m_Size;
 };
 
 DRE_END_NAMESPACE

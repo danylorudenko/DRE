@@ -16,7 +16,7 @@
 namespace GFX
 {
 
-static constexpr std::uint32_t C_DEFAULT_STAGING_ARENA_SIZE     = 1024 * 1024 * 64;
+static constexpr std::uint32_t C_DEFAULT_STAGING_ARENA_SIZE     = 1024 * 1024 * 128;
 static constexpr std::uint32_t C_DEFAULT_UNIFORM_ARENA_SIZE     = DRE_U16_MAX - 1;
 static constexpr std::uint32_t C_DEFAULT_READBACK_ARENA_SIZE    = 1024 * 1024 * 64;
 static constexpr std::uint32_t C_GLOBAL_UNIFORM_SIZE            = 256;
@@ -126,7 +126,7 @@ void GraphicsManager::TransferToSwapchainAndPresent(StorageTexture& src)
 
 void WriteMemorySequence(void*& memory, void const* data, std::uint32_t size)
 {
-    std::memcpy(memory, &data, size);
+    std::memcpy(memory, data, size);
     memory = DRE::PtrAdd(memory, size);
 }
 
@@ -149,7 +149,7 @@ RenderableObject* GraphicsManager::CreateRenderableObject(VKW::Context& context,
     VKW::DescriptorManager* descriptorManager = GetMainDevice()->GetDescriptorAllocator();
 
     DRE::InplaceVector<VKW::DescriptorSet, VKW::CONSTANTS::MAX_PIPELINE_LAYOUT_MEMBERS> descriptorSets;
-    for (std::uint8_t i = std::uint8_t(descriptorManager->GetGlobalSetLayoutsCount()), count = std::uint8_t(layout->GetMemberCount()); i < count; i)
+    for (std::uint8_t i = std::uint8_t(descriptorManager->GetGlobalSetLayoutsCount()), count = std::uint8_t(layout->GetMemberCount()); i < count; i++)
     {
         descriptorSets.EmplaceBack(descriptorManager->AllocateStandaloneSet(*layout->GetMember(i)));
     }

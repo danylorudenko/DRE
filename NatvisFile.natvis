@@ -9,4 +9,88 @@
       </ArrayItems >
     </Expand>
   </Type>
+
+  <Type Name="DRE::Vector&lt;*,*,*&gt;">
+    <DisplayString>size = {m_Size}</DisplayString>
+    <Expand>
+      <ArrayItems>
+        <Size>m_Size</Size>
+        <ValuePointer>($T1*)(m_Data)</ValuePointer>
+      </ArrayItems >
+    </Expand>
+  </Type>
+
+  
+  
+  <Type Name="DRE::InplaceHashTable&lt;*,*,*&gt;">
+    <DisplayString>size = {m_Size}</DisplayString>
+    <Expand>
+      <CustomListItems>
+
+        <Variable Name="currentBucket" InitialValue="m_Buckets + 0"/>
+        <Variable Name="conflictedBucket" InitialValue="currentBucket-&gt;m_Next"/>
+
+        <Size>m_Size</Size>
+        
+        <Loop>
+          <Loop Condition="currentBucket-&gt;m_Key.isEmpty">
+            <!--loop through linked list-->
+            <If Condition="currentBucket-&gt;m_Next != nullptr">
+              <Loop>
+                <Item>conflictedBucket</Item>
+                <Exec>conflictedBucket = currentBucket->m_Next</Exec>
+              </Loop>
+            </If>
+            <!--end linked list-->
+            <Exec>currentBucket = currentBucket + 1</Exec>
+          </Loop>
+          <!--valid item here, display, go to next-->
+          <Item>currentBucket</Item>
+          <Exec>currentBucket = currentBucket + 1</Exec>
+        </Loop>
+        
+      </CustomListItems>
+    </Expand>
+    
+  </Type>
+
+
+  <Type Name="DRE::HashTable&lt;*,*,*&gt;">
+    <DisplayString>size = {m_Size}</DisplayString>
+    <Expand>
+      <CustomListItems>
+
+        <Variable Name="currentBucket" InitialValue="m_Buckets.m_Data + 0"/>
+        <Variable Name="conflictedBucket" InitialValue="currentBucket-&gt;m_NextID"/>
+
+        <Size>m_Size</Size>
+        
+        <Loop>
+          <Loop Condition="currentBucket-&gt;m_Key.isEmpty">
+            <!--loop through linked list-->
+            <If Condition="currentBucket-&gt;m_NextID != 0xffffffff">
+              <Loop>
+                <Item>m_CollisionPool.m_Data[conflictedBucket]</Item>
+                <Exec>conflictedBucket = currentBucket->m_NextID</Exec>
+              </Loop>
+            </If>
+            <!--end linked list-->
+            <Exec>currentBucket = currentBucket + 1</Exec>
+          </Loop>
+          <!--valid item here, display, go to next-->
+          <Item>currentBucket</Item>
+          <Exec>currentBucket = currentBucket + 1</Exec>
+        </Loop>
+        
+      </CustomListItems>
+    </Expand>
+    
+  </Type>
+
+  <Type Name="DRE::AlignedStorage&lt;*&gt;">
+    <DisplayString>data = {($T1*)(m_Storage)}</DisplayString>
+    <Expand>
+      <Item Name="data">($T1*)(m_Storage)</Item>
+    </Expand>
+  </Type>
 </AutoVisualizer>

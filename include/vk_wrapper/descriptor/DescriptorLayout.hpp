@@ -126,7 +126,7 @@ public:
 
 
     inline VkPipelineLayout             GetHandle() const { return handle_; }
-    inline std::uint16_t                GetMemberCount() const { return memberCount_; }
+    inline std::uint16_t                GetMemberCount() const { return members_.Size(); }
     inline DescriptorSetLayout const*   GetMember(std::uint8_t i) const { return members_[i]; }
 
 private:
@@ -134,7 +134,6 @@ private:
     LogicalDevice*      device_;
 
     VkPipelineLayout    handle_;
-    std::uint16_t       memberCount_;
 
     DRE::InplaceVector<DescriptorSetLayout const*, VKW::CONSTANTS::MAX_PIPELINE_LAYOUT_MEMBERS> members_;
 

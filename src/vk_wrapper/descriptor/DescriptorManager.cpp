@@ -16,8 +16,8 @@ DescriptorManager::DescriptorManager(ImportTable* table, LogicalDevice* device)
     , globalSetPool_{ VK_NULL_HANDLE }
     , globalTexturesPool_{ VK_NULL_HANDLE }
 {
-    std::uint32_t constexpr STANDALONE_DESCRIPTOR_COUNT = 20;
-    std::uint32_t constexpr MAX_STANDALONE_SETS         = 20;
+    std::uint32_t constexpr STANDALONE_DESCRIPTOR_COUNT = 1024;
+    std::uint32_t constexpr MAX_STANDALONE_SETS         = 1024;
 
     VkDescriptorPoolSize sizes[4];
     sizes[0].type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;

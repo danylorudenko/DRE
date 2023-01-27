@@ -7,6 +7,8 @@
 
 #include <engine\data\Material.hpp>
 
+#include <iostream>
+
 namespace Data
 {
 
@@ -21,6 +23,11 @@ public:
 
     Material* CreateMaterial(std::uint32_t id, char const* name);
     Material* GetMaterial(std::uint32_t id);
+
+    //void debug_output()
+    //{
+    //    m_MaterialsMap.ForEach([](auto const& pair) { std::cout << "K:" << *pair.key << " V:" << pair.value->GetName() << std::endl; });
+    //}
 
 private:
     DRE::HashTable<std::uint32_t, Material, DRE::DefaultAllocator> m_MaterialsMap;

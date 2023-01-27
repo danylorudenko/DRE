@@ -89,6 +89,8 @@ public:
 
     inline Texture2D const& GetTexture(TextureProperty::Slot slot) const { return m_TextureProperties[int(slot)].GetTexture(); }
 
+    inline char const* GetName() const { return m_Name; }
+
 private:
     DRE::String32       m_Name;
 

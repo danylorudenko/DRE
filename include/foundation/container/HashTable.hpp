@@ -27,6 +27,7 @@ public:
         : m_Buckets{}
         , m_CollisionPool{}
         , m_CollisionPoolAllocator{}
+        , m_Size{ 0 }
     {
     }
 
@@ -34,6 +35,7 @@ public:
         : m_Buckets{ allocator }
         , m_CollisionPool{ allocator }
         , m_CollisionPoolAllocator{}
+        , m_Size{ 0 }
     {
         m_Buckets.Resize(BUCKET_COUNT);
         m_CollisionPool.Resize(BUCKET_COUNT);
@@ -44,19 +46,24 @@ public:
         : m_Buckets{ rhs.m_Buckets }
         , m_CollisionPool{ rhs.m_CollisionPool }
         , m_CollisionPoolAllocator{ rhs.m_CollisionPoolAllocator }
+        , m_Size{ rhs.m_Size }
     {}
 
     HashTable(HashTable&& rhs)
         : m_Buckets{ DRE_MOVE(rhs.m_Buckets) }
         , m_CollisionPool{ DRE_MOVE(rhs.m_CollisionPool) }
         , m_CollisionPoolAllocator{ DRE_MOVE(rhs.m_CollisionPoolAllocator) }
-    {}
+        , m_Size { rhs.m_Size }
+    {
+        rhs.m_Size = 0;
+    }
 
     HashTable& operator=(HashTable const& rhs)
     {
         m_Buckets = rhs.m_Buckets;
         m_CollisionPool = rhs.m_CollisionPool;
         m_CollisionPoolAllocator = rhs.m_CollisionPoolAllocator;
+        m_Size = rhs.m_Size;
 
         return *this;
     }
@@ -66,6 +73,7 @@ public:
         DRE_SWAP_MEMBER(m_Buckets);
         DRE_SWAP_MEMBER(m_CollisionPool);
         DRE_SWAP_MEMBER(m_CollisionPoolAllocator);
+        DRE_SWAP_MEMBER(m_Size);
 
         return *this;
     }
@@ -80,12 +88,14 @@ public:
     {
         TKey defaultKey{};
         Bucket* bucket = FindBaseBucketInternal(key);
-        if (bucket->m_Key == defaultKey)
+        if (bucket->m_Key.isEmpty)
         {
-            bucket->m_Key = key;
+            bucket->m_Key.key = key;
+            bucket->m_Key.isEmpty = false;
 
             new (bucket->m_Value.m_Storage) TValue{ std::forward<TArgs>(args)... };
 
+            ++m_Size;
             return bucket->m_Value;
         }
         else
@@ -99,17 +109,21 @@ public:
                     m_CollisionPool.Data(), m_CollisionPool.SizeInBytes(), 
                     sizeof(Bucket), alignof(Bucket), 
                     m_CollisionPoolAllocator.ChunksCount());
+
+                nextBucket = (Bucket*)m_CollisionPoolAllocator.Alloc();
             }
 
 
             U32 const nextBucketID = U32(DRE::PtrDifference(nextBucket, m_CollisionPoolAllocator.ChunksStart()) / sizeof(Bucket));
 
-            nextBucket->m_Key = key;
+            nextBucket->m_Key.key = key;
+            nextBucket->m_Key.isEmpty = false;
             new (nextBucket->m_Value.m_Storage) TValue{ std::forward<TArgs>(args)... };
             nextBucket->m_NextID = DRE_U32_MAX;
 
             bucket->m_NextID = nextBucketID;
 
+            ++m_Size;
             return nextBucket->m_Value;
         }
     }
@@ -117,10 +131,12 @@ public:
     void Erase(TKey const& key)
     {
         Bucket* bucket = FindBaseBucketInternal(key);
-        if (bucket->m_Key == key)
+        if (bucket->m_Key.key == key)
         {
-            bucket->m_Key = TKey{};
+            bucket->m_Key.key = TKey{};
+            bucket->m_Key.isEmpty = true;
             bucket->m_Value.Destroy();
+            --m_Size;
             return;
         }
 
@@ -128,7 +144,7 @@ public:
         Bucket* prevBucket = bucket;
         U32 targetBucketID = bucket.m_NextID;
 
-        while (targetBucketID != DRE_U32_MAX && m_CollisionPool[targetBucketID].m_Key != key)
+        while (targetBucketID != DRE_U32_MAX && m_CollisionPool[targetBucketID].m_Key.key != key) // don't need to check "isEmtpy" in collision pool
         {
             prevBucket = &m_CollisionPool[targetBucketID];
             targetBucketID = m_CollisionPool[targetBucketID].m_NextID;
@@ -138,12 +154,14 @@ public:
         if (targetBucketID != DRE_U32_MAX)
         {
             Bucket& targetBucket = m_CollisionPool[targetBucketID];
-            targetBucket.mKey = TKey{};
+            targetBucket.m_Key.key = TKey{};
+            targetBucket.m_Key.isEmpty = true;
             targetBucket.m_Value.Destroy();
 
             prevBucket->m_NextID = targetBucket.m_NextID;
 
             m_CollisionPoolAllocator.Free(&targetBucket);
+            --m_Size;
         }
     }
 
@@ -151,7 +169,7 @@ public:
     {
         Bucket* bucket = FindExactBucketInternal(key);
         if(bucket != nullptr)
-            return Pair{ &bucket->m_Key, bucket->m_Value.Ptr() };
+            return Pair{ &bucket->m_Key.key, bucket->m_Value.Ptr() };
         else
             return Pair{ nullptr, nullptr };
     }
@@ -171,9 +189,10 @@ public:
         for (U32 i = 0; i < BUCKET_COUNT; i++)
         {
             Bucket& bucket = m_Buckets[i];
-            if (bucket.m_Key != defaultKey)
+            if (!bucket.m_Key.isEmpty)
             {
-                bucket.m_Key = defaultKey;
+                bucket.m_Key.key = defaultKey;
+                bucket.m_Key.isEmpty = true;
                 bucket.m_Value.Destroy();
             }
 
@@ -183,7 +202,8 @@ public:
             while (nextBucketID != DRE_U32_MAX)
             {
                 Bucket& nextBucket = m_CollisionPool[bucket.m_NextID];
-                nextBucket.m_Key = defaultKey;
+                nextBucket.m_Key.key = defaultKey;
+                nextBucket.m_Key.isEmpty = true;
                 nextBucket.m_Value.Destroy();
                 m_CollisionPoolAllocator.Free(&nextBucket);
                 nextBucketID = nextBucket.m_NextID;
@@ -191,6 +211,8 @@ public:
 
             bucket.m_NextID = DRE_U32_MAX;
         }
+
+        m_Size = 0;
     }
 
     // delegate parameter is InplaceHashTable<>::Pair
@@ -202,9 +224,9 @@ public:
         for (U32 i = 0; i < BUCKET_COUNT; i++)
         {
             Bucket& bucket = m_Buckets[i];
-            if (bucket.m_Key != defaultKey)
+            if (!bucket.m_Key.isEmpty)
             {
-                pair.key = &bucket.m_Key;
+                pair.key = &bucket.m_Key.key;
                 pair.value = bucket.m_Value.Ptr();
 
                 func(pair);
@@ -214,7 +236,7 @@ public:
             while (nextBucketID != DRE_U32_MAX)
             {
                 Bucket& nextBucket = m_CollisionPool[nextBucketID];
-                pair.key = &nextBucket.m_Key;
+                pair.key = &nextBucket.m_Key.key;
                 pair.value = nextBucket.m_Value.Ptr();
 
                 func(pair);
@@ -225,12 +247,18 @@ public:
     }
 
 private:
+    struct KeyWrapper
+    {
+        TKey key     = TKey{};
+        bool isEmpty = true;
+    };
     struct Bucket
     {
-        TKey                    m_Key;
+        KeyWrapper              m_Key;
         AlignedStorage<TValue>  m_Value;
         U32                     m_NextID = DRE_U32_MAX;
     };
+
 
 
     Bucket* FindBaseBucketInternal(TKey const& key)
@@ -246,18 +274,22 @@ private:
         Bucket* targetBucket = FindBaseBucketInternal(key);
         U32 nextBucketID = targetBucket->m_NextID;
 
-        while (targetBucket->m_Key != key && nextBucketID != DRE_U32_MAX)
+        if (targetBucket->m_Key.isEmpty && nextBucketID == DRE_U32_MAX)
+            return nullptr;
+
+        while (targetBucket->m_Key.key != key && nextBucketID != DRE_U32_MAX)
         {
             targetBucket = &m_CollisionPool[nextBucketID];
             nextBucketID = targetBucket->m_NextID;
         }
 
-        return targetBucket->m_Key == TKey{} ? nullptr : targetBucket;
+        return targetBucket->m_Key.isEmpty ? nullptr : targetBucket;
     }
 
     DRE::Vector<Bucket, TAllocator> m_Buckets;
     DRE::Vector<Bucket, TAllocator> m_CollisionPool;
     DRE::AllocatorPool              m_CollisionPoolAllocator;
+    U32                             m_Size;
 };
 
 DRE_END_NAMESPACE

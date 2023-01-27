@@ -223,7 +223,6 @@ PipelineLayout::PipelineLayout()
     : table_{ nullptr }
     , device_{ nullptr }
     , handle_{ VK_NULL_HANDLE }
-    , memberCount_{ 0 }
 {
 }
 
@@ -231,7 +230,6 @@ PipelineLayout::PipelineLayout(ImportTable* table, LogicalDevice* device, Descri
     : table_{ table }
     , device_{ device }
     , handle_{ VK_NULL_HANDLE }
-    , memberCount_{ 0 }
     , descriptor_{ descriptor }
 {
     VkDescriptorSetLayout layouts[CONSTANTS::MAX_PIPELINE_LAYOUT_MEMBERS];
@@ -258,7 +256,6 @@ PipelineLayout::PipelineLayout(ImportTable* table, LogicalDevice* device, Descri
     cInfo.pSetLayouts = layouts;
 
     VK_ASSERT(table_->vkCreatePipelineLayout(device_->Handle(), &cInfo, nullptr, &handle_));
-    memberCount_ = descriptor.GetSetCount();
 
 }
 
@@ -275,7 +272,7 @@ PipelineLayout& PipelineLayout::operator=(PipelineLayout&& rhs)
     DRE_SWAP_MEMBER(table_);
     DRE_SWAP_MEMBER(device_);
     DRE_SWAP_MEMBER(handle_);
-    DRE_SWAP_MEMBER(memberCount_);
+    DRE_SWAP_MEMBER(members_);
     DRE_SWAP_MEMBER(descriptor_);
 
     return *this;

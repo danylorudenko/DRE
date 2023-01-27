@@ -136,7 +136,7 @@ private:
         VKW::BufferResource* vertexBuffer;
         VKW::BufferResource* indexBuffer;
     };
-    using GeometryGPUMap        = DRE::HashTable<Data::Geometry*, GeometryGPU, DRE::DefaultAllocator>;
+    using GeometryGPUMap        = DRE::InplaceHashTable<Data::Geometry*, GeometryGPU>;
     GeometryGPUMap              m_GeometryGPUMap;
 };
 

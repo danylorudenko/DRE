@@ -83,11 +83,12 @@ DRE::String128 const* PipelineDB::CreatePipelineLayoutFromShader(char const* sha
     // next used set after global descriptor sets
     std::uint32_t const startSetId = shaderInterface.m_Members.FindIf([globalLayoutsCount](auto const& data) { return data.set >= globalLayoutsCount; });
 
-    DRE::InplaceVector<VKW::DescriptorSetLayout, VKW::CONSTANTS::MAX_PIPELINE_LAYOUT_MEMBERS> layouts;
+    auto& layouts = m_SetLayouts[shaderName]; // these vars are destroyed at the end
     if (startSetId != shaderInterface.m_Members.Size())
     {
+        std::uint8_t prevSet = shaderInterface.m_Members[startSetId - 1].set;
         std::uint8_t currentSet = shaderInterface.m_Members[startSetId].set;
-        DRE_ASSERT(currentSet == globalLayoutsCount, "Descriptor sets must be continuous");
+        DRE_ASSERT(currentSet == prevSet + 1, "Descriptor sets must be continuous");
 
         VKW::DescriptorSetLayout::Descriptor setLayoutDesc{};
 
@@ -98,8 +99,9 @@ DRE::String128 const* PipelineDB::CreatePipelineLayoutFromShader(char const* sha
             {
                 layouts.EmplaceBack(g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), setLayoutDesc);
                 setLayoutDesc = VKW::DescriptorSetLayout::Descriptor{};
+                prevSet = currentSet;
                 currentSet = m.set;
-                DRE_ASSERT(currentSet == (globalLayoutsCount + layouts.Size()), "Descriptor sets must be continuous");
+                DRE_ASSERT(currentSet == prevSet + 1, "Descriptor sets must be continuous");
             }
 
             setLayoutDesc.Add(m.type, m.binding, m.stage, m.arraySize);
@@ -139,12 +141,12 @@ VKW::PipelineLayout* PipelineDB::CreatePipelineLayout(char const* name, VKW::Pip
     DRE_ASSERT(descriptor.GetLayout(1) == &m_Device->GetDescriptorAllocator()->GetGlobalSetLayout(1), "Invalid layout creation in PipelineDB.");
     DRE_ASSERT(descriptor.GetLayout(2) == &m_Device->GetDescriptorAllocator()->GetGlobalSetLayout(2), "Invalid layout creation in PipelineDB.");
 
-    return &(m_PipelineLayouts[name] = VKW::PipelineLayout{ m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), descriptor });
+    return &(m_PipelineLayouts.Emplace(name, m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), descriptor));
 }
 
 VKW::Pipeline* PipelineDB::CreatePipeline(char const* name, VKW::Pipeline::Descriptor& descriptor)
 {
-    return &(m_Pipelines[name] = VKW::Pipeline{ m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), descriptor });
+    return &(m_Pipelines.Emplace(name, m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), descriptor));
 }
 
 VKW::PipelineLayout const* PipelineDB::GetGlobalLayout() const
