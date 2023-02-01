@@ -6,8 +6,6 @@
 #include <vk_wrapper\Helper.hpp>
 #include <vk_wrapper\resources\Resource.hpp>
 
-#include <iostream>
-
 namespace VKW
 {
 
@@ -383,8 +381,6 @@ void DescriptorManager::FreeTextureDescriptor(GlobalDescriptorHandle& handle)
 void DescriptorManager::WriteDescriptorSet(DescriptorSet set, WriteDesc& desc)
 {
     desc.AddTarget(set.GetHandle());
-
-    std::cout << "Writing set " << set.GetHandle() << std::endl;
 
     table_->vkUpdateDescriptorSets(
         device_->Handle(),

@@ -256,8 +256,6 @@ QueueExecutionPoint Queue::ExecuteInternal(CommandList* commandList, std::uint8_
     commandList->End();
     VkCommandBuffer vkCommandBuffer = *commandList;
 
-    std::cout << "QUEUE: Executing CmdBuffer: " << vkCommandBuffer << " signal: " << signalValue << std::endl;
-
     std::uint8_t const binary = presentationContext == nullptr ? 0 : 1;
 
     DRE_ASSERT(waitPointCount + binary <= WAIT_COUNT_MAX, "Can't wait for more that 5 semaphores");
@@ -340,15 +338,11 @@ void Queue::WaitFor(std::uint8_t pointCount, QueueExecutionPoint const* points)
     VkSemaphore semaphores[WAIT_COUNT_MAX];
     std::uint64_t values[WAIT_COUNT_MAX];
 
-    std::cout << "QUEUE: Waiting on semaphore values:";
-
     for (std::uint8_t i = 0; i < pointCount; i++)
     {
         semaphores[i] = points[i].GetTimelineSemaphore();
         values[i] = points[i].GetPoint();
-        std::cout << ' ' << values[i];
     }
-    std::cout << std::endl;
 
     VkSemaphoreWaitInfo waitInfo;
     waitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO;
