@@ -8,8 +8,6 @@
 #include <vk_wrapper\Constant.hpp>
 #include <vk_wrapper\descriptor\Descriptor.hpp>
 
-#include <gfx\texture\ReadOnlyTexture.hpp>
-
 #include <engine\data\Material.hpp>
 
 namespace VKW
@@ -21,6 +19,8 @@ struct BufferResource;
 
 namespace GFX
 {
+
+class ReadOnlyTexture;
 
 class RenderableObject
     : public NonCopyable
@@ -37,7 +37,7 @@ public:
     inline VKW::BufferResource*         GetIndexBuffer() const { return m_IndexBuffer; }
     inline DescriptorSetVector const&   GetDescriptorSets() const { return m_DescriptorSets; }
 
-    void                        Transform(glm::vec3 pos, glm::vec3 eulerRotation, glm::vec3 scale);
+    void                                Transform(glm::mat4 model);
 
 private:
     glm::mat4x4             m_ModelM;
@@ -46,6 +46,7 @@ private:
     VKW::BufferResource*    m_IndexBuffer;
 
     TexturesVector          m_Textures;
+
     DescriptorSetVector     m_DescriptorSets;
 };
 

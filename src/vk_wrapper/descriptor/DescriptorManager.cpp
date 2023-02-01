@@ -3,8 +3,10 @@
 #include <foundation\Common.hpp>
 #include <foundation\Container\InplaceVector.hpp>
 
-
+#include <vk_wrapper\Helper.hpp>
 #include <vk_wrapper\resources\Resource.hpp>
+
+#include <iostream>
 
 namespace VKW
 {
@@ -378,6 +380,20 @@ void DescriptorManager::FreeTextureDescriptor(GlobalDescriptorHandle& handle)
     handle.count_ = 0;
 }
 
+void DescriptorManager::WriteDescriptorSet(DescriptorSet set, WriteDesc& desc)
+{
+    desc.AddTarget(set.GetHandle());
+
+    std::cout << "Writing set " << set.GetHandle() << std::endl;
+
+    table_->vkUpdateDescriptorSets(
+        device_->Handle(),
+        desc.WritesCount(),
+        desc.Writes(),
+        0,
+        nullptr);
+}
+
 DescriptorSet DescriptorManager::AllocateStandaloneSet(DescriptorSetLayout const& layout)
 {
     VkDescriptorSetLayout vkLayout = layout.GetHandle();
@@ -400,6 +416,139 @@ void DescriptorManager::FreeStandaloneSet(DescriptorSet& set)
     VkDescriptorSet vkSet = set.GetHandle();
     VK_ASSERT(table_->vkFreeDescriptorSets(device_->Handle(), standalonePool_, 1, &vkSet));
 }
+
+DescriptorManager::WriteDesc::WriteDesc()
+{
+}
+
+void DescriptorManager::WriteDesc::AddSamplers(VkSampler* samplers, std::uint8_t count, std::uint32_t binding)
+{
+    if (samplers != nullptr)
+    {
+        std::uint32_t const startInfo = imageInfos_.Size();
+
+        for (std::uint8_t i = 0; i < count; i++)
+        {
+            VkDescriptorImageInfo& info = imageInfos_.EmplaceBack();
+            info.sampler = samplers[i];
+            info.imageView = VK_NULL_HANDLE;
+            info.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        }
+
+        VkWriteDescriptorSet& write = writes_.EmplaceBack();
+        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write.pNext = nullptr;
+        write.dstSet = VK_NULL_HANDLE;
+        write.dstBinding = binding;
+        write.dstArrayElement = 0;
+        write.descriptorCount = count;
+        write.descriptorType = HELPER::DescriptorTypeToVK(DESCRIPTOR_TYPE_SAMPLER);
+        write.pImageInfo = imageInfos_.Data() + startInfo;
+        write.pBufferInfo = nullptr;
+        write.pTexelBufferView = nullptr;
+    }
+}
+
+void DescriptorManager::WriteDesc::AddStorageBuffer(BufferResource* buffer, std::uint32_t binding)
+{
+    if (buffer != nullptr)
+    {
+        VkDescriptorBufferInfo& info = bufferInfos_.EmplaceBack();
+        info.buffer = buffer->handle_;
+        info.offset = 0;
+        info.range = buffer->size_;
+
+        VkWriteDescriptorSet& write = writes_.EmplaceBack();
+        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write.pNext = nullptr;
+        write.dstSet = VK_NULL_HANDLE;
+        write.dstBinding = binding;
+        write.dstArrayElement = 0;
+        write.descriptorCount = 1;
+        write.descriptorType = HELPER::DescriptorTypeToVK(DESCRIPTOR_TYPE_STORAGE_BUFFER);
+        write.pImageInfo = nullptr;
+        write.pBufferInfo = &info;
+        write.pTexelBufferView = nullptr;
+    }
+}
+
+void DescriptorManager::WriteDesc::AddStorageImage(ImageResourceView* view, std::uint32_t binding)
+{
+    if (view != nullptr)
+    {
+        VkDescriptorImageInfo& info = imageInfos_.EmplaceBack();
+        info.sampler = VK_NULL_HANDLE;
+        info.imageView = view->handle_;
+        info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+
+        VkWriteDescriptorSet& write = writes_.EmplaceBack();
+        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write.pNext = nullptr;
+        write.dstSet = VK_NULL_HANDLE;
+        write.dstBinding = binding;
+        write.dstArrayElement = 0;
+        write.descriptorCount = 1;
+        write.descriptorType = HELPER::DescriptorTypeToVK(DESCRIPTOR_TYPE_STORAGE_IMAGE);
+        write.pImageInfo = &info;
+        write.pBufferInfo = nullptr;
+        write.pTexelBufferView = nullptr;
+    }
+}
+
+void DescriptorManager::WriteDesc::AddSampledImage(ImageResourceView* view, std::uint32_t binding)
+{
+    if (view != nullptr)
+    {
+        VkDescriptorImageInfo& info = imageInfos_.EmplaceBack();
+        info.sampler = VK_NULL_HANDLE;
+        info.imageView = view->handle_;
+        info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        VkWriteDescriptorSet& write = writes_.EmplaceBack();
+        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write.pNext = nullptr;
+        write.dstSet = VK_NULL_HANDLE;
+        write.dstBinding = binding;
+        write.dstArrayElement = 0;
+        write.descriptorCount = 1;
+        write.descriptorType = HELPER::DescriptorTypeToVK(DESCRIPTOR_TYPE_TEXTURE);
+        write.pImageInfo = &info;
+        write.pBufferInfo = nullptr;
+        write.pTexelBufferView = nullptr;
+    }
+}
+
+void DescriptorManager::WriteDesc::AddUniform(BufferResource* buffer, std::uint32_t offset, std::uint32_t size, std::uint32_t binding)
+{
+    if (buffer != nullptr)
+    {
+        VkDescriptorBufferInfo& info = bufferInfos_.EmplaceBack();
+        info.buffer = buffer->handle_;
+        info.offset = offset;
+        info.range = size;
+
+        VkWriteDescriptorSet& write = writes_.EmplaceBack();
+        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write.pNext = nullptr;
+        write.dstSet = VK_NULL_HANDLE;
+        write.dstBinding = binding;
+        write.dstArrayElement = 0;
+        write.descriptorCount = 1;
+        write.descriptorType = HELPER::DescriptorTypeToVK(DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+        write.pImageInfo = nullptr;
+        write.pBufferInfo = &info;
+        write.pTexelBufferView = nullptr;
+    }
+}
+
+void DescriptorManager::WriteDesc::AddTarget(VkDescriptorSet target)
+{
+    for (std::uint16_t i = 0; i < writes_.Size(); i++)
+    {
+        writes_[i].dstSet = target;
+    }
+}
+
 
 }
 

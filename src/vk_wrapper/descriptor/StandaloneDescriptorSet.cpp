@@ -1,5 +1,5 @@
 #include <vk_wrapper\descriptor\StandaloneDescriptorSet.hpp>
-
+/*
 #include <foundation\Common.hpp>
 
 #include <vk_wrapper\Helper.hpp>
@@ -15,8 +15,8 @@ StandaloneDescriptorSet::WriteDescriptor::WriteDescriptor()
 {
 }
 
-StandaloneDescriptorSet::Descriptor::Descriptor(/*DescriptorStage stages*/)
-    : layoutDescriptor_{ /*stages*/ }
+StandaloneDescriptorSet::Descriptor::Descriptor()
+    : layoutDescriptor_{  }
 {
 }
 
@@ -170,6 +170,11 @@ void StandaloneDescriptorSet::Descriptor::AddUniform(BufferResource* buffer, std
     WriteDescriptor::AddUniform(buffer, offset, size, binding);
 }
 
+void StandaloneDescriptorSet::Descriptor::AddDeferredUniform(std::uint32_t binding)
+{
+    layoutDescriptor_.Add(DESCRIPTOR_TYPE_UNIFORM_BUFFER, binding, VKW::DESCRIPTOR_STAGE_ALL);
+}
+
 void StandaloneDescriptorSet::WriteDescriptor::SetTargetSet(VkDescriptorSet target)
 {
     for (std::uint16_t i = 0; i < writes_.Size(); i++)
@@ -239,5 +244,5 @@ StandaloneDescriptorSet::~StandaloneDescriptorSet()
         allocator_->FreeStandaloneSet(set_);
     }
 }
-
 }
+*/

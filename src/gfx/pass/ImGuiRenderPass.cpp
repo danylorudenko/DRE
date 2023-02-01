@@ -37,7 +37,7 @@ void ImGuiRenderPass::RegisterResources(RenderGraph& graph)
         g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
         0);
 
-    graph.RegisterUniformBuffer(this, 36, VKW::STAGE_VERTEX | VKW::STAGE_FRAGMENT, 0);
+    graph.RegisterUniformBuffer(this, VKW::STAGE_VERTEX | VKW::STAGE_FRAGMENT, 0);
 }
 
 void ImGuiRenderPass::Initialize(RenderGraph& graph)
@@ -85,20 +85,13 @@ ImGuiRenderPass::~ImGuiRenderPass()
 /////////////////////////
 void ImGuiRenderPass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    StorageTexture* imGuiRT = graph.ResourcesManager().GetStorageTexture(TextureID::FinalRT);
+    StorageTexture* imGuiRT = graph.GetStorageTexture(TextureID::FinalRT);
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, imGuiRT->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
 
     context.CmdBeginRendering(1, imGuiRT->GetShaderView(), nullptr, nullptr);
     float clearColors[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     //context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_0, clearColors); // TODO, enable if imguiRT is not FinalRT
-
-
-    PipelineDB& pipelineDB = g_GraphicsManager->GetPipelineDB();
-    VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
-    std::uint16_t const startSet = pipelineDB.GetGlobalLayout()->GetMemberCount();
-    context.CmdBindGraphicsDescriptorSets(layout, startSet, 1, &graph.GetPassDescriptorSet(GetID()));
-    context.CmdBindPipeline(VKW::BindPoint::Graphics, pipelineDB.GetPipeline("imgui_draw"));
 
 
     ImGui::Render();
@@ -110,10 +103,18 @@ void ImGuiRenderPass::Render(RenderGraph& graph, VKW::Context& context)
     glm::vec4 displayPos_Size{ imDisplayPos.x, imDisplayPos.y, imDisplaySize.x, imDisplaySize.y };
     std::uint32_t texID{ m_ImGuiAtlas->GetShaderReadDescriptor().id_ };
 
-    UniformProxy uniform = graph.ResourcesManager().GetUniformBuffer(GetID(), context);
+    UniformProxy uniform = graph.GetPassUniform(GetID(), context, 36);
 
     uniform.WriteMember140(glm::value_ptr(displayPos_Size), sizeof(displayPos_Size));
     uniform.WriteMember140(texID);
+
+
+    PipelineDB& pipelineDB = g_GraphicsManager->GetPipelineDB();
+    VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
+    std::uint16_t const startSet = pipelineDB.GetGlobalLayout()->GetMemberCount();
+    VKW::DescriptorSet passSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
+    context.CmdBindGraphicsDescriptorSets(layout, startSet, 1, &passSet);
+    context.CmdBindPipeline(VKW::BindPoint::Graphics, pipelineDB.GetPipeline("imgui_draw"));
 
 
     UploadArena& uploadArena =  g_GraphicsManager->GetUploadArena();

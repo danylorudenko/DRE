@@ -14,7 +14,7 @@
 namespace GFX
 {
 
-DependencyManager::DependencyManager(GraphResourcesManager* graphResources)
+DependencyManager::DependencyManager()
 {}
 
 DependencyManager::~DependencyManager()

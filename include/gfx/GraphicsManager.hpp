@@ -95,7 +95,7 @@ private:
     void    CreateAllPasses();
 
     void    PrepareGlobalData(VKW::Context& context, std::uint64_t deltaTimeUS);
-    void    TransferToSwapchainAndPresent(StorageTexture& src);
+    VKW::QueueExecutionPoint TransferToSwapchainAndPresent(StorageTexture& src);
 
 
 private:
@@ -107,6 +107,7 @@ private:
     VKW::Context                m_MainContext;
 
     std::uint64_t               m_GraphicsFrame;
+    VKW::QueueExecutionPoint    m_FrameProcessingCompletePoint[VKW::CONSTANTS::FRAMES_BUFFERING];
 
     UploadArena                 m_UploadArena;
     UniformArena                m_UniformArena;

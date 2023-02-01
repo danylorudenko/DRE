@@ -78,7 +78,7 @@ DRE::String128 const* PipelineDB::CreatePipelineLayoutFromShader(char const* sha
     shaderInterface.Merge(fragmentShader->m_Interface);
     shaderInterface.m_Members.SortBubble([](auto const& lhs, auto const& rhs) { return lhs.set < rhs.set; });
 
-    std::uint32_t const globalLayoutsCount = g_GraphicsManager->GetMainDevice()->GetDescriptorAllocator()->GetGlobalSetLayoutsCount();
+    std::uint32_t const globalLayoutsCount = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();
 
     // next used set after global descriptor sets
     std::uint32_t const startSetId = shaderInterface.m_Members.FindIf([globalLayoutsCount](auto const& data) { return data.set >= globalLayoutsCount; });
@@ -127,7 +127,7 @@ void PipelineDB::AddGlobalLayouts(VKW::PipelineLayout::Descriptor& descriptor)
 {
     DRE_ASSERT(descriptor.GetSetCount() == 0, "Pipeline layout descriptor must be empty before filling default layouts.");
 
-    VKW::DescriptorManager* allocator = m_Device->GetDescriptorAllocator();
+    VKW::DescriptorManager* allocator = m_Device->GetDescriptorManager();
 
     for (std::uint32_t i = 0, count = allocator->GetGlobalSetLayoutsCount(); i < count; i++)
     {
@@ -137,11 +137,17 @@ void PipelineDB::AddGlobalLayouts(VKW::PipelineLayout::Descriptor& descriptor)
 
 VKW::PipelineLayout* PipelineDB::CreatePipelineLayout(char const* name, VKW::PipelineLayout::Descriptor const& descriptor)
 {
-    DRE_ASSERT(descriptor.GetLayout(0) == &m_Device->GetDescriptorAllocator()->GetGlobalSetLayout(0), "Invalid layout creation in PipelineDB.");
-    DRE_ASSERT(descriptor.GetLayout(1) == &m_Device->GetDescriptorAllocator()->GetGlobalSetLayout(1), "Invalid layout creation in PipelineDB.");
-    DRE_ASSERT(descriptor.GetLayout(2) == &m_Device->GetDescriptorAllocator()->GetGlobalSetLayout(2), "Invalid layout creation in PipelineDB.");
+    DRE_ASSERT(descriptor.GetLayout(0) == &m_Device->GetDescriptorManager()->GetGlobalSetLayout(0), "Invalid layout creation in PipelineDB.");
+    DRE_ASSERT(descriptor.GetLayout(1) == &m_Device->GetDescriptorManager()->GetGlobalSetLayout(1), "Invalid layout creation in PipelineDB.");
+    DRE_ASSERT(descriptor.GetLayout(2) == &m_Device->GetDescriptorManager()->GetGlobalSetLayout(2), "Invalid layout creation in PipelineDB.");
 
     return &(m_PipelineLayouts.Emplace(name, m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), descriptor));
+}
+
+VKW::DescriptorSetLayout* PipelineDB::CreateDescriptorSetLayout(const char* name, VKW::DescriptorSetLayout::Descriptor const& desc)
+{
+    auto& layouts = m_SetLayouts[name];
+    return &layouts.EmplaceBack(m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), desc);
 }
 
 VKW::Pipeline* PipelineDB::CreatePipeline(char const* name, VKW::Pipeline::Descriptor& descriptor)
@@ -162,6 +168,11 @@ VKW::PipelineLayout* PipelineDB::GetLayout(char const* name)
 VKW::Pipeline* PipelineDB::GetPipeline(char const* name)
 {
     return m_Pipelines.Find(name).value;
+}
+
+VKW::DescriptorSetLayout* PipelineDB::GetSetLayout(char const* name)
+{
+    return &m_SetLayouts[name][0];
 }
 
 }

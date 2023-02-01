@@ -14,7 +14,6 @@
 #include <vk_wrapper\Context.hpp>
 #include <vk_wrapper\memory\MemoryPage.hpp>
 #include <vk_wrapper\Tools.hpp>
-#include <vk_wrapper\descriptor\StandaloneDescriptorSet.hpp>
 
 #include <gfx\DeviceChild.hpp>
 #include <gfx\FrameID.hpp>

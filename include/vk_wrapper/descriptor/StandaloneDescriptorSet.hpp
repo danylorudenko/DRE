@@ -1,5 +1,5 @@
 #pragma once
-
+/*
 #include <foundation\Container\InplaceVector.hpp>
 #include <vk_wrapper\descriptor\DescriptorLayout.hpp>
 
@@ -10,7 +10,7 @@ struct BufferResource;
 struct ImageResourceView;
 class DescriptorManager;
 
-
+OBSOLETE
 class StandaloneDescriptorSet : public NonCopyable
 {
 public:
@@ -46,13 +46,14 @@ public:
         : public WriteDescriptor
     {
     public:
-        Descriptor(/*DescriptorStage stages*/);
+        Descriptor();
 
         void AddSamplers(VkSampler* samplers, std::uint8_t count, std::uint32_t binding);
         void AddStorageBuffer(BufferResource* buffer, std::uint32_t binding);
         void AddStorageImage(ImageResourceView* image, std::uint32_t binding);
         void AddSampledImage(ImageResourceView* image, std::uint32_t binding);
         void AddUniform(BufferResource* buffer, std::uint32_t offset, std::uint32_t size, std::uint32_t binding);
+        void AddDeferredUniform(std::uint32_t binding);
 
         inline DescriptorSetLayout::Descriptor const&   GetLayoutDescriptor() const { return layoutDescriptor_; }
 
@@ -86,4 +87,4 @@ private:
 };
 
 }
-
+*/

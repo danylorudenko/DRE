@@ -15,9 +15,10 @@ RenderableObject::RenderableObject(VKW::Pipeline* pipeline, VKW::BufferResource*
 {
 }
 
-void RenderableObject::Transform(glm::vec3 pos, glm::vec3 eulerRotation, glm::vec3 scale)
+void RenderableObject::Transform(glm::mat4 model)
 {
-    m_ModelM = glm::mat4{ 
+    m_ModelM = model;
+    /*m_ModelM = glm::mat4{ 
         glm::vec4{ scale.x, 0.0f, 0.0f, 0.0f },
         glm::vec4{ 0.0f, scale.y, 0.0f, 0.0f },
         glm::vec4{ 0.0f, 0.0f, scale.z, 0.0f },
@@ -29,7 +30,7 @@ void RenderableObject::Transform(glm::vec3 pos, glm::vec3 eulerRotation, glm::ve
 
     m_ModelM[0][3] = pos.x;
     m_ModelM[0][3] = pos.y;
-    m_ModelM[0][3] = pos.z;
+    m_ModelM[0][3] = pos.z;*/
 }
 
 }

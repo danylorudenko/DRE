@@ -107,7 +107,7 @@ public:
     void                WaitIdle();
 
 private:
-    QueueExecutionPoint ExecuteInternal(CommandList* commandList, std::uint8_t waitPointCount, QueueExecutionPoint const* waitExecutionPoints, PresentationContext* presentationContext);
+    QueueExecutionPoint ExecuteInternal(CommandList* commandList, std::uint8_t waitPointCount, QueueExecutionPoint const* waitExecutionPoints, std::uint64_t signalValue, PresentationContext* presentationContext);
 
 private:
     ImportTable* table_;
@@ -128,6 +128,7 @@ private:
         CommandList* commandList_;
         std::uint8_t waitCount_;
         QueueExecutionPoint waitPoints_[WAIT_COUNT_MAX];
+        std::uint64_t signalValue_;
     };
     DRE::InplaceVector<PendingCommandList, VKW::CONSTANTS::MAX_COMMANDLIST_PER_QUEUE> pendingCommandLists_;
 

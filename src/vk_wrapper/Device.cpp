@@ -85,7 +85,7 @@ Device::Device(HINSTANCE hInstance, HWND hwnd, bool debug)
 
 
     resourcesController_ = std::make_unique<VKW::ResourcesController>(table_.get(), device_.get(), memoryController_.get());
-    descriptorAllocator_ = std::make_unique<VKW::DescriptorManager>(table_.get(), device_.get());
+    descriptorManager_ = std::make_unique<VKW::DescriptorManager>(table_.get(), device_.get());
 }
 
 Device::~Device()

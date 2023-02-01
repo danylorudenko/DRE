@@ -15,7 +15,7 @@ Scene::Scene(DRE::DefaultAllocator* allocator)
 {
 }
 
-Entity& Scene::CreateRenderableEntity(VKW::Context& context, Data::Geometry* geometry, Data::Material* material)
+Entity& Scene::CreateRenderableEntity(VKW::Context& context, Entity::TransformData const& transform, Data::Geometry* geometry, Data::Material* material)
 {
     // I guess here I have to tie Entity, RenderableObject and RenderView
     GFX::RenderView& mainView = GFX::g_GraphicsManager->GetMainRenderView();
@@ -26,10 +26,12 @@ Entity& Scene::CreateRenderableEntity(VKW::Context& context, Data::Geometry* geo
     // pass it all to renderable object
 
     GFX::RenderableObject* renderable = GFX::g_GraphicsManager->CreateRenderableObject(context, geometry, material);
-    renderable->Transform(glm::vec3{ 0.0f }, glm::vec3{ 0.0f }, glm::vec3{ 1.0f });
+    renderable->Transform(transform.model);
     mainView.AddObject(renderable);
 
-    Entity& entity = m_SceneEntities.EmplaceBack(glm::vec3{0,0,0}, glm::vec3{0,0,0}, glm::vec3{1,1,1}, renderable);
+    Entity& entity = m_SceneEntities.EmplaceBack(transform, renderable);
+    entity.SetMaterial(material);
+    entity.SetGeometry(geometry);
 
     return entity;
 }

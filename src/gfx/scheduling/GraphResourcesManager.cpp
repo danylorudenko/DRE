@@ -11,10 +11,8 @@
 namespace GFX
 {
 
-GraphResourcesManager::GraphResourcesManager(VKW::Device* device, UniformArena* uniformArena, ReadbackArena* readbackArena)
+GraphResourcesManager::GraphResourcesManager(VKW::Device* device)
     : m_Device{ device }
-    , m_UniformArena{ uniformArena }
-    , m_ReadbackArena{ readbackArena }
 {
 
 }
@@ -47,11 +45,6 @@ void GraphResourcesManager::RegisterBuffer(BufferID id, std::uint32_t size, VKW:
     info.size0 = size;
     info.size1 = 0;
     info.depth = 0;
-}
-
-UniformArena::Allocation& GraphResourcesManager::RegisterUniformBuffer(PassID id, std::uint32_t size, VKW::Stages stages)
-{
-    return m_UniformAllocations[id] = m_UniformArena->AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), size, 16);
 }
 
 void GraphResourcesManager::PrepareResources()
@@ -113,12 +106,6 @@ StorageBuffer* GraphResourcesManager::GetStorageBuffer(BufferID id)
 StorageTexture* GraphResourcesManager::GetStorageTexture(TextureID id)
 {
     return &m_StorageTextures.Find(id).value->texture;
-}
-
-UniformProxy GraphResourcesManager::GetUniformBuffer(PassID id, VKW::Context& context)
-{
-    UniformArena::Allocation& allocation = m_UniformAllocations[id];
-    return UniformProxy{ &context, allocation };
 }
 
 

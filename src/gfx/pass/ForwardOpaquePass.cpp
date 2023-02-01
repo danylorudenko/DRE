@@ -55,7 +55,7 @@ void ForwardOpaquePass::Initialize(RenderGraph& graph)
 
 void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    VKW::ImageResourceView* colorAttachment = graph.ResourcesManager().GetStorageTexture(TextureID::FinalRT)->GetShaderView();
+    VKW::ImageResourceView* colorAttachment = graph.GetStorageTexture(TextureID::FinalRT)->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, colorAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
     context.CmdBeginRendering(1, colorAttachment, nullptr, nullptr);

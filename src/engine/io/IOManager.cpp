@@ -61,15 +61,6 @@ std::uint64_t IOManager::ReadFileToBuffer(char const* path, DRE::ByteBuffer& buf
     return fileSize;
 }
 
-struct ModelHeader
-{
-    std::uint32_t vertexCount_ = 0;
-    std::uint32_t vertexSize_ = 0;
-    std::uint32_t indexCount_ = 0;
-    std::uint32_t indexSize_ = 0;
-    std::uint32_t vertexContentFlags_ = 0;
-};
-
 Data::Texture2D IOManager::ReadTexture2D(char const* path, Data::TextureChannelVariations channelVariations)
 {
     Data::Texture2D texture;
@@ -131,13 +122,21 @@ void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiM
 
 void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, aiNode const* node, WORLD::Scene& targetScene)
 {
+    aiMatrix4x4 const& t = node->mTransformation;
+    WORLD::Entity::TransformData const transform {{
+            t.a1, t.a2, t.a3, t.a4,
+            t.b1, t.b2, t.b3, t.b4,
+            t.c1, t.c2, t.c3, t.c4,
+            t.d1, t.d2, t.d3, t.d4
+    }};
+
     for (std::uint32_t i = 0, count = node->mNumMeshes; i < count; i++)
     {
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 
         Data::Material* material = m_MaterialLibrary->GetMaterial(mesh->mMaterialIndex);
         Data::Geometry* geometry = m_GeometryLibrary->GetGeometry(node->mMeshes[i]);
-        WORLD::Entity& nodeEntity = targetScene.CreateRenderableEntity(gfxContext, geometry, material);
+        WORLD::Entity& nodeEntity = targetScene.CreateRenderableEntity(gfxContext, transform, geometry, material);
     }
 
     for (std::uint32_t i = 0; i < node->mNumChildren; i++)

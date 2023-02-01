@@ -27,7 +27,7 @@ class DependencyManager
     , public NonMovable
 {
 public:
-    DependencyManager(GraphResourcesManager* resources);
+    DependencyManager();
 
     virtual ~DependencyManager();
 

@@ -4,10 +4,11 @@
 #include <vk_wrapper\resources\Resource.hpp>
 #include <vk_wrapper\pipeline\Pipeline.hpp>
 #include <vk_wrapper\pipeline\RenderPass.hpp>
-#include <vk_wrapper\descriptor\StandaloneDescriptorSet.hpp>
 #include <vk_wrapper\descriptor\DescriptorManager.hpp>
 #include <vk_wrapper\Helper.hpp>
 #include <vk_wrapper\pipeline\Dependency.hpp>
+
+#include <iostream>
 
 namespace VKW
 {
@@ -129,23 +130,27 @@ void Context::CmdBindComputePipeline(VKW::Pipeline const* pipeline)
 
 void Context::CmdBindDescriptorSets(
     VKW::PipelineLayout const* layout, BindPoint bindPoint,
-    std::uint32_t firstSet, std::uint32_t descriptorSetCount, VKW::StandaloneDescriptorSet const* sets,
+    std::uint32_t firstSet, std::uint32_t descriptorSetCount, VKW::DescriptorSet const* sets,
     std::uint32_t dynamicOffsetCount, std::uint32_t const* pDynamicOffsets)
 {
     VkPipelineBindPoint const vkBindPoint = (bindPoint == BindPoint::Graphics) ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE;
 
+    std::cout << "CONTEXT: Binding to cmdList " << *m_CurrentCommandList << " sets: ";
     VkDescriptorSet vkSets[VKW::CONSTANTS::MAX_PIPELINE_LAYOUT_MEMBERS];
     for (std::uint32_t i = 0; i < descriptorSetCount; i++)
     {
-        vkSets[i] = sets->GetSet();
+        vkSets[i] = sets->GetHandle();
+        std::cout << vkSets[i] << ' ';
     }
+
+    std::cout << std::endl;
 
     m_ImportTable->vkCmdBindDescriptorSets(*m_CurrentCommandList, vkBindPoint, layout->GetHandle(), firstSet, descriptorSetCount, vkSets, dynamicOffsetCount, pDynamicOffsets);
 }
 
 void Context::CmdBindGraphicsDescriptorSets(
     VKW::PipelineLayout const* layout,
-    std::uint32_t firstSet, std::uint32_t descriptorSetCount, VKW::StandaloneDescriptorSet const* sets,
+    std::uint32_t firstSet, std::uint32_t descriptorSetCount, VKW::DescriptorSet const* sets,
     std::uint32_t dynamicOffsetCount, std::uint32_t const* pDynamicOffsets)
 {
     CmdBindDescriptorSets(layout, BindPoint::Graphics, firstSet, descriptorSetCount, sets, dynamicOffsetCount, pDynamicOffsets);
@@ -153,7 +158,7 @@ void Context::CmdBindGraphicsDescriptorSets(
 
 void Context::CmdBindComputeDescriptorSets(
     VKW::PipelineLayout const* layout,
-    std::uint32_t firstSet, std::uint32_t descriptorSetCount, VKW::StandaloneDescriptorSet const* sets,
+    std::uint32_t firstSet, std::uint32_t descriptorSetCount, VKW::DescriptorSet const* sets,
     std::uint32_t dynamicOffsetCount, std::uint32_t const* pDynamicOffsets)
 {
     CmdBindDescriptorSets(layout, BindPoint::Compute, firstSet, descriptorSetCount, sets, dynamicOffsetCount, pDynamicOffsets);
@@ -165,6 +170,8 @@ void Context::CmdBindGlobalDescriptorSets(VKW::DescriptorManager& descriptorMana
     globalSets[0] = descriptorManager.GetGlobalSampler_StorageSet().GetHandle();
     globalSets[1] = descriptorManager.GetGlobalTexturesSet().GetHandle();
     globalSets[2] = descriptorManager.GetGlobalUniformSet(frameID).GetHandle();
+
+    std::cout << "CONTEXT: Binding to cmd list " << *m_CurrentCommandList << " global sets " << globalSets[0] << ' ' << globalSets[1] << ' ' << globalSets[2] << std::endl;
 
     m_ImportTable->vkCmdBindDescriptorSets(*m_CurrentCommandList, VK_PIPELINE_BIND_POINT_GRAPHICS, descriptorManager.GetGlobalPipelineLayout()->GetHandle(), 0, 3, globalSets, 0, nullptr);
     m_ImportTable->vkCmdBindDescriptorSets(*m_CurrentCommandList, VK_PIPELINE_BIND_POINT_COMPUTE, descriptorManager.GetGlobalPipelineLayout()->GetHandle(), 0, 3, globalSets, 0, nullptr);

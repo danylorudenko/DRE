@@ -11,7 +11,7 @@ namespace GFX
 
 RenderGraph::RenderGraph(GraphicsManager* graphicsManager)
     : m_GraphicsManager{ graphicsManager }
-    , m_ResourcesManager{ m_GraphicsManager->GetMainDevice(), &m_GraphicsManager->GetUniformArena(), &m_GraphicsManager->GetReadbackArena() }
+    , m_ResourcesManager{ m_GraphicsManager->GetMainDevice() }
     , m_DescriptorManager{ m_GraphicsManager->GetMainDevice(), &m_ResourcesManager, &m_GraphicsManager->GetPipelineDB() }
     , m_Passes{}
 {
@@ -47,15 +47,38 @@ void RenderGraph::RegisterStorageBuffer(BasePass* pass, BufferID id, std::uint32
     m_DescriptorManager.RegisterBuffer(pass->GetID(), id, access, VKW::StageToDescriptorStage(stage), binding);
 }
 
-void RenderGraph::RegisterUniformBuffer(BasePass* pass, std::uint32_t size, VKW::Stages stage, std::uint32_t binding)
+void RenderGraph::RegisterUniformBuffer(BasePass* pass, VKW::Stages stage, std::uint32_t binding)
 {
-    UniformArena::Allocation& allocation = m_ResourcesManager.RegisterUniformBuffer(pass->GetID(), size, stage);
-    m_DescriptorManager.RegisterUniformBuffer(pass->GetID(), allocation, VKW::StageToDescriptorStage(stage), binding);
+    m_DescriptorManager.RegisterUniformBuffer(pass->GetID(), VKW::StageToDescriptorStage(stage), binding);
 }
 
 void RenderGraph::RegisterPushConstant(BasePass* pass, std::uint32_t size, VKW::Stages stages)
 {
     m_DescriptorManager.ResisterPushConstant(pass->GetID(), size, VKW::StageToDescriptorStage(stages));
+}
+
+StorageTexture* RenderGraph::GetStorageTexture(TextureID id)
+{
+    return m_ResourcesManager.GetStorageTexture(id);
+}
+
+StorageBuffer* RenderGraph::GetStorageBuffer(BufferID id)
+{
+    return m_ResourcesManager.GetStorageBuffer(id);
+}
+
+UniformProxy RenderGraph::GetPassUniform(PassID id, VKW::Context& context, std::uint32_t size)
+{
+    UniformArena::Allocation allocation = m_GraphicsManager->GetUniformArena().AllocateTransientRegion(m_GraphicsManager->GetCurrentFrameID(), size, 16);
+
+    VKW::DescriptorManager::WriteDesc writes;
+    writes.AddUniform(allocation.m_Buffer, allocation.m_OffsetInBuffer, allocation.m_Size, m_DescriptorManager.GetPassUniformBinding(id));
+
+    VKW::DescriptorSet passSet = GetPassDescriptorSet(id, m_GraphicsManager->GetCurrentFrameID());
+    
+    m_GraphicsManager->GetMainDevice()->GetDescriptorManager()->WriteDescriptorSet(passSet, writes);
+
+    return UniformProxy{ &context, allocation };
 }
 
 void RenderGraph::ParseGraph()
@@ -77,9 +100,9 @@ void RenderGraph::InitGraphResources()
     }
 }
 
-VKW::StandaloneDescriptorSet& RenderGraph::GetPassDescriptorSet(PassID pass)
+VKW::DescriptorSet RenderGraph::GetPassDescriptorSet(PassID pass, FrameID frameID)
 {
-    return m_DescriptorManager.GetPassDescriptorSet(pass);
+    return m_DescriptorManager.GetPassDescriptorSet(pass, frameID);
 }
 
 VKW::PipelineLayout* RenderGraph::GetPassPipelineLayout(PassID pass)

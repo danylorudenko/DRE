@@ -7,6 +7,7 @@
 #include <foundation\String\InplaceString.hpp>
 
 #include <vk_wrapper\pipeline\Pipeline.hpp>
+#include <vk_wrapper\descriptor\DescriptorLayout.hpp>
 
 namespace VKW
 {
@@ -31,13 +32,16 @@ public:
 
     void                    AddGlobalLayouts(VKW::PipelineLayout::Descriptor& descriptor);
 
-    VKW::PipelineLayout*    CreatePipelineLayout(char const* name, VKW::PipelineLayout::Descriptor const& descriptor);
-    VKW::Pipeline*          CreatePipeline(char const* name, VKW::Pipeline::Descriptor& descriptor);
-    void                    CreateDefaultPipelines();
+
+    VKW::DescriptorSetLayout*   CreateDescriptorSetLayout(const char* name, VKW::DescriptorSetLayout::Descriptor const& desc);
+    VKW::PipelineLayout*        CreatePipelineLayout(char const* name, VKW::PipelineLayout::Descriptor const& descriptor);
+    VKW::Pipeline*              CreatePipeline(char const* name, VKW::Pipeline::Descriptor& descriptor);
+    void                        CreateDefaultPipelines();
 
     VKW::PipelineLayout const*  GetGlobalLayout() const;
     VKW::PipelineLayout*        GetLayout(char const* name);
     VKW::Pipeline*              GetPipeline(char const* name);
+    VKW::DescriptorSetLayout*   GetSetLayout(char const* name);
 
 private:
     // will find all modules with same name before '.' symbol (like "wall.vert.spv" + "wall.frag.spv") and combine all their layouts into one with name "wall_layout"

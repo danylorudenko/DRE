@@ -21,7 +21,6 @@ struct  BufferResource;
 class   Pipeline;
 class   DescriptorSetLayout;
 class   PipelineLayout;
-class   StandaloneDescriptorSet;
 class   RenderPass;
 class   Framebuffer;
 class   Dependency;
@@ -85,17 +84,17 @@ public:
 
     void CmdBindDescriptorSets(
         VKW::PipelineLayout const* layout, BindPoint bindPoint,
-        std::uint32_t firstSet, std::uint32_t descriptorSetCount, VKW::StandaloneDescriptorSet const* sets,
+        std::uint32_t firstSet, std::uint32_t descriptorSetCount, VKW::DescriptorSet const* sets,
         std::uint32_t dynamicOffsetCount = 0, std::uint32_t const* pDynamicOffsets = nullptr);
 
     void CmdBindGraphicsDescriptorSets(
         VKW::PipelineLayout const* layout, 
-        std::uint32_t firstSet, std::uint32_t descriptorSetCount, VKW::StandaloneDescriptorSet const* sets,
+        std::uint32_t firstSet, std::uint32_t descriptorSetCount, VKW::DescriptorSet const* sets,
         std::uint32_t dynamicOffsetCount = 0, std::uint32_t const* pDynamicOffsets = nullptr);
 
     void CmdBindComputeDescriptorSets(
         VKW::PipelineLayout const* layout,
-        std::uint32_t firstSet, std::uint32_t descriptorSetCount, VKW::StandaloneDescriptorSet const* sets,
+        std::uint32_t firstSet, std::uint32_t descriptorSetCount, VKW::DescriptorSet const* sets,
         std::uint32_t dynamicOffsetCount = 0, std::uint32_t const* pDynamicOffsets = nullptr);
 
     void CmdBindGlobalDescriptorSets(VKW::DescriptorManager& descriptorManager, std::uint8_t frameID);

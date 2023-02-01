@@ -32,11 +32,11 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOMana
     , m_UploadArena{ &m_Device, C_DEFAULT_STAGING_ARENA_SIZE }
     , m_UniformArena{ &m_Device, C_DEFAULT_UNIFORM_ARENA_SIZE }
     , m_ReadbackArena{ &m_Device, C_DEFAULT_UNIFORM_ARENA_SIZE }
-    , m_TextureBank{ &m_MainContext, m_Device.GetResourcesController(), m_Device.GetDescriptorAllocator() }
+    , m_TextureBank{ &m_MainContext, m_Device.GetResourcesController(), m_Device.GetDescriptorManager() }
     , m_PipelineDB{ &m_Device, ioManager }
     , m_PersistentStorage{ &m_Device }
     , m_RenderGraph{ this }
-    , m_DependencyManager{ &m_RenderGraph.ResourcesManager() }
+    , m_DependencyManager{}
 {
     g_GraphicsManager = this;
 
@@ -44,7 +44,7 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOMana
     {
         m_GlobalUniforms[i] = m_Device.GetResourcesController()->CreateBuffer(C_GLOBAL_UNIFORM_SIZE, VKW::BufferUsage::UNIFORM);
     }
-    m_Device.GetDescriptorAllocator()->AllocateDefaultDescriptors(VKW::CONSTANTS::FRAMES_BUFFERING, m_GlobalUniforms, m_PersistentStorage.GetStorage().GetResource());
+    m_Device.GetDescriptorManager()->AllocateDefaultDescriptors(VKW::CONSTANTS::FRAMES_BUFFERING, m_GlobalUniforms, m_PersistentStorage.GetStorage().GetResource());
 }
 
 void GraphicsManager::Initialize()
@@ -86,6 +86,10 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
 {
     m_GraphicsFrame = frame;
 
+    // need to wait for currentFrame - 2 to complete
+    if (m_FrameProcessingCompletePoint[GetCurrentFrameID()].GetQueue() != nullptr)
+        m_FrameProcessingCompletePoint[GetCurrentFrameID()].Wait();
+
     m_UniformArena.ResetAllocations(GetCurrentFrameID());
     m_UploadArena.ResetAllocations(GetCurrentFrameID());
     m_ReadbackArena.ResetAllocations(GetCurrentFrameID());
@@ -94,17 +98,17 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
     PrepareGlobalData(context, deltaTimeUS);
 
     // globalData
-    context.CmdBindGlobalDescriptorSets(*GetMainDevice()->GetDescriptorAllocator(), GetCurrentFrameID());
+    context.CmdBindGlobalDescriptorSets(*GetMainDevice()->GetDescriptorManager(), GetCurrentFrameID());
 
     // main graph
     StorageTexture& finalRT = m_RenderGraph.Render(context);
 
     // presentation
     m_DependencyManager.ResourceBarrier(context, finalRT.GetResource(), VKW::RESOURCE_ACCESS_TRANSFER_SRC, VKW::STAGE_TRANSFER);
-    TransferToSwapchainAndPresent(finalRT);
+    m_FrameProcessingCompletePoint[GetCurrentFrameID()] = TransferToSwapchainAndPresent(finalRT);
 }
 
-void GraphicsManager::TransferToSwapchainAndPresent(StorageTexture& src)
+VKW::QueueExecutionPoint GraphicsManager::TransferToSwapchainAndPresent(StorageTexture& src)
 {
     VKW::PresentationController* presentController = GetPresentationController();
     VKW::PresentationContext presentationContext = presentController->AcquireNewPresentContext();
@@ -120,8 +124,12 @@ void GraphicsManager::TransferToSwapchainAndPresent(StorageTexture& src)
         VKW::RESOURCE_ACCESS_CLEAR,   VKW::STAGE_TRANSFER,
         VKW::RESOURCE_ACCESS_PRESENT, VKW::STAGE_PRESENT);
 
+    VKW::QueueExecutionPoint transferCompletePoint = GetMainContext().SyncPoint();
+
     GetMainContext().FlushWaitSwapchain(presentationContext);
     GetMainContext().Present(presentationContext);
+
+    return transferCompletePoint;
 }
 
 void WriteMemorySequence(void*& memory, void const* data, std::uint32_t size)
@@ -146,7 +154,7 @@ RenderableObject* GraphicsManager::CreateRenderableObject(VKW::Context& context,
         break;
     }
 
-    VKW::DescriptorManager* descriptorManager = GetMainDevice()->GetDescriptorAllocator();
+    VKW::DescriptorManager* descriptorManager = GetMainDevice()->GetDescriptorManager();
 
     DRE::InplaceVector<VKW::DescriptorSet, VKW::CONSTANTS::MAX_PIPELINE_LAYOUT_MEMBERS> descriptorSets;
     for (std::uint8_t i = std::uint8_t(descriptorManager->GetGlobalSetLayoutsCount()), count = std::uint8_t(layout->GetMemberCount()); i < count; i++)

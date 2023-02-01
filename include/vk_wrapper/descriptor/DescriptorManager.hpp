@@ -6,6 +6,9 @@
 #include <utility>
 
 #include <foundation\class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonMovable.hpp>
+
+#include <foundation\container\InplaceVector.hpp>
 
 #include <vulkan\vulkan.h>
 
@@ -41,16 +44,6 @@ enum SamplerType
     SAMPLER_TYPE_MAX
 };
 
-///////////////////////////////
-struct HWDescriptorHandle
-{
-    inline HWDescriptorHandle(VkDescriptorSet handle)
-        : handle_{ handle }
-    {}
-
-    VkDescriptorSet handle_;
-};
-
 /////////////////////////////////////////
 
 class LogicalDevice;
@@ -63,6 +56,35 @@ class DescriptorManager
     : public NonCopyable
 {
 public:
+    class WriteDesc
+        : public NonCopyable
+        , public NonMovable
+    {
+    public:
+        using WriteCollection = DRE::InplaceVector<VkWriteDescriptorSet, VKW::CONSTANTS::MAX_SET_LAYOUT_MEMBERS>;
+        using ImageCollection = DRE::InplaceVector<VkDescriptorImageInfo, VKW::CONSTANTS::MAX_SET_LAYOUT_MEMBERS>;
+        using BufferCollection = DRE::InplaceVector<VkDescriptorBufferInfo, VKW::CONSTANTS::MAX_SET_LAYOUT_MEMBERS>;
+
+        WriteDesc();
+
+        void AddSamplers(VkSampler* samplers, std::uint8_t count, std::uint32_t binding);
+        void AddStorageBuffer(BufferResource* buffer, std::uint32_t binding);
+        void AddStorageImage(ImageResourceView* image, std::uint32_t binding);
+        void AddSampledImage(ImageResourceView* image, std::uint32_t binding);
+        void AddUniform(BufferResource* buffer, std::uint32_t offset, std::uint32_t size, std::uint32_t binding);
+        
+        void AddTarget(VkDescriptorSet targetSet);
+
+        inline std::uint32_t                WritesCount() const { return writes_.Size(); }
+        inline VkWriteDescriptorSet const*  Writes() const { return writes_.Data(); }
+
+    private:
+        WriteCollection  writes_;
+        ImageCollection  imageInfos_;
+        BufferCollection bufferInfos_;
+    };
+
+public:
     DescriptorManager(ImportTable* table, LogicalDevice* device);
 
     DescriptorManager(DescriptorManager&& rhs);
@@ -70,28 +92,30 @@ public:
 
     ~DescriptorManager();
 
-    void                    AllocateDefaultDescriptors(std::uint8_t globalBuffersCount, BufferResource** globalUniformBuffers, BufferResource* persistentStorageBuffer);
+    void                        AllocateDefaultDescriptors(std::uint8_t globalBuffersCount, BufferResource** globalUniformBuffers, BufferResource* persistentStorageBuffer);
 
-    GlobalDescriptorHandle  AllocateTextureDescriptor(ImageResourceView const* view = nullptr);
-    void                    WriteTextureDescriptor(VkDescriptorSet set, std::uint16_t descriptorID, ImageResourceView const* view);
-    void                    FreeTextureDescriptor(GlobalDescriptorHandle& handle);
+    GlobalDescriptorHandle      AllocateTextureDescriptor(ImageResourceView const* view = nullptr);
+    void                        FreeTextureDescriptor(GlobalDescriptorHandle& handle);
 
-    DescriptorSet           AllocateStandaloneSet(DescriptorSetLayout const& layout);
-    void                    FreeStandaloneSet(DescriptorSet& set);
+    DescriptorSet               AllocateStandaloneSet(DescriptorSetLayout const& layout);
+    void                        FreeStandaloneSet(DescriptorSet& set);
 
-    std::uint32_t               GetGlobalSetLayoutsCount() const { return (std::uint32_t)3; }
+    std::uint32_t               GetGlobalSetLayoutsCount() const { return 3u; }
     DescriptorSetLayout const*  GetGlobalSetLayouts() const { return globalSetLayouts_; }
     DescriptorSetLayout&        GetGlobalSetLayout(std::uint32_t i) { return globalSetLayouts_[i]; }
     PipelineLayout*             GetGlobalPipelineLayout() { return &globalPipelineLayout_; }
 
-    DescriptorSet           GetGlobalSampler_StorageSet() const { return DescriptorSet{ globalSampler_StorageSet_, globalSetLayouts_ + 0}; }
-    DescriptorSet           GetGlobalTexturesSet() const { return DescriptorSet{ globalTexturesSet_, globalSetLayouts_ + 1}; }
-    DescriptorSet           GetGlobalUniformSet(std::uint8_t bufferingID) { return DescriptorSet{ globalUniformSets_[bufferingID], globalSetLayouts_ + 2}; }
+    DescriptorSet               GetGlobalSampler_StorageSet() const { return DescriptorSet{ globalSampler_StorageSet_, globalSetLayouts_ + 0}; }
+    DescriptorSet               GetGlobalTexturesSet() const { return DescriptorSet{ globalTexturesSet_, globalSetLayouts_ + 1}; }
+    DescriptorSet               GetGlobalUniformSet(std::uint8_t bufferingID) { return DescriptorSet{ globalUniformSets_[bufferingID], globalSetLayouts_ + 2}; }
 
-    VkSampler               GetDefaultSampler(SamplerType type) const;
+    VkSampler                   GetDefaultSampler(SamplerType type) const;
+
+    void                        WriteDescriptorSet(DescriptorSet set, WriteDesc& desc);
 
 private:
     void CreateGlobalDescriptorLayouts();
+    void WriteTextureDescriptor(VkDescriptorSet set, std::uint16_t descriptorID, ImageResourceView const* view);
 
 private:
     ImportTable* table_;

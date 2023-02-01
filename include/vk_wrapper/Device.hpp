@@ -41,7 +41,7 @@ public:
     VKW::Queue*                     GetMainQueue() const { return queueProvider_->GetMainQueue(); }
     VKW::PresentationController*    GetPresentationController() const { return presentationController_.get(); }
     VKW::ResourcesController*       GetResourcesController() const { return resourcesController_.get(); }
-    VKW::DescriptorManager*       GetDescriptorAllocator() const { return descriptorAllocator_.get(); }
+    VKW::DescriptorManager*         GetDescriptorManager() const { return descriptorManager_.get(); }
 
 
 
@@ -60,7 +60,7 @@ public:
     std::unique_ptr<VKW::MemoryController> memoryController_;
     std::unique_ptr<VKW::ResourcesController> resourcesController_;
 
-    std::unique_ptr<VKW::DescriptorManager> descriptorAllocator_;
+    std::unique_ptr<VKW::DescriptorManager> descriptorManager_;
 
 
 };

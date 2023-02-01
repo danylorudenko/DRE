@@ -3,12 +3,15 @@
 namespace WORLD
 {
 
-Entity::Entity(glm::vec3 pos, glm::vec3 eulerRotation, glm::vec3 scale, GFX::RenderableObject* renderable)
-    : m_RenderableObject{ renderable }
+Entity::Entity(TransformData const& transform, GFX::RenderableObject* renderable)
+    : m_Transform{ transform }
+    , m_RenderableObject{ renderable }
+    , m_Material{ nullptr }
+    , m_Geometry{ nullptr }
 {
     if (m_RenderableObject)
     {
-        m_RenderableObject->Transform(pos, eulerRotation, scale);
+        m_RenderableObject->Transform(transform.model);
     }
 }
 

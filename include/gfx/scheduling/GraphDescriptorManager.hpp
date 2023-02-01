@@ -5,7 +5,6 @@
 #include <foundation\Container\InplaceHashTable.hpp>
 #include <foundation\Container\InplaceVector.hpp>
 
-#include <vk_wrapper\descriptor\StandaloneDescriptorSet.hpp>
 #include <vk_wrapper\pipeline\Dependency.hpp>
 
 #include <gfx\DeviceChild.hpp>
@@ -31,13 +30,14 @@ public:
 
     void RegisterTexture        (PassID pass, TextureID id, VKW::ResourceAccess access, VKW::DescriptorStage stages, std::uint8_t binding);
     void RegisterBuffer         (PassID pass, BufferID id,  VKW::ResourceAccess access, VKW::DescriptorStage stages, std::uint8_t binding);
-    void RegisterUniformBuffer  (PassID pass, UniformArena::Allocation& allocation, VKW::DescriptorStage stages, std::uint8_t binding);
-    void ResisterPushConstant  (PassID pass, std::uint32_t size, VKW::DescriptorStage stage);
+    void RegisterUniformBuffer  (PassID pass, VKW::DescriptorStage stages, std::uint8_t binding);
+    void ResisterPushConstant   (PassID pass, std::uint32_t size, VKW::DescriptorStage stage);
 
     void InitDescriptors();
 
-    VKW::StandaloneDescriptorSet&   GetPassDescriptorSet(PassID pass);
+    VKW::DescriptorSet              GetPassDescriptorSet(PassID pass, FrameID frameID);
     VKW::PipelineLayout*            GetPassPipelineLayout(PassID pass);
+    std::uint32_t                   GetPassUniformBinding(PassID pass);
 
 private:
     struct DescriptorInfo
@@ -48,14 +48,13 @@ private:
         DescriptorInfo(TextureID textureID, VKW::ResourceAccess access, VKW::DescriptorStage stages, std::uint32_t size0, std::uint32_t size1, std::uint8_t isTexture, std::uint8_t binding)
             : mu_TextureID{ textureID }, m_Access{ access }, m_Stages{ stages }, m_Size0{ size0 }, m_Size1{ size1 }, m_IsTexture{ isTexture }, m_Binding{ binding } {}
 
-        DescriptorInfo(VKW::BufferResource* uniformBuffer, VKW::ResourceAccess access, VKW::DescriptorStage stages, std::uint32_t offset, std::uint32_t size, std::uint8_t isTexture, std::uint8_t binding)
-            : mu_UniformBuffer{ uniformBuffer }, m_Access{ access }, m_Stages{ stages }, m_Size0{ offset }, m_Size1{ size }, m_IsTexture{ isTexture }, m_Binding{ binding } {}
+        DescriptorInfo(VKW::DescriptorStage stages, std::uint8_t binding)
+            : mu_BufferID{ 0 }, m_Access{ VKW::RESOURCE_ACCESS_SHADER_UNIFORM }, m_Stages{ stages }, m_Size0{ 0 }, m_Size1{ 0 }, m_IsTexture{ false }, m_Binding{ binding } {}
 
         union
         {
             TextureID               mu_TextureID;
             BufferID                mu_BufferID;
-            VKW::BufferResource*    mu_UniformBuffer;
         };
         VKW::ResourceAccess     m_Access;
         VKW::DescriptorStage    m_Stages;
@@ -67,8 +66,9 @@ private:
     struct SetInfo
     {
         DRE::InplaceVector<DescriptorInfo, VKW::CONSTANTS::MAX_SET_LAYOUT_MEMBERS> descriptorInfos;
-        std::uint32_t           pushConstantSize = 0;
-        VKW::DescriptorStage    pushConstantStages = VKW::DESCRIPTOR_STAGE_NONE;
+        std::uint32_t           uniformBinding      = DRE_U32_MAX;
+        std::uint32_t           pushConstantSize    = 0;
+        VKW::DescriptorStage    pushConstantStages  = VKW::DESCRIPTOR_STAGE_NONE;
     };
 
     DRE::InplaceHashTable<PassID, SetInfo> m_DescriptorsInfo;
@@ -76,8 +76,10 @@ private:
 private:
     struct PerPassDescriptors
     {
-        VKW::StandaloneDescriptorSet m_DescriptorSet;
-        VKW::PipelineLayout*         m_PipelineLayout;
+        VKW::DescriptorSetLayout*    m_DescriptorLayout;
+        VKW::DescriptorSet           m_DescriptorSet[VKW::CONSTANTS::FRAMES_BUFFERING];
+        VKW::PipelineLayout*         m_PipelineLayout = nullptr;
+        std::uint32_t                m_UniformBinding = 0;
     };
 
 

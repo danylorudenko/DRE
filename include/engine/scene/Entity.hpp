@@ -1,6 +1,8 @@
 #pragma once
 
 #include <gfx\renderer\RenderableObject.hpp>
+#include <glm\mat4x4.hpp>
+#include <glm\gtc\matrix_transform.hpp>
 
 namespace Data
 {
@@ -14,7 +16,13 @@ namespace WORLD
 class Entity
 {
 public:
-    Entity(glm::vec3 pos = {0,0,0}, glm::vec3 eulerRotation = {0,0,0}, glm::vec3 scale = {1,1,1}, GFX::RenderableObject* renderable = nullptr);
+    struct TransformData
+    {
+        glm::mat4 model = glm::identity<glm::mat4>();
+    };
+
+public:
+    Entity(TransformData const& transform, GFX::RenderableObject* renderable = nullptr);
 
     inline GFX::RenderableObject*   GetRenderableObject() { return m_RenderableObject; }
     inline void                     SetMaterial(Data::Material* material) { m_Material = material; }
@@ -23,6 +31,7 @@ public:
     inline Data::Geometry*          GetGeometry() const { return m_Geometry; }
 
 private:
+    TransformData           m_Transform;
     GFX::RenderableObject*  m_RenderableObject;
     Data::Geometry*         m_Geometry;
     Data::Material*         m_Material;

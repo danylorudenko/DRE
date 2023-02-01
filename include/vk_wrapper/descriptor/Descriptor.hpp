@@ -73,7 +73,6 @@ struct GlobalDescriptorHandle
 class DescriptorSetLayout;
 // simple wrapper, doesn't own anything
 class DescriptorSet
-    : public NonCopyable
 {
 public:
     DescriptorSet()
@@ -86,6 +85,11 @@ public:
         , layout_{ layout }
     {}
 
+    DescriptorSet(DescriptorSet const& rhs)
+        : set_{ rhs.set_ }
+        , layout_{ rhs.layout_ }
+    {}
+
     DescriptorSet(DescriptorSet&& rhs)
         : set_{ rhs.set_ }
         , layout_{ rhs.layout_ }
@@ -93,6 +97,15 @@ public:
         rhs.set_ = VK_NULL_HANDLE;
         rhs.layout_ = nullptr;
     }
+
+    DescriptorSet& operator=(DescriptorSet const& rhs)
+    {
+        set_ = rhs.set_;
+        layout_ = rhs.layout_;
+
+        return *this;
+    }
+
     DescriptorSet& operator=(DescriptorSet&& rhs)
     {
         set_ = rhs.set_;        rhs.set_ = VK_NULL_HANDLE;

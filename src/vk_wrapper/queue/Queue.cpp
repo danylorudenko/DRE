@@ -126,7 +126,6 @@ void CommandList::SetFinishExecutionPoint(QueueExecutionPoint& point)
 
 void CommandList::WaitForPendingExecution()
 {
-    VkSemaphore timelineSemaphore = executionFinishPoint_.GetTimelineSemaphore();
     executionFinishPoint_.Wait();
 }
 
@@ -211,9 +210,6 @@ QueueExecutionPoint Queue::Execute(CommandList* commandList, QueueExecutionPoint
 
 QueueExecutionPoint Queue::ScheduleExecute(CommandList* commandList, std::uint8_t waitPointCount, QueueExecutionPoint const* waitPoints)
 {
-    std::uint64_t signalValue = submitCounter_++;
-    QueueExecutionPoint executionPoint{ this, signalValue };
-
     PendingCommandList pendingCmdList;
     pendingCmdList.commandList_ = commandList;
     pendingCmdList.waitCount_ = waitPointCount;
@@ -222,14 +218,16 @@ QueueExecutionPoint Queue::ScheduleExecute(CommandList* commandList, std::uint8_
         pendingCmdList.waitPoints_[i] = waitPoints[i];
     }
 
+    pendingCmdList.signalValue_ = ++submitCounter_;
+
     pendingCommandLists_.EmplaceBack(pendingCmdList);
-    return executionPoint;
+    return QueueExecutionPoint{ this, pendingCmdList.signalValue_ };
 }
 
 QueueExecutionPoint Queue::Execute(CommandList* commandList, std::uint8_t waitPointCount, QueueExecutionPoint const* waitPoints)
 {
     ExecutePending();
-    return ExecuteInternal(commandList, waitPointCount, waitPoints, nullptr);
+    return ExecuteInternal(commandList, waitPointCount, waitPoints, ++submitCounter_, nullptr);
 }
 
 void Queue::ExecutePending()
@@ -237,7 +235,7 @@ void Queue::ExecutePending()
     for (std::uint32_t i = 0; i < pendingCommandLists_.Size(); i++)
     {
         PendingCommandList& pending = pendingCommandLists_[i];
-        ExecuteInternal(pending.commandList_, pending.waitCount_, pending.waitPoints_, nullptr);
+        ExecuteInternal(pending.commandList_, pending.waitCount_, pending.waitPoints_, pending.signalValue_, nullptr);
     }
     pendingCommandLists_.Clear();
 }
@@ -245,7 +243,7 @@ void Queue::ExecutePending()
 QueueExecutionPoint Queue::ExecuteWaitSwapchain(CommandList* commandList, PresentationContext& presentationContext, std::uint8_t waitPointCount, QueueExecutionPoint const* waitPoints)
 {
     ExecutePending();
-    return ExecuteInternal(commandList, waitPointCount, waitPoints, &presentationContext);
+    return ExecuteInternal(commandList, waitPointCount, waitPoints, ++submitCounter_, &presentationContext);
 }
 
 QueueExecutionPoint Queue::ExecuteWaitSwapchain(CommandList* commandList, PresentationContext& presentationContext, QueueExecutionPoint const& waitPoint)
@@ -253,10 +251,12 @@ QueueExecutionPoint Queue::ExecuteWaitSwapchain(CommandList* commandList, Presen
     return ExecuteWaitSwapchain(commandList, presentationContext, 1, &waitPoint);
 }
 
-QueueExecutionPoint Queue::ExecuteInternal(CommandList* commandList, std::uint8_t waitPointCount, QueueExecutionPoint const* waitExecutionPoints, PresentationContext* presentationContext)
+QueueExecutionPoint Queue::ExecuteInternal(CommandList* commandList, std::uint8_t waitPointCount, QueueExecutionPoint const* waitExecutionPoints, std::uint64_t signalValue, PresentationContext * presentationContext)
 {
     commandList->End();
     VkCommandBuffer vkCommandBuffer = *commandList;
+
+    std::cout << "QUEUE: Executing CmdBuffer: " << vkCommandBuffer << " signal: " << signalValue << std::endl;
 
     std::uint8_t const binary = presentationContext == nullptr ? 0 : 1;
 
@@ -271,7 +271,7 @@ QueueExecutionPoint Queue::ExecuteInternal(CommandList* commandList, std::uint8_
 
     static std::uint64_t semaphoreWaitValues[WAIT_COUNT_MAX];
 
-    std::uint64_t const signalValues[2] = { ++submitCounter_, 0 };
+    std::uint64_t const signalValues[2] = { signalValue, 0 };
     VkSemaphore signalSemaphores[2] = { timelineSemaphore_, binary ? presentationContext->GetRenderingCompleteSemaphore() : VK_NULL_HANDLE };
 
     VkTimelineSemaphoreSubmitInfo semaphoreInfo;
@@ -340,11 +340,15 @@ void Queue::WaitFor(std::uint8_t pointCount, QueueExecutionPoint const* points)
     VkSemaphore semaphores[WAIT_COUNT_MAX];
     std::uint64_t values[WAIT_COUNT_MAX];
 
+    std::cout << "QUEUE: Waiting on semaphore values:";
+
     for (std::uint8_t i = 0; i < pointCount; i++)
     {
         semaphores[i] = points[i].GetTimelineSemaphore();
         values[i] = points[i].GetPoint();
+        std::cout << ' ' << values[i];
     }
+    std::cout << std::endl;
 
     VkSemaphoreWaitInfo waitInfo;
     waitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO;

@@ -22,20 +22,17 @@ class GraphResourcesManager
     , public NonMovable
 {
 public:
-    GraphResourcesManager(VKW::Device* device, UniformArena* uniformArena, ReadbackArena* readbackArena);
+    GraphResourcesManager(VKW::Device* device);
 
     virtual ~GraphResourcesManager();
 
     void RegisterTexture(TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access, VKW::Stages stage);
     void RegisterBuffer(BufferID id, std::uint32_t size, VKW::ResourceAccess access, VKW::Stages stage);
 
-    UniformArena::Allocation& RegisterUniformBuffer(PassID id, std::uint32_t size, VKW::Stages stages);
-
     void PrepareResources();
 
     StorageBuffer*  GetStorageBuffer    (BufferID id);
     StorageTexture* GetStorageTexture   (TextureID id);
-    UniformProxy    GetUniformBuffer    (PassID id, VKW::Context& context);
 
 
 private:
@@ -71,16 +68,12 @@ private:
     };
 
     VKW::Device*        m_Device;
-    UniformArena*       m_UniformArena;
-    ReadbackArena*      m_ReadbackArena;
 
     DRE::InplaceHashTable<BufferID,  GraphBuffer>  m_StorageBuffers;
     DRE::InplaceHashTable<TextureID, GraphTexture> m_StorageTextures;
 
     DRE::InplaceHashTable<BufferID,  AccumulatedInfo> m_AccumulatedBufferInfo;
     DRE::InplaceHashTable<TextureID, AccumulatedInfo> m_AccumulatedTextureInfo;
-
-    DRE::InplaceHashTable<PassID, UniformArena::Allocation> m_UniformAllocations;
 };
 
 }

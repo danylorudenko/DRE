@@ -30,11 +30,11 @@ void GraphDescriptorManager::RegisterBuffer(PassID pass, BufferID buffer, VKW::R
     setInfo.descriptorInfos.EmplaceBack(buffer, access, stages, 0u, 0u, std::uint8_t(0), binding);
 }
 
-void GraphDescriptorManager::RegisterUniformBuffer(PassID pass, UniformArena::Allocation& allocation, VKW::DescriptorStage stages, std::uint8_t binding)
+void GraphDescriptorManager::RegisterUniformBuffer(PassID pass, VKW::DescriptorStage stages, std::uint8_t binding)
 {
     // onlny one uniform buffer is allowed per pass
     SetInfo& setInfo = m_DescriptorsInfo[pass];
-    setInfo.descriptorInfos.EmplaceBack(allocation.m_Buffer, VKW::ResourceAccess{ VKW::RESOURCE_ACCESS_SHADER_UNIFORM }, stages, allocation.m_OffsetInBuffer, allocation.m_Size, std::uint8_t(0), binding);
+    setInfo.uniformBinding = binding;
 }
 
 void GraphDescriptorManager::ResisterPushConstant(PassID pass, std::uint32_t size, VKW::DescriptorStage stage)
@@ -50,18 +50,17 @@ void GraphDescriptorManager::InitDescriptors()
 
     VKW::ImportTable* table = m_ParentDevice->GetFuncTable();
     VKW::LogicalDevice* device = m_ParentDevice->GetLogicalDevice();
-    VKW::DescriptorManager* allocator = m_ParentDevice->GetDescriptorAllocator();
+    VKW::DescriptorManager* allocator = m_ParentDevice->GetDescriptorManager();
     m_DescriptorsInfo.ForEach([table, device, allocator, this](auto const& pair)
     {
+        PerPassDescriptors& perPassDescriptors = m_PassDescriptors[*pair.key];
         SetInfo& setInfo = *pair.value;
 
         auto& descriptorInfos = setInfo.descriptorInfos;
         descriptorInfos.SortBubble([](DescriptorInfo const& lhs, DescriptorInfo const& rhs) { return lhs.m_Binding < rhs.m_Binding; });
 
-        VKW::DescriptorStage stages = VKW::DESCRIPTOR_STAGE_NONE;
-        for (std::uint8_t i = 0, size = descriptorInfos.Size(); i < size; i++) { stages |= descriptorInfos[i].m_Stages; } // collect all stages
-
-        VKW::StandaloneDescriptorSet::Descriptor desc{/* stages */};
+        VKW::DescriptorSetLayout::Descriptor layoutDesc{};
+        VKW::DescriptorManager::WriteDesc writeDesc{};
         for (std::uint8_t i = 0, size = descriptorInfos.Size(); i < size; i++)
         {
             DescriptorInfo const& info = descriptorInfos[i];
@@ -72,53 +71,66 @@ void GraphDescriptorManager::InitDescriptors()
                 case VKW::RESOURCE_ACCESS_SHADER_WRITE:
                 case VKW::RESOURCE_ACCESS_SHADER_RW:
                 case VKW::RESOURCE_ACCESS_SHADER_READ:
-                    desc.AddStorageImage(m_ResourcesManager->GetStorageTexture(info.mu_TextureID)->GetShaderView(), info.m_Binding);
+                    layoutDesc.Add(VKW::DESCRIPTOR_TYPE_STORAGE_IMAGE, info.m_Binding, info.m_Stages);
+                    writeDesc.AddStorageImage(m_ResourcesManager->GetStorageTexture(info.mu_TextureID)->GetShaderView(), info.m_Binding);
                     break;
                 case VKW::RESOURCE_ACCESS_SHADER_SAMPLE:
-                    desc.AddSampledImage(m_ResourcesManager->GetStorageTexture(info.mu_TextureID)->GetShaderView(), info.m_Binding);
+                    layoutDesc.Add(VKW::DESCRIPTOR_TYPE_TEXTURE, info.m_Binding, info.m_Stages);
+                    writeDesc.AddSampledImage(m_ResourcesManager->GetStorageTexture(info.mu_TextureID)->GetShaderView(), info.m_Binding);
                     break;
                 }
             }
             else
             {
-                if (info.m_Access == VKW::RESOURCE_ACCESS_SHADER_UNIFORM)
-                {
-                    desc.AddUniform(info.mu_UniformBuffer, info.m_Size0, info.m_Size1, info.m_Binding);
-                }
-                else
-                {
-                    desc.AddStorageBuffer(m_ResourcesManager->GetStorageBuffer(info.mu_BufferID)->GetResource(), info.m_Binding);
-                }
+                layoutDesc.Add(VKW::DESCRIPTOR_TYPE_STORAGE_BUFFER, info.m_Binding, info.m_Stages);
+                writeDesc.AddStorageBuffer(m_ResourcesManager->GetStorageBuffer(info.mu_BufferID)->GetResource(), info.m_Binding);
             }
         }
 
-        PerPassDescriptors& perPassDescriptors = m_PassDescriptors[*pair.key];
-        perPassDescriptors.m_DescriptorSet = VKW::StandaloneDescriptorSet{ table, device, desc, allocator };
+        if (setInfo.uniformBinding != DRE_U32_MAX)
+        {
+            layoutDesc.Add(VKW::DESCRIPTOR_TYPE_UNIFORM_BUFFER, setInfo.uniformBinding, VKW::DESCRIPTOR_STAGE_ALL);
+        }
 
-        VKW::PipelineLayout::Descriptor layoutDesc;
-        m_PipelineDB->AddGlobalLayouts(layoutDesc);
-        layoutDesc.Add(&perPassDescriptors.m_DescriptorSet.GetLayout());
+        char name[32];
+        std::sprintf(name, "pass_set_layout_%i", int(*pair.key));
+
+        perPassDescriptors.m_DescriptorLayout = m_PipelineDB->CreateDescriptorSetLayout(name, layoutDesc);
+
+        for (std::uint8_t i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
+        {
+            perPassDescriptors.m_DescriptorSet[i] = m_ParentDevice->GetDescriptorManager()->AllocateStandaloneSet(*perPassDescriptors.m_DescriptorLayout);
+        }
+
+        VKW::PipelineLayout::Descriptor pipelinelayoutDesc;
+        m_PipelineDB->AddGlobalLayouts(pipelinelayoutDesc);
+        pipelinelayoutDesc.Add(perPassDescriptors.m_DescriptorLayout);
 
         if (setInfo.pushConstantSize > 0)
         {
-            layoutDesc.AddPushConstant(setInfo.pushConstantSize, setInfo.pushConstantStages);
+            pipelinelayoutDesc.AddPushConstant(setInfo.pushConstantSize, setInfo.pushConstantStages);
         }
 
-        char layoutName[16];
-        std::sprintf(layoutName, "pass_layout_%i", int(*pair.key));
+        std::sprintf(name, "pass_layout_%i", int(*pair.key));
         
-        perPassDescriptors.m_PipelineLayout = m_PipelineDB->CreatePipelineLayout(layoutName, layoutDesc);
+        perPassDescriptors.m_PipelineLayout = m_PipelineDB->CreatePipelineLayout(name, pipelinelayoutDesc);
     });
 }
 
-VKW::StandaloneDescriptorSet& GraphDescriptorManager::GetPassDescriptorSet(PassID pass)
+VKW::DescriptorSet GraphDescriptorManager::GetPassDescriptorSet(PassID pass, FrameID id)
 {
-    return m_PassDescriptors[pass].m_DescriptorSet;
+    return m_PassDescriptors[pass].m_DescriptorSet[id];
 }
 
 VKW::PipelineLayout* GraphDescriptorManager::GetPassPipelineLayout(PassID pass)
 {
     return m_PassDescriptors[pass].m_PipelineLayout;
+}
+
+std::uint32_t GraphDescriptorManager::GetPassUniformBinding(PassID pass)
+{
+    DRE_ASSERT(m_PassDescriptors[pass].m_UniformBinding != DRE_U32_MAX, "No binding assigned for pass uniform.");
+    return m_PassDescriptors[pass].m_UniformBinding;
 }
 
 

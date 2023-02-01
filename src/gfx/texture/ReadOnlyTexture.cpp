@@ -43,7 +43,7 @@ ReadOnlyTexture::~ReadOnlyTexture()
 {
     if (m_ShaderReadView != nullptr)
     {
-        m_ParentDevice->GetDescriptorAllocator()->FreeTextureDescriptor(m_ShaderReadDescriptor);
+        m_ParentDevice->GetDescriptorManager()->FreeTextureDescriptor(m_ShaderReadDescriptor);
         m_ParentDevice->GetResourcesController()->FreeImageView(m_ShaderReadView);
 
         DRE_DEBUG_ONLY(m_ShaderReadDescriptor = VKW::GlobalDescriptorHandle{});
