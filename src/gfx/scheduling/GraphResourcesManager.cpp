@@ -21,16 +21,16 @@ GraphResourcesManager::~GraphResourcesManager() = default;
 
 void GraphResourcesManager::RegisterTexture(TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access, VKW::Stages stage)
 {
-    AccumulatedInfo& ainfo = m_AccumulatedTextureInfo[id];
+    AccumulatedInfo& info = m_AccumulatedTextureInfo[id];
 
-    DRE_DEBUG_ONLY(if (ainfo.access != VKW::RESOURCE_ACCESS_UNDEFINED))
-        DRE_ASSERT(ainfo.size0 == width && ainfo.size1 == height && ainfo.depth == 1, "Different sized specified for same resource");
+    DRE_DEBUG_ONLY(if (info.access != VKW::RESOURCE_ACCESS_UNDEFINED))
+        DRE_ASSERT(info.size0 == width && info.size1 == height && info.depth == 1, "Different sized specified for same resource");
 
-    ainfo.access |= access;
-    ainfo.format = format;
-    ainfo.size0 = width;
-    ainfo.size1 = height;
-    ainfo.depth = 1;
+    info.access = VKW::ResourceAccess(info.access | std::uint64_t(access));
+    info.format = format;
+    info.size0 = width;
+    info.size1 = height;
+    info.depth = 1;
 }
 
 void GraphResourcesManager::RegisterBuffer(BufferID id, std::uint32_t size, VKW::ResourceAccess access, VKW::Stages stage)
@@ -40,7 +40,7 @@ void GraphResourcesManager::RegisterBuffer(BufferID id, std::uint32_t size, VKW:
     DRE_DEBUG_ONLY(if (info.access != VKW::RESOURCE_ACCESS_UNDEFINED))
         DRE_ASSERT(info.size0 == size, "Different sized specified for same resource");
 
-    info.access |= access;
+    info.access = VKW::ResourceAccess(info.access | std::uint64_t(access));
     info.format = VKW::FORMAT_UNDEFINED;
     info.size0 = size;
     info.size1 = 0;

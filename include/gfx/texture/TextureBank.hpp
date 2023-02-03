@@ -28,6 +28,7 @@ public:
     TextureBank(VKW::Context* loadingContext, VKW::ResourcesController* resourcesController, VKW::DescriptorManager* descriptorAllocator);
     ~TextureBank();
 
+    void                LoadDefaultTextures ();
     ReadOnlyTexture*    LoadTexture2DSync   (DRE::String128 const& name, std::uint32_t width, std::uint32_t height, VKW::Format format, DRE::ByteBuffer const& textureData);
     ReadOnlyTexture*    FindTexture         (DRE::String128 const& name);
 

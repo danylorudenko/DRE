@@ -37,13 +37,6 @@ void GraphDescriptorManager::RegisterUniformBuffer(PassID pass, VKW::DescriptorS
     setInfo.uniformBinding = binding;
 }
 
-void GraphDescriptorManager::ResisterPushConstant(PassID pass, std::uint32_t size, VKW::DescriptorStage stage)
-{
-    SetInfo& setInfo = m_DescriptorsInfo[pass];
-    setInfo.pushConstantSize = size;
-    setInfo.pushConstantStages = stage;
-}
-
 void GraphDescriptorManager::InitDescriptors()
 {
     m_PassDescriptors.Clear();
@@ -90,7 +83,11 @@ void GraphDescriptorManager::InitDescriptors()
         if (setInfo.uniformBinding != DRE_U32_MAX)
         {
             layoutDesc.Add(VKW::DESCRIPTOR_TYPE_UNIFORM_BUFFER, setInfo.uniformBinding, VKW::DESCRIPTOR_STAGE_ALL);
+            perPassDescriptors.m_UniformBinding = setInfo.uniformBinding;
         }
+
+        if (layoutDesc.GetCount() == 0)
+            return;
 
         char name[32];
         std::sprintf(name, "pass_set_layout_%i", int(*pair.key));
@@ -106,13 +103,7 @@ void GraphDescriptorManager::InitDescriptors()
         m_PipelineDB->AddGlobalLayouts(pipelinelayoutDesc);
         pipelinelayoutDesc.Add(perPassDescriptors.m_DescriptorLayout);
 
-        if (setInfo.pushConstantSize > 0)
-        {
-            pipelinelayoutDesc.AddPushConstant(setInfo.pushConstantSize, setInfo.pushConstantStages);
-        }
-
         std::sprintf(name, "pass_layout_%i", int(*pair.key));
-        
         perPassDescriptors.m_PipelineLayout = m_PipelineDB->CreatePipelineLayout(name, pipelinelayoutDesc);
     });
 }

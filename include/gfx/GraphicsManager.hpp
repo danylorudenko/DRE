@@ -17,6 +17,7 @@
 #include <gfx\scheduling\RenderGraph.hpp>
 #include <gfx\scheduling\DependencyManager.hpp>
 #include <gfx\pipeline\PipelineDB.hpp>
+#include <gfx\renderer\RenderableObject.hpp>
 #include <gfx\view\RenderView.hpp>
 
 #include <engine\data\Geometry.hpp>
@@ -56,13 +57,13 @@ public:
 
     inline VKW::Device*                 GetMainDevice() { return &m_Device; }
 
-    inline VKW::ImportTable*            GetVulkanTable() const { return m_Device.table_.get(); }
-    inline VKW::Swapchain*              GetSwapchain() const{ return m_Device.swapchain_.get(); }
-    inline VKW::PresentationController* GetPresentationController() const { return m_Device.presentationController_.get();  }
+    inline VKW::ImportTable*            GetVulkanTable() const { return m_Device.GetFuncTable(); }
+    inline VKW::Swapchain*              GetSwapchain() const{ return m_Device.GetSwapchain(); }
+    inline VKW::PresentationController* GetPresentationController() const { return m_Device.GetPresentationController(); }
 
-    inline VKW::Queue*                  GetMainQueue() const { return m_Device.queueProvider_->GetMainQueue(); }
-    inline VKW::Queue*                  GetLoadingQueue() const { return m_Device.queueProvider_->GetLoadingQueue(); }
-    inline VKW::Queue*                  GetPresentationQueue() const { return m_Device.queueProvider_->GetPresentationQueue(); }
+    inline VKW::Queue*                  GetMainQueue() const { return m_Device.GetMainQueue(); }
+    inline VKW::Queue*                  GetLoadingQueue() const { return m_Device.GetMainQueue(); }
+    inline VKW::Queue*                  GetPresentationQueue() const { return m_Device.GetMainQueue(); }
 
     inline VKW::Context&                GetMainContext() { return m_MainContext; }
 
@@ -92,9 +93,17 @@ public:
     void                                FreeRenderableObject(RenderableObject* obj);
 
 private:
-    void    CreateAllPasses();
+    void            CreateAllPasses();
 
-    void    PrepareGlobalData(VKW::Context& context, std::uint64_t deltaTimeUS);
+    struct GeometryGPU
+    {
+        VKW::BufferResource* vertexBuffer;
+        VKW::BufferResource* indexBuffer;
+    };
+    using GeometryGPUMap = DRE::InplaceHashTable<Data::Geometry*, GeometryGPU>;
+    GeometryGPU* LoadGPUGeometry(VKW::Context& context, Data::Geometry* geometry);
+
+    void            PrepareGlobalData(VKW::Context& context, std::uint64_t deltaTimeUS);
     VKW::QueueExecutionPoint TransferToSwapchainAndPresent(StorageTexture& src);
 
 
@@ -132,12 +141,6 @@ private:
     using MaterialLayoutMap     = DRE::InplaceHashTable<Data::Material::RenderingProperties::MaterialType, VKW::DescriptorSetLayout>;
     MaterialLayoutMap           m_MaterialLayoutMap; // store signature for similar materials
 
-    struct GeometryGPU
-    {
-        VKW::BufferResource* vertexBuffer;
-        VKW::BufferResource* indexBuffer;
-    };
-    using GeometryGPUMap        = DRE::InplaceHashTable<Data::Geometry*, GeometryGPU>;
     GeometryGPUMap              m_GeometryGPUMap;
 };
 

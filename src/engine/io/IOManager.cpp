@@ -157,7 +157,6 @@ void IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene)
 
     ParseAssimpMeshes(GFX::g_GraphicsManager->GetMainContext(), scene);
     ParseAssimpMaterials(scene, path);
-    //m_MaterialLibrary->debug_output();
     ParseAssimpNodeRecursive(GFX::g_GraphicsManager->GetMainContext(), path, scene, scene->mRootNode, targetScene);
     GFX::g_GraphicsManager->GetMainContext().FlushAll();
 }

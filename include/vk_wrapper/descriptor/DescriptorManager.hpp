@@ -94,8 +94,8 @@ public:
 
     void                        AllocateDefaultDescriptors(std::uint8_t globalBuffersCount, BufferResource** globalUniformBuffers, BufferResource* persistentStorageBuffer);
 
-    GlobalDescriptorHandle      AllocateTextureDescriptor(ImageResourceView const* view = nullptr);
-    void                        FreeTextureDescriptor(GlobalDescriptorHandle& handle);
+    TextureDescriptorIndex      AllocateTextureDescriptor(ImageResourceView const* view = nullptr);
+    void                        FreeTextureDescriptor(TextureDescriptorIndex& handle);
 
     DescriptorSet               AllocateStandaloneSet(DescriptorSetLayout const& layout);
     void                        FreeStandaloneSet(DescriptorSet& set);

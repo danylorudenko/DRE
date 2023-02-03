@@ -18,31 +18,26 @@ namespace VKW
 {
 
 /////////////////////////////////////
-enum ResourceAccessBits : std::uint64_t
+enum ResourceAccess : std::uint64_t
 {
-    RESOURCE_ACCESS_UNDEFINED                   = DRE_U64_MAX,
-    RESOURCE_ACCESS_NONE                        = VK_ACCESS_2_NONE,
-    RESOURCE_ACCESS_TRANSFER_DST                = VK_ACCESS_2_TRANSFER_WRITE_BIT,
-    RESOURCE_ACCESS_TRANSFER_SRC                = VK_ACCESS_2_TRANSFER_READ_BIT,
-    RESOURCE_ACCESS_COLOR_ATTACHMENT            = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-    RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT    = VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-    RESOURCE_ACCESS_SHADER_READ                 = VK_ACCESS_2_SHADER_READ_BIT,
-    RESOURCE_ACCESS_SHADER_UNIFORM              = VK_ACCESS_2_UNIFORM_READ_BIT,
-    RESOURCE_ACCESS_SHADER_SAMPLE               = VK_ACCESS_2_SHADER_SAMPLED_READ_BIT,
-    RESOURCE_ACCESS_SHADER_WRITE                = VK_ACCESS_2_SHADER_WRITE_BIT,
-    RESOURCE_ACCESS_HOST_WRITE                  = VK_ACCESS_2_HOST_WRITE_BIT,
-    RESOURCE_ACCESS_HOST_READ                   = VK_ACCESS_2_HOST_READ_BIT,
-    RESOURCE_ACCESS_CLEAR                       = RESOURCE_ACCESS_TRANSFER_DST,
-    RESOURCE_ACCESS_PRESENT                     = VK_ACCESS_2_MEMORY_READ_BIT,
-
-
-    RESOURCE_ACCESS_SHADER_RW         = RESOURCE_ACCESS_SHADER_READ | RESOURCE_ACCESS_SHADER_WRITE,
-    RESOURCE_ACCESS_ANY_TRANSFER      = RESOURCE_ACCESS_TRANSFER_SRC | RESOURCE_ACCESS_TRANSFER_DST,
-    RESOURCE_ACCESS_ANY_ATTACHMENT    = RESOURCE_ACCESS_COLOR_ATTACHMENT | RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT,
-    RESOURCE_ACCESS_ANY_WRITE         = RESOURCE_ACCESS_SHADER_WRITE | RESOURCE_ACCESS_TRANSFER_DST | RESOURCE_ACCESS_ANY_ATTACHMENT,
-    RESOURCE_ACCESS_ANY_READ          = RESOURCE_ACCESS_SHADER_READ | RESOURCE_ACCESS_SHADER_UNIFORM | RESOURCE_ACCESS_TRANSFER_SRC | RESOURCE_ACCESS_SHADER_SAMPLE | RESOURCE_ACCESS_PRESENT
+    RESOURCE_ACCESS_UNDEFINED                   = (1 << 0),
+    RESOURCE_ACCESS_NONE                        = (1 << 1),
+    RESOURCE_ACCESS_TRANSFER_DST                = (1 << 2),
+    RESOURCE_ACCESS_TRANSFER_SRC                = (1 << 3),
+    RESOURCE_ACCESS_COLOR_ATTACHMENT            = (1 << 4),
+    RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT    = (1 << 5),
+    RESOURCE_ACCESS_SHADER_READ                 = (1 << 6),
+    RESOURCE_ACCESS_SHADER_UNIFORM              = (1 << 7),
+    RESOURCE_ACCESS_SHADER_SAMPLE               = (1 << 8),
+    RESOURCE_ACCESS_SHADER_WRITE                = (1 << 9),
+    RESOURCE_ACCESS_SHADER_RW                   = (1 << 10),
+    RESOURCE_ACCESS_HOST_WRITE                  = (1 << 11),
+    RESOURCE_ACCESS_HOST_READ                   = (1 << 12),
+    RESOURCE_ACCESS_CLEAR                       = (1 << 13),
+    RESOURCE_ACCESS_PRESENT                     = (1 << 14),
+    RESOURCE_ACCESS_GENERIC_READ                = (1 << 15),
+    RESOURCE_ACCESS_GENERIC_WRITE               = (1 << 16)
 };
-using ResourceAccess = std::uint64_t;
 
 /////////////////////////////////////
 enum StageBits : std::uint64_t
@@ -67,8 +62,8 @@ VkImageLayout           AccessToLayout(ResourceAccess access);
 VkPipelineStageFlags2   StagesToFlags(Stages stage);
 
 
-bool BarrierRequirements(VKW::ResourceAccess prevAccess, VKW::ResourceAccess access, bool& requireExecutionDependency, bool& requireMemoryDependency, bool& requireTransition);
-bool BarrierRequirements(VKW::ResourceAccess prevAccess, VKW::ResourceAccess access, bool& requireExecutionDependency, bool& requireMemoryDependency);
+//bool BarrierRequirements(VKW::ResourceAccess prevAccess, VKW::ResourceAccess access, bool& requireExecutionDependency, bool& requireMemoryDependency, bool& requireTransition);
+//bool BarrierRequirements(VKW::ResourceAccess prevAccess, VKW::ResourceAccess access, bool& requireExecutionDependency, bool& requireMemoryDependency);
 
 class Dependency
     : public NonMovable

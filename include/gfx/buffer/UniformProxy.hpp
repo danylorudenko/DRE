@@ -18,8 +18,7 @@ class UniformProxy
 public:
     UniformProxy(VKW::Context* context, UniformArena::Allocation const& allocation);
 
-    template<typename T>
-    void WriteMember140(T* data, std::uint32_t size)
+    void WriteMember140(void const* data, std::uint32_t size)
     {
         std::uint32_t padding = size % 16;
         std::uint32_t size140 = size + padding;

@@ -56,9 +56,9 @@ inline bool IsTextureDescriptor(DescriptorType type)
 
 
 ///////////////////////////////
-struct GlobalDescriptorHandle
+struct TextureDescriptorIndex
 {
-    inline GlobalDescriptorHandle(std::uint32_t id = 0, std::uint32_t count = 0)
+    inline TextureDescriptorIndex(std::uint32_t id = 0, std::uint32_t count = 0)
         : id_{ id }, count_{ count }
     {}
 
@@ -116,6 +116,7 @@ public:
 
     inline VkDescriptorSet GetHandle() const { return set_; }
     inline DescriptorSetLayout const* GetLayout() const { return layout_; }
+    inline bool IsValid() const { return set_ != VK_NULL_HANDLE; }
 
 private:
     VkDescriptorSet set_;

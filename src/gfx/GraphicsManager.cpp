@@ -27,7 +27,7 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOMana
     : m_MainWindow{ window }
     , m_IOManager{ ioManager }
     , m_Device{ hInstance, window->NativeHandle(), debug}
-    , m_MainContext{ m_Device.table_.get(), m_Device.GetMainQueue() }
+    , m_MainContext{ m_Device.GetFuncTable(), m_Device.GetMainQueue()}
     , m_GraphicsFrame{ 0 }
     , m_UploadArena{ &m_Device, C_DEFAULT_STAGING_ARENA_SIZE }
     , m_UniformArena{ &m_Device, C_DEFAULT_UNIFORM_ARENA_SIZE }
@@ -49,6 +49,8 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOMana
 
 void GraphicsManager::Initialize()
 {
+    m_PipelineDB.CreateDefaultPipelines();
+    m_TextureBank.LoadDefaultTextures();
     CreateAllPasses();
 }
 
@@ -138,6 +140,48 @@ void WriteMemorySequence(void*& memory, void const* data, std::uint32_t size)
     memory = DRE::PtrAdd(memory, size);
 }
 
+GraphicsManager::GeometryGPU* GraphicsManager::LoadGPUGeometry(VKW::Context& context, Data::Geometry* geometry)
+{
+    std::uint32_t const vertexMemoryRequirements = geometry->GetVertexSizeInBytes();
+    std::uint32_t const indexMemoryRequirements = geometry->GetIndexSizeInBytes();
+    std::uint32_t const meshMemoryRequirements = vertexMemoryRequirements + indexMemoryRequirements;
+
+    auto meshMemory = GFX::g_GraphicsManager->GetUploadArena().AllocateTransientRegion(GFX::g_GraphicsManager->GetCurrentFrameID(), meshMemoryRequirements, 256);
+
+    void* memorySequence = meshMemory.m_MappedRange;
+    WriteMemorySequence(memorySequence, geometry->GetVertexData(), vertexMemoryRequirements);
+    void* indexStart = memorySequence;
+    WriteMemorySequence(memorySequence, geometry->GetIndexData(), indexMemoryRequirements);
+
+    meshMemory.FlushCaches();
+
+    VKW::BufferResource* vertexBuffer = GFX::g_GraphicsManager->GetMainDevice()->GetResourcesController()->CreateBuffer(vertexMemoryRequirements, VKW::BufferUsage::VERTEX_INDEX);
+    VKW::BufferResource* indexBuffer = GFX::g_GraphicsManager->GetMainDevice()->GetResourcesController()->CreateBuffer(indexMemoryRequirements, VKW::BufferUsage::VERTEX_INDEX);
+
+    context.CmdResourceDependency(meshMemory.m_Buffer, meshMemory.m_OffsetInBuffer, meshMemory.m_Size, VKW::RESOURCE_ACCESS_HOST_WRITE, VKW::STAGE_HOST, VKW::RESOURCE_ACCESS_TRANSFER_SRC, VKW::STAGE_TRANSFER);
+
+    // schedule copy
+    context.CmdResourceDependency(vertexBuffer, VKW::RESOURCE_ACCESS_NONE, VKW::STAGE_TOP, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
+    context.CmdCopyBufferToBuffer(vertexBuffer, 0, meshMemory.m_Buffer, meshMemory.m_OffsetInBuffer, vertexMemoryRequirements);
+    context.CmdResourceDependency(vertexBuffer, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER, VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_INPUT_ASSEMBLER);
+
+    context.CmdResourceDependency(indexBuffer, VKW::RESOURCE_ACCESS_NONE, VKW::STAGE_TOP, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
+    context.CmdCopyBufferToBuffer(indexBuffer, 0, meshMemory.m_Buffer, meshMemory.m_OffsetInBuffer + vertexMemoryRequirements, indexMemoryRequirements);
+    context.CmdResourceDependency(indexBuffer, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER, VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_INPUT_ASSEMBLER);
+
+    return &m_GeometryGPUMap.Emplace(geometry, vertexBuffer, indexBuffer);
+}
+
+void EmplaceRenderableObjectTexture(Data::Material* material, Data::Material::TextureProperty::Slot slot, TextureBank& textureBank, char const* defaultName, RenderableObject::TexturesVector& result)
+{
+    Data::Texture2D const& texture = material->GetTexture(Data::Material::TextureProperty::Slot::DIFFUSE);
+    if (!texture.IsInitialized())
+        result.EmplaceBack(textureBank.FindTexture(defaultName));
+    else
+        result.EmplaceBack(textureBank.LoadTexture2DSync(
+            texture.GetName(), texture.GetSizeX(), texture.GetSizeY(), texture.GetFormat(), texture.GetBuffer()
+        ));
+}
 
 RenderableObject* GraphicsManager::CreateRenderableObject(VKW::Context& context, Data::Geometry* geometry, Data::Material* material)
 {
@@ -154,74 +198,27 @@ RenderableObject* GraphicsManager::CreateRenderableObject(VKW::Context& context,
         break;
     }
 
-    VKW::DescriptorManager* descriptorManager = GetMainDevice()->GetDescriptorManager();
-
-    DRE::InplaceVector<VKW::DescriptorSet, VKW::CONSTANTS::MAX_PIPELINE_LAYOUT_MEMBERS> descriptorSets;
-    for (std::uint8_t i = std::uint8_t(descriptorManager->GetGlobalSetLayoutsCount()), count = std::uint8_t(layout->GetMemberCount()); i < count; i++)
-    {
-        descriptorSets.EmplaceBack(descriptorManager->AllocateStandaloneSet(*layout->GetMember(i)));
-    }
-    // ye, but sets are emtpy!!!
-
     // - load textures
     RenderableObject::TexturesVector textures;
-    for (std::uint32_t i = 0, count = std::uint32_t(Data::Material::TextureProperty::MAX); i < count; i++)
-    {
-        Data::Texture2D const& texture = material->GetTexture(Data::Material::TextureProperty::Slot(i));
-        if (!texture.IsInitialized())
-            continue;
-
-        textures.EmplaceBack(
-            m_TextureBank.LoadTexture2DSync(
-                texture.GetName(),
-                texture.GetSizeX(),
-                texture.GetSizeY(),
-                texture.GetFormat(),
-                texture.GetBuffer()
-            )
-        );
-    }
-    // - write other descriptors, texture descriptors are written by LoadTexture2DSync
-
+    EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::DIFFUSE, m_TextureBank, "default_color", textures);
+    EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::NORMAL, m_TextureBank, "default_normal", textures);
 
     // load geometry
     GeometryGPU* geometryGPU = m_GeometryGPUMap.Find(geometry).value;
     if (geometryGPU == nullptr)
+        geometryGPU = LoadGPUGeometry(context, geometry);
+
+    RenderableObject::DescriptorSetVector descriptors;
+
+    VKW::DescriptorManager* descriptorManager = GetMainDevice()->GetDescriptorManager();
+    std::uint8_t const mainRenderingPassSetCount = m_RenderGraph.GetPassDescriptorSet(PassID::ForwardOpaque, GetCurrentFrameID()).IsValid() ? 1 : 0;
+    std::uint8_t const itemDescriptorId = std::uint8_t(descriptorManager->GetGlobalSetLayoutsCount() + mainRenderingPassSetCount); // globals + pass set
+    DRE_ASSERT(layout->GetMemberCount() == itemDescriptorId + 1, "All renderable items should currently contain everything in one set.");
+    for (std::uint8_t i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
     {
-        std::uint32_t const vertexMemoryRequirements = geometry->GetVertexSizeInBytes();
-        std::uint32_t const indexMemoryRequirements = geometry->GetIndexSizeInBytes();
-
-        std::uint32_t const meshMemoryRequirements = vertexMemoryRequirements + indexMemoryRequirements;
-
-
-        auto meshMemory = GFX::g_GraphicsManager->GetUploadArena().AllocateTransientRegion(GFX::g_GraphicsManager->GetCurrentFrameID(), meshMemoryRequirements, 256);
-        void* memorySequence = meshMemory.m_MappedRange;
-
-        WriteMemorySequence(memorySequence, geometry->GetVertexData(), vertexMemoryRequirements);
-
-        void* indexStart = memorySequence;
-
-        WriteMemorySequence(memorySequence, geometry->GetIndexData(), indexMemoryRequirements);
-
-        meshMemory.FlushCaches();
-
-        VKW::BufferResource* vertexBuffer = GFX::g_GraphicsManager->GetMainDevice()->GetResourcesController()->CreateBuffer(vertexMemoryRequirements, VKW::BufferUsage::VERTEX_INDEX);
-        VKW::BufferResource* indexBuffer = GFX::g_GraphicsManager->GetMainDevice()->GetResourcesController()->CreateBuffer(indexMemoryRequirements, VKW::BufferUsage::VERTEX_INDEX);
-
-        context.CmdResourceDependency(meshMemory.m_Buffer, meshMemory.m_OffsetInBuffer, meshMemory.m_Size, VKW::RESOURCE_ACCESS_HOST_WRITE, VKW::STAGE_HOST, VKW::RESOURCE_ACCESS_TRANSFER_SRC, VKW::STAGE_TRANSFER);
-
-        // schedule copy
-        context.CmdResourceDependency(vertexBuffer, VKW::RESOURCE_ACCESS_NONE, VKW::STAGE_TOP, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
-        context.CmdCopyBufferToBuffer(vertexBuffer, 0, meshMemory.m_Buffer, meshMemory.m_OffsetInBuffer, vertexMemoryRequirements);
-
-        context.CmdResourceDependency(indexBuffer, VKW::RESOURCE_ACCESS_NONE, VKW::STAGE_TOP, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
-
-        geometryGPU = &m_GeometryGPUMap.Emplace(geometry, vertexBuffer, indexBuffer);
+        descriptors.EmplaceBack(descriptorManager->AllocateStandaloneSet(*layout->GetMember(itemDescriptorId)));
     }
-
-
-    //RenderableObject(VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, VKW::BufferResource* indexBuffer, TexturesVector&& textures, DescriptorSetVector&& sets);
-    return m_RenderableObjectPool.Alloc(pipeline, geometryGPU->vertexBuffer, geometryGPU->indexBuffer, DRE_MOVE(textures), DRE_MOVE(descriptorSets));
+    return m_RenderableObjectPool.Alloc(pipeline, geometryGPU->vertexBuffer, geometry->GetVertexCount(), geometryGPU->indexBuffer, geometry->GetIndexCount(), DRE_MOVE(textures), DRE_MOVE(descriptors));
 }
 
 void GraphicsManager::FreeRenderableObject(RenderableObject* obj)

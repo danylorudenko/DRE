@@ -55,11 +55,12 @@ private:
 
     VKW::PipelineLayout m_GlobalLayout;
 
-    using SetLayoutMap = DRE::InplaceHashTable<DRE::String128, DRE::InplaceVector<VKW::DescriptorSetLayout, VKW::CONSTANTS::MAX_PIPELINE_LAYOUT_MEMBERS - 3>>;
+    using ShaderLayoutsMap = DRE::InplaceHashTable<DRE::String128, DRE::InplaceVector<VKW::DescriptorSetLayout, VKW::CONSTANTS::MAX_PIPELINE_LAYOUT_MEMBERS - 3>>;
 
-    SetLayoutMap                                                m_SetLayouts;
-    DRE::InplaceHashTable<DRE::String128, VKW::PipelineLayout>  m_PipelineLayouts;
-    DRE::InplaceHashTable<DRE::String128, VKW::Pipeline>        m_Pipelines;
+    ShaderLayoutsMap                                                m_ShaderLayouts;
+    DRE::InplaceHashTable<DRE::String128, VKW::DescriptorSetLayout> m_SetLayouts;
+    DRE::InplaceHashTable<DRE::String128, VKW::PipelineLayout>      m_PipelineLayouts;
+    DRE::InplaceHashTable<DRE::String128, VKW::Pipeline>            m_Pipelines;
 };
 
 }

@@ -26,10 +26,20 @@ ReadOnlyTexture* TextureBank::FindTexture(DRE::String128 const& name)
     return m_DiscTextures.Find(name).value;
 }
 
+void TextureBank::LoadDefaultTextures()
+{
+    float defaultColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    float defaultNormal[3] = { 0.0f, 1.0f, 0.0f };
+    DRE::ByteBuffer defaultColorBuffer{ defaultColor, sizeof(defaultColor) };
+    DRE::ByteBuffer defaultNormalBuffer{ defaultNormal, sizeof(defaultNormal) };
+
+    LoadTexture2DSync("default_color", 1, 1, VKW::FORMAT_R8G8B8A8_UNORM, defaultColorBuffer);
+    LoadTexture2DSync("default_normal", 1, 1, VKW::FORMAT_R8G8B8A8_UNORM, defaultNormalBuffer);
+}
+
 ReadOnlyTexture* TextureBank::LoadTexture2DSync(DRE::String128 const& name, std::uint32_t width, std::uint32_t height, VKW::Format format, DRE::ByteBuffer const& textureData)
 {
     UploadArena& transientArena = g_GraphicsManager->GetUploadArena();
-    std::uint32_t const loadingQueueFamily = m_LoadingContext->GetParentQueue()->GetQueueFamily();
 
     // 1. staging buffer region and target texture
     VKW::ImageResource* imageResource = m_ResourcesController->CreateImage(width, height, format, VKW::ImageUsage::TEXTURE);
@@ -52,12 +62,12 @@ ReadOnlyTexture* TextureBank::LoadTexture2DSync(DRE::String128 const& name, std:
         VKW::RESOURCE_ACCESS_NONE, VKW::STAGE_TOP);
 
     VKW::QueueExecutionPoint syncPoint = m_LoadingContext->SyncPoint();
-    m_LoadingContext->FlushOnlyPending();
+    m_LoadingContext->FlushAll();
     syncPoint.Wait();
     transientArena.ResetAllocations(g_GraphicsManager->GetCurrentFrameID());
 
     VKW::ImageResourceView* imageView = m_ResourcesController->ViewImageAs(imageResource);
-    VKW::GlobalDescriptorHandle descriptorHandle = m_DescriptorAllocator->AllocateTextureDescriptor(imageView);
+    VKW::TextureDescriptorIndex descriptorHandle = m_DescriptorAllocator->AllocateTextureDescriptor(imageView);
 
     return &(m_DiscTextures[name] = ReadOnlyTexture{ g_GraphicsManager->GetMainDevice(), imageResource, imageView, descriptorHandle});
 }

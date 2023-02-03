@@ -94,7 +94,6 @@ void VulkanApplicationDelegate::start()
         InitImGui();
 
     m_IOManager.LoadShaderFiles();
-    m_GraphicsManager.GetPipelineDB().CreateDefaultPipelines();
 
     m_GraphicsManager.GetMainRenderView() = GFX::RenderView{
         &DRE::g_FrameScratchAllocator,

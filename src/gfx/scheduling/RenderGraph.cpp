@@ -52,11 +52,6 @@ void RenderGraph::RegisterUniformBuffer(BasePass* pass, VKW::Stages stage, std::
     m_DescriptorManager.RegisterUniformBuffer(pass->GetID(), VKW::StageToDescriptorStage(stage), binding);
 }
 
-void RenderGraph::RegisterPushConstant(BasePass* pass, std::uint32_t size, VKW::Stages stages)
-{
-    m_DescriptorManager.ResisterPushConstant(pass->GetID(), size, VKW::StageToDescriptorStage(stages));
-}
-
 StorageTexture* RenderGraph::GetStorageTexture(TextureID id)
 {
     return m_ResourcesManager.GetStorageTexture(id);
@@ -69,7 +64,7 @@ StorageBuffer* RenderGraph::GetStorageBuffer(BufferID id)
 
 UniformProxy RenderGraph::GetPassUniform(PassID id, VKW::Context& context, std::uint32_t size)
 {
-    UniformArena::Allocation allocation = m_GraphicsManager->GetUniformArena().AllocateTransientRegion(m_GraphicsManager->GetCurrentFrameID(), size, 16);
+    UniformArena::Allocation allocation = m_GraphicsManager->GetUniformArena().AllocateTransientRegion(m_GraphicsManager->GetCurrentFrameID(), size, 256);
 
     VKW::DescriptorManager::WriteDesc writes;
     writes.AddUniform(allocation.m_Buffer, allocation.m_OffsetInBuffer, allocation.m_Size, m_DescriptorManager.GetPassUniformBinding(id));

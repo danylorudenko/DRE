@@ -8,14 +8,23 @@ namespace VKW
 
 VkAccessFlags2KHR AccessToFlags(ResourceAccess access)
 {
-    /*
     switch (access)
     {
-    case RESOURCE_ACCESS_HOST_WRITE:
-        return VK_ACCESS_2_HOST_WRITE_BIT;
+    case RESOURCE_ACCESS_UNDEFINED:
+    case RESOURCE_ACCESS_NONE:
+        return VK_ACCESS_2_NONE;
 
-    case RESOURCE_ACCESS_HOST_READ:
-        return VK_ACCESS_2_HOST_READ_BIT;
+    case RESOURCE_ACCESS_TRANSFER_DST:
+        return VK_ACCESS_2_TRANSFER_WRITE_BIT;
+
+    case RESOURCE_ACCESS_TRANSFER_SRC:
+        return VK_ACCESS_2_TRANSFER_READ_BIT;
+
+    case RESOURCE_ACCESS_COLOR_ATTACHMENT:
+        return VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT;
+
+    case RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT:
+        return VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
 
     case RESOURCE_ACCESS_SHADER_READ:
         return VK_ACCESS_2_SHADER_READ_BIT_KHR;
@@ -26,49 +35,33 @@ VkAccessFlags2KHR AccessToFlags(ResourceAccess access)
     case RESOURCE_ACCESS_SHADER_SAMPLE:
         return VK_ACCESS_2_SHADER_SAMPLED_READ_BIT_KHR;
 
+    case RESOURCE_ACCESS_SHADER_WRITE:
+        return VK_ACCESS_2_SHADER_WRITE_BIT;
+
     case RESOURCE_ACCESS_SHADER_RW:
-        return VK_ACCESS_2_SHADER_WRITE_BIT_KHR | VK_ACCESS_2_SHADER_READ_BIT_KHR;
+        return VK_ACCESS_2_SHADER_WRITE_BIT | VK_ACCESS_2_SHADER_READ_BIT;
 
-    case RESOURCE_ACCESS_TRANSFER_DST:
-        return VK_ACCESS_2_TRANSFER_WRITE_BIT_KHR;
+    case RESOURCE_ACCESS_HOST_WRITE:
+        return VK_ACCESS_2_HOST_WRITE_BIT;
 
-    case RESOURCE_ACCESS_TRANSFER_SRC:
-        return VK_ACCESS_2_TRANSFER_READ_BIT_KHR;
-
-    case RESOURCE_ACCESS_COLOR_ATTACHMENT:
-        return VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT_KHR;
-
-    case RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT:
-        return VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT_KHR | VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT_KHR;
+    case RESOURCE_ACCESS_HOST_READ:
+        return VK_ACCESS_2_HOST_READ_BIT;
 
     case RESOURCE_ACCESS_CLEAR:
         return VK_ACCESS_2_TRANSFER_WRITE_BIT;
 
     case RESOURCE_ACCESS_PRESENT:
+    case RESOURCE_ACCESS_GENERIC_READ:
         return VK_ACCESS_2_MEMORY_READ_BIT;
 
-    case RESOURCE_ACCESS_UNDEFINED:
-        return VK_ACCESS_2_NONE;
-
-    ///////// combined states
-    case RESOURCE_ACCESS_ANY_READ:
-        return VK_ACCESS_2_MEMORY_READ_BIT;
-
-    case RESOURCE_ACCESS_ANY_WRITE:
+    case RESOURCE_ACCESS_GENERIC_WRITE:
         return VK_ACCESS_2_MEMORY_WRITE_BIT;
-
-    case RESOURCE_ACCESS_ANY_ATTACHMENT:
-        return VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
 
     default:
         DRE_ASSERT(false, "Unsupported ResourceAccess.");
         return VK_FLAGS_NONE;
     }
-
-    */
-    if(access == RESOURCE_ACCESS_UNDEFINED)
-        return VK_ACCESS_2_NONE;
 
     return VkAccessFlags2KHR(access);
 }
@@ -80,18 +73,18 @@ VkImageLayout AccessToLayout(ResourceAccess access)
     case RESOURCE_ACCESS_UNDEFINED:
         return VK_IMAGE_LAYOUT_UNDEFINED;
 
-    case RESOURCE_ACCESS_NONE:
-        return VK_IMAGE_LAYOUT_GENERAL;
-
     case RESOURCE_ACCESS_SHADER_READ:
     case RESOURCE_ACCESS_SHADER_SAMPLE:
         return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
+    case RESOURCE_ACCESS_NONE:
     case RESOURCE_ACCESS_SHADER_WRITE:
+    case RESOURCE_ACCESS_GENERIC_WRITE:
     case RESOURCE_ACCESS_SHADER_RW:
         return VK_IMAGE_LAYOUT_GENERAL;
 
     case RESOURCE_ACCESS_TRANSFER_DST:
+    case RESOURCE_ACCESS_CLEAR:
         return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 
     case RESOURCE_ACCESS_TRANSFER_SRC:
@@ -104,9 +97,8 @@ VkImageLayout AccessToLayout(ResourceAccess access)
     case RESOURCE_ACCESS_PRESENT:
         return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-    case RESOURCE_ACCESS_ANY_READ:
-    case RESOURCE_ACCESS_ANY_WRITE:
-        return VK_IMAGE_LAYOUT_GENERAL;
+    case RESOURCE_ACCESS_GENERIC_READ:
+        VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL;
 
     default:
         DRE_ASSERT(false, "Unsupported ResourceAccess");
@@ -143,76 +135,76 @@ VkPipelineStageFlags2 StagesToFlags(Stages stage)
 }
 
 
-inline bool BarrierRequirements(VKW::ResourceAccess prevAccess, VKW::ResourceAccess access, bool& requireExecutionDependency, bool& requireMemoryDependency, bool& requireTransition)
-{
-    // just reading, no hazards
-    if((prevAccess & VKW::RESOURCE_ACCESS_ANY_READ) && (access & VKW::RESOURCE_ACCESS_ANY_READ))
-        return false;
-
-    if(access & VKW::RESOURCE_ACCESS_ANY_ATTACHMENT)
-    {
-        requireExecutionDependency = true;
-        requireMemoryDependency    = true;
-        requireTransition          = true;
-
-        return true;
-    }
-
-    // just execution dependency, no need for cache flushing
-    if ((prevAccess & VKW::RESOURCE_ACCESS_ANY_READ) && (access & VKW::RESOURCE_ACCESS_ANY_WRITE))
-    {
-        requireExecutionDependency  = true;
-        return true;
-    }
-
-    // WAW hazard, need memory dependency to prevent reordering
-    if ((prevAccess & VKW::RESOURCE_ACCESS_ANY_WRITE) && (access & VKW::RESOURCE_ACCESS_ANY_WRITE))
-    {
-        requireExecutionDependency  = true;
-        requireMemoryDependency     = true;
-        return true;
-    }
-
-    // after transfers we most likely need resource in another state, memory dependency
-    if ((prevAccess & VKW::RESOURCE_ACCESS_ANY_TRANSFER))
-    {
-        requireExecutionDependency  = true;
-        requireMemoryDependency     = true;
-        requireTransition           = true;
-        return true;
-    }
-
-    return false;
-}
-
-inline bool BarrierRequirements(VKW::ResourceAccess prevAccess, VKW::ResourceAccess access, bool& requireExecutionDependency, bool& requireMemoryDependency)
-{
-    // casually reading, no hazards
-    if((prevAccess & VKW::RESOURCE_ACCESS_ANY_READ) && (access & VKW::RESOURCE_ACCESS_ANY_READ))
-        return false;
-
-    if ((prevAccess & VKW::RESOURCE_ACCESS_ANY_READ) && (access & VKW::RESOURCE_ACCESS_ANY_WRITE))
-    {
-        requireExecutionDependency = true;
-        return true;
-    }
-
-    if ((prevAccess & VKW::RESOURCE_ACCESS_ANY_WRITE) && (access & VKW::RESOURCE_ACCESS_ANY_WRITE))
-    {
-        requireExecutionDependency = true;
-        requireMemoryDependency    = true;
-        return true;
-    }
-
-    if ((prevAccess & VKW::RESOURCE_ACCESS_ANY_WRITE) && (access & VKW::RESOURCE_ACCESS_ANY_READ))
-    {
-        requireExecutionDependency = true;
-        requireMemoryDependency    = true;
-        return true;
-    }
-
-    return false;
-}
+//inline bool BarrierRequirements(VKW::ResourceAccess prevAccess, VKW::ResourceAccess access, bool& requireExecutionDependency, bool& requireMemoryDependency, bool& requireTransition)
+//{
+//    // just reading, no hazards
+//    if((prevAccess & VKW::RESOURCE_ACCESS_ANY_READ) && (access & VKW::RESOURCE_ACCESS_ANY_READ))
+//        return false;
+//
+//    if(access & VKW::RESOURCE_ACCESS_ANY_ATTACHMENT)
+//    {
+//        requireExecutionDependency = true;
+//        requireMemoryDependency    = true;
+//        requireTransition          = true;
+//
+//        return true;
+//    }
+//
+//    // just execution dependency, no need for cache flushing
+//    if ((prevAccess & VKW::RESOURCE_ACCESS_ANY_READ) && (access & VKW::RESOURCE_ACCESS_ANY_WRITE))
+//    {
+//        requireExecutionDependency  = true;
+//        return true;
+//    }
+//
+//    // WAW hazard, need memory dependency to prevent reordering
+//    if ((prevAccess & VKW::RESOURCE_ACCESS_ANY_WRITE) && (access & VKW::RESOURCE_ACCESS_ANY_WRITE))
+//    {
+//        requireExecutionDependency  = true;
+//        requireMemoryDependency     = true;
+//        return true;
+//    }
+//
+//    // after transfers we most likely need resource in another state, memory dependency
+//    if ((prevAccess & VKW::RESOURCE_ACCESS_ANY_TRANSFER))
+//    {
+//        requireExecutionDependency  = true;
+//        requireMemoryDependency     = true;
+//        requireTransition           = true;
+//        return true;
+//    }
+//
+//    return false;
+//}
+//
+//inline bool BarrierRequirements(VKW::ResourceAccess prevAccess, VKW::ResourceAccess access, bool& requireExecutionDependency, bool& requireMemoryDependency)
+//{
+//    // casually reading, no hazards
+//    if((prevAccess & VKW::RESOURCE_ACCESS_ANY_READ) && (access & VKW::RESOURCE_ACCESS_ANY_READ))
+//        return false;
+//
+//    if ((prevAccess & VKW::RESOURCE_ACCESS_ANY_READ) && (access & VKW::RESOURCE_ACCESS_ANY_WRITE))
+//    {
+//        requireExecutionDependency = true;
+//        return true;
+//    }
+//
+//    if ((prevAccess & VKW::RESOURCE_ACCESS_ANY_WRITE) && (access & VKW::RESOURCE_ACCESS_ANY_WRITE))
+//    {
+//        requireExecutionDependency = true;
+//        requireMemoryDependency    = true;
+//        return true;
+//    }
+//
+//    if ((prevAccess & VKW::RESOURCE_ACCESS_ANY_WRITE) && (access & VKW::RESOURCE_ACCESS_ANY_READ))
+//    {
+//        requireExecutionDependency = true;
+//        requireMemoryDependency    = true;
+//        return true;
+//    }
+//
+//    return false;
+//}
 
 Dependency::Dependency()
     : memoryBarriers_{}
@@ -240,7 +232,7 @@ void Dependency::Add(
     barrier.dstAccessMask   = AccessToFlags(dstAccess);
     barrier.oldLayout       = AccessToLayout(srcAccess);
     barrier.newLayout       = AccessToLayout(dstAccess);
-    barrier.image = resource->handle_;
+    barrier.image           = resource->handle_;
     barrier.subresourceRange = HELPER::DefaultImageSubresourceRange();
 }
 

@@ -14,7 +14,7 @@ ReadOnlyTexture::ReadOnlyTexture()
     , m_ShaderReadDescriptor{}
 {}
 
-ReadOnlyTexture::ReadOnlyTexture(VKW::Device* device, VKW::ImageResource* resource, VKW::ImageResourceView* view, VKW::GlobalDescriptorHandle descriptor)
+ReadOnlyTexture::ReadOnlyTexture(VKW::Device* device, VKW::ImageResource* resource, VKW::ImageResourceView* view, VKW::TextureDescriptorIndex descriptor)
     : TextureBase{ device, resource }
     , m_ShaderReadView{ view }
     , m_ShaderReadDescriptor{ descriptor }
@@ -46,7 +46,7 @@ ReadOnlyTexture::~ReadOnlyTexture()
         m_ParentDevice->GetDescriptorManager()->FreeTextureDescriptor(m_ShaderReadDescriptor);
         m_ParentDevice->GetResourcesController()->FreeImageView(m_ShaderReadView);
 
-        DRE_DEBUG_ONLY(m_ShaderReadDescriptor = VKW::GlobalDescriptorHandle{});
+        DRE_DEBUG_ONLY(m_ShaderReadDescriptor = VKW::TextureDescriptorIndex{});
         DRE_DEBUG_ONLY(m_ShaderReadView = nullptr);
     }
 }

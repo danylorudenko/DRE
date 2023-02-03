@@ -336,7 +336,7 @@ VkSampler DescriptorManager::GetDefaultSampler(SamplerType type) const
     return defaultSamplers_[(int)type];
 }
 
-GlobalDescriptorHandle DescriptorManager::AllocateTextureDescriptor(ImageResourceView const* view)
+TextureDescriptorIndex DescriptorManager::AllocateTextureDescriptor(ImageResourceView const* view)
 {
     std::uint16_t id = dynamicTextureHeap_.Allocate(1);
 
@@ -345,7 +345,7 @@ GlobalDescriptorHandle DescriptorManager::AllocateTextureDescriptor(ImageResourc
         WriteTextureDescriptor(globalTexturesSet_, id, view);
     }
 
-    return GlobalDescriptorHandle{ id };
+    return TextureDescriptorIndex{ id };
 }
 
 void DescriptorManager::WriteTextureDescriptor(VkDescriptorSet set, std::uint16_t descriptorID, ImageResourceView const* view)
@@ -370,7 +370,7 @@ void DescriptorManager::WriteTextureDescriptor(VkDescriptorSet set, std::uint16_
     table_->vkUpdateDescriptorSets(device_->Handle(), 1, &writeInfo, 0, nullptr);
 }
 
-void DescriptorManager::FreeTextureDescriptor(GlobalDescriptorHandle& handle)
+void DescriptorManager::FreeTextureDescriptor(TextureDescriptorIndex& handle)
 {
     dynamicTextureHeap_.Free(handle.id_);
 

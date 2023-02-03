@@ -18,7 +18,7 @@ class ReadOnlyTexture
 {
 public:
     ReadOnlyTexture();
-    ReadOnlyTexture(VKW::Device* device, VKW::ImageResource* resource, VKW::ImageResourceView* srv, VKW::GlobalDescriptorHandle srvDescriptorHandle);
+    ReadOnlyTexture(VKW::Device* device, VKW::ImageResource* resource, VKW::ImageResourceView* srv, VKW::TextureDescriptorIndex srvDescriptorHandle);
 
     ReadOnlyTexture(ReadOnlyTexture&& rhs);
     ReadOnlyTexture& operator=(ReadOnlyTexture&& rhs);
@@ -26,11 +26,11 @@ public:
     virtual ~ReadOnlyTexture();
 
     inline VKW::ImageResourceView* GetShaderReadView() { return m_ShaderReadView; }
-    inline VKW::GlobalDescriptorHandle const& GetShaderReadDescriptor() const { return m_ShaderReadDescriptor; }
+    inline VKW::TextureDescriptorIndex const& GetShaderReadDescriptor() const { return m_ShaderReadDescriptor; }
 
 protected:
     VKW::ImageResourceView* m_ShaderReadView;
-    VKW::GlobalDescriptorHandle   m_ShaderReadDescriptor;
+    VKW::TextureDescriptorIndex   m_ShaderReadDescriptor;
 };
 
 }

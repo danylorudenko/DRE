@@ -44,7 +44,7 @@ public:
     VKW::DescriptorManager*         GetDescriptorManager() const { return descriptorManager_.get(); }
 
 
-
+private:
     std::unique_ptr<DynamicLibrary> vulkanLibrary_;
 
     std::unique_ptr<VKW::ImportTable> table_;

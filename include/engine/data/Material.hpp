@@ -23,8 +23,6 @@ public:
         {
             DIFFUSE,
             NORMAL,
-            HEIGHT,
-            METALNESS,
             MAX
         };
 

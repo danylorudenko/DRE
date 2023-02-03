@@ -83,7 +83,7 @@ DRE::String128 const* PipelineDB::CreatePipelineLayoutFromShader(char const* sha
     // next used set after global descriptor sets
     std::uint32_t const startSetId = shaderInterface.m_Members.FindIf([globalLayoutsCount](auto const& data) { return data.set >= globalLayoutsCount; });
 
-    auto& layouts = m_SetLayouts[shaderName]; // these vars are destroyed at the end
+    auto& layouts = m_ShaderLayouts[shaderName];
     if (startSetId != shaderInterface.m_Members.Size())
     {
         std::uint8_t prevSet = shaderInterface.m_Members[startSetId - 1].set;
@@ -146,8 +146,7 @@ VKW::PipelineLayout* PipelineDB::CreatePipelineLayout(char const* name, VKW::Pip
 
 VKW::DescriptorSetLayout* PipelineDB::CreateDescriptorSetLayout(const char* name, VKW::DescriptorSetLayout::Descriptor const& desc)
 {
-    auto& layouts = m_SetLayouts[name];
-    return &layouts.EmplaceBack(m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), desc);
+    return &(m_SetLayouts[name] = VKW::DescriptorSetLayout{ m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), desc });
 }
 
 VKW::Pipeline* PipelineDB::CreatePipeline(char const* name, VKW::Pipeline::Descriptor& descriptor)
@@ -172,7 +171,7 @@ VKW::Pipeline* PipelineDB::GetPipeline(char const* name)
 
 VKW::DescriptorSetLayout* PipelineDB::GetSetLayout(char const* name)
 {
-    return &m_SetLayouts[name][0];
+    return &m_SetLayouts[name];
 }
 
 }

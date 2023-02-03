@@ -11,13 +11,13 @@
 namespace VKW
 {
 
-std::uint32_t constexpr BARRIER_MEM_SIZE = 8 * 1024;
+std::uint32_t constexpr BARRIER_MEM_SIZE = 256 * 1024;
 
 Context::Context(VKW::ImportTable* table, VKW::Queue* queue)
     : m_ImportTable{ table }
     , m_ParentQueue{ queue }
     , m_RenderingRect{}
-    , m_BarrierMemory{ std::malloc(BARRIER_MEM_SIZE), BARRIER_MEM_SIZE }
+    , m_BarrierMemory{ BARRIER_MEM_SIZE }
     , m_BarrierAllocator{ m_BarrierMemory.Data(), m_BarrierMemory.Size() }
     , m_PendingDependency{ &m_BarrierAllocator }
 {
