@@ -44,7 +44,7 @@ void DrawBatcher::Batch(VKW::Context& context, WORLD::Scene const& scene)
 
          UniformProxy uniformProxy{ &context, uniformAllocation };
 
-         glm::mat4 const mvp = obj.GetModelM() * camera.GetViewM() * camera.GetProjM();
+         glm::mat4 const mvp = camera.GetProjM() * camera.GetViewM() * obj.GetModelM();
          uniformProxy.WriteMember140(mvp);
          uniformProxy.WriteMember140(obj.GetModelM());
 

@@ -120,11 +120,18 @@ void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiM
 void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, aiNode const* node, WORLD::Scene& targetScene)
 {
     aiMatrix4x4 const& t = node->mTransformation;
+    //WORLD::Entity::TransformData const transform {{
+    //        t.a1, t.a2, t.a3, t.a4,
+    //        t.b1, t.b2, t.b3, t.b4,
+    //        t.c1, t.c2, t.c3, t.c4,
+    //        t.d1, t.d2, t.d3, t.d4
+    //}};
+
     WORLD::Entity::TransformData const transform {{
-            t.a1, t.a2, t.a3, t.a4,
-            t.b1, t.b2, t.b3, t.b4,
-            t.c1, t.c2, t.c3, t.c4,
-            t.d1, t.d2, t.d3, t.d4
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
     }};
 
     for (std::uint32_t i = 0, count = node->mNumMeshes; i < count; i++)

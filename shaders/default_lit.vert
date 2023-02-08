@@ -45,7 +45,7 @@ void main()
 	out_tangent_viewpos = TBN * GetCameraPos();
 	out_tangent_light = TBN * normalize(C_LIGHT_DIR);
 	
-	out_normal = in_norm * diffuse.xyz; // WARNING
+	out_normal = in_norm; // WARNING
 	out_uv = in_uv;
 	
 	gl_Position = transformUniform.mvp_mat * vec4(in_pos, 1.0);

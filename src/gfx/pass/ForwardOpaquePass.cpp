@@ -85,7 +85,7 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
         context.CmdBindGraphicsDescriptorSets(atom.pipeline->GetLayout(), startSet, 1, &atom.descriptorSet);
         context.CmdBindVertexBuffer(atom.vertexBuffer, atom.vertexOffset);
         context.CmdBindIndexBuffer(atom.indexBuffer, atom.indexOffset);
-        context.CmdDraw(atom.indexCount);
+        context.CmdDrawIndexed(atom.indexCount);
     }
 
     // 2. feed all RenderableObject's to DrawBatcher

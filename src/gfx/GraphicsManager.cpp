@@ -151,7 +151,7 @@ GraphicsManager::GeometryGPU* GraphicsManager::LoadGPUGeometry(VKW::Context& con
     std::uint32_t const indexMemoryRequirements = geometry->GetIndexSizeInBytes();
     std::uint32_t const meshMemoryRequirements = vertexMemoryRequirements + indexMemoryRequirements;
 
-    auto meshMemory = GFX::g_GraphicsManager->GetUploadArena().AllocateTransientRegion(GFX::g_GraphicsManager->GetCurrentFrameID(), meshMemoryRequirements, 256);
+    auto meshMemory = GetUploadArena().AllocateTransientRegion(GetCurrentFrameID(), meshMemoryRequirements, 256);
 
     void* memorySequence = meshMemory.m_MappedRange;
     WriteMemorySequence(memorySequence, geometry->GetVertexData(), vertexMemoryRequirements);
@@ -160,8 +160,8 @@ GraphicsManager::GeometryGPU* GraphicsManager::LoadGPUGeometry(VKW::Context& con
 
     meshMemory.FlushCaches();
 
-    VKW::BufferResource* vertexBuffer = GFX::g_GraphicsManager->GetMainDevice()->GetResourcesController()->CreateBuffer(vertexMemoryRequirements, VKW::BufferUsage::VERTEX_INDEX);
-    VKW::BufferResource* indexBuffer = GFX::g_GraphicsManager->GetMainDevice()->GetResourcesController()->CreateBuffer(indexMemoryRequirements, VKW::BufferUsage::VERTEX_INDEX);
+    VKW::BufferResource* vertexBuffer = GetMainDevice()->GetResourcesController()->CreateBuffer(vertexMemoryRequirements, VKW::BufferUsage::VERTEX_INDEX);
+    VKW::BufferResource* indexBuffer = GetMainDevice()->GetResourcesController()->CreateBuffer(indexMemoryRequirements, VKW::BufferUsage::VERTEX_INDEX);
 
     context.CmdResourceDependency(meshMemory.m_Buffer, meshMemory.m_OffsetInBuffer, meshMemory.m_Size, VKW::RESOURCE_ACCESS_HOST_WRITE, VKW::STAGE_HOST, VKW::RESOURCE_ACCESS_TRANSFER_SRC, VKW::STAGE_TRANSFER);
 
@@ -173,6 +173,10 @@ GraphicsManager::GeometryGPU* GraphicsManager::LoadGPUGeometry(VKW::Context& con
     context.CmdResourceDependency(indexBuffer, VKW::RESOURCE_ACCESS_NONE, VKW::STAGE_TOP, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
     context.CmdCopyBufferToBuffer(indexBuffer, 0, meshMemory.m_Buffer, meshMemory.m_OffsetInBuffer + vertexMemoryRequirements, indexMemoryRequirements);
     context.CmdResourceDependency(indexBuffer, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER, VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_INPUT_ASSEMBLER);
+
+    context.FlushAll();
+
+    GetUploadArena().ResetAllocations(GetCurrentFrameID());
 
     return &m_GeometryGPUMap.Emplace(geometry, vertexBuffer, indexBuffer);
 }

@@ -9,12 +9,13 @@ Camera::Camera()
     : m_Position{ 0.0f, 0.0f, 0.0f }
     , m_EulerOrientation{ 0.0f, 0.0f, 0.0f }
     , m_Direction{ 0.0f, 0.0f, -1.0f }
-    , m_FOV{ glm::radians(60.0f) }
+    , m_FOV{ 60.0f }
     , m_Aspect{ 1.0f }
     , m_ViewM{ glm::identity<glm::mat4>() }
     , m_ProjM{ glm::identity<glm::mat4>() }
 {
-
+    CalculateView();
+    CalculateProjectionMatrix();
 }
 
 void Camera::CalculateView()
