@@ -2,7 +2,6 @@
 
 #include <foundation\system\Window.hpp>
 
-
 #include <vk_wrapper\Device.hpp>
 #include <vk_wrapper\pipeline\Pipeline.hpp>
 #include <vk_wrapper\pipeline\ShaderModule.hpp>
@@ -11,6 +10,7 @@
 #include <gfx\pass\ImGuiRenderPass.hpp>
 
 #include <engine\io\IOManager.hpp>
+#include <engine\scene\Scene.hpp>
 #include <global_uniform.h>
 
 namespace GFX
@@ -62,18 +62,23 @@ void GraphicsManager::CreateAllPasses()
     m_RenderGraph.InitGraphResources();
 }
 
-void GraphicsManager::PrepareGlobalData(VKW::Context& context, std::uint64_t deltaTimeUS)
+void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, std::uint64_t deltaTimeUS)
 {
     std::uint8_t C_STD140_DATA_STRIDE = 16;
     
     VKW::BufferResource* buffer = m_GlobalUniforms[GetCurrentFrameID()];
     void* dst = buffer->memory_.GetRegionMappedPtr();
 
-    GlobalUniform globalUniform{};
+    GlobalUniforms globalUniform{};
     globalUniform.viewportSize_deltaMS_0[0] = static_cast<float>(GetRenderingWidth());
     globalUniform.viewportSize_deltaMS_0[1] = static_cast<float>(GetRenderingHeight());
     globalUniform.viewportSize_deltaMS_0[2] = static_cast<float>(static_cast<double>(deltaTimeUS) / 1000.0);
     globalUniform.viewportSize_deltaMS_0[3] = 0.0f;
+
+    globalUniform.cameraPos = vec4{ scene.GetMainCamera().GetPosition(), 1.0f };
+    globalUniform.cameraDir = vec4{ scene.GetMainCamera().GetDirection(), 0.0f };
+    globalUniform.matrixView = scene.GetMainCamera().GetViewM();
+    globalUniform.matrixProj = scene.GetMainCamera().GetProjM();
 
     std::memcpy(dst, &globalUniform, sizeof(globalUniform));
 
@@ -97,7 +102,7 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
     m_ReadbackArena.ResetAllocations(GetCurrentFrameID());
 
     VKW::Context& context = GetMainContext();
-    PrepareGlobalData(context, deltaTimeUS);
+    PrepareGlobalData(context,  *WORLD::g_MainScene, deltaTimeUS);
 
     // globalData
     context.CmdBindGlobalDescriptorSets(*GetMainDevice()->GetDescriptorManager(), GetCurrentFrameID());

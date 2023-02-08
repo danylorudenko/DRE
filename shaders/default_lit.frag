@@ -14,14 +14,16 @@ layout(location = 5) in vec3 in_tangent_light;
 
 layout(location = 0) out vec4 finalColor;
 
-layout(set = 3, binding = 0) uniform ImGuiData
+layout(set = 3, binding = 0, std140) uniform TransformUniform
 {
-	vec4 pos_screenSize;
-	uint textureID;
-} imGuiData;
+	mat4  mvp_mat;
+	mat4  model_mat;
+	uvec2 textureIDs;
+} transformUniform;
 
 
 void main()
 {
-	finalColor = vec4(in_normal.rgb, in_tangent_light.r);
+	vec4 diffuse = texture(sampler2D(GetGlobalTexture(transformUniform.textureIDs[0]), GetSamplerLinear()), in_uv);
+	finalColor = vec4(diffuse.rgb, in_tangent_light.r);
 }

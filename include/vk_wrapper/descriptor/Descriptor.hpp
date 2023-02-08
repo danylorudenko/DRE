@@ -9,7 +9,7 @@ namespace VKW
 {
 
 ////////////////////////////////////////////
-enum DescriptorStageBits : std::uint16_t
+enum DescriptorStage : std::uint16_t
 {
     DESCRIPTOR_STAGE_NONE        = 0,
     DESCRIPTOR_STAGE_COMPUTE     = 1,
@@ -18,8 +18,6 @@ enum DescriptorStageBits : std::uint16_t
     DESCRIPTOR_STAGE_RENDERING   = DESCRIPTOR_STAGE_VERTEX | DESCRIPTOR_STAGE_FRAGMENT,
     DESCRIPTOR_STAGE_ALL         = DESCRIPTOR_STAGE_COMPUTE | DESCRIPTOR_STAGE_RENDERING
 };
-
-using DescriptorStage = std::uint16_t;
 
 ////////////////////////////////////////////
 enum DescriptorTypeBits

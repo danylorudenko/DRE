@@ -16,7 +16,7 @@ layout(set = 1, binding = 0) uniform texture2D  g_GlobalTextures[];
 
 // Default samplers
 #define GetSamplerNearest() g_GlobalSamplers[0]
-#define GetSamplerLinear() return g_GlobalSamplers[1]
+#define GetSamplerLinear() g_GlobalSamplers[1]
 #define GetSamplerLinearClamp() g_GlobalSamplers[2]
 #define GetSamplerAnisotropic() g_GlobalSamplers[3]
 

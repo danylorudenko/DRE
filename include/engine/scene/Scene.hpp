@@ -28,8 +28,11 @@ public:
     ~Scene();
 
 
-    inline Camera& GetMainCamera() { return m_MainCamera; }
-    inline auto& GetEntities() { return m_SceneEntities; }
+    inline Camera&          GetMainCamera() { return m_MainCamera; }
+    inline Camera const &   GetMainCamera() const { return m_MainCamera; }
+
+    inline auto&            GetEntities() { return m_SceneEntities; }
+
 
     Entity&     CreateRenderableEntity(VKW::Context& context, Entity::TransformData const& transform, Data::Geometry* geometry, Data::Material* material);
 

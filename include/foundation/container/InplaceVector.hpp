@@ -228,15 +228,15 @@ public:
     template<typename TPredicate>
     void SortBubble(TPredicate const& predicate)
     {
-        if (Size() == 0)
+        if (Size() < 2)
             return;
 
         std::uint32_t const last = Size() - 1;
-        std::uint32_t sortedRange = 0;
+        std::uint32_t sortedRange = 1;
         while (sortedRange < last)
         {
             T* data = Data();
-            for (std::uint32_t i = 1, size = Size(); i < size; i++)
+            for (std::uint32_t i = sortedRange, size = Size(); i < size; i++)
             {
                 if (!predicate(data[i - 1], data[i]))
                 {
@@ -244,6 +244,7 @@ public:
                     sortedRange = i;
                     break;
                 }
+                sortedRange = i;
             }
         }
     }

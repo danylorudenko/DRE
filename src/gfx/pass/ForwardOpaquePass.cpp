@@ -71,7 +71,7 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
         batcher.AddRenderable(allEntities[i].GetRenderableObject());
     }
 
-    batcher.Batch(context);
+    batcher.Batch(context, *WORLD::g_MainScene);
 
     std::uint32_t const startSet = 
         g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount() +

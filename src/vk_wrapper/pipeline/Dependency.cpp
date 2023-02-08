@@ -330,7 +330,7 @@ void Dependency::GetDependency(VkDependencyInfoKHR& result)
 
 VKW::DescriptorStage StageToDescriptorStage(VKW::Stages stage)
 {
-    VKW::DescriptorStage result = VKW::DESCRIPTOR_STAGE_NONE;
+    std::uint16_t result = VKW::DESCRIPTOR_STAGE_NONE;
 
     if (stage & VKW::STAGE_COMPUTE)
         result |= VKW::DESCRIPTOR_STAGE_COMPUTE;
@@ -341,7 +341,7 @@ VKW::DescriptorStage StageToDescriptorStage(VKW::Stages stage)
     if (stage & VKW::STAGE_FRAGMENT)
         result |= VKW::DESCRIPTOR_STAGE_FRAGMENT;
 
-    return result;
+    return VKW::DescriptorStage(result);
 }
 
 }

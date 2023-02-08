@@ -34,7 +34,7 @@ std::uint16_t DescriptorSetLayout::Descriptor::Add(DescriptorType type, std::uin
     members_[count_].variableCount_ = 0;
     members_[count_].updateAfterBind_ = 0;
 
-    stagesMask_ |= stage;
+    stagesMask_ = VKW::DescriptorStage(std::uint16_t(stagesMask_) | std::uint16_t(stage));
 
     return count_++;
 }
@@ -52,7 +52,7 @@ std::uint16_t DescriptorSetLayout::Descriptor::AddVariableCount(DescriptorType t
     members_[count_].variableCount_ = 1;
     members_[count_].updateAfterBind_ = 1;
 
-    stagesMask_ |= stage;
+    stagesMask_ = VKW::DescriptorStage(std::uint16_t(stagesMask_) | std::uint16_t(stage));
 
     isClosed_ = true;
     return count_++;

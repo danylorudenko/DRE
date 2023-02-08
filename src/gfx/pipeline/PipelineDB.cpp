@@ -104,7 +104,10 @@ DRE::String128 const* PipelineDB::CreatePipelineLayoutFromShader(char const* sha
                 DRE_ASSERT(currentSet == prevSet + 1, "Descriptor sets must be continuous");
             }
 
-            setLayoutDesc.Add(m.type, m.binding, m.stage, m.arraySize);
+            if (m.arraySize != DRE_U8_MAX)
+                setLayoutDesc.Add(m.type, m.binding, m.stage, m.arraySize);
+            else
+                setLayoutDesc.AddVariableCount(m.type, m.binding, m.stage, VKW::CONSTANTS::TEXTURE_DESCRIPTOR_HEAP_SIZE);
         }
         layouts.EmplaceBack(g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), setLayoutDesc);
 

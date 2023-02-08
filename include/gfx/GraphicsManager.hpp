@@ -39,6 +39,11 @@ namespace Data
 class Geometry;
 }
 
+namespace WORLD
+{
+class Scene;
+}
+
 namespace GFX
 {
 
@@ -103,7 +108,7 @@ private:
     using GeometryGPUMap = DRE::InplaceHashTable<Data::Geometry*, GeometryGPU>;
     GeometryGPU* LoadGPUGeometry(VKW::Context& context, Data::Geometry* geometry);
 
-    void            PrepareGlobalData(VKW::Context& context, std::uint64_t deltaTimeUS);
+    void            PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, std::uint64_t deltaTimeUS);
     VKW::QueueExecutionPoint TransferToSwapchainAndPresent(StorageTexture& src);
 
 

@@ -5,6 +5,10 @@
 #include <gfx\GraphicsManager.hpp>
 #include <gfx\renderer\RenderableObject.hpp>
 
+#include <engine/scene/Scene.hpp>
+
+#include <glm\gtc\matrix_transform.hpp>
+
 namespace GFX
 {
 
@@ -22,8 +26,9 @@ void DrawBatcher::AddRenderable(RenderableObject* renderable)
     m_AllRenderables.EmplaceBack(renderable);
 }
 
-void DrawBatcher::Batch(VKW::Context& context)
+void DrawBatcher::Batch(VKW::Context& context, WORLD::Scene const& scene)
 {
+    WORLD::Camera const& camera = scene.GetMainCamera();
     for (std::uint32_t i = 0, count = m_AllRenderables.Size(); i < count; i++)
     {
         RenderableObject& obj = *m_AllRenderables[i];
@@ -38,6 +43,9 @@ void DrawBatcher::Batch(VKW::Context& context)
          m_DescriptorManager->WriteDescriptorSet(obj.GetDescriptorSets(g_GraphicsManager->GetCurrentFrameID()), writeDesc);
 
          UniformProxy uniformProxy{ &context, uniformAllocation };
+
+         glm::mat4 const mvp = obj.GetModelM() * camera.GetViewM() * camera.GetProjM();
+         uniformProxy.WriteMember140(mvp);
          uniformProxy.WriteMember140(obj.GetModelM());
 
          std::uint32_t textureIDs[2] = { 

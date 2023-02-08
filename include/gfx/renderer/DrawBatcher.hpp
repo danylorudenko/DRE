@@ -19,6 +19,11 @@ class   Pipeline;
 class   DescriptorManager;
 }
 
+namespace WORLD
+{
+class Scene;
+}
+
 namespace GFX
 {
 
@@ -47,7 +52,7 @@ public:
 
     void AddRenderable(RenderableObject* object);
 
-    void Batch(VKW::Context& context);
+    void Batch(VKW::Context& context, WORLD::Scene const& scene);
 
     inline auto const& GetOpaqueDraws() const { return m_OpaqueDraws; }
 

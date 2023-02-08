@@ -87,9 +87,6 @@ void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiM
     case Data::Material::TextureProperty::NORMAL:
         aiType = aiTextureType_NORMALS;
         break;
-    case Data::Material::TextureProperty::METALNESS:
-        aiType = aiTextureType_METALNESS;
-        break;
     default:
         DRE_ASSERT(false, "Unsupported Data::Material::TextureProperty::Slot while parsing material textures.");
     }
@@ -237,8 +234,12 @@ void IOManager::ShaderInterface::Merge(IOManager::ShaderInterface const& rhs)
 {
     for (std::uint32_t i = 0, size = rhs.m_Members.Size(); i < size; i++)
     {
-        if (m_Members.Find(rhs.m_Members[i]) != m_Members.Size())
+        std::uint32_t result = m_Members.Find(rhs.m_Members[i]);
+        if (result != m_Members.Size()) // similar member found
+        {
+            m_Members[result].stage = VKW::DescriptorStage(m_Members[result].stage | std::uint16_t(rhs.m_Members[i].stage));
             continue;
+        }
 
         m_Members.EmplaceBack(rhs.m_Members[i]);
     }
@@ -259,7 +260,7 @@ bool IOManager::ShaderInterface::Member::operator!=(IOManager::ShaderInterface::
     return !operator==(rhs);
 }
 
-VKW::ShaderModuleType SPVExecutionModelToVKWType(spv::ExecutionModel executionModel)
+VKW::ShaderModuleType SPVExecutionModelToVKWModuleType(spv::ExecutionModel executionModel)
 {
     switch (executionModel)
     {
@@ -274,6 +275,21 @@ VKW::ShaderModuleType SPVExecutionModelToVKWType(spv::ExecutionModel executionMo
     }
 }
 
+VKW::DescriptorStage SPVExecutionModelToVKWStage(spv::ExecutionModel executionModel)
+{
+    switch (executionModel)
+    {
+    case spv::ExecutionModelVertex:
+        return VKW::DESCRIPTOR_STAGE_VERTEX;
+    case spv::ExecutionModelFragment:
+        return VKW::DESCRIPTOR_STAGE_FRAGMENT;
+    case spv::ExecutionModelGLCompute:
+        return VKW::DESCRIPTOR_STAGE_COMPUTE;
+    default:
+        return VKW::DESCRIPTOR_STAGE_NONE;
+    }
+}
+
 template<typename TResourceArray>
 void ParseShaderInterfaceType(spirv_cross::Compiler& compiler, TResourceArray const& resources, VKW::DescriptorType type, IOManager::ShaderInterface& resultInterface)
 {
@@ -281,14 +297,20 @@ void ParseShaderInterfaceType(spirv_cross::Compiler& compiler, TResourceArray co
     {
         auto& member        = resultInterface.m_Members.EmplaceBack();
         member.type         = type;
-        member.stage        = SPVExecutionModelToVKWType(compiler.get_execution_model());
+        member.stage        = SPVExecutionModelToVKWStage(compiler.get_execution_model());
         member.set          = compiler.get_decoration(res.id, spv::DecorationDescriptorSet);
         member.binding      = compiler.get_decoration(res.id, spv::DecorationBinding);
 
         spirv_cross::SPIRType const& spvType = compiler.get_type(res.type_id);
-        member.arraySize    = spvType.array.empty() ? 1 : spvType.array[0];
+        member.arraySize    = 1;
 
-        DRE_ASSERT(spvType.array.size() <= 1, "Don't support multidimentional array relfection yet.");
+        if (!spvType.array.empty())
+        {
+            DRE_ASSERT(spvType.array.size() <= 1, "Don't support multidimentional array relfection yet.");
+            DRE_ASSERT(spvType.array_size_literal[0] == true, "Arrays of size from specialization constants are not supported yet.");
+            std::uint8_t const arraySize = spvType.array[0];
+            member.arraySize = arraySize == 0 ? DRE_U8_MAX : arraySize; // if array size 0 -> variable size
+        }
     }
 }
 
@@ -326,7 +348,7 @@ void IOManager::LoadShaderFiles()
             shaderData.m_Binary = DRE_MOVE(moduleBuffer);
             
             spirv_cross::Compiler compiler{ reinterpret_cast<std::uint32_t const*>(shaderData.m_Binary.Data()), shaderData.m_Binary.Size() / sizeof(std::uint32_t) };
-            shaderData.m_ModuleType = SPVExecutionModelToVKWType(compiler.get_execution_model());
+            shaderData.m_ModuleType = SPVExecutionModelToVKWModuleType(compiler.get_execution_model());
 
             ParseShaderInterface(compiler, shaderData.m_Interface); 
         }
