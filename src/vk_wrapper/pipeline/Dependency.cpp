@@ -233,7 +233,12 @@ void Dependency::Add(
     barrier.oldLayout       = AccessToLayout(srcAccess);
     barrier.newLayout       = AccessToLayout(dstAccess);
     barrier.image           = resource->handle_;
-    barrier.subresourceRange = HELPER::DefaultImageSubresourceRange();
+
+    VkImageAspectFlags const aspectFlags = resource->createInfo_.usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT 
+        ? VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT
+        : VK_IMAGE_ASPECT_COLOR_BIT;
+
+    barrier.subresourceRange = HELPER::DefaultImageSubresourceRange(aspectFlags);
 }
 
 void Dependency::Add(

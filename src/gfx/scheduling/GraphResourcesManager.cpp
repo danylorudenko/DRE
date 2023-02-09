@@ -3,6 +3,7 @@
 #include <foundation\Common.hpp>
 
 #include <vk_wrapper\Device.hpp>
+#include <vk_wrapper\Helper.hpp>
 
 #include <gfx\GraphicsManager.hpp>
 #include <gfx\pass\BasePass.hpp>
@@ -19,7 +20,7 @@ GraphResourcesManager::GraphResourcesManager(VKW::Device* device)
 
 GraphResourcesManager::~GraphResourcesManager() = default;
 
-void GraphResourcesManager::RegisterTexture(TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access, VKW::Stages stage)
+void GraphResourcesManager::RegisterTexture(TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access)
 {
     AccumulatedInfo& info = m_AccumulatedTextureInfo[id];
 
@@ -33,7 +34,7 @@ void GraphResourcesManager::RegisterTexture(TextureID id, VKW::Format format, st
     info.depth = 1;
 }
 
-void GraphResourcesManager::RegisterBuffer(BufferID id, std::uint32_t size, VKW::ResourceAccess access, VKW::Stages stage)
+void GraphResourcesManager::RegisterBuffer(BufferID id, std::uint32_t size, VKW::ResourceAccess access)
 {
     AccumulatedInfo& info = m_AccumulatedBufferInfo[id];
 
@@ -61,18 +62,20 @@ void GraphResourcesManager::PrepareResources()
 
 
         VKW::ImageUsage usage = VKW::ImageUsage::STORAGE_IMAGE;
-        if (info.access | VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT)
+        if (info.access & VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT)
         {
             usage = VKW::ImageUsage::RENDER_TARGET;
         }
-        else if (info.access | VKW::RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT)
+        else if (info.access & VKW::RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT)
         {
             usage = VKW::ImageUsage::DEPTH_STENCIL;
         }
  
 
         VKW::ImageResource* image    = m_Device->GetResourcesController()->CreateImage(info.size0, info.size1, info.format, usage);
-        VKW::ImageResourceView* view = m_Device->GetResourcesController()->ViewImageAs(image);
+
+        VkImageSubresourceRange range = VKW::HELPER::DefaultImageSubresourceRange(usage == VKW::ImageUsage::DEPTH_STENCIL ? VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT : VK_IMAGE_ASPECT_COLOR_BIT);
+        VKW::ImageResourceView* view = m_Device->GetResourcesController()->ViewImageAs(image, &range);
 
         m_StorageTextures[*pair.key] = GraphTexture{ StorageTexture{ m_Device, image, view }, info };
     });

@@ -18,7 +18,7 @@ Scene::Scene(DRE::DefaultAllocator* allocator)
 Entity& Scene::CreateRenderableEntity(VKW::Context& context, Entity::TransformData const& transform, Data::Geometry* geometry, Data::Material* material)
 {
     // I guess here I have to tie Entity, RenderableObject and RenderView
-    GFX::RenderView& mainView = GFX::g_GraphicsManager->GetMainRenderView();
+    //GFX::RenderView& mainView = GFX::g_GraphicsManager->GetMainRenderView();
 
     // form material "pipeline layout" (I guess we'll have a default one)
     // get default pipeline to use (there also will be a default one)
@@ -27,7 +27,7 @@ Entity& Scene::CreateRenderableEntity(VKW::Context& context, Entity::TransformDa
 
     GFX::RenderableObject* renderable = GFX::g_GraphicsManager->CreateRenderableObject(context, geometry, material);
     renderable->Transform(transform.model);
-    mainView.AddObject(renderable);
+    //mainView.AddObject(renderable);
 
     Entity& entity = m_SceneEntities.EmplaceBack(transform, renderable);
     entity.SetMaterial(material);

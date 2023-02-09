@@ -76,7 +76,7 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     globalUniform.viewportSize_deltaMS_0[3] = 0.0f;
 
     globalUniform.cameraPos = vec4{ scene.GetMainCamera().GetPosition(), 1.0f };
-    globalUniform.cameraDir = vec4{ scene.GetMainCamera().GetDirection(), 0.0f };
+    globalUniform.cameraDir = vec4{ scene.GetMainCamera().GetForward(), 0.0f };
     globalUniform.matrixView = scene.GetMainCamera().GetViewM();
     globalUniform.matrixProj = scene.GetMainCamera().GetProjM();
 

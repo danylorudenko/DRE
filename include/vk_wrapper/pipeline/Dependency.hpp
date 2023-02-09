@@ -20,23 +20,23 @@ namespace VKW
 /////////////////////////////////////
 enum ResourceAccess : std::uint64_t
 {
-    RESOURCE_ACCESS_UNDEFINED                   = (1 << 0),
-    RESOURCE_ACCESS_NONE                        = (1 << 1),
-    RESOURCE_ACCESS_TRANSFER_DST                = (1 << 2),
-    RESOURCE_ACCESS_TRANSFER_SRC                = (1 << 3),
-    RESOURCE_ACCESS_COLOR_ATTACHMENT            = (1 << 4),
-    RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT    = (1 << 5),
-    RESOURCE_ACCESS_SHADER_READ                 = (1 << 6),
-    RESOURCE_ACCESS_SHADER_UNIFORM              = (1 << 7),
-    RESOURCE_ACCESS_SHADER_SAMPLE               = (1 << 8),
-    RESOURCE_ACCESS_SHADER_WRITE                = (1 << 9),
-    RESOURCE_ACCESS_SHADER_RW                   = (1 << 10),
-    RESOURCE_ACCESS_HOST_WRITE                  = (1 << 11),
-    RESOURCE_ACCESS_HOST_READ                   = (1 << 12),
-    RESOURCE_ACCESS_CLEAR                       = (1 << 13),
-    RESOURCE_ACCESS_PRESENT                     = (1 << 14),
-    RESOURCE_ACCESS_GENERIC_READ                = (1 << 15),
-    RESOURCE_ACCESS_GENERIC_WRITE               = (1 << 16)
+    RESOURCE_ACCESS_UNDEFINED                   = 0,
+    RESOURCE_ACCESS_NONE                        = (1 << 0),
+    RESOURCE_ACCESS_TRANSFER_DST                = (1 << 1),
+    RESOURCE_ACCESS_TRANSFER_SRC                = (1 << 2),
+    RESOURCE_ACCESS_COLOR_ATTACHMENT            = (1 << 3),
+    RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT    = (1 << 4),
+    RESOURCE_ACCESS_SHADER_READ                 = (1 << 5),
+    RESOURCE_ACCESS_SHADER_UNIFORM              = (1 << 6),
+    RESOURCE_ACCESS_SHADER_SAMPLE               = (1 << 7),
+    RESOURCE_ACCESS_SHADER_WRITE                = (1 << 8),
+    RESOURCE_ACCESS_SHADER_RW                   = (1 << 9),
+    RESOURCE_ACCESS_HOST_WRITE                  = (1 << 10),
+    RESOURCE_ACCESS_HOST_READ                   = (1 << 11),
+    RESOURCE_ACCESS_CLEAR                       = (1 << 12),
+    RESOURCE_ACCESS_PRESENT                     = (1 << 13),
+    RESOURCE_ACCESS_GENERIC_READ                = (1 << 14),
+    RESOURCE_ACCESS_GENERIC_WRITE               = (1 << 15)
 };
 
 /////////////////////////////////////
@@ -52,6 +52,7 @@ enum StageBits : std::uint64_t
     STAGE_HOST              = VK_PIPELINE_STAGE_2_HOST_BIT_KHR,
     STAGE_TOP               = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
     STAGE_BOTTOM            = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
+    STAGE_ALL_GRAPHICS      = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT,
     STAGE_PRESENT           = STAGE_TOP,
 };
 using Stages = std::uint64_t;

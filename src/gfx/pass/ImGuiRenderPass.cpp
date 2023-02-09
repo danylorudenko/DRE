@@ -61,6 +61,7 @@ void ImGuiRenderPass::Initialize(RenderGraph& graph)
     pipelineDescriptor.AddVertexAttribute(VKW::FORMAT_R32G32_FLOAT);
     pipelineDescriptor.AddVertexAttribute(VKW::FORMAT_R32G32_FLOAT);
     pipelineDescriptor.AddVertexAttribute(VKW::FORMAT_R8G8B8A8_UNORM);
+    pipelineDescriptor.SetWindingOrder(VKW::WINDING_ORDER_CLOCKWIZE);
 
     DRE::ByteBuffer vertexModuleBuffer;
     IO::IOManager::ReadFileToBuffer("shaders\\imgui.vert.spv", vertexModuleBuffer);

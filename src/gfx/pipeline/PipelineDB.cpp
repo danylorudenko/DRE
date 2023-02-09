@@ -52,7 +52,7 @@ DRE::String128 const* PipelineDB::CreateMaterialPipeline(char const* name)
     desc.SetFragmentShader(fragModule);
     desc.SetLayout(GetLayout(*layoutName));
     desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
-    desc.EnableDepthStencilTest(VKW::FORMAT_D16_UNORM);
+    desc.EnableDepthTest(VKW::FORMAT_D24_UNORM_S8_UINT);
     desc.AddOutputViewport(g_GraphicsManager->GetMainDevice()->GetSwapchain()->GetFormat(), VKW::BLEND_TYPE_NONE);
 
     desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // pos

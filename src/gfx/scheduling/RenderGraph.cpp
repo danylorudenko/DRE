@@ -27,23 +27,23 @@ RenderGraph::~RenderGraph()
 
 void RenderGraph::RegisterStorageTexture(BasePass* pass, TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding)
 {
-    m_ResourcesManager.RegisterTexture(id, format, width, height, access, stage);
+    m_ResourcesManager.RegisterTexture(id, format, width, height, access);
     m_DescriptorManager.RegisterTexture(pass->GetID(), id, access, VKW::StageToDescriptorStage(stage), binding);
 }
 
 void RenderGraph::RegisterRenderTarget(BasePass* pass, TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, std::uint32_t)
 {
-    m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT);
 }
 
 void RenderGraph::RegisterDepthStencilTarget(BasePass* pass, TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height)
 {
-    m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT, VKW::STAGE_FRAGMENT);
+    m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT);
 }
 
 void RenderGraph::RegisterStorageBuffer(BasePass* pass, BufferID id, std::uint32_t size, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding)
 {
-    m_ResourcesManager.RegisterBuffer(id, size, access, stage);
+    m_ResourcesManager.RegisterBuffer(id, size, access);
     m_DescriptorManager.RegisterBuffer(pass->GetID(), id, access, VKW::StageToDescriptorStage(stage), binding);
 }
 

@@ -26,8 +26,8 @@ public:
 
     virtual ~GraphResourcesManager();
 
-    void RegisterTexture(TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access, VKW::Stages stage);
-    void RegisterBuffer(BufferID id, std::uint32_t size, VKW::ResourceAccess access, VKW::Stages stage);
+    void RegisterTexture(TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access);
+    void RegisterBuffer(BufferID id, std::uint32_t size, VKW::ResourceAccess access);
 
     void PrepareResources();
 

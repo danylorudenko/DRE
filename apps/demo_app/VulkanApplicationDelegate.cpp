@@ -95,10 +95,13 @@ void VulkanApplicationDelegate::start()
 
     m_IOManager.LoadShaderFiles();
 
-    m_GraphicsManager.GetMainRenderView() = GFX::RenderView{
-        &DRE::g_FrameScratchAllocator,
-        glm::uvec2{ 0, 0 }, glm::uvec2{ m_GraphicsManager.GetMainDevice()->GetSwapchain()->GetWidth(), m_GraphicsManager.GetMainDevice()->GetSwapchain()->GetHeight() },
-        m_MainScene.GetMainCamera().GetPosition(), glm::vec3{1.0f, 0.0f, 0.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, m_MainScene.GetMainCamera().GetFOV()};
+    //m_GraphicsManager.GetMainRenderView() = GFX::RenderView{
+    //    &DRE::g_FrameScratchAllocator,
+    //    glm::uvec2{ 0, 0 }, glm::uvec2{ m_GraphicsManager.GetMainDevice()->GetSwapchain()->GetWidth(), m_GraphicsManager.GetMainDevice()->GetSwapchain()->GetHeight() },
+    //    m_MainScene.GetMainCamera().GetPosition(), glm::vec3{1.0f, 0.0f, 0.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, m_MainScene.GetMainCamera().GetFOV()};
+
+    m_MainScene.GetMainCamera().SetAspect(float(m_GraphicsManager.GetMainDevice()->GetSwapchain()->GetWidth()) / float(m_GraphicsManager.GetMainDevice()->GetSwapchain()->GetHeight()));
+    m_MainScene.GetMainCamera().SetFOV(60.0f);
 
     m_GraphicsManager.Initialize();
 
@@ -179,19 +182,12 @@ void VulkanApplicationDelegate::ImGuiUser()
 
         WORLD::Camera& camera = m_MainScene.GetMainCamera();
         glm::vec3 const& cameraEuler = camera.GetEulerOrientation();
+        glm::vec3 const& cameraForward = camera.GetForward();
+        glm::vec3 const& cameraRight = camera.GetRight();
 
         float const cameraMod = (static_cast<float>(m_PrevFrameDeltaMicroseconds) / 10000);
-        glm::vec3 cam_front{
-                glm::sin(cameraEuler.y) * glm::cos(cameraEuler.x),
-                glm::sin(cameraEuler.x),
-                glm::cos(cameraEuler.y) * glm::cos(cameraEuler.x)
-        };
-
-        glm::vec3 cam_right{
-                glm::sin(cameraEuler.y - 1.571f) * glm::cos(cameraEuler.x),
-                0.0f,
-                glm::cos(cameraEuler.y - 1.571f) * glm::cos(cameraEuler.x)
-        };
+        float const moveMul = 3.0f;
+        float const rotMul = 1.0f;
 
         if (ImGui::Begin("Camera Controls", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
         {
@@ -204,39 +200,39 @@ void VulkanApplicationDelegate::ImGuiUser()
             ImGui::PushButtonRepeat(true);
 
             if (ImGui::ArrowButton("fwd", ImGuiDir_Up))
-                camera.Move(cam_front * 0.05f * cameraMod);
+                camera.Move(cameraForward * moveMul * cameraMod);
             ImGui::SameLine();
             if (ImGui::ArrowButton("left", ImGuiDir_Left))
-                camera.Move(-cam_right * 0.05f * cameraMod);
+                camera.Move(-cameraRight * moveMul * cameraMod);
             ImGui::SameLine(0.0f, 20.0f);
             if (ImGui::ArrowButton("upr", ImGuiDir_Up))
-                camera.Rotate(glm::vec3{ -0.005f * cameraMod, 0.0f, 0.0f });
+                camera.Rotate(glm::vec3{ -rotMul * cameraMod, 0.0f, 0.0f });
             ImGui::SameLine();
             if (ImGui::ArrowButton("leftr", ImGuiDir_Left))
-                camera.Rotate(glm::vec3{ 0.0f, 0.005f * cameraMod, 0.0f });
+                camera.Rotate(glm::vec3{ 0.0f, rotMul * cameraMod, 0.0f });
             ImGui::SameLine();
             if(ImGui::Button("UP"))
-                camera.Move(glm::vec3{ 0.0f, 0.05f * cameraMod, 0.0f });
+                camera.Move(glm::vec3{ 0.0f, moveMul * cameraMod, 0.0f });
 
             // new line
             if (ImGui::ArrowButton("back", ImGuiDir_Down))
-                camera.Move(-cam_front * 0.05f * cameraMod);
+                camera.Move(-cameraForward * moveMul * cameraMod);
             ImGui::SameLine();
             if (ImGui::ArrowButton("right", ImGuiDir_Right))
-                camera.Move(cam_right * 0.05f * cameraMod);
+                camera.Move(cameraRight * moveMul * cameraMod);
             ImGui::SameLine(0.0f, 20.0f);
             if (ImGui::ArrowButton("downr", ImGuiDir_Down))
-                camera.Rotate(glm::vec3{ 0.005f * cameraMod, 0.0f, 0.0f });
+                camera.Rotate(glm::vec3{ rotMul * cameraMod, 0.0f, 0.0f });
             ImGui::SameLine();
             if (ImGui::ArrowButton("rightr", ImGuiDir_Right))
-                camera.Rotate(glm::vec3{ 0.0f, -0.005f * cameraMod, 0.0f });
+                camera.Rotate(glm::vec3{ 0.0f, -rotMul * cameraMod, 0.0f });
             ImGui::SameLine();
             if (ImGui::Button("DOWN"))
-                camera.Move(glm::vec3{ 0.0f, -0.05f * cameraMod, 0.0f });
+                camera.Move(glm::vec3{ 0.0f, -moveMul * cameraMod, 0.0f });
 
             ImGui::PopButtonRepeat();
 
-            ImGui::Text("Camera pos: %.2f, %.2f, %.2f", camera.GetPosition()[0], camera.GetPosition(), camera.GetPosition()[2]);
+            ImGui::Text("Camera pos: %.2f, %.2f, %.2f", camera.GetPosition()[0], camera.GetPosition()[1], camera.GetPosition()[2]);
             ImGui::Text("Camera rot: %.2f, %.2f, %.2f", camera.GetEulerOrientation()[0], camera.GetEulerOrientation()[1], camera.GetEulerOrientation()[2]);
             ImGui::End();
         }

@@ -31,6 +31,12 @@ enum BlendType
     BLEND_TYPE_MAX
 };
 
+enum WindingOrder
+{
+    WINDING_ORDER_CLOCKWIZE         = VK_FRONT_FACE_CLOCKWISE,
+    WINDING_RODER_COUNTER_CLOCKWIZE = VK_FRONT_FACE_COUNTER_CLOCKWISE
+};
+
 class Pipeline
     : public NonCopyable
 {
@@ -54,8 +60,9 @@ public:
 
         void SetLayout              (PipelineLayout const* layout);
 
-        void EnableDepthStencilTest (Format depthFormat);
+        void EnableDepthTest        (Format depthFormat);
         void SetCullMode            (VkCullModeFlags mode);
+        void SetWindingOrder        (WindingOrder order);
 
         void AddVertexAttribute     (Format format);
         void AddOutputViewport      (Format format, BlendType blend);

@@ -23,6 +23,10 @@ void ForwardOpaquePass::RegisterResources(RenderGraph& graph)
         TextureID::FinalRT,
         VKW::FORMAT_B8G8R8A8_UNORM, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
         0);
+
+    graph.RegisterDepthStencilTarget(this,
+        TextureID::MainDepth,
+        VKW::FORMAT_D24_UNORM_S8_UINT, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
 }
 
 void ForwardOpaquePass::Initialize(RenderGraph& graph)
@@ -54,11 +58,14 @@ void ForwardOpaquePass::Initialize(RenderGraph& graph)
 void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
 {
     VKW::ImageResourceView* colorAttachment = graph.GetStorageTexture(TextureID::FinalRT)->GetShaderView();
+    VKW::ImageResourceView* depthAttachment = graph.GetStorageTexture(TextureID::MainDepth)->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, colorAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    context.CmdBeginRendering(1, colorAttachment, nullptr, nullptr);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->parentResource_, VKW::RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
+    context.CmdBeginRendering(1, colorAttachment, depthAttachment, nullptr);
     float clearColors[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_0, clearColors);
+    context.CmdClearAttachments(VKW::ATTACHMENT_MASK_DEPTH, 1.0f, 0);
 
     context.CmdSetViewport(1, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
     context.CmdSetScissor(1, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());

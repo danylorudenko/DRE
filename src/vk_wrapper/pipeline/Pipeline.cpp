@@ -69,7 +69,7 @@ Pipeline::Descriptor::Descriptor()
     rasterizationState_.rasterizerDiscardEnable = VK_FALSE;
     rasterizationState_.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizationState_.cullMode = VK_CULL_MODE_BACK_BIT;
-    rasterizationState_.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    rasterizationState_.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizationState_.depthBiasEnable = VK_FALSE;
     rasterizationState_.depthBiasConstantFactor = 0.0f;
     rasterizationState_.depthBiasClamp = 0.0f;
@@ -195,7 +195,7 @@ void Pipeline::Descriptor::SetLayout(PipelineLayout const* layout)
     pipelineLayout_ = layout;
 }
 
-void Pipeline::Descriptor::EnableDepthStencilTest(Format depthFormat)
+void Pipeline::Descriptor::EnableDepthTest(Format depthFormat)
 {
     depthStencilState_.depthTestEnable = VK_TRUE;
     depthStencilState_.depthWriteEnable = VK_TRUE;
@@ -208,6 +208,11 @@ void Pipeline::Descriptor::EnableDepthStencilTest(Format depthFormat)
 void Pipeline::Descriptor::SetCullMode(VkCullModeFlags flags)
 {
     rasterizationState_.cullMode = flags;
+}
+
+void Pipeline::Descriptor::SetWindingOrder(WindingOrder face)
+{
+    rasterizationState_.frontFace = VkFrontFace(face);
 }
 
 void Pipeline::Descriptor::AddVertexAttribute(Format format)
