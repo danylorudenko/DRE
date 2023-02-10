@@ -181,11 +181,17 @@ void EmplaceRenderableObjectTexture(Data::Material* material, Data::Material::Te
 {
     Data::Texture2D const& texture = material->GetTexture(slot);
     if (!texture.IsInitialized())
+    {
         result.EmplaceBack(textureBank.FindTexture(defaultName));
+    }
     else
-        result.EmplaceBack(textureBank.LoadTexture2DSync(
-            texture.GetName(), texture.GetSizeX(), texture.GetSizeY(), texture.GetFormat(), texture.GetBuffer()
-        ));
+    {
+        ReadOnlyTexture* gfxTexture = textureBank.FindTexture(texture.GetName());
+
+        result.EmplaceBack(gfxTexture == nullptr 
+            ? textureBank.LoadTexture2DSync(texture.GetName(), texture.GetSizeX(), texture.GetSizeY(), texture.GetFormat(), texture.GetBuffer()) 
+            : gfxTexture);
+    }
 }
 
 RenderableObject* GraphicsManager::CreateRenderableObject(VKW::Context& context, Data::Geometry* geometry, Data::Material* material)
