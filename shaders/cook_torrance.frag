@@ -18,14 +18,54 @@ layout(set = 3, binding = 0, std140) uniform TransformUniform
 {
 	mat4  mvp_mat;
 	mat4  model_mat;
-	uvec2 textureIDs;
+	uvec4 textureIDs;
 } transformUniform;
+
+
+float GGX_NDF(vec3 n, vec3 h, float a)
+{
+	float a2 = a * a;
+	float NdotH = dot(n, h);
+	float nh2 = NdotH * NdotH;
+
+	float denom = nh2 * (a2 - 1.0) + 1.0;
+	denom = PI * denom * denom;
+
+	return a2 / denom;
+}
+
+float ShlickGGX(float NdotV, float k)
+{
+	float denom = NdotV * (1.0 - k) + k;
+
+	return NdotV / denom;
+}
+
+float SmithGGX(vec3 n, vec3 v, vec3 L, float a)
+{
+	float a1 = (a + 1);
+	float k = (a1 * a1) / 8.0;
+
+	float ggx1 = ShlickGGX(dot(n, v), k);
+	float ggx2 = ShlickGGX(dot(n, L), k);
+
+	return ggx1 * ggx2;
+}
+
+
+vec3 FresnelShlick(float NdotH, vec3 color, float metalness)
+{
+	vec3 F0 = mix(vec3(0.04), color, metalness);
+	return F0 + (vec3(1.0) - F0) * pow(1.0 - NdotH, 5.0);
+}
+
+
 
 
 void main()
 {
-	vec3 diffuse = texture(sampler2D(GetGlobalTexture(transformUniform.textureIDs[0]), GetSamplerLinear()), in_uv).rgb;
+	vec3 diffuse = SampleGlobalTextureAnisotropic(transformUniform.textureIDs[0], in_uv).rgb;
 	float lit = max(0.0, dot(in_normal, in_tangent_light));
 	lit = max(lit, 0.3);
-	finalColor = vec4(diffuse * lit, 1.0);
+	finalColor = vec4(diffuse.rgb * lit, 1.0);
 }

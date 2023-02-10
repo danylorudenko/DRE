@@ -42,6 +42,8 @@ public:
     inline VKW::DescriptorSet const&    GetDescriptorSets(FrameID frameID) const { return m_DescriptorSets[frameID]; }
     inline ReadOnlyTexture*             GetDiffuseTexture() const { return m_Textures[0]; }
     inline ReadOnlyTexture*             GetNormalTexture() const { return m_Textures[1]; }
+    inline ReadOnlyTexture*             GetMetalnessTexture() const { return m_Textures[2]; }
+    inline ReadOnlyTexture*             GetRoughnessTexture() const { return m_Textures[3]; }
 
     void                                Transform(glm::mat4 model);
 

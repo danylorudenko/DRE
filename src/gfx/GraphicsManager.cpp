@@ -179,7 +179,7 @@ GraphicsManager::GeometryGPU* GraphicsManager::LoadGPUGeometry(VKW::Context& con
 
 void EmplaceRenderableObjectTexture(Data::Material* material, Data::Material::TextureProperty::Slot slot, TextureBank& textureBank, char const* defaultName, RenderableObject::TexturesVector& result)
 {
-    Data::Texture2D const& texture = material->GetTexture(Data::Material::TextureProperty::Slot::DIFFUSE);
+    Data::Texture2D const& texture = material->GetTexture(slot);
     if (!texture.IsInitialized())
         result.EmplaceBack(textureBank.FindTexture(defaultName));
     else
@@ -211,6 +211,8 @@ RenderableObject* GraphicsManager::CreateRenderableObject(VKW::Context& context,
     RenderableObject::TexturesVector textures;
     EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::DIFFUSE, m_TextureBank, "default_color", textures);
     EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::NORMAL, m_TextureBank, "default_normal", textures);
+    EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::METALNESS, m_TextureBank, "zero_r", textures);
+    EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::ROUGHNESS, m_TextureBank, "one_r", textures);
 
     // load geometry
     GeometryGPU* geometryGPU = m_GeometryGPUMap.Find(geometry).value;

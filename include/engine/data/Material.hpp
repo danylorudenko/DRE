@@ -23,6 +23,9 @@ public:
         {
             DIFFUSE,
             NORMAL,
+            METALNESS,
+            ROUGHNESS,
+            OCCLUSION,
             MAX
         };
 

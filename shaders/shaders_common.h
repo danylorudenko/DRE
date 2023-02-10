@@ -1,5 +1,7 @@
 // description
 
+#define PI 3.14159
+
 layout(set = 0, binding = 0) uniform sampler    g_GlobalSamplers[];
 layout(set = 0, binding = 1) buffer             PersistentStorage
 {
@@ -19,5 +21,15 @@ layout(set = 1, binding = 0) uniform texture2D  g_GlobalTextures[];
 #define GetSamplerLinear() g_GlobalSamplers[1]
 #define GetSamplerLinearClamp() g_GlobalSamplers[2]
 #define GetSamplerAnisotropic() g_GlobalSamplers[3]
+
+vec4 SampleGlobalTextureLinear(uint id, vec2 uv)
+{
+    return texture(sampler2D(GetGlobalTexture(id), GetSamplerLinear()), uv);
+}
+
+vec4 SampleGlobalTextureAnisotropic(uint id, vec2 uv)
+{
+    return texture(sampler2D(GetGlobalTexture(id), GetSamplerAnisotropic()), uv);
+}
 
 

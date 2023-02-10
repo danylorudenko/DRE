@@ -35,7 +35,7 @@ void DrawBatcher::Batch(VKW::Context& context, WORLD::Scene const& scene)
 
          std::uint32_t constexpr uniformSize = 
             sizeof(obj.GetModelM()) + 
-            sizeof(VKW::TextureDescriptorIndex) * 2;
+            sizeof(VKW::TextureDescriptorIndex) * 4;
 
          auto uniformAllocation = m_UniformArena->AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), uniformSize, 256);
          VKW::DescriptorManager::WriteDesc writeDesc;
@@ -48,9 +48,11 @@ void DrawBatcher::Batch(VKW::Context& context, WORLD::Scene const& scene)
          uniformProxy.WriteMember140(mvp);
          uniformProxy.WriteMember140(obj.GetModelM());
 
-         std::uint32_t textureIDs[2] = { 
+         std::uint32_t textureIDs[4] = { 
             obj.GetDiffuseTexture()->GetShaderReadDescriptor().id_, 
-            obj.GetNormalTexture()->GetShaderReadDescriptor().id_
+            obj.GetNormalTexture()->GetShaderReadDescriptor().id_,
+            obj.GetMetalnessTexture()->GetShaderReadDescriptor().id_,
+            obj.GetRoughnessTexture()->GetShaderReadDescriptor().id_
          };
 
          uniformProxy.WriteMember140(textureIDs, sizeof(textureIDs));

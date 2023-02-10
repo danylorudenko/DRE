@@ -248,9 +248,9 @@ void DescriptorManager::AllocateDefaultDescriptors(std::uint8_t globalBuffersCou
     descriptorInfo.magFilter = VK_FILTER_LINEAR;
     descriptorInfo.minFilter = VK_FILTER_LINEAR;
     descriptorInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
-    descriptorInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-    descriptorInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-    descriptorInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    descriptorInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    descriptorInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    descriptorInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
     descriptorInfo.mipLodBias = 0.0f;
     descriptorInfo.anisotropyEnable = VK_TRUE;
     descriptorInfo.maxAnisotropy = 8.0f;

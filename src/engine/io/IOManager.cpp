@@ -87,6 +87,15 @@ void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiM
     case Data::Material::TextureProperty::NORMAL:
         aiType = aiTextureType_NORMALS;
         break;
+    case Data::Material::TextureProperty::METALNESS:
+        aiType = aiTextureType_METALNESS;
+        break;
+    case Data::Material::TextureProperty::ROUGHNESS:
+        aiType = aiTextureType_DIFFUSE_ROUGHNESS;
+        break;
+    case Data::Material::TextureProperty::OCCLUSION:
+        aiType = aiTextureType_AMBIENT_OCCLUSION;
+        break;
     default:
         DRE_ASSERT(false, "Unsupported Data::Material::TextureProperty::Slot while parsing material textures.");
     }
@@ -179,10 +188,17 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* path)
 
         DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_DIFFUSE) <= 1, "We don't support multiple textures of the same type per material (DIFFUSE).");
         DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_NORMALS) <= 1, "We don't support multiple textures of the same type per material (NORMALS)");
+        DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_METALNESS) <= 1, "We don't support multiple textures of the same type per material (METALNESS)");
+        DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS) <= 1, "We don't support multiple textures of the same type per material (DIFFUSE_ROUGHNESS)");
+        DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_AMBIENT_OCCLUSION) <= 1, "We don't support multiple textures of the same type per material (AMBIENT_OCCLUSION)");
 
         // PROCESS TEXTURES
         ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::DIFFUSE, Data::TEXTURE_VARIATION_RGBA);
         ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::NORMAL, Data::TEXTURE_VARIATION_RGBA);
+        ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::METALNESS, Data::TEXTURE_VARIATION_GRAY);
+        ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::ROUGHNESS, Data::TEXTURE_VARIATION_GRAY);
+        ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::OCCLUSION, Data::TEXTURE_VARIATION_GRAY);
+        // TODO: load rgb here
 
         material->GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_COOK_TORRANCE);
     }

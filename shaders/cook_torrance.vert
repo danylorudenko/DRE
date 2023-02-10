@@ -23,7 +23,7 @@ layout(set = 3, binding = 0, std140) uniform TransformUniform
 {
 	mat4  mvp_mat;
 	mat4  model_mat;
-	uvec2 textureIDs;
+	uvec4 textureIDs;
 } transformUniform;
 
 #define GetDiffuseTexture() GetGlobalTexture(transformUniform.textureIDs[0])
@@ -34,7 +34,6 @@ const vec3 C_LIGHT_DIR = vec3(1.0, 1.0, 1.0);
 void main()
 {	
 	out_wpos = vec3(transformUniform.model_mat * vec4(in_pos, 1.0));
-	vec4 diffuse = texture(sampler2D(GetGlobalTexture(transformUniform.textureIDs[0]), GetSamplerLinear()), in_uv);
 	
 	vec3 T = mat3(transformUniform.model_mat) * in_tan;
 	vec3 B = mat3(transformUniform.model_mat) * in_btan;

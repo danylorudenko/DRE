@@ -30,11 +30,17 @@ void TextureBank::LoadDefaultTextures()
 {
     float defaultColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
     float defaultNormal[3] = { 0.0f, 1.0f, 0.0f };
+    float zero = 0.0f;
+    float one = 1.0f;
     DRE::ByteBuffer defaultColorBuffer{ defaultColor, sizeof(defaultColor) };
     DRE::ByteBuffer defaultNormalBuffer{ defaultNormal, sizeof(defaultNormal) };
+    DRE::ByteBuffer zeroBuffer{ &zero, sizeof(zero) };
+    DRE::ByteBuffer oneBuffer{ &one, sizeof(one) };
 
     LoadTexture2DSync("default_color", 1, 1, VKW::FORMAT_R8G8B8A8_UNORM, defaultColorBuffer);
     LoadTexture2DSync("default_normal", 1, 1, VKW::FORMAT_R8G8B8A8_UNORM, defaultNormalBuffer);
+    LoadTexture2DSync("zero_r", 1, 1, VKW::FORMAT_R8_UNORM, zeroBuffer);
+    LoadTexture2DSync("one_r", 1, 1, VKW::FORMAT_R8_UNORM, oneBuffer);
 }
 
 ReadOnlyTexture* TextureBank::LoadTexture2DSync(DRE::String128 const& name, std::uint32_t width, std::uint32_t height, VKW::Format format, DRE::ByteBuffer const& textureData)
