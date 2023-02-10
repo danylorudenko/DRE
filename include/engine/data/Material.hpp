@@ -62,6 +62,7 @@ public:
         enum MaterialType
         {
             MATERIAL_TYPE_DEFAULT_LIT,
+            MATERIAL_TYPE_COOK_TORRANCE,
             MATERIAL_TYPE_MAX
         };
 

@@ -29,6 +29,7 @@ void PipelineDB::CreateDefaultPipelines()
     // default plane material shader
     {
         CreateMaterialPipeline("default_lit");
+        CreateMaterialPipeline("cook_torrance");
     }
 }
 

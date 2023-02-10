@@ -198,6 +198,10 @@ RenderableObject* GraphicsManager::CreateRenderableObject(VKW::Context& context,
         pipeline = GetPipelineDB().GetPipeline("default_lit");
         layout = GetPipelineDB().GetLayout("default_lit_layout");
         break;
+    case Data::Material::RenderingProperties::MATERIAL_TYPE_COOK_TORRANCE:
+        pipeline = GetPipelineDB().GetPipeline("cook_torrance");
+        layout = GetPipelineDB().GetLayout("cook_torrance_layout");
+        break;
     default:
         DRE_ASSERT(false, "No corresponding pipeline in PipelineDB for this material type.");
         break;
