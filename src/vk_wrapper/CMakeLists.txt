@@ -61,8 +61,7 @@ add_library(vk_wrapper STATIC
 find_package(Vulkan REQUIRED)
 
 target_include_directories(vk_wrapper PUBLIC 
-	"${DRE_SOURCE_DIR}/include"
-	"${Vulkan_INCLUDE_DIR}")
+	"${DRE_SOURCE_DIR}/include")
 
 target_compile_features(vk_wrapper PUBLIC cxx_std_20)
 # TODO: disable exceptions
@@ -72,7 +71,7 @@ target_compile_definitions(vk_wrapper PUBLIC
 	WIN32_LEAN_AND_MEAN 
 	NOMINMAX)
 
-target_link_libraries(vk_wrapper PUBLIC foundation)
+target_link_libraries(vk_wrapper PUBLIC foundation Vulkan-Headers)
 
 source_group(
 	TREE "${DRE_SOURCE_DIR}/include/vk_wrapper"

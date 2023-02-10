@@ -17,6 +17,7 @@ add_subdirectory(extern/assimp)
 
 
 add_subdirectory(extern/glm)
+add_subdirectory(extern/Vulkan-Headers)
 add_subdirectory(extern/SPIRV-Cross)
 
 #imgui and stb have no CMakeLists

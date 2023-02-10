@@ -23,7 +23,7 @@
 #include <engine\data\MaterialLibrary.hpp>
 #include <engine\scene\Scene.hpp>
 
-#include <spirv_cross\spirv_cross.hpp>
+#include <spirv_cross.hpp>
 
 namespace IO
 {
