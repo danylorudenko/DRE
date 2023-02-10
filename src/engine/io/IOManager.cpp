@@ -117,21 +117,14 @@ void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiM
     }
 }
 
-void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, aiNode const* node, WORLD::Scene& targetScene)
+void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, aiNode const* node, aiMatrix4x4 const& parentTransform, WORLD::Scene& targetScene)
 {
-    aiMatrix4x4 const& t = node->mTransformation;
-    //WORLD::Entity::TransformData const transform {{
-    //        t.a1, t.a2, t.a3, t.a4,
-    //        t.b1, t.b2, t.b3, t.b4,
-    //        t.c1, t.c2, t.c3, t.c4,
-    //        t.d1, t.d2, t.d3, t.d4
-    //}};
-
+    aiMatrix4x4 const t = node->mTransformation * parentTransform;
     WORLD::Entity::TransformData const transform {{
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f
+            t.a1, t.a2, t.a3, t.a4,
+            t.b1, t.b2, t.b3, t.b4,
+            t.c1, t.c2, t.c3, t.c4,
+            t.d1, t.d2, t.d3, t.d4
     }};
 
     for (std::uint32_t i = 0, count = node->mNumMeshes; i < count; i++)
@@ -145,7 +138,7 @@ void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* a
 
     for (std::uint32_t i = 0; i < node->mNumChildren; i++)
     {
-        ParseAssimpNodeRecursive(gfxContext, assetPath, scene, node->mChildren[i], targetScene);
+        ParseAssimpNodeRecursive(gfxContext, assetPath, scene, node->mChildren[i], t, targetScene);
     }
 }
 
@@ -153,7 +146,7 @@ void IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene)
 {
     Assimp::Importer importer = Assimp::Importer();
 
-    aiScene const* scene = importer.ReadFile(path, aiProcessPreset_TargetRealtime_Fast);
+    aiScene const* scene = importer.ReadFile(path, aiProcessPreset_TargetRealtime_Fast | aiProcess_FlipUVs);
 
     DRE_ASSERT(scene != nullptr, "Failed to load a model file.");
     if (scene == nullptr)
@@ -161,7 +154,9 @@ void IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene)
 
     ParseAssimpMeshes(GFX::g_GraphicsManager->GetMainContext(), scene);
     ParseAssimpMaterials(scene, path);
-    ParseAssimpNodeRecursive(GFX::g_GraphicsManager->GetMainContext(), path, scene, scene->mRootNode, targetScene);
+
+    aiMatrix4x4 rootTransform{};
+    ParseAssimpNodeRecursive(GFX::g_GraphicsManager->GetMainContext(), path, scene, scene->mRootNode, rootTransform, targetScene);
     GFX::g_GraphicsManager->GetMainContext().FlushAll();
 }
 

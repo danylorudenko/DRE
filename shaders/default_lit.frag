@@ -24,6 +24,8 @@ layout(set = 3, binding = 0, std140) uniform TransformUniform
 
 void main()
 {
-	vec4 diffuse = texture(sampler2D(GetGlobalTexture(transformUniform.textureIDs[0]), GetSamplerLinear()), in_uv);
-	finalColor = vec4(diffuse.rgb, in_tangent_light.r);
+	vec3 diffuse = texture(sampler2D(GetGlobalTexture(transformUniform.textureIDs[0]), GetSamplerLinear()), in_uv).rgb;
+	float lit = max(0.0, dot(in_normal, in_tangent_light));
+	lit = max(lit, 0.3);
+	finalColor = vec4(diffuse * lit, 1.0);
 }

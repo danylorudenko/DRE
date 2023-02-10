@@ -19,6 +19,7 @@ set(FOUNDATION_HEADER_LIST
 	"${DRE_SOURCE_DIR}/include/foundation/memory/AllocatorLinear.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/memory/AllocatorPool.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/memory/AllocatorScopeStack.hpp"
+	"${DRE_SOURCE_DIR}/include/foundation/memory/AllocatorSystem.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/memory/ByteBuffer.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/memory/ElementAllocator.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/memory/InplaceObjectAllocator.hpp"

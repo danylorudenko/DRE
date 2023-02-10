@@ -174,10 +174,6 @@ GraphicsManager::GeometryGPU* GraphicsManager::LoadGPUGeometry(VKW::Context& con
     context.CmdCopyBufferToBuffer(indexBuffer, 0, meshMemory.m_Buffer, meshMemory.m_OffsetInBuffer + vertexMemoryRequirements, indexMemoryRequirements);
     context.CmdResourceDependency(indexBuffer, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER, VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_INPUT_ASSEMBLER);
 
-    context.FlushAll();
-
-    GetUploadArena().ResetAllocations(GetCurrentFrameID());
-
     return &m_GeometryGPUMap.Emplace(geometry, vertexBuffer, indexBuffer);
 }
 

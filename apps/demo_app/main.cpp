@@ -10,8 +10,11 @@ int main()
 
     bool imguiEnabled = true;
 
-    auto* appDelegate = DRE::g_PersistentDataAllocator.Alloc<VulkanApplicationDelegate>(instance, "Bullet Manager", 1600u, 900u, 2u, DEBUG_OR_RELEASE(true, false), imguiEnabled);
-    auto* application = DRE::g_PersistentDataAllocator.Alloc<Application>(appDelegate);
+    VulkanApplicationDelegate* appDelegate = (VulkanApplicationDelegate*)DRE::g_PersistentDataAllocator.Alloc(sizeof(VulkanApplicationDelegate), alignof(VulkanApplicationDelegate));
+    new (appDelegate) VulkanApplicationDelegate{ instance, "Bullet Manager", 1600u, 900u, 2u, DEBUG_OR_RELEASE(true, false), imguiEnabled };
+
+    Application* application = (Application*)DRE::g_PersistentDataAllocator.Alloc(sizeof(Application), alignof(Application));
+    new (application) Application{ appDelegate };
 
     application->run();
 

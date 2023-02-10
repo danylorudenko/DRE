@@ -22,8 +22,13 @@ void* g_DataExchangeArena   = nullptr;
 
 AllocatorLinear                 g_PersistentDataAllocator;
 AllocatorLinear                 g_FrameScratchAllocator;
-DefaultAllocator                   g_MainAllocator;
+#ifndef DRE_DEBUG_MAIN_ALLOCATOR
+DefaultAllocator                g_MainAllocator;
+#else
+AllocatorSystem                 g_MainAllocator;
+#endif
 DataExchangeAllocatorBuddy      g_DataExchangeAllocator;
+
 
 
 
@@ -37,9 +42,11 @@ void InitializeGlobalMemory()
     g_FrameScratchArena = DRE_MALLOC(FRAME_SCRATCH_ARENA_SIZE);
     g_FrameScratchAllocator = AllocatorLinear(g_FrameScratchArena, FRAME_SCRATCH_ARENA_SIZE);
 
+#ifndef DRE_DEBUG_MAIN_ALLOCATOR
     U64 constexpr mainAllocatorMemorySize = DefaultAllocator::RequiredMemorySize();
     g_MainArena = DRE_MALLOC(mainAllocatorMemorySize);
     g_MainAllocator = DefaultAllocator{ g_MainArena, mainAllocatorMemorySize };
+#endif
 
     g_DataExchangeArena = DRE_MALLOC(DATA_EXCHANGE_ARENA_SIZE);
     g_DataExchangeAllocator = DataExchangeAllocatorBuddy(g_DataExchangeArena, DATA_EXCHANGE_ARENA_SIZE);

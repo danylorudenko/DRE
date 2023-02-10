@@ -11,6 +11,8 @@
 #include <engine\data\Texture2D.hpp>
 #include <engine\data\Material.hpp>
 
+#include <assimp\matrix4x4.h>
+
 namespace WORLD
 {
 class Scene;
@@ -86,7 +88,7 @@ public:
 private:
     void ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene);
     void ParseAssimpMaterials(aiScene const* scene, char const* path);
-    void ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, aiNode const* node, WORLD::Scene& targetScene);
+    void ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, aiNode const* node, aiMatrix4x4 const& parentTransform, WORLD::Scene& targetScene);
 
     void ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiMat, DRE::String256 const& assetFolderPath, Data::Material* material, Data::Material::TextureProperty::Slot slot, Data::TextureChannelVariations channels);
 

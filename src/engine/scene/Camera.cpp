@@ -28,7 +28,7 @@ void Camera::CalculateView()
     rotationM = glm::rotate(rotationM, euler.z, glm::vec3{ 0.0f, 0.0f, 1.0f }); // roll
 
     m_Forward = rotationM * glm::vec4{ 0.0f, 0.0f, -1.0f, 0.0f };
-    m_Right = -(glm::cross(m_Forward, glm::vec3{ 0.0f, 1.0f, 0.0f}));
+    m_Right = glm::cross(m_Forward, glm::vec3{ 0.0f, 1.0f, 0.0f});
 
     m_ViewM = glm::lookAtRH(m_Position, m_Position + m_Forward, GetUp());
     //m_ViewM = glm::identity<glm::mat4>();

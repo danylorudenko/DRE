@@ -102,6 +102,8 @@ void VulkanApplicationDelegate::start()
 
     m_MainScene.GetMainCamera().SetAspect(float(m_GraphicsManager.GetMainDevice()->GetSwapchain()->GetWidth()) / float(m_GraphicsManager.GetMainDevice()->GetSwapchain()->GetHeight()));
     m_MainScene.GetMainCamera().SetFOV(60.0f);
+    m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 7.28f, 5.57f, -1.07f });
+    m_MainScene.GetMainCamera().SetEulerOrientation(glm::vec3{ -17.26f, 107.37f, 0.0f });
 
     m_GraphicsManager.Initialize();
 
@@ -186,7 +188,7 @@ void VulkanApplicationDelegate::ImGuiUser()
         glm::vec3 const& cameraRight = camera.GetRight();
 
         float const cameraMod = (static_cast<float>(m_PrevFrameDeltaMicroseconds) / 10000);
-        float const moveMul = 3.0f;
+        float const moveMul = 0.1f;
         float const rotMul = 1.0f;
 
         if (ImGui::Begin("Camera Controls", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
@@ -206,7 +208,7 @@ void VulkanApplicationDelegate::ImGuiUser()
                 camera.Move(-cameraRight * moveMul * cameraMod);
             ImGui::SameLine(0.0f, 20.0f);
             if (ImGui::ArrowButton("upr", ImGuiDir_Up))
-                camera.Rotate(glm::vec3{ -rotMul * cameraMod, 0.0f, 0.0f });
+                camera.Rotate(glm::vec3{ rotMul * cameraMod, 0.0f, 0.0f });
             ImGui::SameLine();
             if (ImGui::ArrowButton("leftr", ImGuiDir_Left))
                 camera.Rotate(glm::vec3{ 0.0f, rotMul * cameraMod, 0.0f });
@@ -222,7 +224,7 @@ void VulkanApplicationDelegate::ImGuiUser()
                 camera.Move(cameraRight * moveMul * cameraMod);
             ImGui::SameLine(0.0f, 20.0f);
             if (ImGui::ArrowButton("downr", ImGuiDir_Down))
-                camera.Rotate(glm::vec3{ rotMul * cameraMod, 0.0f, 0.0f });
+                camera.Rotate(glm::vec3{ -rotMul * cameraMod, 0.0f, 0.0f });
             ImGui::SameLine();
             if (ImGui::ArrowButton("rightr", ImGuiDir_Right))
                 camera.Rotate(glm::vec3{ 0.0f, -rotMul * cameraMod, 0.0f });

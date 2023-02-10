@@ -43,7 +43,7 @@ void main()
 	
 	out_tangent_wpos = TBN * out_wpos;
 	out_tangent_viewpos = TBN * GetCameraPos();
-	out_tangent_light = TBN * normalize(C_LIGHT_DIR);
+	out_tangent_light = normalize(C_LIGHT_DIR);
 	
 	out_normal = in_norm; // WARNING
 	out_uv = in_uv;

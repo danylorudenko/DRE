@@ -5,6 +5,12 @@
 #include <foundation\memory\AllocatorBuddy.hpp>
 
 
+//#define DRE_DEBUG_MAIN_ALLOCATOR
+#ifdef DRE_DEBUG_MAIN_ALLOCATOR
+#include <foundation\memory\AllocatorSystem.hpp>
+#endif
+
+
 #define DRE_MALLOC(size) std::malloc(size)
 #define DRE_FREE(memory) std::free(memory)
 
@@ -31,9 +37,14 @@ extern AllocatorLinear                  g_FrameScratchAllocator;
 
 U64 constexpr MAIN_ALLOCATOR_LEAF_SIZE  = 1024 * 64;
 U64 constexpr MAIN_ALLOCATOR_MAX_DEPTH  = 12;
-using  DefaultAllocator                 = AllocatorBuddy<MAIN_ALLOCATOR_LEAF_SIZE, MAIN_ALLOCATOR_MAX_DEPTH>;
-extern DefaultAllocator                 g_MainAllocator;
 
+#ifndef DRE_DEBUG_MAIN_ALLOCATOR
+using  DefaultAllocator = AllocatorBuddy<MAIN_ALLOCATOR_LEAF_SIZE, MAIN_ALLOCATOR_MAX_DEPTH>;
+extern DefaultAllocator                 g_MainAllocator;
+#else
+using  DefaultAllocator = AllocatorSystem;
+extern DefaultAllocator                 g_MainAllocator;
+#endif
 
 
 
@@ -43,5 +54,6 @@ U64 constexpr DATA_EXCHANGE_LEAF_SIZE   = 1024;
 U64 constexpr DATA_EXCHANGE_MAX_DEPTH   = 5;
 using  DataExchangeAllocatorBuddy       = AllocatorBuddy<DATA_EXCHANGE_LEAF_SIZE, DATA_EXCHANGE_MAX_DEPTH>;
 extern DataExchangeAllocatorBuddy       g_MultithreadDataExchangeAllocator;
+
 
 DRE_END_NAMESPACE
