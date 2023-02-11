@@ -64,7 +64,7 @@ vec3 FresnelShlick(float NdotH, vec3 color, float metalness)
 
 void main()
 {
-	vec3 diffuse = SampleGlobalTextureAnisotropic(transformUniform.textureIDs[0], in_uv).rgb;
+	vec3 diffuse = SampleGlobalTextureAnisotropic(instanceUniform.textureIDs[0], in_uv).rgb;
 	float lit = max(0.0, dot(in_normal, in_tangent_light));
 	lit = max(lit, 0.3);
 	finalColor = vec4(diffuse.rgb * lit, 1.0);
