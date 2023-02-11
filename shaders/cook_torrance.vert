@@ -19,25 +19,22 @@ layout(location = 4) out vec2 out_uv;
 layout(location = 5) out vec3 out_tangent_light;
 
 
-layout(set = 3, binding = 0, std140) uniform TransformUniform
+layout(set = 3, binding = 0, std140) uniform InstanceUniform
 {
-	mat4  mvp_mat;
 	mat4  model_mat;
+	mat4  mvp_mat;
 	uvec4 textureIDs;
-} transformUniform;
-
-#define GetDiffuseTexture() GetGlobalTexture(transformUniform.textureIDs[0])
-#define GetNormalTexture() GetGlobalTexture(transformUniform.textureIDs[1])
+} instanceUniform;
 
 const vec3 C_LIGHT_DIR = vec3(1.0, 1.0, 1.0);
 
 void main()
 {	
-	out_wpos = vec3(transformUniform.model_mat * vec4(in_pos, 1.0));
+	out_wpos = vec3(instanceUniform.model_mat * vec4(in_pos, 1.0));
 	
-	vec3 T = mat3(transformUniform.model_mat) * in_tan;
-	vec3 B = mat3(transformUniform.model_mat) * in_btan;
-	vec3 N = mat3(transformUniform.model_mat) * in_norm;
+	vec3 T = mat3(instanceUniform.model_mat) * in_tan;
+	vec3 B = mat3(instanceUniform.model_mat) * in_btan;
+	vec3 N = mat3(instanceUniform.model_mat) * in_norm;
 	mat3 TBN = transpose(mat3(T, B, N));
 	
 	out_tangent_wpos = TBN * out_wpos;
@@ -47,5 +44,5 @@ void main()
 	out_normal = in_norm; // WARNING
 	out_uv = in_uv;
 	
-	gl_Position = transformUniform.mvp_mat * vec4(in_pos, 1.0);
+	gl_Position = instanceUniform.mvp_mat * vec4(in_pos, 1.0);
 }

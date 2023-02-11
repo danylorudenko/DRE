@@ -14,12 +14,12 @@ layout(location = 5) in vec3 in_tangent_light;
 
 layout(location = 0) out vec4 finalColor;
 
-layout(set = 3, binding = 0, std140) uniform TransformUniform
+layout(set = 3, binding = 0, std140) uniform InstanceUniform
 {
-	mat4  mvp_mat;
 	mat4  model_mat;
+	mat4  mvp_mat;
 	uvec4 textureIDs;
-} transformUniform;
+} instanceUniform;
 
 
 float GGX_NDF(vec3 n, vec3 h, float a)
