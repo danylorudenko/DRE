@@ -23,5 +23,8 @@ int main()
 
     DRE::TerminateGlobalMemory();
 
+    // to terminate all detached threads we don't care about
+    std::exit(0);
+
     return 0;
 }

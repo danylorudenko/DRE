@@ -90,6 +90,7 @@ void main()
 
     vec3 numerator = NDF * G * F;
     float denum = 4.0 * NdotV * NdotL + 0.001;
+    denum = 1;
 
     vec3 specular = numerator / denum;
 

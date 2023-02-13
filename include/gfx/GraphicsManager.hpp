@@ -91,14 +91,16 @@ public:
 
 
 public:
-    void    Initialize();
-    void    RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS);
+    void                                Initialize();
+    void                                ReloadShaders();
+    void                                RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS);
+    void                                WaitIdle();
 
     RenderableObject*                   CreateRenderableObject(VKW::Context& context, Data::Geometry* geometry, Data::Material* material);
     void                                FreeRenderableObject(RenderableObject* obj);
 
 private:
-    void            CreateAllPasses();
+    void CreateAllPasses();
 
     struct GeometryGPU
     {

@@ -64,8 +64,9 @@ public:
     void Append(char const* str, U16 size)
     {
         DRE_ASSERT(size + m_Size < SIZE, "Inplace string overflow.");
-        std::strcat(m_Data, str);
+        std::strncat(m_Data, str, size);
         m_Size += size;
+        m_Data[m_Size] = '\0';
     }
 
 private:

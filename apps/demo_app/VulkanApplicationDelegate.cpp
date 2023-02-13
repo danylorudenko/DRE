@@ -32,16 +32,12 @@ VulkanApplicationDelegate::VulkanApplicationDelegate(HINSTANCE instance, char co
     , m_IOManager{ &DRE::g_MainAllocator, &m_MaterialLibrary, &m_GeometryLibrary }
     , m_GraphicsManager{ instance, &m_MainWindow, &m_IOManager, vkDebug }
     , m_ImGuiEnabled{ imguiEnabled }
-    , m_PrevFrameDeltaMicroseconds{ 0 }
-    , m_AppStartTimeMicroseconds{ 0 }
+    , m_DeltaMicroseconds{ 0 }
     , m_EngineFrame{ 0 }
     , m_MainScene{ &DRE::g_MainAllocator }
     , m_BulletsEveryFrame{ false }
 {
     WORLD::g_MainScene = &m_MainScene;
-
-    auto startPoint = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now());
-    m_AppStartTimeMicroseconds = static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(startPoint.time_since_epoch()).count());
 }
 
 //////////////////////////////////////////
@@ -115,10 +111,8 @@ void VulkanApplicationDelegate::update()
 {
     ////////////////////////////////////////////////////
     // Frame time measurement
-    auto currTime = std::chrono::high_resolution_clock::now();
-    auto frameTime = currTime - m_PrevFrameTimePoint;
-    m_PrevFrameTimePoint = currTime;
-    m_PrevFrameDeltaMicroseconds = std::chrono::duration_cast<std::chrono::microseconds>(frameTime).count();
+    m_DeltaMicroseconds = m_FrameStopwatch.CurrentMicroseconds();
+    m_FrameStopwatch.Reset();
     ////////////////////////////////////////////////////
 
     DRE::g_FrameScratchAllocator.Reset();
@@ -133,7 +127,14 @@ void VulkanApplicationDelegate::update()
         m_ImGuiHelper->EndFrame();
     }
 
-    m_GraphicsManager.RenderFrame(m_EngineFrame, m_PrevFrameDeltaMicroseconds);
+    if (m_IOManager.NewShadersPending())
+    {
+        m_GraphicsManager.WaitIdle();
+        m_GraphicsManager.ReloadShaders();
+        m_IOManager.SignalShadersProcessed();
+    }
+
+    m_GraphicsManager.RenderFrame(m_EngineFrame, m_DeltaMicroseconds);
 
     m_EngineFrame++;
 }
@@ -174,8 +175,8 @@ void VulkanApplicationDelegate::ImGuiUser()
         static bool frameDataOpened = false;
         if (ImGui::Begin("Frame Stats", nullptr, frameDataWindowFlags))
         {
-            ImGui::Text("DT: %f ms", static_cast<double>(m_PrevFrameDeltaMicroseconds) / 1000);
-            ImGui::Text("FPS: %f", 1.0 / (static_cast<double>(m_PrevFrameDeltaMicroseconds) / 1000000));
+            ImGui::Text("DT: %f ms", static_cast<double>(m_DeltaMicroseconds) / 1000);
+            ImGui::Text("FPS: %f", 1.0 / (static_cast<double>(m_DeltaMicroseconds) / 1000000));
             ImGui::End();
         }
 
@@ -187,7 +188,7 @@ void VulkanApplicationDelegate::ImGuiUser()
         glm::vec3 const& cameraForward = camera.GetForward();
         glm::vec3 const& cameraRight = camera.GetRight();
 
-        float const cameraMod = (static_cast<float>(m_PrevFrameDeltaMicroseconds) / 10000);
+        float const cameraMod = (static_cast<float>(m_DeltaMicroseconds) / 10000);
         float const moveMul = 0.1f;
         float const rotMul = 1.0f;
 

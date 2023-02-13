@@ -29,6 +29,7 @@ set(FOUNDATION_HEADER_LIST
 	"${DRE_SOURCE_DIR}/include/foundation/string/ConstString.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/string/InplaceString.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/system/DynamicLibrary.hpp"
+	"${DRE_SOURCE_DIR}/include/foundation/system/Time.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/system/Window.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/util/AlignedStorage.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/util/Hash.hpp")
@@ -41,6 +42,7 @@ set(FOUNDATION_SOURCE_LIST
 	"${DRE_SOURCE_DIR}/src/foundation/memory/ByteBuffer.cpp"
 	"${DRE_SOURCE_DIR}/src/foundation/memory/Memory.cpp"
 	"${DRE_SOURCE_DIR}/src/foundation/system/DynamicLibrary.cpp"
+	"${DRE_SOURCE_DIR}/src/foundation/system/Time.cpp"
 	"${DRE_SOURCE_DIR}/src/foundation/system/Window.cpp"
 	"${DRE_SOURCE_DIR}/src/foundation/util/Hash.cpp")
 	

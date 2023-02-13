@@ -33,12 +33,12 @@ void PipelineDB::CreateDefaultPipelines()
     }
 }
 
-DRE::String128 const* PipelineDB::CreateMaterialPipeline(char const* name)
+DRE::String64 const* PipelineDB::CreateMaterialPipeline(char const* name)
 {
-    DRE::String128 const* layoutName = CreatePipelineLayoutFromShader(name);
+    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name);
 
-    DRE::String128 vertName{ name }; vertName.Append(".vert");
-    DRE::String128 fragName{ name }; fragName.Append(".frag");
+    DRE::String64 vertName{ name }; vertName.Append(".vert");
+    DRE::String64 fragName{ name }; fragName.Append(".frag");
 
     IO::IOManager::ShaderData const* vertData = m_IOManager->GetShaderData(vertName);
     IO::IOManager::ShaderData const* fragData = m_IOManager->GetShaderData(fragName);
@@ -66,7 +66,32 @@ DRE::String128 const* PipelineDB::CreateMaterialPipeline(char const* name)
     return m_Pipelines.Find(name).key;
 }
 
-DRE::String128 const* PipelineDB::CreatePipelineLayoutFromShader(char const* shaderName)
+void PipelineDB::ReloadPipeline(char const* name)
+{
+    DRE::String128 layoutName{ name }; layoutName.Append("_layout");
+    VKW::PipelineLayout* layout = GetLayout(layoutName);
+
+    DRE::String64 vertName{ name }; vertName.Append(".vert");
+    DRE::String64 fragName{ name }; fragName.Append(".frag");
+
+    IO::IOManager::ShaderData const* vertData = m_IOManager->GetShaderData(vertName);
+    IO::IOManager::ShaderData const* fragData = m_IOManager->GetShaderData(fragName);
+
+    VKW::ShaderModule vertModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData->m_Binary, vertData->m_ModuleType, "main" };
+    VKW::ShaderModule fragModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragData->m_Binary, fragData->m_ModuleType, "main" };
+
+    VKW::Pipeline* pipeline = GetPipeline(name);
+    DRE_ASSERT(pipeline != nullptr, "Attempt to reload pipeline which did not exist.");
+
+    VKW::Pipeline::Descriptor& desc = pipeline->GetDescriptor();
+
+    desc.SetVertexShader(vertModule);
+    desc.SetFragmentShader(fragModule);
+
+    m_Pipelines[name] = VKW::Pipeline{ m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), desc };
+}
+
+DRE::String64 const* PipelineDB::CreatePipelineLayoutFromShader(char const* shaderName)
 {
     DRE::String128 vertName{ shaderName }; vertName.Append(".vert");
     DRE::String128 fragName{ shaderName }; fragName.Append(".frag");
@@ -121,7 +146,7 @@ DRE::String128 const* PipelineDB::CreatePipelineLayoutFromShader(char const* sha
         layoutDesc.Add(&layouts[i]);
     }
 
-    DRE::String128 layoutName{ shaderName }; layoutName.Append("_layout");
+    DRE::String64 layoutName{ shaderName }; layoutName.Append("_layout");
     CreatePipelineLayout(layoutName, layoutDesc);
 
     return m_PipelineLayouts.Find(layoutName).key;

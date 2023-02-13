@@ -1,12 +1,12 @@
 #pragma once
 
 #include <memory>
-#include <chrono>
 #include <future>
 
 #include <foundation\class_features\NonMovable.hpp>
 
 #include <foundation\memory\AllocatorBuddy.hpp>
+#include <foundation\system\Time.hpp>
 
 #include <demo_app\Application.hpp>
 #include <demo_app\ImGuiHelper.hpp>
@@ -62,9 +62,9 @@ private:
     std::unique_ptr<ImGuiHelper>        m_ImGuiHelper;
     bool m_ImGuiEnabled;
 
-    std::chrono::high_resolution_clock::time_point m_PrevFrameTimePoint;
-    std::uint64_t m_PrevFrameDeltaMicroseconds;
-    std::uint64_t m_AppStartTimeMicroseconds;
+    DRE::Stopwatch  m_FrameStopwatch;
+    DRE::Stopwatch  m_GlobalStopwatch;
+    std::uint64_t m_DeltaMicroseconds;
     std::uint64_t m_EngineFrame;
 
 

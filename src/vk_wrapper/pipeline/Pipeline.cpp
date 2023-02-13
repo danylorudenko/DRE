@@ -300,7 +300,9 @@ VkGraphicsPipelineCreateInfo const& Pipeline::Descriptor::CompileGraphicPipeline
     graphicsCreateInfo_.stageCount = shaderStagesCount_;
     graphicsCreateInfo_.pStages = shaderStages_;
 
+    vertexInputState_.pVertexBindingDescriptions = &vertexBindingDescription_;
     vertexInputState_.vertexAttributeDescriptionCount = vertexAttributeCount_;
+    vertexInputState_.pVertexAttributeDescriptions = vertexAttributeDescriptions_;
     graphicsCreateInfo_.pVertexInputState = &vertexInputState_;
 
     graphicsCreateInfo_.pInputAssemblyState = &inputAssemblyState_;
@@ -315,8 +317,10 @@ VkGraphicsPipelineCreateInfo const& Pipeline::Descriptor::CompileGraphicPipeline
     graphicsCreateInfo_.pDepthStencilState = &depthStencilState_;
 
     blendState_.attachmentCount = viewportsCount_;
+    blendState_.pAttachments = colorBlendAttachmentStates_;
     graphicsCreateInfo_.pColorBlendState = &blendState_;
 
+    dynamicState_.pDynamicStates = dynamicStateItems_;
     graphicsCreateInfo_.pDynamicState = &dynamicState_;
 
     graphicsCreateInfo_.layout = pipelineLayout_->GetHandle();
@@ -325,6 +329,9 @@ VkGraphicsPipelineCreateInfo const& Pipeline::Descriptor::CompileGraphicPipeline
 
     graphicsCreateInfo_.basePipelineHandle = VK_NULL_HANDLE;
     graphicsCreateInfo_.basePipelineIndex = 0;
+
+    // reset this for easier reuse later
+    shaderStagesCount_ = 0;
 
     return graphicsCreateInfo_;
 }
@@ -374,6 +381,7 @@ Pipeline::Pipeline(ImportTable* table, LogicalDevice* device, Descriptor& descri
     }
 
     layout_ = descriptor.GetLayout();
+    descriptor_ = descriptor;
 }
 
 Pipeline::Pipeline(Pipeline&& rhs)

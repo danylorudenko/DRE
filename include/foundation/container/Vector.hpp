@@ -118,7 +118,7 @@ public:
 
     bool Empty() const
     {
-        return Size() > 0;
+        return Size() == 0;
     }
 
     T& operator[](U32 index)

@@ -89,6 +89,12 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
         VKW::RESOURCE_ACCESS_SHADER_UNIFORM, VKW::STAGE_VERTEX);
 }
 
+void GraphicsManager::ReloadShaders()
+{
+    DRE::String64 name = m_IOManager->GetPendingShader();
+    m_PipelineDB.ReloadPipeline(name);
+}
+
 void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS)
 {
     m_GraphicsFrame = frame;
@@ -243,9 +249,14 @@ void GraphicsManager::FreeRenderableObject(RenderableObject* obj)
     GetRenderablePool().Free(obj);
 }
 
-GraphicsManager::~GraphicsManager()
+void GraphicsManager::WaitIdle()
 {
     GetMainContext().WaitIdle();
+}
+
+GraphicsManager::~GraphicsManager()
+{
+    WaitIdle();
 }
 
 }

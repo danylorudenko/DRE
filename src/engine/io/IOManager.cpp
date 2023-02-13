@@ -1,15 +1,16 @@
 #include <engine\io\IOManager.hpp>
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <utility>
 #include <charconv>
 #include <filesystem>
-#include <thread>
 
 #include <foundation\memory\Memory.hpp>
 #include <foundation\memory\ByteBuffer.hpp>
 #include <foundation\Container\HashTable.hpp>
+#include <foundation\system\Time.hpp>
 #include <foundation\util\Hash.hpp>
 
 #include <assimp\Importer.hpp>
@@ -33,14 +34,15 @@ IOManager::IOManager(DRE::DefaultAllocator* allocator, Data::MaterialLibrary* ma
     : m_Allocator{ allocator }
     , m_MaterialLibrary{ materialLibrary }
     , m_GeometryLibrary{ geometryLibrary }
-    , m_ShaderBinaries{ allocator }
+    , m_ShaderData{ allocator }
+    , m_PendingChangesFlag{ false }
 {
 }
 
 IOManager::~IOManager() 
 {
     // if we detach frie
-    //m_ShaderObserverThread.detach
+    m_ShaderObserverThread.detach();
 }
 
 std::uint64_t IOManager::ReadFileToBuffer(char const* path, DRE::ByteBuffer& buffer)
@@ -64,6 +66,20 @@ std::uint64_t IOManager::ReadFileToBuffer(char const* path, DRE::ByteBuffer& buf
     istream.close();
 
     return fileSize;
+}
+
+DRE::String64 IOManager::GetPendingShader()
+{
+    std::lock_guard guard(m_PendingShadersMutex);
+    DRE_ASSERT(m_PendingShaders.Size() <= 1, "Multiple shader reload is not supported.");
+    return m_PendingShaders.Empty() ? DRE::String64("") : m_PendingShaders[0];
+}
+
+void IOManager::SignalShadersProcessed()
+{
+    std::lock_guard guard(m_PendingShadersMutex);
+    m_PendingShaders.Clear();
+    IOManager::m_PendingChangesFlag.store(false, std::memory_order::relaxed);
 }
 
 Data::Texture2D IOManager::ReadTexture2D(char const* path, Data::TextureChannelVariations channelVariations)
@@ -364,7 +380,7 @@ void IOManager::LoadShaderFiles()
         if (entry.path().has_extension() && entry.path().extension() == ".spv")
         {
             // .stem() is a filename without extension
-            ShaderData& shaderData = m_ShaderBinaries.Emplace(entry.path().stem().generic_string().c_str());
+            ShaderData& shaderData = m_ShaderData.Emplace(entry.path().stem().generic_string().c_str());
 
             DRE::ByteBuffer moduleBuffer{ static_cast<std::uint64_t>(entry.file_size()) };
             ReadFileToBuffer(entry.path().generic_string().c_str(), moduleBuffer);
@@ -377,18 +393,20 @@ void IOManager::LoadShaderFiles()
         }
     }
 
-    m_ShaderObserverThread = std::thread{ IOManager::ShaderCompilationObserver };
+    m_ShaderObserverThread = std::thread{ &IOManager::ShaderObserver, this };
 }
 
-void IOManager::ShaderCompilationObserver()
+void IOManager::ShaderObserver()
 {
     //                                                                                                                     required for dirs
     HANDLE directoryHandle = CreateFileA("shaders", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
     if (directoryHandle == INVALID_HANDLE_VALUE)
     {
-        std::cout << "IOManager::ShaderCompilationObserver: Failed to create directory handle. Terminating thread." << std::endl;
+        std::cout << "IOManager::ShaderObserver: Failed to create directory handle. Terminating thread." << std::endl;
         return;
     }
+
+    DRE::Stopwatch stopwatch;
 
     while (true)
     {
@@ -397,7 +415,13 @@ void IOManager::ShaderCompilationObserver()
         DWORD bytesReturned = 0;
         if (ReadDirectoryChangesW(directoryHandle, bufferPtr, 1024, FALSE, FILE_NOTIFY_CHANGE_LAST_WRITE, &bytesReturned, NULL, NULL) == 0)
         {
-            std::cout << "IOManager::ShaderCompilationObserver: Failed to get directory changes." << std::endl;
+            std::cout << "IOManager::ShaderObserver: Failed to get directory changes." << std::endl;
+        }
+        
+        // timeout to skip duplicate events
+        if (stopwatch.CurrentSeconds() < 1)
+        {
+            continue;
         }
 
         FILE_NOTIFY_INFORMATION* infoPtr = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(bufferPtr);
@@ -405,30 +429,53 @@ void IOManager::ShaderCompilationObserver()
         {
             if (infoPtr->Action != FILE_ACTION_MODIFIED)
             {
-                std::cout << "IOManager::ShaderCompilationObserver: Unsupported file event. Terminating thread." << std::endl;
+                std::cout << "IOManager::ShaderObserver: Unsupported file event. Terminating thread." << std::endl;
                 return;
             }
 
-            char resultBuffer[256];
-            int const length = WideCharToMultiByte(CP_UTF8, 0, infoPtr->FileName, infoPtr->FileNameLength / sizeof(WCHAR), resultBuffer, 256, NULL, NULL);
+            char fileName[64];
+            int const length = WideCharToMultiByte(CP_UTF8, 0, infoPtr->FileName, infoPtr->FileNameLength / sizeof(WCHAR), fileName, 64, NULL, NULL);
             if (length == 0)
             {
-                std::cout << "IOManager::ShaderCompilationObserver: Failed to get ASCII file name from the event." << std::endl;
+                std::cout << "IOManager::ShaderObserver: Failed to get ASCII file name from the event." << std::endl;
             }
-            resultBuffer[length] = '\0';
+            fileName[length] = '\0';
 
-            int extStart = length;
-            while (extStart > 0 && resultBuffer[extStart] != '.')
+            char* spvExtStart = std::strrchr(fileName, '.');
+            if (spvExtStart == nullptr) // file with no extension
             {
-                --extStart;
+                infoPtr = infoPtr->NextEntryOffset == 0 ? nullptr : DRE::PtrAdd(infoPtr, infoPtr->NextEntryOffset);
+                continue;
             }
 
-            if (std::strcmp(resultBuffer + extStart + 1, "spv") == 0)
+            if (std::strcmp(spvExtStart + 1, "spv") != 0) // not a SPIR-V file
             {
-                std::cout << "IOManager::ShaderCompilationObserver: change in SPIR-V file " << resultBuffer << " detected." << std::endl;
+                infoPtr = infoPtr->NextEntryOffset == 0 ? nullptr : DRE::PtrAdd(infoPtr, infoPtr->NextEntryOffset);
+                continue;
+            }
+
+            std::cout << "IOManager::ShaderObserver: change in SPIR-V file " << fileName << " detected." << std::endl;
+
+            char stem[64];
+            char* stemEnd = std::strchr(fileName, '.');
+            std::uint32_t stemSize = DRE::PtrDifference(stemEnd, fileName);
+            std::strncpy(stem, fileName, stemSize);
+
+            stem[stemSize] = '\0';
+            {
+                std::lock_guard guard{ m_PendingShadersMutex };
+                m_PendingShaders.EmplaceBack(stem);
+
+                DRE::String64 shaderPath{ "shaders\\" };
+                shaderPath.Append(fileName, static_cast<DRE::U16>(DRE::PtrDifference(spvExtStart, fileName)));
+
+                DRE::ByteBuffer& shaderBinary = m_ShaderData[fileName].m_Binary;
+                ReadFileToBuffer(shaderPath, shaderBinary);
             }
 
             infoPtr = infoPtr->NextEntryOffset == 0 ? nullptr : DRE::PtrAdd(infoPtr, infoPtr->NextEntryOffset);
+            stopwatch.Reset();
+            m_PendingChangesFlag.store(true, std::memory_order::release);
         }
     }
 }

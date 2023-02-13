@@ -45,7 +45,7 @@ public:
     static std::uint32_t constexpr MAX_VERTEX_ATTRIBUTES = 6;
 
 public:
-    class Descriptor : public NonMovable, public NonCopyable
+    class Descriptor
     {
     public:
         Descriptor();
@@ -91,8 +91,6 @@ public:
 
         VkPipelineViewportStateCreateInfo           viewportState_;
         std::uint8_t                                viewportsCount_;
-        //VkViewport                                  viewports_[VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS];
-        //VkRect2D                                    scissors_[VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS];
 
         VkPipelineRasterizationStateCreateInfo      rasterizationState_;
         VkPipelineMultisampleStateCreateInfo        multisampleState_;
@@ -122,13 +120,17 @@ public:
     inline VkPipeline               GetHandle() const { return handle_; }
     inline PipelineLayout const*    GetLayout() const { return layout_; }
 
+    inline Descriptor&              GetDescriptor() { return descriptor_; }
+
 
 private:
     ImportTable*            table_;
-    LogicalDevice*                 device_;
+    LogicalDevice*          device_;
 
     VkPipeline              handle_;
     PipelineLayout const*   layout_;
+
+    Descriptor              descriptor_;
 };
 
 }

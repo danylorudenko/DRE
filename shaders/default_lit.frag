@@ -27,5 +27,5 @@ void main()
 	vec3 diffuse = texture(sampler2D(GetGlobalTexture(transformUniform.textureIDs[0]), GetSamplerLinear()), in_uv).rgb;
 	float lit = max(0.0, dot(in_normal, in_tangent_light));
 	lit = max(lit, 0.3);
-	finalColor = vec4(diffuse * lit, 1.0);
+	finalColor = vec4(diffuse, 1.0);
 }

@@ -14,6 +14,8 @@
 #include <assimp\matrix4x4.h>
 
 #include <thread>
+#include <atomic>
+#include <mutex>
 
 namespace WORLD
 {
@@ -75,17 +77,20 @@ public:
 
 public:
     IOManager(DRE::DefaultAllocator* allocator, Data::MaterialLibrary* materialLibrary, Data::GeometryLibrary* geometryLibrary);
-
-    void LoadShaderFiles();
-    ShaderData* GetShaderData(char const* name) { return m_ShaderBinaries.Find(name).value; }
-
-    Data::Texture2D ReadTexture2D(char const* path, Data::TextureChannelVariations channels);
-
-    void            ParseModelFile(char const* path, WORLD::Scene& targetScene);
-
     ~IOManager();
 
-    static std::uint64_t ReadFileToBuffer(char const* path, DRE::ByteBuffer& buffer);
+    void LoadShaderFiles();
+    ShaderData* GetShaderData(char const* name) { return m_ShaderData.Find(name).value; }
+
+    Data::Texture2D ReadTexture2D(char const* path, Data::TextureChannelVariations channels);
+    void            ParseModelFile(char const* path, WORLD::Scene& targetScene);
+
+
+    static std::uint64_t    ReadFileToBuffer(char const* path, DRE::ByteBuffer& buffer);
+
+    inline bool             NewShadersPending() { return IOManager::m_PendingChangesFlag.load(std::memory_order::acquire); }
+    DRE::String64           GetPendingShader();
+    void                    SignalShadersProcessed();
 
 private:
     void ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene);
@@ -94,7 +99,7 @@ private:
 
     void ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiMat, DRE::String256 const& assetFolderPath, Data::Material* material, Data::Material::TextureProperty::Slot slot, Data::TextureChannelVariations channels);
 
-    static void ShaderCompilationObserver();
+    void ShaderObserver();
 
 private:
     DRE::DefaultAllocator* m_Allocator;
@@ -102,8 +107,14 @@ private:
     Data::MaterialLibrary* m_MaterialLibrary;
     Data::GeometryLibrary* m_GeometryLibrary;
 
-    DRE::HashTable<DRE::String64, ShaderData, DRE::DefaultAllocator> m_ShaderBinaries;
+    DRE::HashTable<DRE::String64, ShaderData, DRE::DefaultAllocator> m_ShaderData;
+
+    DRE::InplaceVector<DRE::String64, 3> m_PendingShaders;
+    std::mutex  m_PendingShadersMutex;
     std::thread m_ShaderObserverThread;
+    std::atomic_bool m_PendingChangesFlag;
+
+
 };
 
 }
