@@ -107,7 +107,7 @@ void VulkanApplicationDelegate::start()
 
     m_GraphicsManager.Initialize();
 
-    m_IOManager.ParseModelFile("data\\Sponza\\Sponza.gltf", m_MainScene);
+    m_IOManager.ParseModelFile("data\\Sponza\\glTF\\Sponza.gltf", m_MainScene);
 }
 
 //////////////////////////////////////////

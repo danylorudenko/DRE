@@ -353,7 +353,7 @@ void ParseShaderInterface(spirv_cross::Compiler& compiler, IOManager::ShaderInte
 
 void IOManager::LoadShaderFiles()
 {
-    std::filesystem::recursive_directory_iterator dir_iterator(".", std::filesystem::directory_options::none);
+    std::filesystem::recursive_directory_iterator dir_iterator("shaders", std::filesystem::directory_options::follow_directory_symlink);
     for (auto const& entry : dir_iterator)
     {
         if (entry.path().has_extension() && entry.path().extension() == ".spv")

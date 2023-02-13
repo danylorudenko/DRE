@@ -75,11 +75,18 @@ set(DEMO_SHADERS_SOURCES
 )
 
 add_custom_target(demo_shaders ALL
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${DRE_SOURCE_DIR}/shaders"
-        "$<TARGET_FILE_DIR:demo_app>/shaders"
-		SOURCES ${DEMO_SHADERS_SOURCES}
-        COMMENT "Copying shaders into binary directory"
+	COMMAND ${CMAKE_COMMAND} -E create_symlink
+	"${DRE_SOURCE_DIR}/shaders"
+	"$<TARGET_FILE_DIR:demo_app>/shaders"
+	SOURCES ${DEMO_SHADERS_SOURCES}
+	COMMENT "Creating symlink to shaders in binary directory"
 )
-		
-add_dependencies(demo_app demo_shaders)
+
+add_custom_target(demo_assets ALL
+	COMMAND ${CMAKE_COMMAND} -E create_symlink
+	"${DRE_SOURCE_DIR}/extern/glTF-Sample-Models/2.0"
+	"$<TARGET_FILE_DIR:demo_app>/data"
+	COMMENT "Creating symlink to data in binary directory"
+)
+
+add_dependencies(demo_app demo_shaders demo_assets)
