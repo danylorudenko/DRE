@@ -90,11 +90,10 @@ void main()
 
     vec3 numerator = NDF * G * F;
     float denum = 4.0 * NdotV * NdotL + 0.001;
-    denum = 1;
 
     vec3 specular = numerator / denum;
 
     vec3 res = (kD * diffuse + specular) * NdotL;
 
-    finalColor = vec4(res.rgb, 1.0);
+    finalColor = vec4(res, 1.0);
 }

@@ -200,7 +200,7 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* path)
         DRE_ASSERT(folderEnd != 0, "Unable to find file path separator!");
         --folderEnd;
     }
-    textureFilePath.Shrink(folderEnd + 1);
+    textureFilePath.Shrink(folderEnd);
 
     for (std::uint32_t i = 0, size = scene->mNumMaterials; i < size; i++)
     {
@@ -406,8 +406,6 @@ void IOManager::ShaderObserver()
         return;
     }
 
-    DRE::Stopwatch stopwatch;
-
     while (true)
     {
         static std::uint8_t buffer[1024];
@@ -418,12 +416,6 @@ void IOManager::ShaderObserver()
             std::cout << "IOManager::ShaderObserver: Failed to get directory changes." << std::endl;
         }
         
-        // timeout to skip duplicate events
-        if (stopwatch.CurrentSeconds() < 1)
-        {
-            continue;
-        }
-
         FILE_NOTIFY_INFORMATION* infoPtr = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(bufferPtr);
         while (infoPtr != nullptr)
         {
@@ -454,28 +446,27 @@ void IOManager::ShaderObserver()
                 continue;
             }
 
-            std::cout << "IOManager::ShaderObserver: change in SPIR-V file " << fileName << " detected." << std::endl;
+            DRE::String64 shaderPath{ "shaders\\" };
+            shaderPath.Append(fileName);
 
-            char stem[64];
+            DRE::String64 shaderName{ fileName };
+            shaderName.Shrink(DRE::PtrDifference(spvExtStart, fileName));
+
+
+            DRE::String64 stem{ fileName };
             char* stemEnd = std::strchr(fileName, '.');
-            std::uint32_t stemSize = DRE::PtrDifference(stemEnd, fileName);
-            std::strncpy(stem, fileName, stemSize);
+            stem.Shrink(DRE::PtrDifference(stemEnd, fileName));
 
-            stem[stemSize] = '\0';
+            DRE::ByteBuffer& shaderBinary = m_ShaderData[shaderName].m_Binary;
+            DRE::ByteBuffer newBinary;
+            if (ReadFileToBuffer(shaderPath, shaderBinary) != 0)
             {
                 std::lock_guard guard{ m_PendingShadersMutex };
                 m_PendingShaders.EmplaceBack(stem);
-
-                DRE::String64 shaderPath{ "shaders\\" };
-                shaderPath.Append(fileName, static_cast<DRE::U16>(DRE::PtrDifference(spvExtStart, fileName)));
-
-                DRE::ByteBuffer& shaderBinary = m_ShaderData[fileName].m_Binary;
-                ReadFileToBuffer(shaderPath, shaderBinary);
+                m_PendingChangesFlag.store(true, std::memory_order::release);
             }
 
             infoPtr = infoPtr->NextEntryOffset == 0 ? nullptr : DRE::PtrAdd(infoPtr, infoPtr->NextEntryOffset);
-            stopwatch.Reset();
-            m_PendingChangesFlag.store(true, std::memory_order::release);
         }
     }
 }

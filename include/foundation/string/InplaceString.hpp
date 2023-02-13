@@ -51,8 +51,10 @@ public:
     void Shrink(U16 size)
     {
         DRE_ASSERT(size <= m_Size, "Can't shrink string upwards");
-        m_Data[size - 1] = '\0';
         m_Size = size;
+
+        // to keep similar strings binary-equal
+        std::memset(m_Data + size, 0, sizeof(m_Data) - size);
     }
 
     void Append(char const* str)
