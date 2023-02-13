@@ -13,6 +13,8 @@
 
 #include <assimp\matrix4x4.h>
 
+#include <thread>
+
 namespace WORLD
 {
 class Scene;
@@ -92,6 +94,8 @@ private:
 
     void ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiMat, DRE::String256 const& assetFolderPath, Data::Material* material, Data::Material::TextureProperty::Slot slot, Data::TextureChannelVariations channels);
 
+    static void ShaderCompilationObserver();
+
 private:
     DRE::DefaultAllocator* m_Allocator;
 
@@ -99,6 +103,7 @@ private:
     Data::GeometryLibrary* m_GeometryLibrary;
 
     DRE::HashTable<DRE::String64, ShaderData, DRE::DefaultAllocator> m_ShaderBinaries;
+    std::thread m_ShaderObserverThread;
 };
 
 }

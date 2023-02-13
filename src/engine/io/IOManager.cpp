@@ -5,6 +5,7 @@
 #include <utility>
 #include <charconv>
 #include <filesystem>
+#include <thread>
 
 #include <foundation\memory\Memory.hpp>
 #include <foundation\memory\ByteBuffer.hpp>
@@ -36,7 +37,11 @@ IOManager::IOManager(DRE::DefaultAllocator* allocator, Data::MaterialLibrary* ma
 {
 }
 
-IOManager::~IOManager() {}
+IOManager::~IOManager() 
+{
+    // if we detach frie
+    //m_ShaderObserverThread.detach
+}
 
 std::uint64_t IOManager::ReadFileToBuffer(char const* path, DRE::ByteBuffer& buffer)
 {
@@ -369,6 +374,61 @@ void IOManager::LoadShaderFiles()
             shaderData.m_ModuleType = SPVExecutionModelToVKWModuleType(compiler.get_execution_model());
 
             ParseShaderInterface(compiler, shaderData.m_Interface); 
+        }
+    }
+
+    m_ShaderObserverThread = std::thread{ IOManager::ShaderCompilationObserver };
+}
+
+void IOManager::ShaderCompilationObserver()
+{
+    //                                                                                                                     required for dirs
+    HANDLE directoryHandle = CreateFileA("shaders", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (directoryHandle == INVALID_HANDLE_VALUE)
+    {
+        std::cout << "IOManager::ShaderCompilationObserver: Failed to create directory handle. Terminating thread." << std::endl;
+        return;
+    }
+
+    while (true)
+    {
+        static std::uint8_t buffer[1024];
+        std::uint8_t* bufferPtr = DRE::PtrAlign(buffer, sizeof(DWORD));
+        DWORD bytesReturned = 0;
+        if (ReadDirectoryChangesW(directoryHandle, bufferPtr, 1024, FALSE, FILE_NOTIFY_CHANGE_LAST_WRITE, &bytesReturned, NULL, NULL) == 0)
+        {
+            std::cout << "IOManager::ShaderCompilationObserver: Failed to get directory changes." << std::endl;
+        }
+
+        FILE_NOTIFY_INFORMATION* infoPtr = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(bufferPtr);
+        while (infoPtr != nullptr)
+        {
+            if (infoPtr->Action != FILE_ACTION_MODIFIED)
+            {
+                std::cout << "IOManager::ShaderCompilationObserver: Unsupported file event. Terminating thread." << std::endl;
+                return;
+            }
+
+            char resultBuffer[256];
+            int const length = WideCharToMultiByte(CP_UTF8, 0, infoPtr->FileName, infoPtr->FileNameLength / sizeof(WCHAR), resultBuffer, 256, NULL, NULL);
+            if (length == 0)
+            {
+                std::cout << "IOManager::ShaderCompilationObserver: Failed to get ASCII file name from the event." << std::endl;
+            }
+            resultBuffer[length] = '\0';
+
+            int extStart = length;
+            while (extStart > 0 && resultBuffer[extStart] != '.')
+            {
+                --extStart;
+            }
+
+            if (std::strcmp(resultBuffer + extStart + 1, "spv") == 0)
+            {
+                std::cout << "IOManager::ShaderCompilationObserver: change in SPIR-V file " << resultBuffer << " detected." << std::endl;
+            }
+
+            infoPtr = infoPtr->NextEntryOffset == 0 ? nullptr : DRE::PtrAdd(infoPtr, infoPtr->NextEntryOffset);
         }
     }
 }
