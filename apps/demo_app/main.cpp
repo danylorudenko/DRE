@@ -1,10 +1,12 @@
 #include <demo_app\VulkanApplicationDelegate.hpp>
 
 #include <foundation\memory\Memory.hpp>
+//#include <glslang\Include\glslang_c_interface.h>
 
 int main()
 {
     DRE::InitializeGlobalMemory();
+    //glslang_initialize_process();
 
     HINSTANCE instance = GetModuleHandle(nullptr);
 
@@ -21,6 +23,7 @@ int main()
     application->~Application();;
     appDelegate->~VulkanApplicationDelegate();;
 
+    //glslang_finalize_process();
     DRE::TerminateGlobalMemory();
 
     // to terminate all detached threads we don't care about
