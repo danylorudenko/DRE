@@ -30,3 +30,7 @@
 	path = extern/glslang
 	url = https://github.com/KhronosGroup/glslang.git
 	branch = main
+[submodule "extern/shaderc"]
+	path = extern/shaderc
+	url = https://github.com/google/shaderc.git
+	branch = main
