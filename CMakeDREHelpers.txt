@@ -2,7 +2,7 @@ function(update_git_submodule name)
 	if(EXISTS "extern/${name}/.gitignore" OR EXISTS "extern/${name}/CMakeLists.txt" OR EXISTS "extern/${name}/README.md")
 		message("Module ${name} is up to date")
 	else()
-		message("Updating submodule ${name})
+		message("Updating submodule ${name}")
 		execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive extern/${name}
 		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 		COMMAND_ERROR_IS_FATAL_ANY)
