@@ -26,6 +26,7 @@
 #include <engine\scene\Scene.hpp>
 
 #include <spirv_cross.hpp>
+#include <shaderc/shaderc.hpp>
 //#include <glslang\Public\ResourceLimits.h>
 //#include <glslang\Include\glslang_c_interface.h>
 
@@ -47,7 +48,7 @@ IOManager::~IOManager()
     m_ShaderObserverThread.detach();
 }
 
-std::uint64_t IOManager::ReadFileToBuffer(char const* path, DRE::ByteBuffer& buffer)
+std::uint64_t IOManager::ReadFileToBuffer(char const* path, DRE::ByteBuffer* buffer)
 {
     std::ifstream istream{ path, std::ios_base::binary | std::ios_base::beg };
     if (!istream) {
@@ -61,35 +62,132 @@ std::uint64_t IOManager::ReadFileToBuffer(char const* path, DRE::ByteBuffer& buf
         return 0;
     }
 
-    buffer.Resize(fileSize);
+    if (buffer == nullptr)
+        return fileSize;
+
+    buffer->Resize(fileSize);
 
     istream.seekg(0, std::ios_base::beg);
-    istream.read(buffer.As<char*>(), static_cast<std::uint64_t>(fileSize));
+    istream.read(buffer->As<char*>(), static_cast<std::uint64_t>(fileSize));
     istream.close();
 
     return fileSize;
 }
 
+std::uint64_t IOManager::ReadFileStringToBuffer(char const* path, DRE::ByteBuffer* buffer)
+{
+    std::ifstream istream{ path, std::ios_base::binary | std::ios_base::beg };
+    if (!istream) {
+        std::cerr << "Error opening file in path: " << path << std::endl;
+        return 0;
+    }
+
+    auto const fileSize = istream.seekg(0, std::ios_base::end).tellg();
+    if (!istream) {
+        std::cerr << "Error measuring file size: " << path << std::endl;
+        return 0;
+    }
+
+    if (buffer == nullptr)
+        return fileSize;
+
+    buffer->Resize(static_cast<std::uint64_t>(fileSize) + 1);
+
+    istream.seekg(0, std::ios_base::beg);
+    istream.read(buffer->As<char*>(), static_cast<std::uint64_t>(fileSize));
+    istream.close();
+
+    buffer->As<char*>()[static_cast<std::uint64_t>(fileSize)] = '\0';
+
+    return fileSize;
+}
+
+struct DREIncludeData
+{
+    DRE::ByteBuffer content;
+    DRE::String64 contentName;
+    DRE::String64 targetName;
+};
+
+class DREIncluder : public shaderc::CompileOptions::IncluderInterface
+{
+public:
+    virtual shaderc_include_result* GetInclude(const char* requested_source,
+        shaderc_include_type type,
+        const char* requesting_source,
+        size_t include_depth) override
+    {
+        shaderc_include_result* result = DRE::g_FrameScratchAllocator.Alloc<shaderc_include_result>();
+        DREIncludeData* data = new (DRE::g_FrameScratchAllocator.Alloc<DREIncludeData>()) DREIncludeData{};
+
+        data->contentName = "shaders\\";
+        data->contentName.Append(requested_source);
+
+        data->targetName = requesting_source;
+        
+        DRE_ASSERT(IOManager::ReadFileStringToBuffer(data->contentName, &data->content) != 0, "Failed to read requested include for GLSL.");
+
+        result->source_name = data->contentName;
+        result->content_length = data->content.Size();
+        result->content = data->content.As<char*>();
+        result->source_name = data->targetName;
+        result->source_name_length = data->targetName.GetSize();
+        result->user_data = data;
+
+        return result;
+    }
+
+    // Handles shaderc_include_result_release_fn callbacks.
+    virtual void ReleaseInclude(shaderc_include_result* result) override
+    {
+        DREIncludeData* data = (DREIncludeData*)result->user_data;
+        data->~DREIncludeData();
+    }
+
+    virtual ~DREIncluder() = default;
+};
 
 DRE::ByteBuffer IOManager::CompileGLSL(char const* path)
 {
     std::filesystem::path filePath{ path };
-    glslang_stage_t stage = GLSLANG_STAGE_COUNT;
+
+    shaderc_shader_kind kind = (shaderc_shader_kind)0;
 
     auto extension = filePath.extension();
     if (extension == ".vert")
-        stage = GLSLANG_STAGE_VERTEX;
+        kind = shaderc_glsl_vertex_shader;
     else if (extension == ".frag")
-        stage = GLSLANG_STAGE_FRAGMENT;
+        kind = shaderc_glsl_fragment_shader;
     else if (extension == ".comp")
-        stage = GLSLANG_STAGE_COMPUTE;
+        kind = shaderc_glsl_compute_shader;
     else
         DRE_ASSERT(false, "Attempt to compile unsupported shader type. See file extension.");
 
-    DRE::ByteBuffer sourceBlob;
-    DRE_ASSERT(ReadFileToBuffer(path, sourceBlob) != 0, "Failed to read GLSL source.");
+    DRE::ByteBuffer sourceBlob{};
+    DRE_ASSERT(ReadFileStringToBuffer(path, &sourceBlob) != 0, "Failed to read GLSL source.");
 
-    return DRE::ByteBuffer{};
+    shaderc::Compiler compiler;
+    shaderc::CompileOptions options;
+    options.SetTargetEnvironment(shaderc_target_env::shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
+    options.SetIncluder(std::make_unique< DREIncluder>());
+
+    shaderc::PreprocessedSourceCompilationResult preprocess = compiler.PreprocessGlsl(sourceBlob.As<char*>(), sourceBlob.Size(), kind, path, options);
+    if (preprocess.GetCompilationStatus() != shaderc_compilation_status_success)
+    {
+        std::cout << preprocess.GetErrorMessage();
+        return DRE::ByteBuffer{};
+    }
+
+    DRE::U64 const preprocessedSize = DRE::PtrDifference(preprocess.end(), preprocess.begin());
+    shaderc::SpvCompilationResult compile = compiler.CompileGlslToSpv(preprocess.begin(), preprocessedSize, kind, path, "main", options);
+
+    if (compile.GetCompilationStatus() != shaderc_compilation_status_success) {
+        std::cout << compile.GetErrorMessage();
+        return DRE::ByteBuffer{};
+    }
+
+    DRE::U64 const moduleSize = DRE::PtrDifference(compile.end(), compile.begin());
+    return DRE::ByteBuffer{ (void*)compile.begin(), moduleSize };
 }
 
 
@@ -609,7 +707,7 @@ void IOManager::LoadShaderFiles()
             ShaderData& shaderData = m_ShaderData.Emplace(entry.path().stem().generic_string().c_str());
 
             DRE::ByteBuffer moduleBuffer{ static_cast<std::uint64_t>(entry.file_size()) };
-            ReadFileToBuffer(entry.path().generic_string().c_str(), moduleBuffer);
+            ReadFileToBuffer(entry.path().generic_string().c_str(), &moduleBuffer);
             shaderData.m_Binary = DRE_MOVE(moduleBuffer);
             
             spirv_cross::Compiler compiler{ reinterpret_cast<std::uint32_t const*>(shaderData.m_Binary.Data()), shaderData.m_Binary.Size() / sizeof(std::uint32_t) };
@@ -685,7 +783,7 @@ void IOManager::ShaderObserver()
 
             DRE::ByteBuffer& shaderBinary = m_ShaderData[shaderName].m_Binary;
             DRE::ByteBuffer newBinary;
-            if (ReadFileToBuffer(shaderPath, shaderBinary) != 0)
+            if (ReadFileToBuffer(shaderPath, &shaderBinary) != 0)
             {
                 std::lock_guard guard{ m_PendingShadersMutex };
                 m_PendingShaders.EmplaceBack(stem);

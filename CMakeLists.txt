@@ -10,7 +10,7 @@ find_package(Git REQUIRED)
 include(CmakeDREHelpers.txt)
 update_git_submodule(assimp)
 update_git_submodule(glm)
-update_git_submodule(glslang)
+#update_git_submodule(glslang)
 update_git_submodule(glTF-Sample-Models)
 update_git_submodule(imgui)
 update_git_submodule(SPIRV-Cross)
@@ -29,13 +29,19 @@ add_subdirectory(extern/assimp)
 
 #override glslang defaults
 #==========
-option(SKIP_GLSLANG_INSTALL "Skip installation" ON)
-option(ENABLE_GLSLANG_BINARIES "Builds glslangValidator and spirv-remap" OFF)
-#==========
-find_package(Python3 COMPONENTS Interpreter REQUIRED)
-execute_process(COMMAND python update_glslang_sources.py
-	WORKING_DIRECTORY "extern/glslang")
-add_subdirectory(extern/glslang)
+#option(SKIP_GLSLANG_INSTALL "Skip installation" ON)
+#option(ENABLE_GLSLANG_BINARIES "Builds glslangValidator and spirv-remap" OFF)
+##==========
+#find_package(Python3 COMPONENTS Interpreter REQUIRED)
+#execute_process(COMMAND python update_glslang_sources.py
+#	WORKING_DIRECTORY "extern/glslang")
+#add_subdirectory(extern/glslang)
+
+option(SHADERC_SKIP_INSTALL ON)
+option(SHADERC_SKIP_TESTS "Skip building tests" ON)
+option(SHADERC_SKIP_EXAMPLES "Skip building examples" ${SHADERC_SKIP_EXAMPLES})
+option(SHADERC_SKIP_COPYRIGHT_CHECK "Skip copyright check" ${SHADERC_SKIP_COPYRIGHT_CHECK})
+add_subdirectory(extern/shaderc)
 
 
 add_subdirectory(extern/glm)

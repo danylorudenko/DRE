@@ -5,11 +5,13 @@ DRE_BEGIN_NAMESPACE
 ByteBuffer::ByteBuffer()
     : buffer_{ nullptr }
     , size_{ 0 }
+    , capacity_{ 0 }
 {}
 
 ByteBuffer::ByteBuffer(std::uint64_t size)
     : buffer_{ nullptr }
     , size_{ 0 }
+    , capacity_{ 0 }
 {
     Resize(size);
 }
@@ -17,6 +19,7 @@ ByteBuffer::ByteBuffer(std::uint64_t size)
 ByteBuffer::ByteBuffer(void* srcData, std::uint64_t size)
     : buffer_{ nullptr }
     , size_{ 0 }
+    , capacity_{ 0 }
 {
     Resize(size);
     std::memcpy(buffer_, srcData, size);
@@ -25,6 +28,7 @@ ByteBuffer::ByteBuffer(void* srcData, std::uint64_t size)
 ByteBuffer::ByteBuffer(ByteBuffer const& rhs)
     : buffer_{ nullptr }
     , size_{ 0 }
+    , capacity_{ 0 }
 {
     operator=(rhs);
 }
@@ -32,6 +36,7 @@ ByteBuffer::ByteBuffer(ByteBuffer const& rhs)
 ByteBuffer::ByteBuffer(ByteBuffer&& rhs)
     : buffer_{ nullptr }
     , size_{ 0 }
+    , capacity_{ 0 }
 {
     operator=(std::move(rhs));
 }
@@ -47,8 +52,9 @@ ByteBuffer& ByteBuffer::operator=(ByteBuffer const& rhs)
 
 ByteBuffer& ByteBuffer::operator=(ByteBuffer&& rhs)
 {
-    std::swap(buffer_, rhs.buffer_);
-    std::swap(size_, rhs.size_);
+    DRE_SWAP_MEMBER(buffer_);
+    DRE_SWAP_MEMBER(size_);
+    DRE_SWAP_MEMBER(capacity_);
 
     return *this;
 }
@@ -65,9 +71,12 @@ void* ByteBuffer::Data() const
 
 void ByteBuffer::Resize(std::uint64_t newSize)
 {
-    if (newSize == size_)
+    if (newSize <= size_)
+    {
+        size_ = newSize;
         return;
-    
+    }
+
     void* newBuffer = malloc(newSize);
 
     if (buffer_) {
@@ -77,11 +86,12 @@ void ByteBuffer::Resize(std::uint64_t newSize)
 
     buffer_ = newBuffer;
     size_ = newSize;
+    capacity_ = newSize;
 }
 
 ByteBuffer::~ByteBuffer()
 {
-    free(buffer_);
+    std::free(buffer_);
 }
 
 DRE_END_NAMESPACE

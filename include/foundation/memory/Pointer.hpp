@@ -4,7 +4,7 @@
 
 DRE_BEGIN_NAMESPACE
 
-inline PtrDiff PtrDifference(void* lhs, void* rhs)
+inline PtrDiff PtrDifference(void const* lhs, void const* rhs)
 {
     return (U8*)lhs - (U8*)rhs;
 }

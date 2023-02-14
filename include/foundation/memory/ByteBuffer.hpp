@@ -32,6 +32,7 @@ public:
 private:
     void* buffer_;
     std::uint64_t size_;
+    std::uint64_t capacity_;
 };
 
 DRE_END_NAMESPACE

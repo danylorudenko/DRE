@@ -86,7 +86,8 @@ public:
     void            ParseModelFile(char const* path, WORLD::Scene& targetScene);
 
 
-    static std::uint64_t    ReadFileToBuffer(char const* path, DRE::ByteBuffer& buffer);
+    static std::uint64_t    ReadFileToBuffer(char const* path, DRE::ByteBuffer* buffer);
+    static std::uint64_t    ReadFileStringToBuffer(char const* path, DRE::ByteBuffer* buffer);
     static DRE::ByteBuffer  CompileGLSL(char const* file);
 
     inline bool             NewShadersPending() { return IOManager::m_PendingChangesFlag.load(std::memory_order::acquire); }
