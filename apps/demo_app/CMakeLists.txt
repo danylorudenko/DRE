@@ -34,3 +34,17 @@ source_group(
 	TREE "${DRE_SOURCE_DIR}/apps/demo_app"
 	PREFIX "Header Files"
 	FILES ${DEMO_HEADER_LIST})
+	
+add_custom_command(TARGET demo_app POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E create_symlink
+	"${DRE_SOURCE_DIR}/shaders"
+	"$<TARGET_FILE_DIR:demo_app>/shaders"
+	COMMENT "Creating symlink to shaders in binary directory"
+)
+
+add_custom_command(TARGET demo_app POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E create_symlink
+	"${DRE_SOURCE_DIR}/extern/glTF-Sample-Models/2.0"
+	"$<TARGET_FILE_DIR:demo_app>/data"
+	COMMENT "Creating symlink to data in binary directory"
+)

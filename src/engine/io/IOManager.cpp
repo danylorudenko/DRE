@@ -26,6 +26,7 @@
 #include <engine\scene\Scene.hpp>
 
 #include <spirv_cross.hpp>
+#include <glslang\Public\ShaderLang.h>
 
 namespace IO
 {
@@ -188,6 +189,8 @@ void IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene)
     aiMatrix4x4 rootTransform{};
     ParseAssimpNodeRecursive(GFX::g_GraphicsManager->GetMainContext(), path, scene, scene->mRootNode, rootTransform, targetScene);
     GFX::g_GraphicsManager->GetMainContext().FlushAll();
+
+    glslang::InitializeProcess();
 }
 
 void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* path)

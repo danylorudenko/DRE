@@ -6,6 +6,18 @@ project(DRE
 		LANGUAGES C CXX)
 
 
+find_package(Git REQUIRED)
+include(CmakeDREHelpers.txt)
+update_git_submodule(assimp)
+update_git_submodule(glm)
+update_git_submodule(glslang)
+update_git_submodule(glTF-Sample-Models)
+update_git_submodule(imgui)
+update_git_submodule(SPIRV-Cross)
+update_git_submodule(stb)
+update_git_submodule(Vulkan-Headers)
+
+
 #override some assimp defaults
 #==========
 option(BUILD_SHARED_LIBS "Build package with shared libraries." OFF)
@@ -14,6 +26,16 @@ option(ASSIMP_BUILD_TESTS "If the test suite for Assimp is built in addition to 
 option(ASSIMP_INSTALL "Disable this if you want to use assimp as a submodule." ON)
 #==========
 add_subdirectory(extern/assimp)
+
+#override glslang defaults
+#==========
+option(SKIP_GLSLANG_INSTALL "Skip installation" ON)
+option(ENABLE_GLSLANG_BINARIES "Builds glslangValidator and spirv-remap" OFF)
+#==========
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+execute_process(COMMAND python update_glslang_sources.py
+	WORKING_DIRECTORY "extern/glslang")
+add_subdirectory(extern/glslang)
 
 
 add_subdirectory(extern/glm)
@@ -73,20 +95,3 @@ set(DEMO_SHADERS_SOURCES
 	"${DRE_SOURCE_DIR}/shaders/test-triangle-nodata.vert"
 	"${DRE_SOURCE_DIR}/shaders/test-triangle-nodata.frag"
 )
-
-add_custom_target(demo_shaders ALL
-	COMMAND ${CMAKE_COMMAND} -E create_symlink
-	"${DRE_SOURCE_DIR}/shaders"
-	"$<TARGET_FILE_DIR:demo_app>/shaders"
-	SOURCES ${DEMO_SHADERS_SOURCES}
-	COMMENT "Creating symlink to shaders in binary directory"
-)
-
-add_custom_target(demo_assets ALL
-	COMMAND ${CMAKE_COMMAND} -E create_symlink
-	"${DRE_SOURCE_DIR}/extern/glTF-Sample-Models/2.0"
-	"$<TARGET_FILE_DIR:demo_app>/data"
-	COMMENT "Creating symlink to data in binary directory"
-)
-
-add_dependencies(demo_app demo_shaders demo_assets)
