@@ -17,33 +17,38 @@ public:
 
     template<typename TString>
     InplaceString(TString&& rhs)
-        : m_Size{ static_cast<DRE::U16>(std::strlen(rhs)) }
+        : m_Size{ static_cast<DRE::U16>(std::strlen(static_cast<TChar const*>(rhs))) }
     {
         DRE_ASSERT(m_Size < SIZE, "Inplace string overflow.");
         std::memset(m_Data, 0, sizeof(m_Data));
-        std::strcpy(m_Data, rhs);
+        std::strcpy(m_Data, static_cast<TChar const*>(rhs));
     }
 
     template<typename TString>
-    bool operator==(TString&& rhs)
+    bool operator==(TString const& rhs) const
     {
-        return std::strcmp(m_Data, rhs) == 0;
+        return std::strcmp(m_Data, static_cast<TChar const*>(rhs)) == 0;
     }
 
     template<typename TString>
-    bool operator!=(TString&& rhs)
+    bool operator!=(TString const& rhs) const
     {
-        return std::strcmp(m_Data, rhs) != 0;
+        return std::strcmp(m_Data, static_cast<TChar const*>(rhs)) != 0;
     }
 
-    operator TChar* ()
+    explicit operator TChar const* () const
     {
         return m_Data;
     }
 
-    operator TChar const* () const
+    TChar const* GetData() const
     {
         return m_Data;
+    }
+
+    TChar operator[](std::uint32_t i) const
+    {
+        return m_Data[i];
     }
 
     U16 GetSize() const { return m_Size; }

@@ -27,8 +27,6 @@
 
 #include <spirv_cross.hpp>
 #include <shaderc/shaderc.hpp>
-//#include <glslang\Public\ResourceLimits.h>
-//#include <glslang\Include\glslang_c_interface.h>
 
 namespace IO
 {
@@ -102,6 +100,22 @@ std::uint64_t IOManager::ReadFileStringToBuffer(char const* path, DRE::ByteBuffe
     return fileSize;
 }
 
+void IOManager::WriteNewFile(char const* path, DRE::ByteBuffer const& buffer)
+{
+    std::ofstream ostream{ path, std::ios_base::binary };
+    if (!ostream) {
+        std::cerr << "Error writing file in path: " << path << std::endl;
+    }
+
+    ostream.write(buffer.As<char const*>(), buffer.Size());
+
+    if (!ostream) {
+        std::cerr << "Failed to write " << buffer.Size() << " bytes to file " << path << std::endl;
+    }
+
+    ostream.close();
+}
+
 struct DREIncludeData
 {
     DRE::ByteBuffer content;
@@ -125,12 +139,12 @@ public:
 
         data->targetName = requesting_source;
         
-        DRE_ASSERT(IOManager::ReadFileToBuffer(data->contentName, &data->content) != 0, "Failed to read requested include for GLSL.");
+        DRE_ASSERT(IOManager::ReadFileToBuffer(data->contentName.GetData(), &data->content) != 0, "Failed to read requested include for GLSL.");
 
-        result->source_name = data->contentName;
+        result->source_name = data->contentName.GetData();
         result->content_length = data->content.Size();
         result->content = data->content.As<char*>();
-        result->source_name = data->targetName;
+        result->source_name = data->targetName.GetData();
         result->source_name_length = data->targetName.GetSize();
         result->user_data = data;
 
@@ -190,18 +204,11 @@ DRE::ByteBuffer IOManager::CompileGLSL(char const* path)
     return DRE::ByteBuffer{ (void*)compile.begin(), moduleSize };
 }
 
-DRE::String64 IOManager::GetPendingShader()
+DRE::InplaceVector<DRE::String64, 12> IOManager::GetPendingShaders()
 {
-    std::lock_guard guard(m_PendingShadersMutex);
-    DRE_ASSERT(m_PendingShaders.Size() <= 1, "Multiple shader reload is not supported.");
-    return m_PendingShaders.Empty() ? DRE::String64("") : m_PendingShaders[0];
-}
-
-void IOManager::SignalShadersProcessed()
-{
-    std::lock_guard guard(m_PendingShadersMutex);
-    m_PendingShaders.Clear();
+    std::lock_guard guard{ m_PendingShadersMutex };
     IOManager::m_PendingChangesFlag.store(false, std::memory_order::relaxed);
+    return DRE_MOVE(m_PendingShaders);
 }
 
 Data::Texture2D IOManager::ReadTexture2D(char const* path, Data::TextureChannelVariations channelVariations)
@@ -258,7 +265,7 @@ void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiM
         textureFilePath.Append(separator);
         textureFilePath.Append(aiTexturePath.C_Str(), DRE::U16(aiTexturePath.length));
 
-        Data::Texture2D dataTexture = ReadTexture2D(textureFilePath, channels);
+        Data::Texture2D dataTexture = ReadTexture2D(textureFilePath.GetData(), channels);
         material->AssignTextureToSlot(slot, DRE_MOVE(dataTexture));
     }
     else
@@ -559,36 +566,25 @@ void IOManager::ShaderObserver()
             }
             fileName[length] = '\0';
 
-            char* spvExtStart = std::strrchr(fileName, '.');
-            if (spvExtStart == nullptr) // file with no extension
+            char* ExtStart = std::strrchr(fileName, '.');
+            if (ExtStart == nullptr || 
+                (std::strcmp(ExtStart, ".vert") != 0 &&
+                std::strcmp(ExtStart, ".frag") != 0))
             {
                 infoPtr = infoPtr->NextEntryOffset == 0 ? nullptr : DRE::PtrAdd(infoPtr, infoPtr->NextEntryOffset);
                 continue;
             }
-
-            if (std::strcmp(spvExtStart + 1, "spv") != 0) // not a SPIR-V file
-            {
-                infoPtr = infoPtr->NextEntryOffset == 0 ? nullptr : DRE::PtrAdd(infoPtr, infoPtr->NextEntryOffset);
-                continue;
-            }
-
-            DRE::String64 shaderPath{ "shaders\\" };
-            shaderPath.Append(fileName);
-
-            DRE::String64 shaderName{ fileName };
-            shaderName.Shrink(DRE::PtrDifference(spvExtStart, fileName));
-
 
             DRE::String64 stem{ fileName };
             char* stemEnd = std::strchr(fileName, '.');
             stem.Shrink(DRE::PtrDifference(stemEnd, fileName));
 
-            DRE::ByteBuffer& shaderBinary = m_ShaderData[shaderName].m_Binary;
-            DRE::ByteBuffer newBinary;
-            if (ReadFileToBuffer(shaderPath, &shaderBinary) != 0)
             {
                 std::lock_guard guard{ m_PendingShadersMutex };
-                m_PendingShaders.EmplaceBack(stem);
+                if (m_PendingShaders.Find(stem) == m_PendingShaders.Size())
+                {
+                    m_PendingShaders.EmplaceBack(stem);
+                }
                 m_PendingChangesFlag.store(true, std::memory_order::release);
             }
 

@@ -127,13 +127,14 @@ void VulkanApplicationDelegate::update()
         m_ImGuiHelper->EndFrame();
     }
 
-    if (m_IOManager.NewShadersPending())
+    if (m_InputSystem.GetKeyboardButtonJustReleased(Keys::R))
     {
-        m_GraphicsManager.WaitIdle();
-        m_GraphicsManager.ReloadShaders();
-        m_IOManager.SignalShadersProcessed();
+        if (m_IOManager.NewShadersPending())
+        {
+            m_GraphicsManager.WaitIdle();
+            m_GraphicsManager.ReloadShaders();
+        }
     }
-
     m_GraphicsManager.RenderFrame(m_EngineFrame, m_DeltaMicroseconds);
 
     m_EngineFrame++;

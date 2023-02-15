@@ -10,7 +10,7 @@ find_package(Git REQUIRED)
 include(CmakeDREHelpers.txt)
 update_git_submodule(assimp)
 update_git_submodule(glm)
-#update_git_submodule(glslang)
+update_git_submodule(shaderc)
 update_git_submodule(glTF-Sample-Models)
 update_git_submodule(imgui)
 update_git_submodule(SPIRV-Cross)
@@ -35,8 +35,7 @@ option(SHADERC_SKIP_TESTS "Skip building tests" ON)
 option(SHADERC_SKIP_EXAMPLES "Skip building examples" ${SHADERC_SKIP_EXAMPLES})
 option(SHADERC_SKIP_COPYRIGHT_CHECK "Skip copyright check" ${SHADERC_SKIP_COPYRIGHT_CHECK})
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
-execute_process(COMMAND python extern/shaderc/utils/git-sync-deps
-	WORKING_DIRECTORY extern/shaderc)
+execute_process(COMMAND python extern/shaderc/utils/git-sync-deps)
 #==========
 add_subdirectory(extern/shaderc)
 

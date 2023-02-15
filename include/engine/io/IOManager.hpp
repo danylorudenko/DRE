@@ -88,11 +88,11 @@ public:
 
     static std::uint64_t    ReadFileToBuffer(char const* path, DRE::ByteBuffer* buffer);
     static std::uint64_t    ReadFileStringToBuffer(char const* path, DRE::ByteBuffer* buffer);
+    static void             WriteNewFile(char const* path, DRE::ByteBuffer const& buffer);
     static DRE::ByteBuffer  CompileGLSL(char const* file);
 
-    inline bool             NewShadersPending() { return IOManager::m_PendingChangesFlag.load(std::memory_order::acquire); }
-    DRE::String64           GetPendingShader();
-    void                    SignalShadersProcessed();
+    inline bool                             NewShadersPending() { return IOManager::m_PendingChangesFlag.load(std::memory_order::acquire); }
+    DRE::InplaceVector<DRE::String64, 12>   GetPendingShaders();
 
 private:
     void ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene);
@@ -111,7 +111,7 @@ private:
 
     DRE::HashTable<DRE::String64, ShaderData, DRE::DefaultAllocator> m_ShaderData;
 
-    DRE::InplaceVector<DRE::String64, 3> m_PendingShaders;
+    DRE::InplaceVector<DRE::String64, 12> m_PendingShaders;
     std::mutex  m_PendingShadersMutex;
     std::thread m_ShaderObserverThread;
     std::atomic_bool m_PendingChangesFlag;

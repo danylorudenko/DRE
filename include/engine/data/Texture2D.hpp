@@ -30,7 +30,7 @@ public:
     std::uint32_t GetSizeX() const;
     std::uint32_t GetSizeY() const;
 
-    char const* GetName() const { return name_; }
+    char const* GetName() const { return static_cast<char const*>(name_); }
 
 private:
     DRE::String128 name_;

@@ -91,8 +91,11 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
 
 void GraphicsManager::ReloadShaders()
 {
-    DRE::String64 name = m_IOManager->GetPendingShader();
-    m_PipelineDB.ReloadPipeline(name);
+    auto names = m_IOManager->GetPendingShaders();
+    for (std::uint32_t i = 0; i < names.Size(); i++)
+    {
+        m_PipelineDB.ReloadPipeline(names[i].GetData());
+    }
 }
 
 void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS)
