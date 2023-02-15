@@ -9,6 +9,7 @@ enum class TextureID
 {
     ID_None,
     MainDepth,
+    ShadowMap,
     ImGuiRT,
     FinalRT,
     ID_MAX

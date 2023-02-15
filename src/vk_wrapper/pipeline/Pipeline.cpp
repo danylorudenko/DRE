@@ -14,10 +14,10 @@ namespace VKW
 {
 
 Pipeline::Descriptor::Descriptor()
-    : type_{ PIPELINE_TYPE_GRAPHIC }
+    : type_{ PIEPLINE_TYPE_INVALID }
     , shaderStagesCount_{ 0 }
     , vertexAttributeCount_{ 0 }
-    , viewportsCount_{ 0 }
+    , colorOutputCount_{ 0 }
     , depthAttachmentFormat_{ VK_FORMAT_UNDEFINED }
     , stencilAttachmentFormat_{ VK_FORMAT_UNDEFINED }
     , pipelineLayout_{ nullptr }
@@ -134,7 +134,7 @@ void Pipeline::Descriptor::SetPipelineType(PipelineType type)
     if (type == PIPELINE_TYPE_COMPUTE)
     {
         DRE_ASSERT(vertexAttributeCount_ == 0, "Incompatible state detected in Pipeline::Descriptor - vertexAttrCount != 0 on compute.");
-        DRE_ASSERT(viewportsCount_ == 0, "Incompatible state detected in Pipeline::Descriptor - viewportsCount != 0 on compute.");
+        DRE_ASSERT(colorOutputCount_ == 0, "Incompatible state detected in Pipeline::Descriptor - viewportsCount != 0 on compute.");
 
         type_ = type;
     }
@@ -230,24 +230,13 @@ void Pipeline::Descriptor::AddVertexAttribute(Format format)
     vertexBindingDescription_.stride += FormatSize(format);
 }
 
-void Pipeline::Descriptor::AddOutputViewport(Format format, BlendType blend)
+void Pipeline::Descriptor::AddColorOutput(Format format, BlendType blend)
 {
-    DRE_ASSERT(viewportsCount_ < VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS, "MAX_VIEWPORTS overflow for Graphics pipeline descriptor");
+    DRE_ASSERT(colorOutputCount_ < VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS, "MAX_VIEWPORTS overflow for Graphics pipeline descriptor");
 
-    //VkViewport& viewport = viewports_[viewportsCount_];
-    //VkRect2D& scissors = scissors_[viewportsCount_];
-    VkPipelineColorBlendAttachmentState& attachmentBlendState = colorBlendAttachmentStates_[viewportsCount_];
-    colorAttachmentFormats_[viewportsCount_] = VKW::Format2VK(format);
-    viewportsCount_++;
-
-    //viewport.x = static_cast<float>(outputViewport.offset.x);
-    //viewport.y = static_cast<float>(outputViewport.offset.y);
-    //viewport.width = static_cast<float>(outputViewport.extent.width);
-    //viewport.height = static_cast<float>(outputViewport.extent.height);
-    //viewport.minDepth = 0.0f;
-    //viewport.maxDepth = 1.0f;
-    //
-    //scissors = outputViewport;
+    VkPipelineColorBlendAttachmentState& attachmentBlendState = colorBlendAttachmentStates_[colorOutputCount_];
+    colorAttachmentFormats_[colorOutputCount_] = VKW::Format2VK(format);
+    colorOutputCount_++;
 
     if (blend == BLEND_TYPE_NONE)
     {
@@ -289,7 +278,7 @@ VkGraphicsPipelineCreateInfo const& Pipeline::Descriptor::CompileGraphicPipeline
 {
     DRE_ASSERT(type_ == PIPELINE_TYPE_GRAPHIC, "Compiling invalid pipeline type descriptor.");
 
-    renderingCreateInfo_.colorAttachmentCount = viewportsCount_;
+    renderingCreateInfo_.colorAttachmentCount = colorOutputCount_;
     renderingCreateInfo_.pColorAttachmentFormats = colorAttachmentFormats_;
     renderingCreateInfo_.depthAttachmentFormat = depthAttachmentFormat_;
     renderingCreateInfo_.stencilAttachmentFormat = stencilAttachmentFormat_;
@@ -308,15 +297,15 @@ VkGraphicsPipelineCreateInfo const& Pipeline::Descriptor::CompileGraphicPipeline
     graphicsCreateInfo_.pInputAssemblyState = &inputAssemblyState_;
     graphicsCreateInfo_.pTessellationState = nullptr;
 
-    viewportState_.viewportCount = viewportsCount_;
-    viewportState_.scissorCount = viewportsCount_;
+    viewportState_.viewportCount = colorOutputCount_;
+    viewportState_.scissorCount = colorOutputCount_;
     graphicsCreateInfo_.pViewportState = &viewportState_;
 
     graphicsCreateInfo_.pRasterizationState = &rasterizationState_;
     graphicsCreateInfo_.pMultisampleState = &multisampleState_;
     graphicsCreateInfo_.pDepthStencilState = &depthStencilState_;
 
-    blendState_.attachmentCount = viewportsCount_;
+    blendState_.attachmentCount = colorOutputCount_;
     blendState_.pAttachments = colorBlendAttachmentStates_;
     graphicsCreateInfo_.pColorBlendState = &blendState_;
 

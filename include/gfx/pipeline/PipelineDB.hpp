@@ -46,10 +46,15 @@ public:
     VKW::DescriptorSetLayout*   GetSetLayout(char const* name);
 
 private:
-    // will find all modules with same name before '.' symbol (like "wall.vert.spv" + "wall.frag.spv") and combine all their layouts into one with name "wall_layout"
-    DRE::String64 const*    CreatePipelineLayoutFromShader(char const* shaderName);
+    // will find all passed modules and combine all their layouts into one with name "{name}_layout"
+    DRE::String64 const*        CreatePipelineLayoutFromShader(char const* shaderName, 
+        char const* vertexName, 
+        char const* fragmentName, 
+        char const* computeName);
 
-    DRE::String64 const*    CreateMaterialPipeline(char const* name);
+    DRE::String64 const*    CreateGraphicsForwardPipeline(char const* name);
+    DRE::String64 const*    CreateGraphicsForwardShadowPipeline(char const* name);
+    DRE::String64 const*    CreateComputePipeline(char const* name);
 
 private:
     VKW::Device*        m_Device;

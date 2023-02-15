@@ -28,17 +28,17 @@ void PipelineDB::CreateDefaultPipelines()
 {
     // default plane material shader
     {
-        CreateMaterialPipeline("default_lit");
-        CreateMaterialPipeline("cook_torrance");
+        CreateGraphicsForwardPipeline("default_lit");
+        CreateGraphicsForwardPipeline("cook_torrance");
     }
 }
 
-DRE::String64 const* PipelineDB::CreateMaterialPipeline(char const* name)
+DRE::String64 const* PipelineDB::CreateGraphicsForwardPipeline(char const* name)
 {
-    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name);
-
     DRE::String64 vertName{ name }; vertName.Append(".vert");
     DRE::String64 fragName{ name }; fragName.Append(".frag");
+
+    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName.GetData(), fragName.GetData(), nullptr);
 
     IO::IOManager::ShaderData const* vertData = m_IOManager->GetShaderData(vertName.GetData());
     IO::IOManager::ShaderData const* fragData = m_IOManager->GetShaderData(fragName.GetData());
@@ -54,7 +54,7 @@ DRE::String64 const* PipelineDB::CreateMaterialPipeline(char const* name)
     desc.SetLayout(GetLayout(layoutName->GetData()));
     desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
     desc.EnableDepthTest(VKW::FORMAT_D24_UNORM_S8_UINT);
-    desc.AddOutputViewport(g_GraphicsManager->GetMainDevice()->GetSwapchain()->GetFormat(), VKW::BLEND_TYPE_NONE);
+    desc.AddColorOutput(g_GraphicsManager->GetMainDevice()->GetSwapchain()->GetFormat(), VKW::BLEND_TYPE_NONE);
 
     desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // pos
     desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // norm
@@ -66,6 +66,55 @@ DRE::String64 const* PipelineDB::CreateMaterialPipeline(char const* name)
     return m_Pipelines.Find(name).key;
 }
 
+DRE::String64 const* PipelineDB::CreateGraphicsForwardShadowPipeline(char const* name)
+{
+    DRE::String64 vertName{ name }; vertName.Append(".vert");
+
+    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName.GetData(), nullptr, nullptr);
+
+    IO::IOManager::ShaderData const* vertData = m_IOManager->GetShaderData(vertName.GetData());
+    VKW::ShaderModule vertModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData->m_Binary, vertData->m_ModuleType, "main" };
+
+    VKW::Pipeline::Descriptor desc;
+
+    desc.SetPipelineType(VKW::PIPELINE_TYPE_GRAPHIC);
+    desc.SetVertexShader(vertModule);
+    desc.SetLayout(GetLayout(layoutName->GetData()));
+    desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
+    desc.EnableDepthTest(VKW::FORMAT_D16_UNORM);
+    desc.AddColorOutput(g_GraphicsManager->GetMainDevice()->GetSwapchain()->GetFormat(), VKW::BLEND_TYPE_NONE);
+
+    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // pos
+    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // norm
+    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // tan
+    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // btan
+    desc.AddVertexAttribute(VKW::FORMAT_R32G32_FLOAT);    // uv
+
+    CreatePipeline(name, desc);
+    return m_Pipelines.Find(name).key;
+}
+
+DRE::String64 const* PipelineDB::CreateComputePipeline(char const* name)
+{
+    DRE::String64 compName{ name }; compName.Append(".vert");
+
+    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, nullptr, nullptr, compName.GetData());
+    VKW::PipelineLayout* layout = GetLayout(layoutName->GetData());
+    DRE_ASSERT(layout != nullptr, "Can't find pipeline!");
+
+    IO::IOManager::ShaderData const* shaderData = m_IOManager->GetShaderData(compName.GetData());
+    VKW::ShaderModule compModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), shaderData->m_Binary, shaderData->m_ModuleType, "main" };
+
+    VKW::Pipeline::Descriptor desc;
+    desc.SetPipelineType(VKW::PIPELINE_TYPE_COMPUTE);
+    desc.SetComputeShader(compModule);
+    desc.SetLayout(layout);
+
+    CreatePipeline(name, desc);
+    return m_Pipelines.Find(name).key;
+
+}
+
 void PipelineDB::ReloadPipeline(char const* name)
 {
     std::cout << "Reloading pipeline " << name << std::endl;
@@ -75,47 +124,74 @@ void PipelineDB::ReloadPipeline(char const* name)
 
     DRE::String64 vertName{ name }; vertName.Append(".vert");
     DRE::String64 fragName{ name }; fragName.Append(".frag");
+    DRE::String64 compName{ name }; compName.Append(".comp");
 
     IO::IOManager::ShaderData* vertData = m_IOManager->GetShaderData(vertName.GetData());
     IO::IOManager::ShaderData* fragData = m_IOManager->GetShaderData(fragName.GetData());
+    IO::IOManager::ShaderData* compData = m_IOManager->GetShaderData(compName.GetData());
 
-    DRE::String64 vertPath{ "shaders\\"}; vertPath.Append(vertName.GetData());
-    DRE::String64 fragPath{ "shaders\\" }; fragPath.Append(fragName.GetData());
-
-    vertData->m_Binary = m_IOManager->CompileGLSL(vertPath.GetData());
-    fragData->m_Binary = m_IOManager->CompileGLSL(fragPath.GetData());
-
-    vertPath.Append(".spv");
-    fragPath.Append(".spv");
-
-    IO::IOManager::WriteNewFile(vertPath.GetData(), vertData->m_Binary);
-    IO::IOManager::WriteNewFile(fragPath.GetData(), fragData->m_Binary);
-
-    VKW::ShaderModule vertModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData->m_Binary, vertData->m_ModuleType, "main" };
-    VKW::ShaderModule fragModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragData->m_Binary, fragData->m_ModuleType, "main" };
+    VKW::ShaderModule vertModule;
+    VKW::ShaderModule fragModule;
 
     VKW::Pipeline* pipeline = GetPipeline(name);
     DRE_ASSERT(pipeline != nullptr, "Attempt to reload pipeline which did not exist.");
-
     VKW::Pipeline::Descriptor& desc = pipeline->GetDescriptor();
 
-    desc.SetVertexShader(vertModule);
-    desc.SetFragmentShader(fragModule);
+
+    if (vertData != nullptr)
+    {
+        DRE::String64 vertPath{ "shaders\\" }; vertPath.Append(vertName.GetData());
+        vertData->m_Binary = m_IOManager->CompileGLSL(vertPath.GetData());
+        vertPath.Append(".spv");
+        IO::IOManager::WriteNewFile(vertPath.GetData(), vertData->m_Binary);
+
+        vertModule = VKW::ShaderModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData->m_Binary, vertData->m_ModuleType, "main" };
+        desc.SetVertexShader(vertModule);
+    }
+    
+    if (fragData != nullptr)
+    {
+        DRE::String64 fragPath{ "shaders\\" }; fragPath.Append(fragName.GetData());
+        fragData->m_Binary = m_IOManager->CompileGLSL(fragPath.GetData());
+        fragPath.Append(".spv");
+        IO::IOManager::WriteNewFile(fragPath.GetData(), fragData->m_Binary);
+
+        fragModule = VKW::ShaderModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragData->m_Binary, fragData->m_ModuleType, "main" };
+        desc.SetFragmentShader(fragModule);
+    }
+
+    if (compData != nullptr)
+    {
+        COMPUTE MTFCK
+    }
 
     m_Pipelines[name] = VKW::Pipeline{ m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), desc };
 }
 
-DRE::String64 const* PipelineDB::CreatePipelineLayoutFromShader(char const* shaderName)
+DRE::String64 const* PipelineDB::CreatePipelineLayoutFromShader(char const* shaderName,
+    char const* vertName,
+    char const* fragName,
+    char const* compName)
 {
-    DRE::String128 vertName{ shaderName }; vertName.Append(".vert");
-    DRE::String128 fragName{ shaderName }; fragName.Append(".frag");
+    if ((vertName != nullptr || fragName != nullptr) && compName != nullptr)
+    {
+        DRE_ASSERT(false, "Attempt to create pipeline from both graphics and compute shaders.");
+    }
 
-    IO::IOManager::ShaderData const* vertexShader = m_IOManager->GetShaderData(vertName.GetData());
-    IO::IOManager::ShaderData const* fragmentShader = m_IOManager->GetShaderData(fragName.GetData());
+    IO::IOManager::ShaderData const* vertShader = vertName != nullptr ? m_IOManager->GetShaderData(vertName) : nullptr;
+    IO::IOManager::ShaderData const* fragShader = fragName != nullptr ? m_IOManager->GetShaderData(fragName) : nullptr;
+    IO::IOManager::ShaderData const* compShader = compName != nullptr ? m_IOManager->GetShaderData(compName) : nullptr;
 
+    IO::IOManager::ShaderInterface shaderInterface;
+    if(vertShader != nullptr)
+        shaderInterface.Merge(vertShader->m_Interface);
 
-    IO::IOManager::ShaderInterface shaderInterface = vertexShader->m_Interface;
-    shaderInterface.Merge(fragmentShader->m_Interface);
+    if(fragShader != nullptr)
+        shaderInterface.Merge(fragShader->m_Interface);
+
+    if(compShader != nullptr)
+        shaderInterface.Merge(compShader->m_Interface);
+
     shaderInterface.m_Members.SortBubble([](auto const& lhs, auto const& rhs) { return lhs.set < rhs.set; });
 
     std::uint32_t const globalLayoutsCount = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();

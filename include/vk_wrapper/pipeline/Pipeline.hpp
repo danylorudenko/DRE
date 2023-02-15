@@ -21,7 +21,8 @@ class ShaderModule;
 enum PipelineType
 {
     PIPELINE_TYPE_GRAPHIC,
-    PIPELINE_TYPE_COMPUTE
+    PIPELINE_TYPE_COMPUTE,
+    PIEPLINE_TYPE_INVALID
 };
 
 enum BlendType
@@ -65,7 +66,7 @@ public:
         void SetWindingOrder        (WindingOrder order);
 
         void AddVertexAttribute     (Format format);
-        void AddOutputViewport      (Format format, BlendType blend);
+        void AddColorOutput      (Format format, BlendType blend);
 
         VkGraphicsPipelineCreateInfo const& CompileGraphicPipelineCreateInfo();
         VkComputePipelineCreateInfo const& CompileComputePipelineCreateInfo();
@@ -90,7 +91,7 @@ public:
         VkPipelineInputAssemblyStateCreateInfo      inputAssemblyState_;
 
         VkPipelineViewportStateCreateInfo           viewportState_;
-        std::uint8_t                                viewportsCount_;
+        std::uint8_t                                colorOutputCount_;
 
         VkPipelineRasterizationStateCreateInfo      rasterizationState_;
         VkPipelineMultisampleStateCreateInfo        multisampleState_;

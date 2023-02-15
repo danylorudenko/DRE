@@ -74,7 +74,7 @@ void ImGuiRenderPass::Initialize(RenderGraph& graph)
     pipelineDescriptor.SetVertexShader(vertexModule);
     pipelineDescriptor.SetFragmentShader(fragmentModule);
 
-    pipelineDescriptor.AddOutputViewport(VKW::FORMAT_B8G8R8A8_UNORM, VKW::BLEND_TYPE_ALPHA_OVER);
+    pipelineDescriptor.AddColorOutput(VKW::FORMAT_B8G8R8A8_UNORM, VKW::BLEND_TYPE_ALPHA_OVER);
 
     pipelineDB.CreatePipeline("imgui_draw", pipelineDescriptor);
 }

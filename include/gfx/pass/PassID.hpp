@@ -7,6 +7,7 @@ enum class PassID
 {
     BulletForward,
     ForwardOpaque,
+    Shadow,
     ImGuiRender,
     MAX
 };
