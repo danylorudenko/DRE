@@ -12,11 +12,8 @@ layout(location = 3) in vec3 in_btan;
 layout(location = 4) in vec2 in_uv;
 
 layout(location = 0) out vec3 out_wpos;
-layout(location = 1) out vec3 out_normal;
-layout(location = 2) out vec3 out_tangent_viewpos;
-layout(location = 3) out vec3 out_tangent_wpos;
-layout(location = 4) out vec2 out_uv;
-layout(location = 5) out vec3 out_tangent_light;
+layout(location = 1) out vec2 out_uv;
+layout(location = 2) out mat3 out_TBN;
 
 
 layout(set = 3, binding = 0, std140) uniform InstanceUniform
@@ -26,23 +23,17 @@ layout(set = 3, binding = 0, std140) uniform InstanceUniform
 	uvec4 textureIDs;
 } instanceUniform;
 
-const vec3 C_LIGHT_DIR = vec3(1.0, 1.0, 1.0);
-
 void main()
 {	
 	out_wpos = vec3(instanceUniform.model_mat * vec4(in_pos, 1.0));
-	
-	vec3 T = mat3(instanceUniform.model_mat) * in_tan;
-	vec3 B = mat3(instanceUniform.model_mat) * in_btan;
-	vec3 N = mat3(instanceUniform.model_mat) * in_norm;
-	mat3 TBN = transpose(mat3(T, B, N));
-	
-	out_tangent_wpos = TBN * out_wpos;
-	out_tangent_viewpos = TBN * GetCameraPos();
-	out_tangent_light = normalize(C_LIGHT_DIR);
-	
-	out_normal = in_norm; // WARNING
+
 	out_uv = in_uv;
-	
+    
+	vec3 T = normalize(vec3(instanceUniform.model_mat * vec4(in_tan, 0.0)));
+    vec3 B = normalize(vec3(instanceUniform.model_mat * vec4(in_btan, 0.0)));
+    vec3 N = normalize(vec3(instanceUniform.model_mat * vec4(in_norm, 0.0)));
+    
+    out_TBN = mat3(T, B, N);
+    
 	gl_Position = instanceUniform.mvp_mat * vec4(in_pos, 1.0);
 }

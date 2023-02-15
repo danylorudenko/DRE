@@ -32,8 +32,8 @@ add_subdirectory(extern/assimp)
 #==========
 option(SHADERC_SKIP_INSTALL ON)
 option(SHADERC_SKIP_TESTS "Skip building tests" ON)
-option(SHADERC_SKIP_EXAMPLES "Skip building examples" ${SHADERC_SKIP_EXAMPLES})
-option(SHADERC_SKIP_COPYRIGHT_CHECK "Skip copyright check" ${SHADERC_SKIP_COPYRIGHT_CHECK})
+option(SHADERC_SKIP_EXAMPLES "Skip building examples" ON)
+option(SHADERC_SKIP_COPYRIGHT_CHECK "Skip copyright check" ON)
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 execute_process(COMMAND python extern/shaderc/utils/git-sync-deps)
 #==========
