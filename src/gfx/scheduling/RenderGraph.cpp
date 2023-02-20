@@ -41,6 +41,11 @@ void RenderGraph::RegisterDepthStencilTarget(BasePass* pass, TextureID id, VKW::
     m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT);
 }
 
+void RenderGraph::RegisterDepthOnlyTarget(BasePass* pass, TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height)
+{
+    m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT);
+}
+
 void RenderGraph::RegisterStorageBuffer(BasePass* pass, BufferID id, std::uint32_t size, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding)
 {
     m_ResourcesManager.RegisterBuffer(id, size, access);
@@ -52,14 +57,14 @@ void RenderGraph::RegisterUniformBuffer(BasePass* pass, VKW::Stages stage, std::
     m_DescriptorManager.RegisterUniformBuffer(pass->GetID(), VKW::StageToDescriptorStage(stage), binding);
 }
 
-StorageTexture* RenderGraph::GetStorageTexture(TextureID id)
+StorageTexture* RenderGraph::GetTexture(TextureID id)
 {
-    return m_ResourcesManager.GetStorageTexture(id);
+    return m_ResourcesManager.GetTexture(id);
 }
 
-StorageBuffer* RenderGraph::GetStorageBuffer(BufferID id)
+StorageBuffer* RenderGraph::GetBuffer(BufferID id)
 {
-    return m_ResourcesManager.GetStorageBuffer(id);
+    return m_ResourcesManager.GetBuffer(id);
 }
 
 UniformProxy RenderGraph::GetPassUniform(PassID id, VKW::Context& context, std::uint32_t size)
@@ -112,7 +117,7 @@ StorageTexture& RenderGraph::Render(VKW::Context& context)
         m_Passes[i]->Render(*this, context);
     }
 
-    return *m_ResourcesManager.GetStorageTexture(TextureID::FinalRT);
+    return *m_ResourcesManager.GetTexture(TextureID::FinalRT);
 }
 
 }

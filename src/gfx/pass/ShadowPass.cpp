@@ -14,22 +14,41 @@ PassID ShadowPass::GetID() const
     return PassID::Shadow;
 }
 
-static constexpr std::uint32_t C_SHADOW_MAP_WIDTH = 1024;
-static constexpr std::uint32_t C_SHADOW_MAP_HEIGHT = 1024;
-
+void ShadowPass::Initialize(RenderGraph& graph)
+{
+}
 
 void ShadowPass::RegisterResources(RenderGraph& graph)
 {
-    graph.RegisterDepthStencilTarget(this,
+    graph.RegisterDepthOnlyTarget(this,
         TextureID::ShadowMap,
         VKW::FORMAT_D16_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_WIDTH);
 }
 
+
+void ShadowObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view)
+{
+    std::uint32_t constexpr uniformSize = sizeof(glm::mat4);
+
+    auto uniformAllocation = arena.AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), uniformSize, 256);
+    VKW::DescriptorManager::WriteDesc writeDesc;
+    writeDesc.AddUniform(uniformAllocation.m_Buffer, uniformAllocation.m_OffsetInBuffer, uniformAllocation.m_Size, 0);
+    descriptorManager.WriteDescriptorSet(obj.GetDescriptorSets(g_GraphicsManager->GetCurrentFrameID()), writeDesc);
+
+    UniformProxy uniformProxy{ &context, uniformAllocation };
+
+    //how to fucking write shadow uniform
+
+    glm::mat4 const mvp = view.GetViewProjectionM() * obj.GetModelM();
+    uniformProxy.WriteMember140(mvp);
+}
+
+
 void ShadowPass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    VKW::ImageResourceView* depthAttachment = graph.GetStorageTexture(TextureID::ShadowMap)->GetShaderView();
+    VKW::ImageResourceView* depthAttachment = graph.GetTexture(TextureID::ShadowMap)->GetShaderView();
 
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->parentResource_, VKW::RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->parentResource_, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
     context.CmdBeginRendering(0, nullptr, depthAttachment, nullptr);
     context.CmdClearAttachments(VKW::ATTACHMENT_MASK_DEPTH, 1.0f, 0);
 
@@ -38,13 +57,8 @@ void ShadowPass::Render(RenderGraph& graph, VKW::Context& context)
 
     // 1. take all RenderableObject's in main scene
     DrawBatcher batcher{ &DRE::g_FrameScratchAllocator, g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), &g_GraphicsManager->GetUniformArena() };
-    auto& allEntities = WORLD::g_MainScene->GetEntities();
-    for (std::uint32_t i = 0, size = allEntities.Size(); i < size; i++)
-    {
-        batcher.AddRenderable(allEntities[i].GetRenderableObject());
-    }
 
-    batcher.Batch(context, *WORLD::g_MainScene);
+    batcher.Batch(context, g_GraphicsManager->GetSunShadowRenderView(), GFX::ShadowObjectDelegate);
 
     std::uint32_t const startSet = 
         g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount() +

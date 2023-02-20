@@ -1,20 +1,21 @@
 #include "VulkanApplicationDelegate.hpp"
 
+#include <assimp\Importer.hpp>
+#include <glm\geometric.hpp>
+#include <imgui.h>
+
+#include <utility>
+#include <cstdio>
+
 #include <vk_wrapper\Tools.hpp>
 #include <vk_wrapper\Helper.hpp>
 #include <vk_wrapper\resources\Framebuffer.hpp>
 #include <vk_wrapper\pipeline\ShaderModule.hpp>
 
-#include <engine\transform\TransformComponent.hpp>
 
-#include <utility>
-#include <cstdio>
-
-#include <glm/geometric.hpp>
-
-#include <imgui.h>
-
-#include <assimp\Importer.hpp>
+////////////////
+constexpr bool C_COMPILE_GLSL_SOURCES_ON_START = true;
+////////////////
 
 //////////////////////////////////////////
 VulkanApplicationDelegate::VulkanApplicationDelegate(HINSTANCE instance, char const* title, std::uint32_t windowWidth, std::uint32_t windowHeight, std::uint32_t buffering, bool vkDebug, bool imguiEnabled)
@@ -35,7 +36,6 @@ VulkanApplicationDelegate::VulkanApplicationDelegate(HINSTANCE instance, char co
     , m_DeltaMicroseconds{ 0 }
     , m_EngineFrame{ 0 }
     , m_MainScene{ &DRE::g_MainAllocator }
-    , m_BulletsEveryFrame{ false }
 {
     WORLD::g_MainScene = &m_MainScene;
 }
@@ -89,14 +89,14 @@ void VulkanApplicationDelegate::start()
     if (m_ImGuiEnabled)
         InitImGui();
 
-    m_IOManager.LoadShaderFiles();
+    if (C_COMPILE_GLSL_SOURCES_ON_START)
+    {
+        m_IOManager.CompileGLSLSources();
+    }
+    m_IOManager.LoadShaderBinaries();
 
-    //m_GraphicsManager.GetMainRenderView() = GFX::RenderView{
-    //    &DRE::g_FrameScratchAllocator,
-    //    glm::uvec2{ 0, 0 }, glm::uvec2{ m_GraphicsManager.GetMainDevice()->GetSwapchain()->GetWidth(), m_GraphicsManager.GetMainDevice()->GetSwapchain()->GetHeight() },
-    //    m_MainScene.GetMainCamera().GetPosition(), glm::vec3{1.0f, 0.0f, 0.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, m_MainScene.GetMainCamera().GetFOV()};
+    m_GraphicsManager.GetMainRenderView() = GFX::RenderView{ &DRE::g_MainAllocator };
 
-    m_MainScene.GetMainCamera().SetAspect(float(m_GraphicsManager.GetMainDevice()->GetSwapchain()->GetWidth()) / float(m_GraphicsManager.GetMainDevice()->GetSwapchain()->GetHeight()));
     m_MainScene.GetMainCamera().SetFOV(60.0f);
     m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 7.28f, 5.57f, -1.07f });
     m_MainScene.GetMainCamera().SetEulerOrientation(glm::vec3{ -17.26f, 107.37f, 0.0f });
@@ -116,7 +116,6 @@ void VulkanApplicationDelegate::update()
     ////////////////////////////////////////////////////
 
     DRE::g_FrameScratchAllocator.Reset();
-    m_GraphicsManager.GetMainRenderView().Reset();
 
     m_InputSystem.Update();
 
@@ -143,14 +142,6 @@ void VulkanApplicationDelegate::update()
 //////////////////////////////////////////
 void VulkanApplicationDelegate::shutdown()
 {
-    if (m_BulletAddTasks.Size() > 0)
-    {
-        for (std::uint8_t i = 0; i < m_BulletAddTasks.Size(); i++)
-        {
-            m_BulletAddTasks[i].wait();
-        }
-        m_BulletAddTasks.Clear();
-    }
 }
 
 //////////////////////////////////////////

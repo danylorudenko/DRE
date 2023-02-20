@@ -72,9 +72,9 @@ using UPtr      = std::uintptr_t;
     #define DRE_DEBUG_ARG(arg)
 
     #define DRE_LOG(...)
-    #define DRE_ASSERT(condition, message)
-    #define DRE_WARNING(condition, message)
-    #define DRE_ERROR(condition, message)
+    #define DRE_ASSERT(condition, message) (condition)
+    #define DRE_WARNING(condition, message) (condition)
+    #define DRE_ERROR(condition, message) (condition)
 #endif // if defined DRE_DEBUG
 
 

@@ -30,6 +30,7 @@ void PipelineDB::CreateDefaultPipelines()
     {
         CreateGraphicsForwardPipeline("default_lit");
         CreateGraphicsForwardPipeline("cook_torrance");
+        CreateGraphicsForwardShadowPipeline("forward_shadow");
     }
 }
 
@@ -53,7 +54,7 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardPipeline(char const* name)
     desc.SetFragmentShader(fragModule);
     desc.SetLayout(GetLayout(layoutName->GetData()));
     desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
-    desc.EnableDepthTest(VKW::FORMAT_D24_UNORM_S8_UINT);
+    desc.EnableDepthTest(VKW::FORMAT_D16_UNORM);
     desc.AddColorOutput(g_GraphicsManager->GetMainDevice()->GetSwapchain()->GetFormat(), VKW::BLEND_TYPE_NONE);
 
     desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // pos
@@ -82,7 +83,6 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardShadowPipeline(char const*
     desc.SetLayout(GetLayout(layoutName->GetData()));
     desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
     desc.EnableDepthTest(VKW::FORMAT_D16_UNORM);
-    desc.AddColorOutput(g_GraphicsManager->GetMainDevice()->GetSwapchain()->GetFormat(), VKW::BLEND_TYPE_NONE);
 
     desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // pos
     desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // norm
@@ -132,11 +132,11 @@ void PipelineDB::ReloadPipeline(char const* name)
 
     VKW::ShaderModule vertModule;
     VKW::ShaderModule fragModule;
+    VKW::ShaderModule compModule;
 
     VKW::Pipeline* pipeline = GetPipeline(name);
     DRE_ASSERT(pipeline != nullptr, "Attempt to reload pipeline which did not exist.");
     VKW::Pipeline::Descriptor& desc = pipeline->GetDescriptor();
-
 
     if (vertData != nullptr)
     {
@@ -162,7 +162,13 @@ void PipelineDB::ReloadPipeline(char const* name)
 
     if (compData != nullptr)
     {
-        COMPUTE MTFCK
+        DRE::String64 compPath{ "shaders\\" }; compPath.Append(compName.GetData());
+        compData->m_Binary = m_IOManager->CompileGLSL(compPath.GetData());
+        compPath.Append(".spv");
+        IO::IOManager::WriteNewFile(compPath.GetData(), compData->m_Binary);
+
+        compModule = VKW::ShaderModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), compData->m_Binary, compData->m_ModuleType, "main" };
+        desc.SetComputeShader(compModule);
     }
 
     m_Pipelines[name] = VKW::Pipeline{ m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), desc };

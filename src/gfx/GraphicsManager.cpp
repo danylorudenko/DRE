@@ -8,6 +8,7 @@
 
 #include <gfx\pass\ForwardOpaquePass.hpp>
 #include <gfx\pass\ImGuiRenderPass.hpp>
+#include <gfx\pass\ShadowPass.hpp>
 
 #include <engine\io\IOManager.hpp>
 #include <engine\scene\Scene.hpp>
@@ -37,6 +38,8 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOMana
     , m_PersistentStorage{ &m_Device }
     , m_RenderGraph{ this }
     , m_DependencyManager{}
+    , m_MainView{ &DRE::g_MainAllocator }
+    , m_SunShadowView{ &DRE::g_MainAllocator }
 {
     g_GraphicsManager = this;
 
@@ -56,6 +59,7 @@ void GraphicsManager::Initialize()
 
 void GraphicsManager::CreateAllPasses()
 {
+    m_RenderGraph.AddPass<ShadowPass>();
     m_RenderGraph.AddPass<ForwardOpaquePass>();
     m_RenderGraph.AddPass<ImGuiRenderPass>();
     m_RenderGraph.ParseGraph();
@@ -68,6 +72,11 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     
     VKW::BufferResource* buffer = m_GlobalUniforms[GetCurrentFrameID()];
     void* dst = buffer->memory_.GetRegionMappedPtr();
+    
+    WORLD::Camera const& camera = scene.GetMainCamera();
+    m_MainView.UpdatePlacement(camera.GetPosition(), camera.GetForward(), camera.GetUp());
+    m_MainView.UpdateViewport(glm::uvec2{ 0, 0 }, glm::uvec2{ GetRenderingWidth(), GetRenderingHeight() });
+    m_MainView.UpdateProjection(camera.GetFOV(), camera.GetRange()[0], camera.GetRange()[1]);
 
     GlobalUniforms globalUniform{};
     globalUniform.viewportSize_deltaMS_0[0] = static_cast<float>(GetRenderingWidth());
@@ -75,10 +84,13 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     globalUniform.viewportSize_deltaMS_0[2] = static_cast<float>(static_cast<double>(deltaTimeUS) / 1000.0);
     globalUniform.viewportSize_deltaMS_0[3] = 0.0f;
 
-    globalUniform.cameraPos = vec4{ scene.GetMainCamera().GetPosition(), 1.0f };
-    globalUniform.cameraDir = vec4{ scene.GetMainCamera().GetForward(), 0.0f };
-    globalUniform.matrixView = scene.GetMainCamera().GetViewM();
-    globalUniform.matrixProj = scene.GetMainCamera().GetProjM();
+    globalUniform.main_CameraPos     = vec4{ scene.GetMainCamera().GetPosition(), 1.0f };
+    globalUniform.main_CameraDir     = vec4{ scene.GetMainCamera().GetForward(), 0.0f };
+    globalUniform.main_ViewM         = m_MainView.GetViewM();
+    globalUniform.main_iViewM        = m_MainView.GetInvViewM();
+    globalUniform.main_ProjM         = m_MainView.GetProjectionM();
+    globalUniform.main_iProjM        = m_MainView.GetInvProjectionM();
+    globalUniform.main_LightDir      = glm::normalize(vec4{ 1.0f, 1.0f, 1.0f, 0.0f });
 
     std::memcpy(dst, &globalUniform, sizeof(globalUniform));
 
@@ -87,6 +99,18 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     context.CmdResourceDependency(buffer,
         VKW::RESOURCE_ACCESS_HOST_WRITE, VKW::STAGE_HOST,
         VKW::RESOURCE_ACCESS_SHADER_UNIFORM, VKW::STAGE_VERTEX);
+
+    // main sun view
+    m_SunShadowView.UpdatePlacement(
+        glm::vec3{ 0.0f, 0.0f, 0.0f },
+        glm::normalize(glm::vec3{ 1.0f, 1.0f, 1.0f }), 
+        glm::vec3{ 0.0f, 1.0f, 0.0f });
+
+    m_SunShadowView.UpdateViewport(glm::uvec2{ 0, 0 }, glm::uvec2{ C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT });
+    m_SunShadowView.UpdateProjection(
+        -C_SHADOW_MAP_WORLD_EXTENT, C_SHADOW_MAP_WORLD_EXTENT,
+        -C_SHADOW_MAP_WORLD_EXTENT, C_SHADOW_MAP_WORLD_EXTENT,
+        -C_SHADOW_MAP_WORLD_EXTENT, C_SHADOW_MAP_WORLD_EXTENT);
 }
 
 void GraphicsManager::ReloadShaders()
@@ -245,6 +269,29 @@ RenderableObject* GraphicsManager::CreateRenderableObject(VKW::Context& context,
         descriptors.EmplaceBack(descriptorManager->AllocateStandaloneSet(*layout->GetMember(itemDescriptorId)));
     }
     return m_RenderableObjectPool.Alloc(pipeline, geometryGPU->vertexBuffer, geometry->GetVertexCount(), geometryGPU->indexBuffer, geometry->GetIndexCount(), DRE_MOVE(textures), DRE_MOVE(descriptors));
+}
+
+RenderableObject* GraphicsManager::CreateShadowRenderableObject(VKW::Context& context, Data::Geometry* geometry)
+{
+    VKW::Pipeline* pipeline = GetPipelineDB().GetPipeline("forward_shadow");
+    VKW::PipelineLayout* layout = GetPipelineDB().GetLayout("forward_shadow_layout");
+
+    // load geometry
+    GeometryGPU* geometryGPU = m_GeometryGPUMap.Find(geometry).value;
+    if (geometryGPU == nullptr)
+        geometryGPU = LoadGPUGeometry(context, geometry);
+
+    RenderableObject::DescriptorSetVector descriptors;
+
+    VKW::DescriptorManager* descriptorManager = GetMainDevice()->GetDescriptorManager();
+    std::uint8_t const mainRenderingPassSetCount = m_RenderGraph.GetPassDescriptorSet(PassID::Shadow, GetCurrentFrameID()).IsValid() ? 1 : 0;
+    std::uint8_t const itemDescriptorId = std::uint8_t(descriptorManager->GetGlobalSetLayoutsCount() + mainRenderingPassSetCount); // globals + pass set
+    DRE_ASSERT(layout->GetMemberCount() == itemDescriptorId + 1, "All renderable items should currently contain everything in one set.");
+    for (std::uint8_t i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
+    {
+        descriptors.EmplaceBack(descriptorManager->AllocateStandaloneSet(*layout->GetMember(itemDescriptorId)));
+    }
+    return m_RenderableObjectPool.Alloc(pipeline, geometryGPU->vertexBuffer, geometry->GetVertexCount(), geometryGPU->indexBuffer, geometry->GetIndexCount(), DRE_MOVE(descriptors));
 }
 
 void GraphicsManager::FreeRenderableObject(RenderableObject* obj)

@@ -16,7 +16,7 @@ layout(location = 1) out vec2 out_uv;
 layout(location = 2) out mat3 out_TBN;
 
 
-layout(set = 3, binding = 0, std140) uniform InstanceUniform
+layout(set = 4, binding = 0, std140) uniform InstanceUniform
 {
 	mat4  model_mat;
 	mat4  mvp_mat;

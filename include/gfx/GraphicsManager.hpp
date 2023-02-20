@@ -23,6 +23,9 @@
 #include <engine\data\Geometry.hpp>
 #include <engine\data\Material.hpp>
 
+static constexpr std::uint32_t C_SHADOW_MAP_WIDTH = 1024;
+static constexpr std::uint32_t C_SHADOW_MAP_HEIGHT = 1024;
+static constexpr float C_SHADOW_MAP_WORLD_EXTENT = 50.0f;
 
 namespace VKW
 {
@@ -87,6 +90,7 @@ public:
     inline RenderGraph&                 GetMainRenderGraph() { return m_RenderGraph; }
 
     inline RenderView&                  GetMainRenderView() { return m_MainView; }
+    inline RenderView&                  GetSunShadowRenderView() { return m_SunShadowView; }
     inline auto&                        GetRenderablePool() { return m_RenderableObjectPool; }
 
 
@@ -97,6 +101,7 @@ public:
     void                                WaitIdle();
 
     RenderableObject*                   CreateRenderableObject(VKW::Context& context, Data::Geometry* geometry, Data::Material* material);
+    RenderableObject*                   CreateShadowRenderableObject(VKW::Context& context, Data::Geometry* geometry);
     void                                FreeRenderableObject(RenderableObject* obj);
 
 private:
@@ -141,6 +146,7 @@ private:
 
 
     RenderView                  m_MainView;
+    RenderView                  m_SunShadowView;
 
     using RenderablePool        = DRE::InplaceObjectAllocator<RenderableObject, 2048>;
     RenderablePool              m_RenderableObjectPool;

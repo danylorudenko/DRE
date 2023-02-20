@@ -68,7 +68,7 @@ public:
 
     ~InplaceObjectAllocator()
     {
-        DRE_ASSERT(m_ElementsInUseDebug == 0, "ObjectPool was deleted before all objects returned to pool.");
+        DRE_DEBUG_ONLY(DRE_ASSERT(m_ElementsInUseDebug == 0, "ObjectPool was deleted before all objects returned to pool."));
     }
 
 private:

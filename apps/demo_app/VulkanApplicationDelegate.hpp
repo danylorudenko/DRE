@@ -69,11 +69,4 @@ private:
 
 
     WORLD::Scene                        m_MainScene;
-
-
-    // TESTS SECTION
-    static std::uint8_t constexpr       MAX_TASKS = 4;
-    DRE::InplaceVector<std::future<void>, MAX_TASKS> m_BulletAddTasks;
-
-    bool                                m_BulletsEveryFrame;
 };

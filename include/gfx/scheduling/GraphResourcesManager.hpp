@@ -31,8 +31,8 @@ public:
 
     void PrepareResources();
 
-    StorageBuffer*  GetStorageBuffer    (BufferID id);
-    StorageTexture* GetStorageTexture   (TextureID id);
+    StorageBuffer*  GetBuffer    (BufferID id);
+    StorageTexture* GetTexture   (TextureID id);
 
 
 private:

@@ -11,7 +11,13 @@ layout(location = 2) in mat3 in_TBN;
 
 layout(location = 0) out vec4 finalColor;
 
-layout(set = 3, binding = 0, std140) uniform InstanceUniform
+layout(set = 3, binding = 0) uniform texture2D shadowMap;
+layout(set = 3, binding = 1, std140) uniform PassUniform
+{
+    mat4  shadow_VP;
+} passUniform;
+
+layout(set = 4, binding = 0, std140) uniform InstanceUniform
 {
     mat4  model_mat;
     mat4  mvp_mat;
@@ -55,6 +61,17 @@ vec3 FresnelShlick(float NdotH, vec3 color, float metalness)
     return F0 + (vec3(1.0) - F0) * pow(1.0 - NdotH, 5.0);
 }
 
+float CalculateShadow(vec3 wpos)
+{
+    vec3 lightspaceCoord = (passUniform.shadow_VP * vec4(wpos, 1.0)).xyz;
+    vec2 shadowUV = lightspaceCoord.xy * 0.5 + 0.5;
+    float shadowValue = texture(sampler2D(shadowMap, GetSamplerLinear()), shadowUV).r;
+    
+    float result = shadowValue - 0.02 < lightspaceCoord.z ? 1.0 : 0.0;
+    
+    return result;
+}
+
 
 #define DiffuseTextureID     instanceUniform.textureIDs[0]
 #define NormalTextureID      instanceUniform.textureIDs[1]
@@ -72,7 +89,7 @@ void main()
 
     vec3 n = normalize(in_TBN * (normal * 2.0 - 1.0));
     vec3 v = normalize(GetCameraPos() - in_wpos);
-    vec3 L = normalize(C_LIGHT_DIR);
+    vec3 L = GetMainLightDir();
     vec3 h = normalize(v + L);
     
     float NdotL = max(0.0, dot(n, L));
@@ -93,7 +110,14 @@ void main()
 
     vec3 ambient = vec3(0.15, 0.15, 0.15) * diffuse;
 
-    vec3 res = (kD * diffuse+ specular) * NdotL + ambient;
+    float shadow = CalculateShadow(in_wpos);
 
+    vec3 res = shadow * (kD * diffuse+ specular) * NdotL + ambient;
+    
+    // debug section
+    vec2 screenUV = gl_FragCoord.xy / GetViewportSize();
+    float shadowValue = texture(sampler2D(shadowMap, GetSamplerLinear()), screenUV).r;
+    
+    //finalColor = vec4(shadowValue.rrr, 1.0);
     finalColor = vec4(res, 1.0);
 }

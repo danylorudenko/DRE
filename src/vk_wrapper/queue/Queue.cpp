@@ -109,7 +109,7 @@ void CommandList::Begin()
 
 void CommandList::End()
 {
-    DRE_ASSERT(isOpened_, "Attempt to call End on commandlist that was not opened.");
+    DRE_DEBUG_ONLY(DRE_ASSERT(isOpened_, "Attempt to call End on commandlist that was not opened."));
     VK_ASSERT(table_->vkEndCommandBuffer(commandBuffer_));
 }
 

@@ -28,6 +28,7 @@ namespace GFX
 {
 
 class RenderableObject;
+class RenderView;
 
 struct AtomDraw
 {
@@ -43,6 +44,7 @@ struct AtomDraw
     VKW::DescriptorSet      descriptorSet;
 };
 
+/////////////////////////////
 class DrawBatcher
     : public NonMovable
     , public NonCopyable
@@ -50,10 +52,8 @@ class DrawBatcher
 public:
     DrawBatcher(DRE::AllocatorLinear* allocator, VKW::DescriptorManager* descriptorManager, UniformArena* uniformArena);
 
-    void AddRenderable(RenderableObject* object);
-
-    void Batch(VKW::Context& context, WORLD::Scene const& scene);
-
+    using AtomDataDelegate = void(*)(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view);
+    void Batch(VKW::Context& context, RenderView const& view, AtomDataDelegate atomDelegate);
     inline auto const& GetOpaqueDraws() const { return m_OpaqueDraws; }
 
 private:
@@ -61,7 +61,6 @@ private:
     VKW::DescriptorManager* m_DescriptorManager;
     UniformArena*           m_UniformArena;
 
-    DRE::Vector<RenderableObject*, DRE::AllocatorLinear> m_AllRenderables;
     DRE::Vector<AtomDraw, DRE::AllocatorLinear> m_OpaqueDraws;
 };
 

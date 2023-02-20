@@ -22,9 +22,11 @@ public:
     };
 
 public:
-    Entity(TransformData const& transform, GFX::RenderableObject* renderable = nullptr);
+    Entity(TransformData const& transform, GFX::RenderableObject* renderable = nullptr, GFX::RenderableObject* renderableShadow = nullptr);
 
     inline GFX::RenderableObject*   GetRenderableObject() { return m_RenderableObject; }
+    inline GFX::RenderableObject*   GetRenderableShadowObject() { return m_RenderableShadowObject; }
+
     inline void                     SetMaterial(Data::Material* material) { m_Material = material; }
     inline Data::Material*          GetMaterial() const { return m_Material; }
     inline void                     SetGeometry(Data::Geometry* geometry) { m_Geometry = geometry; }
@@ -33,6 +35,7 @@ public:
 private:
     TransformData           m_Transform;
     GFX::RenderableObject*  m_RenderableObject;
+    GFX::RenderableObject*  m_RenderableShadowObject;
     Data::Geometry*         m_Geometry;
     Data::Material*         m_Material;
 };

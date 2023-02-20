@@ -79,7 +79,8 @@ public:
     IOManager(DRE::DefaultAllocator* allocator, Data::MaterialLibrary* materialLibrary, Data::GeometryLibrary* geometryLibrary);
     ~IOManager();
 
-    void LoadShaderFiles();
+    void LoadShaderBinaries();
+    void CompileGLSLSources();
     ShaderData* GetShaderData(char const* name) { return m_ShaderData.Find(name).value; }
 
     Data::Texture2D ReadTexture2D(char const* path, Data::TextureChannelVariations channels);

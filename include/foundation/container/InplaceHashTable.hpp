@@ -36,16 +36,16 @@ public:
     template<typename... TArgs>
     TValue& Emplace(TKey const& key, TArgs&&... args)
     {
-        Bucket* bucket = FindBaseBucketInternal(key);
-        if (bucket->m_Key.isEmpty)
+        Bucket* baseBucket = FindBaseBucketInternal(key);
+        if (baseBucket->m_Key.isEmpty)
         {
-            bucket->m_Key.key = key;
-            bucket->m_Key.isEmpty = false;
+            baseBucket->m_Key.key = key;
+            baseBucket->m_Key.isEmpty = false;
 
-            new (bucket->m_Value.m_Storage) TValue{ std::forward<TArgs>(args)... };
+            new (baseBucket->m_Value.m_Storage) TValue{ std::forward<TArgs>(args)... };
 
             ++m_Size;
-            return bucket->m_Value;
+            return baseBucket->m_Value;
         }
         else
         {
@@ -55,7 +55,9 @@ public:
             new (nextBucket->m_Value.m_Storage) TValue{ std::forward<TArgs>(args)... };
             nextBucket->m_Next   = nullptr;
 
-            bucket->m_Next = nextBucket;
+            while (baseBucket->m_Next != nullptr)
+                baseBucket = baseBucket->m_Next;
+            baseBucket->m_Next = nextBucket;
 
             ++m_Size;
             return nextBucket->m_Value;

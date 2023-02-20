@@ -17,6 +17,30 @@ RenderableObject::RenderableObject(VKW::Pipeline* pipeline, VKW::BufferResource*
 {
 }
 
+RenderableObject::RenderableObject(VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount, DescriptorSetVector&& sets)
+    : m_ModelM{ glm::identity<glm::mat4>() }
+    , m_Pipeline{ pipeline }
+    , m_VertexBuffer{ vertexBuffer }
+    , m_IndexBuffer{ indexBuffer }
+    , m_VertexCount{ vertexCount }
+    , m_IndexCount{ indexCount }
+    , m_DescriptorSets{ DRE_MOVE(sets) }
+    , m_Textures{}
+{
+}
+
+RenderableObject::RenderableObject(VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount)
+    : m_ModelM{ glm::identity<glm::mat4>() }
+    , m_Pipeline{ pipeline }
+    , m_VertexBuffer{ vertexBuffer }
+    , m_IndexBuffer{ indexBuffer }
+    , m_VertexCount{ vertexCount }
+    , m_IndexCount{ indexCount }
+    , m_DescriptorSets{}
+    , m_Textures{}
+{
+}
+
 void RenderableObject::Transform(glm::mat4 model)
 {
     m_ModelM = model;

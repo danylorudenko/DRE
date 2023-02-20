@@ -62,19 +62,30 @@ void GraphResourcesManager::PrepareResources()
 
 
         VKW::ImageUsage usage = VKW::ImageUsage::STORAGE_IMAGE;
+        VkImageAspectFlags imageAspect = VK_IMAGE_ASPECT_NONE;
         if (info.access & VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT)
         {
             usage = VKW::ImageUsage::RENDER_TARGET;
+            imageAspect = VK_IMAGE_ASPECT_COLOR_BIT;
         }
         else if (info.access & VKW::RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT)
         {
             usage = VKW::ImageUsage::DEPTH_STENCIL;
+            imageAspect = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+        }
+        else if (info.access & VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT)
+        {
+            usage = VKW::ImageUsage::DEPTH;
+            if ((info.access & (VKW::RESOURCE_ACCESS_SHADER_READ | VKW::RESOURCE_ACCESS_SHADER_WRITE | VKW::RESOURCE_ACCESS_SHADER_RW | VKW::RESOURCE_ACCESS_SHADER_SAMPLE)) != 0)
+                usage = VKW::ImageUsage::DEPTH_TEXTURE;
+            imageAspect = VK_IMAGE_ASPECT_DEPTH_BIT;
         }
  
 
         VKW::ImageResource* image    = m_Device->GetResourcesController()->CreateImage(info.size0, info.size1, info.format, usage);
 
-        VkImageSubresourceRange range = VKW::HELPER::DefaultImageSubresourceRange(usage == VKW::ImageUsage::DEPTH_STENCIL ? VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT : VK_IMAGE_ASPECT_COLOR_BIT);
+
+        VkImageSubresourceRange range = VKW::HELPER::DefaultImageSubresourceRange(imageAspect);
         VKW::ImageResourceView* view = m_Device->GetResourcesController()->ViewImageAs(image, &range);
 
         m_StorageTextures[*pair.key] = GraphTexture{ StorageTexture{ m_Device, image, view }, info };
@@ -101,12 +112,12 @@ void GraphResourcesManager::PrepareResources()
 
 }
 
-StorageBuffer* GraphResourcesManager::GetStorageBuffer(BufferID id)
+StorageBuffer* GraphResourcesManager::GetBuffer(BufferID id)
 {
     return &m_StorageBuffers.Find(id).value->buffer;
 }
 
-StorageTexture* GraphResourcesManager::GetStorageTexture(TextureID id)
+StorageTexture* GraphResourcesManager::GetTexture(TextureID id)
 {
     return &m_StorageTextures.Find(id).value->texture;
 }

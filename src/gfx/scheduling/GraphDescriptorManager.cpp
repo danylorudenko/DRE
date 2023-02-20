@@ -35,6 +35,7 @@ void GraphDescriptorManager::RegisterUniformBuffer(PassID pass, VKW::DescriptorS
     // onlny one uniform buffer is allowed per pass
     SetInfo& setInfo = m_DescriptorsInfo[pass];
     setInfo.uniformBinding = binding;
+    setInfo.uniformStage = stages;
 }
 
 void GraphDescriptorManager::InitDescriptors()
@@ -65,24 +66,24 @@ void GraphDescriptorManager::InitDescriptors()
                 case VKW::RESOURCE_ACCESS_SHADER_RW:
                 case VKW::RESOURCE_ACCESS_SHADER_READ:
                     layoutDesc.Add(VKW::DESCRIPTOR_TYPE_STORAGE_IMAGE, info.m_Binding, info.m_Stages);
-                    writeDesc.AddStorageImage(m_ResourcesManager->GetStorageTexture(info.mu_TextureID)->GetShaderView(), info.m_Binding);
+                    writeDesc.AddStorageImage(m_ResourcesManager->GetTexture(info.mu_TextureID)->GetShaderView(), info.m_Binding);
                     break;
                 case VKW::RESOURCE_ACCESS_SHADER_SAMPLE:
                     layoutDesc.Add(VKW::DESCRIPTOR_TYPE_TEXTURE, info.m_Binding, info.m_Stages);
-                    writeDesc.AddSampledImage(m_ResourcesManager->GetStorageTexture(info.mu_TextureID)->GetShaderView(), info.m_Binding);
+                    writeDesc.AddSampledImage(m_ResourcesManager->GetTexture(info.mu_TextureID)->GetShaderView(), info.m_Binding);
                     break;
                 }
             }
             else
             {
                 layoutDesc.Add(VKW::DESCRIPTOR_TYPE_STORAGE_BUFFER, info.m_Binding, info.m_Stages);
-                writeDesc.AddStorageBuffer(m_ResourcesManager->GetStorageBuffer(info.mu_BufferID)->GetResource(), info.m_Binding);
+                writeDesc.AddStorageBuffer(m_ResourcesManager->GetBuffer(info.mu_BufferID)->GetResource(), info.m_Binding);
             }
         }
 
         if (setInfo.uniformBinding != DRE_U32_MAX)
         {
-            layoutDesc.Add(VKW::DESCRIPTOR_TYPE_UNIFORM_BUFFER, setInfo.uniformBinding, VKW::DESCRIPTOR_STAGE_ALL);
+            layoutDesc.Add(VKW::DESCRIPTOR_TYPE_UNIFORM_BUFFER, setInfo.uniformBinding, setInfo.uniformStage);
             perPassDescriptors.m_UniformBinding = setInfo.uniformBinding;
         }
 
@@ -94,9 +95,11 @@ void GraphDescriptorManager::InitDescriptors()
 
         perPassDescriptors.m_DescriptorLayout = m_PipelineDB->CreateDescriptorSetLayout(name, layoutDesc);
 
+
         for (std::uint8_t i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
         {
             perPassDescriptors.m_DescriptorSet[i] = m_ParentDevice->GetDescriptorManager()->AllocateStandaloneSet(*perPassDescriptors.m_DescriptorLayout);
+            m_ParentDevice->GetDescriptorManager()->WriteDescriptorSet(perPassDescriptors.m_DescriptorSet[i], writeDesc);
         }
 
         VKW::PipelineLayout::Descriptor pipelinelayoutDesc;

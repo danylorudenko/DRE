@@ -114,7 +114,7 @@ MemoryRegion MemoryController::AllocateMemoryRegion(MemoryPageRegionDesc const& 
     for (std::uint32_t i = 0, allocationsCount = allocations_.Size(); i < allocationsCount; ++i) {
         MemoryPage const* page = allocations_[i];
         bool const classValid  = page->memoryClass_ == desc.memoryClass_;
-        bool const sizeValid   = desc.size_ <= page->GetFreeMemorySize();
+        bool const sizeValid   = desc.size_ + desc.alignment_ <= page->GetFreeMemorySize();
 
         if (classValid && sizeValid ) {
             validAllocation = i;
@@ -140,10 +140,11 @@ MemoryRegion MemoryController::GetNextFreePageRegion(MemoryPage* page, MemoryPag
     std::uint64_t const size = desc.size_ + desc.alignment_;
 
     std::uint32_t const memoryTypeId = memoryClassTypes_[(int)page->memoryClass_];
-    assert((desc.memoryTypeBits_ & (1 << memoryTypeId)) && "Memory class of this MemoryPage has not fulfilled the allocation requirements."); 
+    DRE_ASSERT((desc.memoryTypeBits_ & (1 << memoryTypeId)), "Memory class of this MemoryPage has not fulfilled the allocation requirements."); 
 
     MemoryRegion result{ page, RoundToMultipleOfPOT(page->nextFreeOffset_, desc.alignment_), size };
 
+    DRE_ASSERT(page->nextFreeOffset_ + size <= page->size_, "MemroyPage: nextFreeOffset_ must never be mote than size");
     page->nextFreeOffset_ += size;
     ++page->bindCount_;
     

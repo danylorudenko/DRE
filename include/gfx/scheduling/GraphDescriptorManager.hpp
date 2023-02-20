@@ -66,6 +66,7 @@ private:
     {
         DRE::InplaceVector<DescriptorInfo, VKW::CONSTANTS::MAX_SET_LAYOUT_MEMBERS> descriptorInfos;
         std::uint32_t           uniformBinding      = DRE_U32_MAX;
+        VKW::DescriptorStage    uniformStage        = VKW::DESCRIPTOR_STAGE_NONE;
     };
 
     DRE::InplaceHashTable<PassID, SetInfo> m_DescriptorsInfo;

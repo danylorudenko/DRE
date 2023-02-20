@@ -24,6 +24,7 @@ VkAccessFlags2KHR AccessToFlags(ResourceAccess access)
         return VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT;
 
     case RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT:
+    case RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT:
         return VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
 
     case RESOURCE_ACCESS_SHADER_READ:
@@ -92,6 +93,7 @@ VkImageLayout AccessToLayout(ResourceAccess access)
 
     case RESOURCE_ACCESS_COLOR_ATTACHMENT:
     case RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT:
+    case RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT:
         return VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
 
     case RESOURCE_ACCESS_PRESENT:
@@ -234,9 +236,20 @@ void Dependency::Add(
     barrier.newLayout       = AccessToLayout(dstAccess);
     barrier.image           = resource->handle_;
 
-    VkImageAspectFlags const aspectFlags = resource->createInfo_.usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT 
-        ? VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT
-        : VK_IMAGE_ASPECT_COLOR_BIT;
+    ResourceAccess combinedAccess = ResourceAccess(srcAccess | dstAccess);
+    VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_NONE;
+    if (combinedAccess & RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT)
+    {
+        aspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
+    }
+    else if (combinedAccess & RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT)
+    {
+        aspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+    }
+    else
+    {
+        aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+    }
 
     barrier.subresourceRange = HELPER::DefaultImageSubresourceRange(aspectFlags);
 }

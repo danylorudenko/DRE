@@ -74,6 +74,8 @@ public:
 
     private:
         PipelineType                                type_;
+        bool                                        depthTestEnabled_ : 1;
+        bool                                        stencilTestEnabled_ : 1;
 
         VkPipelineRenderingCreateInfo               renderingCreateInfo_;
 

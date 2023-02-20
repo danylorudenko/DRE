@@ -86,7 +86,7 @@ ImGuiRenderPass::~ImGuiRenderPass()
 /////////////////////////
 void ImGuiRenderPass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    StorageTexture* imGuiRT = graph.GetStorageTexture(TextureID::FinalRT);
+    StorageTexture* imGuiRT = graph.GetTexture(TextureID::FinalRT);
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, imGuiRT->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
 

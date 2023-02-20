@@ -97,7 +97,7 @@ public:
 
     ~ObjectPool()
     {
-        DRE_ASSERT(m_ElementsInUseDebug == 0, "ObjectPool was deleted before all objects returned to pool.");
+        DRE_DEBUG_ONLY(DRE_ASSERT(m_ElementsInUseDebug == 0, "ObjectPool was deleted before all objects returned to pool."));
         if (m_Storage)
         {
             for (U32 i = 0; i < m_Count; i++)

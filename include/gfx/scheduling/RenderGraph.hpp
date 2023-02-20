@@ -37,6 +37,7 @@ public:
 
     void RegisterRenderTarget       (BasePass* pass, TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, std::uint32_t binding);
     void RegisterDepthStencilTarget (BasePass* pass, TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height);
+    void RegisterDepthOnlyTarget (BasePass* pass, TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height);
 
     void RegisterStorageTexture     (BasePass* pass, TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding);
     void RegisterStorageBuffer      (BasePass* pass, BufferID id, std::uint32_t size, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding);
@@ -45,8 +46,8 @@ public:
     VKW::DescriptorSet              GetPassDescriptorSet(PassID pass, FrameID frameID);
     VKW::PipelineLayout*            GetPassPipelineLayout(PassID pass);
 
-    StorageTexture*                 GetStorageTexture(TextureID id);
-    StorageBuffer*                  GetStorageBuffer(BufferID id);
+    StorageTexture*                 GetTexture(TextureID id);
+    StorageBuffer*                  GetBuffer(BufferID id);
     UniformProxy                    GetPassUniform(PassID pass, VKW::Context& context, std::uint32_t size);
 
 public:

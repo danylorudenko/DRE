@@ -87,16 +87,16 @@ public:
     TValue& Emplace(TKey const& key, TArgs&&... args)
     {
         TKey defaultKey{};
-        Bucket* bucket = FindBaseBucketInternal(key);
-        if (bucket->m_Key.isEmpty)
+        Bucket* baseBucket = FindBaseBucketInternal(key);
+        if (baseBucket->m_Key.isEmpty)
         {
-            bucket->m_Key.key = key;
-            bucket->m_Key.isEmpty = false;
+            baseBucket->m_Key.key = key;
+            baseBucket->m_Key.isEmpty = false;
 
-            new (bucket->m_Value.m_Storage) TValue{ std::forward<TArgs>(args)... };
+            new (baseBucket->m_Value.m_Storage) TValue{ std::forward<TArgs>(args)... };
 
             ++m_Size;
-            return bucket->m_Value;
+            return baseBucket->m_Value;
         }
         else
         {
@@ -121,7 +121,11 @@ public:
             new (nextBucket->m_Value.m_Storage) TValue{ std::forward<TArgs>(args)... };
             nextBucket->m_NextID = DRE_U32_MAX;
 
-            bucket->m_NextID = nextBucketID;
+            while (baseBucket->m_NextID != DRE_U32_MAX)
+            {
+                baseBucket = &m_CollisionPool[baseBucket->m_NextID];
+            }
+            baseBucket->m_NextID = nextBucketID;
 
             ++m_Size;
             return nextBucket->m_Value;
@@ -283,7 +287,7 @@ private:
             nextBucketID = targetBucket->m_NextID;
         }
 
-        return targetBucket->m_Key.isEmpty ? nullptr : targetBucket;
+        return (targetBucket->m_Key.isEmpty || targetBucket->m_Key.key != key) ? nullptr : targetBucket;
     }
 
     DRE::Vector<Bucket, TAllocator> m_Buckets;

@@ -15,6 +15,8 @@ namespace VKW
 
 Pipeline::Descriptor::Descriptor()
     : type_{ PIEPLINE_TYPE_INVALID }
+    , depthTestEnabled_{ false }
+    , stencilTestEnabled_{ false }
     , shaderStagesCount_{ 0 }
     , vertexAttributeCount_{ 0 }
     , colorOutputCount_{ 0 }
@@ -197,6 +199,8 @@ void Pipeline::Descriptor::SetLayout(PipelineLayout const* layout)
 
 void Pipeline::Descriptor::EnableDepthTest(Format depthFormat)
 {
+    depthTestEnabled_ = true;
+
     depthStencilState_.depthTestEnable = VK_TRUE;
     depthStencilState_.depthWriteEnable = VK_TRUE;
     depthStencilState_.depthCompareOp = VK_COMPARE_OP_LESS;
@@ -297,8 +301,8 @@ VkGraphicsPipelineCreateInfo const& Pipeline::Descriptor::CompileGraphicPipeline
     graphicsCreateInfo_.pInputAssemblyState = &inputAssemblyState_;
     graphicsCreateInfo_.pTessellationState = nullptr;
 
-    viewportState_.viewportCount = colorOutputCount_;
-    viewportState_.scissorCount = colorOutputCount_;
+    viewportState_.viewportCount = colorOutputCount_ != 0 ? colorOutputCount_ : ((depthTestEnabled_ || stencilTestEnabled_) ? 1 : 0);
+    viewportState_.scissorCount = colorOutputCount_ != 0 ? colorOutputCount_ : ((depthTestEnabled_ || stencilTestEnabled_) ? 1 : 0);
     graphicsCreateInfo_.pViewportState = &viewportState_;
 
     graphicsCreateInfo_.pRasterizationState = &rasterizationState_;

@@ -26,7 +26,7 @@
 #include <engine\scene\Scene.hpp>
 
 #include <spirv_cross.hpp>
-#include <shaderc/shaderc.hpp>
+#include <shaderc\shaderc.hpp>
 
 namespace IO
 {
@@ -139,7 +139,8 @@ public:
 
         data->targetName = requesting_source;
         
-        DRE_ASSERT(IOManager::ReadFileToBuffer(data->contentName.GetData(), &data->content) != 0, "Failed to read requested include for GLSL.");
+        std::uint64_t const bytesRead = IOManager::ReadFileToBuffer(data->contentName.GetData(), &data->content);
+        DRE_ASSERT(bytesRead != 0, "Failed to read requested include for GLSL.");
 
         result->source_name = data->contentName.GetData();
         result->content_length = data->content.Size();
@@ -165,6 +166,8 @@ DRE::ByteBuffer IOManager::CompileGLSL(char const* path)
 {
     std::filesystem::path filePath{ path };
 
+    std::cout << "Compiling shader " << path << std::endl;
+
     shaderc_shader_kind kind = (shaderc_shader_kind)0;
 
     auto extension = filePath.extension();
@@ -178,7 +181,8 @@ DRE::ByteBuffer IOManager::CompileGLSL(char const* path)
         DRE_ASSERT(false, "Attempt to compile unsupported shader type. See file extension.");
 
     DRE::ByteBuffer sourceBlob{};
-    DRE_ASSERT(ReadFileToBuffer(path, &sourceBlob) != 0, "Failed to read GLSL source.");
+    std::uint64_t const bytesRead = ReadFileToBuffer(path, &sourceBlob);
+    DRE_ASSERT(bytesRead != 0, "Failed to read GLSL source.");
 
     shaderc::Compiler compiler;
     shaderc::CompileOptions options;
@@ -195,7 +199,8 @@ DRE::ByteBuffer IOManager::CompileGLSL(char const* path)
     DRE::U64 const preprocessedSize = DRE::PtrDifference(preprocess.end(), preprocess.begin());
     shaderc::SpvCompilationResult compile = compiler.CompileGlslToSpv(preprocess.begin(), preprocessedSize, kind, path, "main", options);
 
-    if (compile.GetCompilationStatus() != shaderc_compilation_status_success) {
+    if (compile.GetCompilationStatus() != shaderc_compilation_status_success) 
+    {
         std::cout << compile.GetErrorMessage();
         return DRE::ByteBuffer{};
     }
@@ -291,6 +296,7 @@ void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* a
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 
         Data::Material* material = m_MaterialLibrary->GetMaterial(mesh->mMaterialIndex);
+
         Data::Geometry* geometry = m_GeometryLibrary->GetGeometry(node->mMeshes[i]);
         WORLD::Entity& nodeEntity = targetScene.CreateRenderableEntity(gfxContext, transform, geometry, material);
     }
@@ -303,10 +309,6 @@ void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* a
 
 void IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene)
 {
-    DRE::ByteBuffer binaryspirv = CompileGLSL("shaders\\cook_torrance.frag");
-
-
-
     Assimp::Importer importer = Assimp::Importer();
 
     aiScene const* scene = importer.ReadFile(path, aiProcessPreset_TargetRealtime_Fast | aiProcess_FlipUVs);
@@ -505,9 +507,31 @@ void ParseShaderInterface(spirv_cross::Compiler& compiler, IOManager::ShaderInte
     }
 }
 
-void IOManager::LoadShaderFiles()
+void IOManager::CompileGLSLSources()
 {
-    std::filesystem::recursive_directory_iterator dir_iterator("shaders", std::filesystem::directory_options::follow_directory_symlink);
+    std::filesystem::recursive_directory_iterator dir_iterator{ "shaders", std::filesystem::directory_options::follow_directory_symlink };
+    
+    for (auto const& entry : dir_iterator)
+    {
+        if (entry.path().has_extension() &&
+            (entry.path().extension() == ".vert" || entry.path().extension() == ".frag" || entry.path().extension() == ".comp"))
+        {
+            // .stem() is a filename without extension
+            DRE::String64 path{ entry.path().generic_string().c_str() };
+            DRE::ByteBuffer spirv = CompileGLSL(path.GetData());
+
+            DRE_ASSERT(spirv.Size() > 0, "Can't run with invalid shader.");
+
+            path.Append(".spv");
+            WriteNewFile(path.GetData(), spirv);
+        }
+    }
+}
+
+void IOManager::LoadShaderBinaries()
+{
+    std::filesystem::recursive_directory_iterator dir_iterator{ "shaders", std::filesystem::directory_options::follow_directory_symlink };
+
     for (auto const& entry : dir_iterator)
     {
         if (entry.path().has_extension() && entry.path().extension() == ".spv")
