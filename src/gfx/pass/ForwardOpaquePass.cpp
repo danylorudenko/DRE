@@ -32,7 +32,7 @@ void ForwardOpaquePass::RegisterResources(RenderGraph& graph)
 
     graph.RegisterDepthOnlyTarget(this,
         TextureID::MainDepth,
-        VKW::FORMAT_D16_UNORM, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
+        VKW::FORMAT_D32_FLOAT, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
 }
 
 void ForwardOpaquePass::Initialize(RenderGraph& graph)
@@ -81,7 +81,7 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
     context.CmdBeginRendering(1, colorAttachment, depthAttachment, nullptr);
     float clearColors[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_0, clearColors);
-    context.CmdClearAttachments(VKW::ATTACHMENT_MASK_DEPTH, 1.0f, 0);
+    context.CmdClearAttachments(VKW::ATTACHMENT_MASK_DEPTH, 0.0f, 0);
 
     context.CmdSetViewport(1, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
     context.CmdSetScissor(1, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());

@@ -53,7 +53,7 @@ void RenderView::UpdatePlacement(glm::vec3 viewerPos, glm::vec3 viewDirection, g
 void RenderView::UpdateProjection(float fov, float zNear, float zFar)
 {
     float const aspect = static_cast<float>(m_Size[0]) / static_cast<float>(m_Size[1]);
-    m_P = glm::perspectiveRH_ZO(glm::radians(fov), aspect, zNear, zFar);
+    m_P = glm::perspectiveRH_ZO(glm::radians(fov), aspect, zFar, zNear); // depth is reversed
     m_P[1][1] *= -1.0f;
 
     m_iP = glm::inverse(m_P);
@@ -64,7 +64,7 @@ void RenderView::UpdateProjection(float fov, float zNear, float zFar)
 
 void RenderView::UpdateProjection(float left, float right, float bottom, float top, float zNear, float zFar)
 {
-    m_P = glm::orthoRH_ZO(left, right, bottom, top, zNear, zFar);
+    m_P = glm::orthoRH_ZO(left, right, bottom, top, zFar, zNear); // depth is reversed
     m_P[1][1] *= -1.0f;
 
     m_iP = glm::inverse(m_P);

@@ -14,7 +14,7 @@
 
 
 ////////////////
-constexpr bool C_COMPILE_GLSL_SOURCES_ON_START = true;
+constexpr bool C_COMPILE_GLSL_SOURCES_ON_START = false;
 ////////////////
 
 //////////////////////////////////////////
@@ -36,6 +36,7 @@ VulkanApplicationDelegate::VulkanApplicationDelegate(HINSTANCE instance, char co
     , m_DeltaMicroseconds{ 0 }
     , m_EngineFrame{ 0 }
     , m_MainScene{ &DRE::g_MainAllocator }
+    , m_RotateSun{ false }
 {
     WORLD::g_MainScene = &m_MainScene;
 }
@@ -101,10 +102,14 @@ void VulkanApplicationDelegate::start()
     m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 7.28f, 5.57f, -1.07f });
     m_MainScene.GetMainCamera().SetEulerOrientation(glm::vec3{ -17.26f, 107.37f, 0.0f });
 
+    m_MainScene.GetMainSunLight().SetEulerOrientation(glm::vec3{ -70.0f, 45.0f, 0.0f });
+
     m_GraphicsManager.Initialize();
 
     m_IOManager.ParseModelFile("data\\Sponza\\glTF\\Sponza.gltf", m_MainScene);
 }
+
+constexpr float C_SUN_ROTATOR_MUL = 1.0f / 100000.0f;
 
 //////////////////////////////////////////
 void VulkanApplicationDelegate::update()
@@ -134,6 +139,10 @@ void VulkanApplicationDelegate::update()
             m_GraphicsManager.ReloadShaders();
         }
     }
+
+    if (m_RotateSun)
+        m_MainScene.GetMainSunLight().Rotate(glm::vec3{ 0.0f, C_SUN_ROTATOR_MUL * m_DeltaMicroseconds, 0.0f });
+
     m_GraphicsManager.RenderFrame(m_EngineFrame, m_DeltaMicroseconds);
 
     m_EngineFrame++;
@@ -229,6 +238,9 @@ void VulkanApplicationDelegate::ImGuiUser()
 
             ImGui::Text("Camera pos: %.2f, %.2f, %.2f", camera.GetPosition()[0], camera.GetPosition()[1], camera.GetPosition()[2]);
             ImGui::Text("Camera rot: %.2f, %.2f, %.2f", camera.GetEulerOrientation()[0], camera.GetEulerOrientation()[1], camera.GetEulerOrientation()[2]);
+
+            ImGui::Checkbox("Rotate sun", &m_RotateSun);
+
             ImGui::End();
         }
     }

@@ -54,7 +54,7 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardPipeline(char const* name)
     desc.SetFragmentShader(fragModule);
     desc.SetLayout(GetLayout(layoutName->GetData()));
     desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
-    desc.EnableDepthTest(VKW::FORMAT_D16_UNORM);
+    desc.EnableDepthTest(VKW::FORMAT_D32_FLOAT);
     desc.AddColorOutput(g_GraphicsManager->GetMainDevice()->GetSwapchain()->GetFormat(), VKW::BLEND_TYPE_NONE);
 
     desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // pos

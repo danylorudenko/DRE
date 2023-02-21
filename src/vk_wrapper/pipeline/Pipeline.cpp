@@ -203,7 +203,7 @@ void Pipeline::Descriptor::EnableDepthTest(Format depthFormat)
 
     depthStencilState_.depthTestEnable = VK_TRUE;
     depthStencilState_.depthWriteEnable = VK_TRUE;
-    depthStencilState_.depthCompareOp = VK_COMPARE_OP_LESS;
+    depthStencilState_.depthCompareOp = VK_COMPARE_OP_GREATER;
     depthStencilState_.depthBoundsTestEnable = VK_FALSE;
 
     depthAttachmentFormat_ = VKW::Format2VK(depthFormat);

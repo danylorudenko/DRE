@@ -19,8 +19,7 @@ namespace GFX
 
 static constexpr std::uint32_t C_DEFAULT_STAGING_ARENA_SIZE     = 1024 * 1024 * 128;
 static constexpr std::uint32_t C_DEFAULT_UNIFORM_ARENA_SIZE     = DRE_U16_MAX - 1;
-static constexpr std::uint32_t C_DEFAULT_READBACK_ARENA_SIZE    = 1024 * 1024 * 64;
-static constexpr std::uint32_t C_GLOBAL_UNIFORM_SIZE            = 256;
+static constexpr std::uint32_t C_DEFAULT_READBACK_ARENA_SIZE    = DRE_U16_MAX - 1;
 
 GraphicsManager* g_GraphicsManager = nullptr;
 
@@ -32,7 +31,7 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOMana
     , m_GraphicsFrame{ 0 }
     , m_UploadArena{ &m_Device, C_DEFAULT_STAGING_ARENA_SIZE }
     , m_UniformArena{ &m_Device, C_DEFAULT_UNIFORM_ARENA_SIZE }
-    , m_ReadbackArena{ &m_Device, C_DEFAULT_UNIFORM_ARENA_SIZE }
+    , m_ReadbackArena{ &m_Device, C_DEFAULT_READBACK_ARENA_SIZE }
     , m_TextureBank{ &m_MainContext, m_Device.GetResourcesController(), m_Device.GetDescriptorManager() }
     , m_PipelineDB{ &m_Device, ioManager }
     , m_PersistentStorage{ &m_Device }
@@ -45,7 +44,7 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOMana
 
     for (std::uint32_t i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
     {
-        m_GlobalUniforms[i] = m_Device.GetResourcesController()->CreateBuffer(C_GLOBAL_UNIFORM_SIZE, VKW::BufferUsage::UNIFORM);
+        m_GlobalUniforms[i] = m_Device.GetResourcesController()->CreateBuffer(sizeof(GlobalUniforms), VKW::BufferUsage::UNIFORM);
     }
     m_Device.GetDescriptorManager()->AllocateDefaultDescriptors(VKW::CONSTANTS::FRAMES_BUFFERING, m_GlobalUniforms, m_PersistentStorage.GetStorage().GetResource());
 }
@@ -68,8 +67,6 @@ void GraphicsManager::CreateAllPasses()
 
 void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, std::uint64_t deltaTimeUS)
 {
-    std::uint8_t C_STD140_DATA_STRIDE = 16;
-    
     VKW::BufferResource* buffer = m_GlobalUniforms[GetCurrentFrameID()];
     void* dst = buffer->memory_.GetRegionMappedPtr();
     
@@ -78,19 +75,28 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     m_MainView.UpdateViewport(glm::uvec2{ 0, 0 }, glm::uvec2{ GetRenderingWidth(), GetRenderingHeight() });
     m_MainView.UpdateProjection(camera.GetFOV(), camera.GetRange()[0], camera.GetRange()[1]);
 
+    WORLD::DirectionalLight const& sunLight = scene.GetMainSunLight();
+    m_SunShadowView.UpdatePlacement(sunLight.GetPosition(), sunLight.GetForward(), sunLight.GetUp());
+    m_SunShadowView.UpdateViewport(glm::uvec2{ 0, 0 }, glm::uvec2{ C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT });
+    m_SunShadowView.UpdateProjection(
+        -C_SHADOW_MAP_WORLD_EXTENT, C_SHADOW_MAP_WORLD_EXTENT,
+        -C_SHADOW_MAP_WORLD_EXTENT, C_SHADOW_MAP_WORLD_EXTENT,
+        -C_SHADOW_MAP_WORLD_EXTENT, C_SHADOW_MAP_WORLD_EXTENT);
+
     GlobalUniforms globalUniform{};
     globalUniform.viewportSize_deltaMS_0[0] = static_cast<float>(GetRenderingWidth());
     globalUniform.viewportSize_deltaMS_0[1] = static_cast<float>(GetRenderingHeight());
     globalUniform.viewportSize_deltaMS_0[2] = static_cast<float>(static_cast<double>(deltaTimeUS) / 1000.0);
     globalUniform.viewportSize_deltaMS_0[3] = 0.0f;
 
-    globalUniform.main_CameraPos     = vec4{ scene.GetMainCamera().GetPosition(), 1.0f };
-    globalUniform.main_CameraDir     = vec4{ scene.GetMainCamera().GetForward(), 0.0f };
+    globalUniform.main_CameraPos     = glm::vec4{ scene.GetMainCamera().GetPosition(), 1.0f };
+    globalUniform.main_CameraDir     = glm::vec4{ scene.GetMainCamera().GetForward(), 0.0f };
     globalUniform.main_ViewM         = m_MainView.GetViewM();
     globalUniform.main_iViewM        = m_MainView.GetInvViewM();
     globalUniform.main_ProjM         = m_MainView.GetProjectionM();
     globalUniform.main_iProjM        = m_MainView.GetInvProjectionM();
-    globalUniform.main_LightDir      = glm::normalize(vec4{ 1.0f, 1.0f, 1.0f, 0.0f });
+    globalUniform.main_LightDir      = glm::vec4{ scene.GetMainSunLight().GetForward(), 0.0f };
+    globalUniform.main_LightRadiance = glm::vec4{ scene.GetMainSunLight().GetRadiance(), 1.0f };
 
     std::memcpy(dst, &globalUniform, sizeof(globalUniform));
 
@@ -99,18 +105,6 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     context.CmdResourceDependency(buffer,
         VKW::RESOURCE_ACCESS_HOST_WRITE, VKW::STAGE_HOST,
         VKW::RESOURCE_ACCESS_SHADER_UNIFORM, VKW::STAGE_VERTEX);
-
-    // main sun view
-    m_SunShadowView.UpdatePlacement(
-        glm::vec3{ 0.0f, 0.0f, 0.0f },
-        glm::normalize(glm::vec3{ 1.0f, 1.0f, 1.0f }), 
-        glm::vec3{ 0.0f, 1.0f, 0.0f });
-
-    m_SunShadowView.UpdateViewport(glm::uvec2{ 0, 0 }, glm::uvec2{ C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT });
-    m_SunShadowView.UpdateProjection(
-        -C_SHADOW_MAP_WORLD_EXTENT, C_SHADOW_MAP_WORLD_EXTENT,
-        -C_SHADOW_MAP_WORLD_EXTENT, C_SHADOW_MAP_WORLD_EXTENT,
-        -C_SHADOW_MAP_WORLD_EXTENT, C_SHADOW_MAP_WORLD_EXTENT);
 }
 
 void GraphicsManager::ReloadShaders()

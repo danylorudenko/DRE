@@ -37,8 +37,6 @@ void ShadowObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::Des
 
     UniformProxy uniformProxy{ &context, uniformAllocation };
 
-    //how to fucking write shadow uniform
-
     glm::mat4 const mvp = view.GetViewProjectionM() * obj.GetModelM();
     uniformProxy.WriteMember140(mvp);
 }
@@ -50,7 +48,7 @@ void ShadowPass::Render(RenderGraph& graph, VKW::Context& context)
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->parentResource_, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
     context.CmdBeginRendering(0, nullptr, depthAttachment, nullptr);
-    context.CmdClearAttachments(VKW::ATTACHMENT_MASK_DEPTH, 1.0f, 0);
+    context.CmdClearAttachments(VKW::ATTACHMENT_MASK_DEPTH, 0.0f, 0);
 
     context.CmdSetViewport(1, 0, 0, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT);
     context.CmdSetScissor(1, 0, 0, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT);

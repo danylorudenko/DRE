@@ -19,8 +19,6 @@
 #include <foundation\system\DynamicLibrary.hpp>
 #include <foundation\input\InputSystem.hpp>
 
-#include <engine\transform\TransformationSystem.hpp>
-
 #include <engine\scene\Scene.hpp>
 #include <engine\data\MaterialLibrary.hpp>
 #include <engine\data\GeometryLibrary.hpp>
@@ -69,4 +67,5 @@ private:
 
 
     WORLD::Scene                        m_MainScene;
+    bool                                m_RotateSun;
 };

@@ -67,7 +67,7 @@ float CalculateShadow(vec3 wpos)
     vec2 shadowUV = lightspaceCoord.xy * 0.5 + 0.5;
     float shadowValue = texture(sampler2D(shadowMap, GetSamplerLinear()), shadowUV).r;
     
-    float result = shadowValue - 0.02 < lightspaceCoord.z ? 1.0 : 0.0;
+    float result = shadowValue - 0.01 > lightspaceCoord.z ? 0.0 : 1.0;
     
     return result;
 }
@@ -78,8 +78,6 @@ float CalculateShadow(vec3 wpos)
 #define MetalnessTextureID   instanceUniform.textureIDs[2]
 #define RoughnessTextureID   instanceUniform.textureIDs[3]
 
-const vec3 C_LIGHT_DIR = vec3(1.0, 1.0, 1.0);
-
 void main()
 {
     vec3 diffuse    = SampleGlobalTextureAnisotropic(DiffuseTextureID, in_uv).rgb;
@@ -89,7 +87,7 @@ void main()
 
     vec3 n = normalize(in_TBN * (normal * 2.0 - 1.0));
     vec3 v = normalize(GetCameraPos() - in_wpos);
-    vec3 L = GetMainLightDir();
+    vec3 L = -GetMainLightDir();
     vec3 h = normalize(v + L);
     
     float NdotL = max(0.0, dot(n, L));
@@ -119,5 +117,6 @@ void main()
     float shadowValue = texture(sampler2D(shadowMap, GetSamplerLinear()), screenUV).r;
     
     //finalColor = vec4(shadowValue.rrr, 1.0);
+    //finalColor = vec4(shadow.rrr, 1.0);
     finalColor = vec4(res, 1.0);
 }

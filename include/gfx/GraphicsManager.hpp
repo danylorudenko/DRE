@@ -23,9 +23,9 @@
 #include <engine\data\Geometry.hpp>
 #include <engine\data\Material.hpp>
 
-static constexpr std::uint32_t C_SHADOW_MAP_WIDTH = 1024;
-static constexpr std::uint32_t C_SHADOW_MAP_HEIGHT = 1024;
-static constexpr float C_SHADOW_MAP_WORLD_EXTENT = 50.0f;
+static constexpr std::uint32_t C_SHADOW_MAP_WIDTH = 2048;
+static constexpr std::uint32_t C_SHADOW_MAP_HEIGHT = 2048;
+static constexpr float C_SHADOW_MAP_WORLD_EXTENT = 30.0f;
 
 namespace VKW
 {

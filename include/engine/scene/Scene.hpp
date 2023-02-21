@@ -6,6 +6,7 @@
 
 #include <engine\scene\Camera.hpp>
 #include <engine\scene\Entity.hpp>
+#include <engine\scene\Light.hpp>
 
 namespace Data
 {
@@ -28,8 +29,11 @@ public:
     ~Scene();
 
 
-    inline Camera&          GetMainCamera() { return m_MainCamera; }
-    inline Camera const &   GetMainCamera() const { return m_MainCamera; }
+    inline Camera&                  GetMainCamera() { return m_MainCamera; }
+    inline Camera const &           GetMainCamera() const { return m_MainCamera; }
+
+    inline DirectionalLight&        GetMainSunLight() { return m_MainSunLight; }
+    inline DirectionalLight const&  GetMainSunLight() const { return m_MainSunLight; }
 
     inline auto&            GetEntities() { return m_SceneEntities; }
 
@@ -38,6 +42,7 @@ public:
 
 private:
     Camera m_MainCamera;
+    DirectionalLight m_MainSunLight;
 
     DRE::Vector<Entity, DRE::DefaultAllocator> m_SceneEntities;
 };
