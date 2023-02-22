@@ -28,10 +28,10 @@ public:
 
         for (U32 i = 0; i < MAX_OBJECTS - 1; i++)
         {
-            m_Storage[i].m_Next = m_Storage + i + 1;
+            *reinterpret_cast<AlignedStorage<T>**>(m_Storage + i) = m_Storage + i + 1;
         }
 
-        m_Storage[MAX_OBJECTS - 1].m_Next = nullptr;
+        *(reinterpret_cast<void**>(m_Storage + MAX_OBJECTS - 1)) = nullptr;
         m_NextFree = m_Storage;
     }
     
@@ -46,11 +46,11 @@ public:
     {
         DRE_ASSERT(m_NextFree != nullptr, "ObjectPool is empty.");
 
-        Node* nextNode = m_NextFree;
-        m_NextFree = nextNode->m_Next;
+        void* nextNode = m_NextFree;
+        m_NextFree = *reinterpret_cast<AlignedStorage<T>**>(nextNode);
 
         DRE_DEBUG_ONLY(m_ElementsInUseDebug++);
-        T* obj = reinterpret_cast<T*>(nextNode->m_Object);
+        T* obj = reinterpret_cast<AlignedStorage<T>*>(nextNode)->Ptr();
         return new (obj) T{ std::forward<TArgs>(args)... };
     }
 
@@ -58,11 +58,14 @@ public:
     {
         obj->~T();
 
-        Node* node = reinterpret_cast<Node*>(obj);
-        node->m_Next = m_NextFree;
+        AlignedStorage<T>* node = reinterpret_cast<AlignedStorage<T>*>(obj);
+        *reinterpret_cast<AlignedStorage<T>**>(node) = m_NextFree;
         m_NextFree = node;
         DRE_DEBUG_ONLY(m_ElementsInUseDebug--);
     }
+
+    T* Data() { return m_Storage[0].Ptr(); }
+    T const* Data() const { return m_Storage[0].Ptr(); }
 
     DRE_DEBUG_ONLY(U32 GetElementsInUseDebug() const { return m_ElementsInUseDebug; })
 
@@ -72,16 +75,8 @@ public:
     }
 
 private:
-    struct Node
-    {
-        alignas(T)
-        U8 m_Object[sizeof(T)];
-        Node* m_Next;
-    };
-
-private:
-    Node  m_Storage[MAX_OBJECTS];
-    Node* m_NextFree;
+    AlignedStorage<T>  m_Storage[MAX_OBJECTS];
+    AlignedStorage<T>* m_NextFree;
 
     DRE_DEBUG_ONLY(U32 m_ElementsInUseDebug;)
 

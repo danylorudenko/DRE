@@ -101,12 +101,11 @@ public:
 
     AllocatorPool& operator=(AllocatorPool&& rhs)
     {
-        DRE_ASSERT(m_Memory == nullptr, "Can't move-assign to initialized allocators.");
-        m_Memory = rhs.m_Memory;                            rhs.m_Memory = nullptr;
-        m_Size = rhs.m_Size;                                rhs.m_Size = 0;
-        m_PoolChunkSize = rhs.m_PoolChunkSize;              rhs.m_PoolChunkSize = 0;
-        m_PoolChunkAlignment = rhs.m_PoolChunkAlignment;    rhs.m_PoolChunkAlignment = 0;
-        m_NextFreeChunk = rhs.m_NextFreeChunk;              rhs.m_NextFreeChunk = nullptr;
+        DRE_SWAP_MEMBER(m_Memory);
+        DRE_SWAP_MEMBER(m_Size);
+        DRE_SWAP_MEMBER(m_PoolChunkSize);
+        DRE_SWAP_MEMBER(m_PoolChunkAlignment);
+        DRE_SWAP_MEMBER(m_NextFreeChunk);
 
         return *this;
     }
