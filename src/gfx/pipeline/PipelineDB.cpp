@@ -141,7 +141,15 @@ void PipelineDB::ReloadPipeline(char const* name)
     if (vertData != nullptr)
     {
         DRE::String64 vertPath{ "shaders\\" }; vertPath.Append(vertName.GetData());
-        vertData->m_Binary = m_IOManager->CompileGLSL(vertPath.GetData());
+        DRE::ByteBuffer compiledBinary = m_IOManager->CompileGLSL(vertPath.GetData());
+        if (compiledBinary.Size() == 0)
+        {
+            std::cout << "Failed to recompile shader " << vertPath.GetData() << ". Pipeline was not cecreated." << std::endl;
+            return;
+        }
+
+        vertData->m_Binary = compiledBinary;
+
         vertPath.Append(".spv");
         IO::IOManager::WriteNewFile(vertPath.GetData(), vertData->m_Binary);
 
@@ -152,7 +160,15 @@ void PipelineDB::ReloadPipeline(char const* name)
     if (fragData != nullptr)
     {
         DRE::String64 fragPath{ "shaders\\" }; fragPath.Append(fragName.GetData());
-        fragData->m_Binary = m_IOManager->CompileGLSL(fragPath.GetData());
+        DRE::ByteBuffer compiledBinary = m_IOManager->CompileGLSL(fragPath.GetData());
+        if (compiledBinary.Size() == 0)
+        {
+            std::cout << "Failed to recompile shader " << fragPath.GetData() << ". Pipeline was not cecreated." << std::endl;
+            return;
+        }
+
+        fragData->m_Binary = compiledBinary;
+
         fragPath.Append(".spv");
         IO::IOManager::WriteNewFile(fragPath.GetData(), fragData->m_Binary);
 
@@ -163,7 +179,15 @@ void PipelineDB::ReloadPipeline(char const* name)
     if (compData != nullptr)
     {
         DRE::String64 compPath{ "shaders\\" }; compPath.Append(compName.GetData());
-        compData->m_Binary = m_IOManager->CompileGLSL(compPath.GetData());
+        DRE::ByteBuffer compiledBinary = m_IOManager->CompileGLSL(compPath.GetData());
+        if (compiledBinary.Size() == 0)
+        {
+            std::cout << "Failed to recompile shader " << compPath.GetData() << ". Pipeline was not cecreated." << std::endl;
+            return;
+        }
+
+        compData->m_Binary = compiledBinary;
+
         compPath.Append(".spv");
         IO::IOManager::WriteNewFile(compPath.GetData(), compData->m_Binary);
 

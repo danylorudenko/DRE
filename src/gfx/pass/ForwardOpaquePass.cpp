@@ -79,7 +79,7 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, shadowMap->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT);
 
     context.CmdBeginRendering(1, colorAttachment, depthAttachment, nullptr);
-    float clearColors[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    float clearColors[4] = { 0.9f, 0.9f, 0.9f, 0.0f };
     context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_0, clearColors);
     context.CmdClearAttachments(VKW::ATTACHMENT_MASK_DEPTH, 0.0f, 0);
 
@@ -88,8 +88,13 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
 
     {
         glm::mat4 const shadow_ViewProj = g_GraphicsManager->GetSunShadowRenderView().GetViewProjectionM();
-        UniformProxy passUniformProxy = graph.GetPassUniform(GetID(), context, sizeof(shadow_ViewProj));
+        glm::vec4 const shadow_Size = glm::vec4{ C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, 0.0f, 0.0f };
+
+        std::uint32_t constexpr passUniformSize = sizeof(shadow_ViewProj) + sizeof(shadow_Size);
+
+        UniformProxy passUniformProxy = graph.GetPassUniform(GetID(), context, passUniformSize);
         passUniformProxy.WriteMember140(shadow_ViewProj);
+        passUniformProxy.WriteMember140(shadow_Size);
     }
 
     VKW::DescriptorSet passSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
