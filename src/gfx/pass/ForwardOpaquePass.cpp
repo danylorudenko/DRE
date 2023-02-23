@@ -26,7 +26,7 @@ void ForwardOpaquePass::RegisterResources(RenderGraph& graph)
     graph.RegisterUniformBuffer(this, VKW::STAGE_FRAGMENT, 1);
     
     graph.RegisterRenderTarget(this,
-        TextureID::FinalRT,
+        TextureID::ForwardRT,
         VKW::FORMAT_B8G8R8A8_UNORM, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
         0);
 
@@ -70,7 +70,7 @@ void ForwardObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::De
 
 void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    VKW::ImageResourceView* colorAttachment = graph.GetTexture(TextureID::FinalRT)->GetShaderView();
+    VKW::ImageResourceView* colorAttachment = graph.GetTexture(TextureID::ForwardRT)->GetShaderView();
     VKW::ImageResourceView* depthAttachment = graph.GetTexture(TextureID::MainDepth)->GetShaderView();
     VKW::ImageResourceView* shadowMap       = graph.GetTexture(TextureID::ShadowMap)->GetShaderView();
 

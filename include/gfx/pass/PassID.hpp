@@ -9,6 +9,7 @@ enum class PassID
     ForwardOpaque,
     Shadow,
     ImGuiRender,
+    ColorEncoding,
     MAX
 };
 

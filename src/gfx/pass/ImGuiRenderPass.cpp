@@ -33,7 +33,7 @@ PassID ImGuiRenderPass::GetID() const
 /////////////////////////
 void ImGuiRenderPass::RegisterResources(RenderGraph& graph)
 {
-    graph.RegisterRenderTarget(this, TextureID::FinalRT, VKW::FORMAT_B8G8R8A8_UNORM,
+    graph.RegisterRenderTarget(this, TextureID::DisplayEncodedImage, VKW::FORMAT_B8G8R8A8_UNORM,
         g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
         0);
 
@@ -86,14 +86,12 @@ ImGuiRenderPass::~ImGuiRenderPass()
 /////////////////////////
 void ImGuiRenderPass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    StorageTexture* imGuiRT = graph.GetTexture(TextureID::FinalRT);
+    StorageTexture* imGuiRT = graph.GetTexture(TextureID::DisplayEncodedImage);
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, imGuiRT->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
 
     context.CmdBeginRendering(1, imGuiRT->GetShaderView(), nullptr, nullptr);
     float clearColors[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    //context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_0, clearColors); // TODO, enable if imguiRT is not FinalRT
-
 
     ImGui::Render();
     ImDrawData* data = ImGui::GetDrawData();

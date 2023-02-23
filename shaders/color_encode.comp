@@ -1,0 +1,36 @@
+#version 450 core
+
+#extension GL_EXT_nonuniform_qualifier : enable
+#extension GL_GOOGLE_include_directive : enable
+
+#include "shaders_common.h"
+
+layout (set=3, binding=0, rgba8) uniform readonly 	image2D linearRT;
+layout (set=3, binding=1, rgba8) uniform 			image2D encodedOutput;
+
+layout (set=0, binding=2) uniform PassUniform
+{
+	vec4 data;
+} passUniform;
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+vec3 ACESFilm(vec3 x)
+{
+    float a = 2.51f;
+    float b = 0.03f;
+    float c = 2.43f;
+    float d = 0.59f;
+    float e = 0.14f;
+    return clamp((x*(a*x+b))/(x*(c*x+d)+e), 0.0, 1.0);
+}
+
+void main()
+{
+	ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
+	
+    vec3 linear = imageLoad(linearRT, coords).rgb;
+    vec3 result = ACESFilm(linear);
+	
+	imageStore(encodedOutput, coords, vec4(result, 1.0));
+}

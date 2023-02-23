@@ -10,8 +10,8 @@ enum class TextureID
     ID_None,
     MainDepth,
     ShadowMap,
-    ImGuiRT,
-    FinalRT,
+    ForwardRT,
+    DisplayEncodedImage,
     ID_MAX
 };
 

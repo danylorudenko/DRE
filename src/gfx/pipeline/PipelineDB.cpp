@@ -31,6 +31,7 @@ void PipelineDB::CreateDefaultPipelines()
         CreateGraphicsForwardPipeline("default_lit");
         CreateGraphicsForwardPipeline("cook_torrance");
         CreateGraphicsForwardShadowPipeline("forward_shadow");
+        CreateComputePipeline("color_encode");
     }
 }
 
@@ -96,7 +97,7 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardShadowPipeline(char const*
 
 DRE::String64 const* PipelineDB::CreateComputePipeline(char const* name)
 {
-    DRE::String64 compName{ name }; compName.Append(".vert");
+    DRE::String64 compName{ name }; compName.Append(".comp");
 
     DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, nullptr, nullptr, compName.GetData());
     VKW::PipelineLayout* layout = GetLayout(layoutName->GetData());
@@ -222,7 +223,9 @@ DRE::String64 const* PipelineDB::CreatePipelineLayoutFromShader(char const* shad
     if(compShader != nullptr)
         shaderInterface.Merge(compShader->m_Interface);
 
-    shaderInterface.m_Members.SortBubble([](auto const& lhs, auto const& rhs) { return lhs.set < rhs.set; });
+    shaderInterface.m_Members.SortBubble([](auto const& lhs, auto const& rhs) {
+        return (lhs.set <= rhs.set);
+    });
 
     std::uint32_t const globalLayoutsCount = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();
 

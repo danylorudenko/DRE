@@ -117,7 +117,7 @@ StorageTexture& RenderGraph::Render(VKW::Context& context)
         m_Passes[i]->Render(*this, context);
     }
 
-    return *m_ResourcesManager.GetTexture(TextureID::FinalRT);
+    return *m_ResourcesManager.GetTexture(TextureID::DisplayEncodedImage);
 }
 
 }
