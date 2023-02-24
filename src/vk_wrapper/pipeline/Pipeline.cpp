@@ -341,6 +341,8 @@ VkComputePipelineCreateInfo const& Pipeline::Descriptor::CompileComputePipelineC
     computeCreateInfo_.basePipelineHandle = VK_NULL_HANDLE;
     computeCreateInfo_.basePipelineIndex = 0;
 
+    shaderStagesCount_ = 0;
+
     return computeCreateInfo_;
 }
 

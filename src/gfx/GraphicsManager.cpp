@@ -40,6 +40,7 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOMana
     , m_DependencyManager{}
     , m_MainView{ &DRE::g_MainAllocator }
     , m_SunShadowView{ &DRE::g_MainAllocator }
+    , m_Settings{}
 {
     g_GraphicsManager = this;
 

@@ -50,6 +50,12 @@ class Scene;
 namespace GFX
 {
 
+struct GraphicsSettings
+{
+    bool    m_UseACESEncoding       = true;
+    float   m_ExposureEV            = 0.0f;
+};
+
 class GraphicsManager final
     : public NonCopyable
     , public NonMovable
@@ -92,6 +98,9 @@ public:
     inline RenderView&                  GetMainRenderView() { return m_MainView; }
     inline RenderView&                  GetSunShadowRenderView() { return m_SunShadowView; }
     inline auto&                        GetRenderablePool() { return m_RenderableObjectPool; }
+
+    inline GraphicsSettings&            GetGraphicsSettings() { return m_Settings; }
+    inline GraphicsSettings const&      GetGraphicsSettings() const { return m_Settings; }
 
 
 public:
@@ -155,6 +164,8 @@ private:
     MaterialLayoutMap           m_MaterialLayoutMap; // store signature for similar materials
 
     GeometryGPUMap              m_GeometryGPUMap;
+
+    GraphicsSettings            m_Settings;
 };
 
 extern GraphicsManager* g_GraphicsManager;

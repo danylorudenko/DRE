@@ -96,8 +96,6 @@ void VulkanApplicationDelegate::start()
     }
     m_IOManager.LoadShaderBinaries();
 
-    m_GraphicsManager.GetMainRenderView() = GFX::RenderView{ &DRE::g_MainAllocator };
-
     m_MainScene.GetMainCamera().SetFOV(60.0f);
     m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 7.28f, 5.57f, -1.07f });
     m_MainScene.GetMainCamera().SetEulerOrientation(glm::vec3{ -17.26f, 107.37f, 0.0f });
@@ -184,22 +182,22 @@ void VulkanApplicationDelegate::ImGuiUser()
         ImGui::SetNextWindowPos(ImVec2(0.0f, 100.0f), ImGuiCond_Always);
         ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiCond_Always);
 
-        WORLD::Camera& camera = m_MainScene.GetMainCamera();
-        glm::vec3 const& cameraEuler = camera.GetEulerOrientation();
-        glm::vec3 const& cameraForward = camera.GetForward();
-        glm::vec3 const& cameraRight = camera.GetRight();
-
-        float const cameraMod = (static_cast<float>(m_DeltaMicroseconds) / 10000);
-        float const moveMul = 0.1f;
-        float const rotMul = 1.0f;
-
         if (ImGui::Begin("Camera Controls", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
         {
+            WORLD::Camera& camera = m_MainScene.GetMainCamera();
+            glm::vec3 const& cameraEuler = camera.GetEulerOrientation();
+            glm::vec3 const& cameraForward = camera.GetForward();
+            glm::vec3 const& cameraRight = camera.GetRight();
+
             if (ImGui::Button("Reset", ImVec2(50.0, 20.0f)))
             {
                 camera.SetPosition(glm::vec3{ 0.0f, 0.0f, 0.0f });
                 camera.SetEulerOrientation(glm::vec3{ 0.0f, 0.0f, 0.0f });
             }
+
+            float const cameraMod = (static_cast<float>(m_DeltaMicroseconds) / 10000);
+            float const moveMul = 0.1f;
+            float const rotMul = 1.0f;
 
             ImGui::PushButtonRepeat(true);
 
@@ -240,6 +238,8 @@ void VulkanApplicationDelegate::ImGuiUser()
             ImGui::Text("Camera rot: %.2f, %.2f, %.2f", camera.GetEulerOrientation()[0], camera.GetEulerOrientation()[1], camera.GetEulerOrientation()[2]);
 
             ImGui::Checkbox("Rotate sun", &m_RotateSun);
+            ImGui::Checkbox("Use ACES", &m_GraphicsManager.GetGraphicsSettings().m_UseACESEncoding);
+            ImGui::SliderFloat("Exposure target EV", &m_GraphicsManager.GetGraphicsSettings().m_ExposureEV, -3.0f, 5.0f);
 
             ImGui::End();
         }

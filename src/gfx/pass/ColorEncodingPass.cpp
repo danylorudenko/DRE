@@ -37,6 +37,12 @@ void ColorEncodingPass::Render(RenderGraph& graph, VKW::Context& context)
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, forwardRT->parentResource_, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, encodedImage->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
 
+    UniformProxy uniform = graph.GetPassUniform(GetID(), context, sizeof(glm::vec4));
+    float const useACES = g_GraphicsManager->GetGraphicsSettings().m_UseACESEncoding ? 1.0f : 0.0f;
+    float const exposure = glm::exp2(-g_GraphicsManager->GetGraphicsSettings().m_ExposureEV);
+    uniform.WriteMember140(glm::vec4{ useACES, exposure, 0.0f, 0.0f });
+
+
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
     VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("color_encode");
     VKW::DescriptorSet set = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());

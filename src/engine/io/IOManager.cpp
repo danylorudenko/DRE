@@ -593,7 +593,8 @@ void IOManager::ShaderObserver()
             char* ExtStart = std::strrchr(fileName, '.');
             if (ExtStart == nullptr || 
                 (std::strcmp(ExtStart, ".vert") != 0 &&
-                std::strcmp(ExtStart, ".frag") != 0))
+                std::strcmp(ExtStart, ".frag") != 0 &&
+                std::strcmp(ExtStart, ".comp") != 0))
             {
                 infoPtr = infoPtr->NextEntryOffset == 0 ? nullptr : DRE::PtrAdd(infoPtr, infoPtr->NextEntryOffset);
                 continue;
