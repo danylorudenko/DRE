@@ -231,20 +231,15 @@ public:
         if (Size() < 2)
             return;
 
-        std::uint32_t const last = Size() - 1;
-        std::uint32_t sortedRange = 1;
-        while (sortedRange < last)
+        for(std::uint32_t i = 0; i < m_Size; i++)
         {
             T* data = Data();
-            for (std::uint32_t i = sortedRange, size = Size(); i < size; i++)
+            for (std::uint32_t j = 1, size = m_Size - i; j < size; j++)
             {
-                if (!predicate(data[i - 1], data[i]))
+                if (!predicate(data[j - 1], data[j]))
                 {
-                    DRE_SWAP(data[i - 1], data[i]);
-                    sortedRange = i;
-                    break;
+                    DRE_SWAP(data[j - 1], data[j]);
                 }
-                sortedRange = i;
             }
         }
     }

@@ -74,14 +74,15 @@ VkImageLayout AccessToLayout(ResourceAccess access)
     case RESOURCE_ACCESS_UNDEFINED:
         return VK_IMAGE_LAYOUT_UNDEFINED;
 
-    case RESOURCE_ACCESS_SHADER_READ:
     case RESOURCE_ACCESS_SHADER_SAMPLE:
         return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
     case RESOURCE_ACCESS_NONE:
-    case RESOURCE_ACCESS_SHADER_WRITE:
     case RESOURCE_ACCESS_GENERIC_WRITE:
+    case RESOURCE_ACCESS_GENERIC_READ:
     case RESOURCE_ACCESS_SHADER_RW:
+    case RESOURCE_ACCESS_SHADER_WRITE:
+    case RESOURCE_ACCESS_SHADER_READ:
         return VK_IMAGE_LAYOUT_GENERAL;
 
     case RESOURCE_ACCESS_TRANSFER_DST:
@@ -98,9 +99,6 @@ VkImageLayout AccessToLayout(ResourceAccess access)
 
     case RESOURCE_ACCESS_PRESENT:
         return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-    case RESOURCE_ACCESS_GENERIC_READ:
-        VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL;
 
     default:
         DRE_ASSERT(false, "Unsupported ResourceAccess");
