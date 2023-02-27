@@ -25,10 +25,20 @@ RenderGraph::~RenderGraph()
     }
 }
 
-void RenderGraph::RegisterStorageTexture(BasePass* pass, TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding)
+void RenderGraph::RegisterTexture(BasePass* pass, TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding)
 {
     m_ResourcesManager.RegisterTexture(id, format, width, height, access);
     m_DescriptorManager.RegisterTexture(pass->GetID(), id, access, VKW::StageToDescriptorStage(stage), binding);
+}
+
+void RenderGraph::RegisterStandaloneTexture(TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access)
+{
+    m_ResourcesManager.RegisterTexture(id, format, width, height, access);
+}
+
+void RenderGraph::RegisterTextureSlot(BasePass* pass, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding)
+{
+    m_DescriptorManager.RegisterTexture(pass->GetID(), TextureID::ID_None, access, VKW::StageToDescriptorStage(stage), binding);
 }
 
 void RenderGraph::RegisterRenderTarget(BasePass* pass, TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, std::uint32_t)

@@ -22,14 +22,16 @@ layout(set = 1, binding = 0) uniform texture2D  g_GlobalTextures[];
 #define GetSamplerLinearClamp() g_GlobalSamplers[2]
 #define GetSamplerAnisotropic() g_GlobalSamplers[3]
 
+#define SampleTexture(textureObj, samplerObj, uv_coords) texture(sampler2D(textureObj, samplerObj), uv_coords)
+
 vec4 SampleGlobalTextureLinear(uint id, vec2 uv)
 {
-    return texture(sampler2D(GetGlobalTexture(id), GetSamplerLinear()), uv);
+    return SampleTexture(GetGlobalTexture(id), GetSamplerLinear(), uv);
 }
 
 vec4 SampleGlobalTextureAnisotropic(uint id, vec2 uv)
 {
-    return texture(sampler2D(GetGlobalTexture(id), GetSamplerAnisotropic()), uv);
+    return SampleTexture(GetGlobalTexture(id), GetSamplerAnisotropic(), uv);
 }
 
 

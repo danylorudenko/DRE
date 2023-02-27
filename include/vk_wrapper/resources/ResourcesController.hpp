@@ -26,7 +26,7 @@ enum class ImageUsage
     STORAGE_IMAGE,
     RENDER_TARGET,
     DEPTH,
-    DEPTH_TEXTURE,
+    DEPTH_SAMPLED,
     STENCIL,
     DEPTH_STENCIL,
     UPLOAD_IMAGE

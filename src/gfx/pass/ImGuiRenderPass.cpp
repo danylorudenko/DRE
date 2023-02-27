@@ -86,13 +86,6 @@ ImGuiRenderPass::~ImGuiRenderPass()
 /////////////////////////
 void ImGuiRenderPass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    StorageTexture* imGuiRT = graph.GetTexture(TextureID::DisplayEncodedImage);
-
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, imGuiRT->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-
-    context.CmdBeginRendering(1, imGuiRT->GetShaderView(), nullptr, nullptr);
-    float clearColors[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-
     ImGui::Render();
     ImDrawData* data = ImGui::GetDrawData();
 
@@ -107,11 +100,17 @@ void ImGuiRenderPass::Render(RenderGraph& graph, VKW::Context& context)
     uniform.WriteMember140(glm::value_ptr(displayPos_Size), sizeof(displayPos_Size));
     uniform.WriteMember140(texID);
 
+    VKW::ImageResourceView* imGuiRT = graph.GetTexture(TextureID::DisplayEncodedImage)->GetShaderView();
 
     PipelineDB& pipelineDB = g_GraphicsManager->GetPipelineDB();
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
     std::uint16_t const startSet = pipelineDB.GetGlobalLayout()->GetMemberCount();
     VKW::DescriptorSet passSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
+
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, imGuiRT->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+
+    context.CmdBeginRendering(1, &imGuiRT, nullptr, nullptr);
+    float clearColors[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     context.CmdBindGraphicsDescriptorSets(layout, startSet, 1, &passSet);
     context.CmdBindPipeline(VKW::BindPoint::Graphics, pipelineDB.GetPipeline("imgui_draw"));
 

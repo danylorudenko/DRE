@@ -1,0 +1,28 @@
+#version 450 core
+
+#extension GL_EXT_nonuniform_qualifier : enable
+#extension GL_GOOGLE_include_directive : enable
+
+#include "shaders_common.h"
+
+layout (set=3, binding=1)        uniform texture2D   velocity;
+layout (set=3, binding=2)        uniform texture2D   color_buffer;
+layout (set=3, binding=3)        uniform texture2D   history;
+layout (set=3, binding=4, rgba8) uniform image2D     taa_output;
+
+layout (set=3, binding=0, std140) uniform PassUniform
+{
+    vec4 useTAA;
+} passUniform;
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+void main()
+{
+    ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
+    vec2 uv = coords / GetViewportSize();
+
+    vec3 result = SampleTexture(color_buffer, GetSamplerNearest(), uv).rgb;
+
+    imageStore(taa_output, coords, vec4(result, 1.0));
+    //imageStore(taa_output, coords, vec4(1.0, 0.2, 0.5, 1.0));
+}

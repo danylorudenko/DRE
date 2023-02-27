@@ -32,6 +32,7 @@ void PipelineDB::CreateDefaultPipelines()
         CreateGraphicsForwardPipeline("cook_torrance");
         CreateGraphicsForwardShadowPipeline("forward_shadow");
         CreateComputePipeline("color_encode");
+        CreateComputePipeline("temporal_AA");
     }
 }
 
@@ -57,6 +58,7 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardPipeline(char const* name)
     desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
     desc.EnableDepthTest(VKW::FORMAT_D32_FLOAT);
     desc.AddColorOutput(g_GraphicsManager->GetMainDevice()->GetSwapchain()->GetFormat(), VKW::BLEND_TYPE_NONE);
+    desc.AddColorOutput(VKW::FORMAT_R16G16_FLOAT, VKW::BLEND_TYPE_NONE); // velocity vectors
 
     desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // pos
     desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // norm

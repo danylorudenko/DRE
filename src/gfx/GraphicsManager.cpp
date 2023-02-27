@@ -7,6 +7,7 @@
 #include <vk_wrapper\pipeline\ShaderModule.hpp>
 
 #include <gfx\pass\ForwardOpaquePass.hpp>
+#include <gfx\pass\AntiAliasingPass.hpp>
 #include <gfx\pass\ImGuiRenderPass.hpp>
 #include <gfx\pass\ShadowPass.hpp>
 #include <gfx\pass\ColorEncodingPass.hpp>
@@ -62,6 +63,7 @@ void GraphicsManager::CreateAllPasses()
 {
     m_RenderGraph.AddPass<ShadowPass>();
     m_RenderGraph.AddPass<ForwardOpaquePass>();
+    m_RenderGraph.AddPass<AntiAliasingPass>();
     m_RenderGraph.AddPass<ColorEncodingPass>();
     m_RenderGraph.AddPass<ImGuiRenderPass>();
     m_RenderGraph.ParseGraph();

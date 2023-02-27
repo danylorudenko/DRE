@@ -7,9 +7,11 @@
 
 layout(location = 0) in vec3 in_wpos;
 layout(location = 1) in vec2 in_uv;
-layout(location = 2) in mat3 in_TBN;
+layout(location = 2) in vec2 in_velocity;
+layout(location = 3) in mat3 in_TBN;
 
 layout(location = 0) out vec4 finalColor;
+layout(location = 1) out vec2 velocity;
 
 layout(set = 3, binding = 0) uniform texture2D shadowMap;
 layout(set = 3, binding = 1, std140) uniform PassUniform
@@ -22,6 +24,7 @@ layout(set = 4, binding = 0, std140) uniform InstanceUniform
 {
     mat4  model_mat;
     mat4  mvp_mat;
+    mat4  prev_mvp_mat;
     uvec4 textureIDs;
 } instanceUniform;
 
@@ -209,4 +212,5 @@ void main()
     //finalColor = vec4(shadowValue.rrr, 1.0);
     //finalColor = vec4(shadow.rrr, 1.0);
     finalColor = vec4(res, 1.0);
+    velocity = in_velocity;
 }

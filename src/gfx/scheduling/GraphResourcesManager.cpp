@@ -62,7 +62,7 @@ void GraphResourcesManager::PrepareResources()
 
 
         VKW::ImageUsage usage = VKW::ImageUsage::STORAGE_IMAGE;
-        VkImageAspectFlags imageAspect = VK_IMAGE_ASPECT_NONE;
+        VkImageAspectFlags imageAspect = VK_IMAGE_ASPECT_COLOR_BIT;
         if (info.access & VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT)
         {
             usage = VKW::ImageUsage::RENDER_TARGET;
@@ -77,7 +77,7 @@ void GraphResourcesManager::PrepareResources()
         {
             usage = VKW::ImageUsage::DEPTH;
             if ((info.access & (VKW::RESOURCE_ACCESS_SHADER_READ | VKW::RESOURCE_ACCESS_SHADER_WRITE | VKW::RESOURCE_ACCESS_SHADER_RW | VKW::RESOURCE_ACCESS_SHADER_SAMPLE)) != 0)
-                usage = VKW::ImageUsage::DEPTH_TEXTURE;
+                usage = VKW::ImageUsage::DEPTH_SAMPLED;
             imageAspect = VK_IMAGE_ASPECT_DEPTH_BIT;
         }
  

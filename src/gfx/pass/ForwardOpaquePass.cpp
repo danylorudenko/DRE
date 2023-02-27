@@ -19,16 +19,22 @@ PassID GFX::ForwardOpaquePass::GetID() const
 
 void ForwardOpaquePass::RegisterResources(RenderGraph& graph)
 {
-    graph.RegisterStorageTexture(this,
+    graph.RegisterTexture(this,
         TextureID::ShadowMap,
         VKW::FORMAT_D16_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT, 0);
 
     graph.RegisterUniformBuffer(this, VKW::STAGE_FRAGMENT, 1);
-    
+
+
     graph.RegisterRenderTarget(this,
-        TextureID::ForwardRT,
+        TextureID::ColorBuffer,
         VKW::FORMAT_B8G8R8A8_UNORM, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
         0);
+
+    graph.RegisterRenderTarget(this,
+        TextureID::Velocity,
+        VKW::FORMAT_R16G16_FLOAT, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
+        1);
 
     graph.RegisterDepthOnlyTarget(this,
         TextureID::MainDepth,
@@ -42,7 +48,7 @@ void ForwardOpaquePass::Initialize(RenderGraph& graph)
 void ForwardObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view)
 {
     std::uint32_t constexpr uniformSize =
-        sizeof(glm::mat4) * 2 +
+        sizeof(glm::mat4) * 3 +
         sizeof(VKW::TextureDescriptorIndex) * 4;
 
     auto uniformAllocation = arena.AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), uniformSize, 256);
@@ -57,6 +63,7 @@ void ForwardObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::De
     glm::mat4 const mvp = view.GetViewProjectionM() * obj.GetModelM();
     uniformProxy.WriteMember140(obj.GetModelM());
     uniformProxy.WriteMember140(mvp);
+    uniformProxy.WriteMember140(mvp);
 
     std::uint32_t textureIDs[4] = {
        obj.GetDiffuseTexture()->GetShaderReadDescriptor().id_,
@@ -70,21 +77,30 @@ void ForwardObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::De
 
 void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    VKW::ImageResourceView* colorAttachment = graph.GetTexture(TextureID::ForwardRT)->GetShaderView();
+    VKW::ImageResourceView* colorAttachment = graph.GetTexture(TextureID::ColorBuffer)->GetShaderView();
+    VKW::ImageResourceView* velocityAttachment = graph.GetTexture(TextureID::Velocity)->GetShaderView();
     VKW::ImageResourceView* depthAttachment = graph.GetTexture(TextureID::MainDepth)->GetShaderView();
     VKW::ImageResourceView* shadowMap       = graph.GetTexture(TextureID::ShadowMap)->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, colorAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, velocityAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->parentResource_, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, shadowMap->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT);
 
-    context.CmdBeginRendering(1, colorAttachment, depthAttachment, nullptr);
+    VKW::ImageResourceView* attachments[2] = { colorAttachment, velocityAttachment };
+
+    DrawBatcher batcher{ &DRE::g_FrameScratchAllocator, g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), &g_GraphicsManager->GetUniformArena() };
+    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), GFX::ForwardObjectDelegate);
+
+    context.CmdBeginRendering(2, attachments, depthAttachment, nullptr);
     float clearColors[4] = { 0.9f, 0.9f, 0.9f, 0.0f };
+    float clearVelocity[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_0, clearColors);
+    context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_1, clearVelocity);
     context.CmdClearAttachments(VKW::ATTACHMENT_MASK_DEPTH, 0.0f, 0);
 
-    context.CmdSetViewport(1, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
-    context.CmdSetScissor(1, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
+    context.CmdSetViewport(2, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
+    context.CmdSetScissor(2, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
 
     {
         glm::mat4 const shadow_ViewProj = g_GraphicsManager->GetSunShadowRenderView().GetViewProjectionM();
@@ -102,10 +118,6 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
 
     VKW::PipelineLayout* passLayout = graph.GetPassPipelineLayout(GetID());
     context.CmdBindDescriptorSets(passLayout, VKW::BindPoint::Graphics, passSetBinding, 1, &passSet);
-
-    // 1. take all RenderableObject's in main scene
-    DrawBatcher batcher{ &DRE::g_FrameScratchAllocator, g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), &g_GraphicsManager->GetUniformArena() };
-    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), GFX::ForwardObjectDelegate);
 
     std::uint32_t const startSet = 
         g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount() +

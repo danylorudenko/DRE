@@ -177,7 +177,7 @@ ImageResource* ResourcesController::CreateImage(std::uint32_t width, std::uint32
     case ImageUsage::RENDER_TARGET:
         info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | 
             VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | 
-            VK_IMAGE_USAGE_STORAGE_BIT;
+            VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
         memoryDesc.memoryClass_ = MemoryClass::DeviceFast;
         break;
@@ -189,7 +189,7 @@ ImageResource* ResourcesController::CreateImage(std::uint32_t width, std::uint32
         memoryDesc.memoryClass_ = MemoryClass::DeviceFast;
         break;
 
-    case ImageUsage::DEPTH_TEXTURE:
+    case ImageUsage::DEPTH_SAMPLED:
         info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
         memoryDesc.memoryClass_ = MemoryClass::DeviceFast;
         break;

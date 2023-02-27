@@ -66,11 +66,13 @@ void GraphDescriptorManager::InitDescriptors()
                 case VKW::RESOURCE_ACCESS_SHADER_RW:
                 case VKW::RESOURCE_ACCESS_SHADER_READ:
                     layoutDesc.Add(VKW::DESCRIPTOR_TYPE_STORAGE_IMAGE, info.m_Binding, info.m_Stages);
-                    writeDesc.AddStorageImage(m_ResourcesManager->GetTexture(info.mu_TextureID)->GetShaderView(), info.m_Binding);
+                    if (info.mu_TextureID != TextureID::ID_None)
+                        writeDesc.AddStorageImage(m_ResourcesManager->GetTexture(info.mu_TextureID)->GetShaderView(), info.m_Binding);
                     break;
                 case VKW::RESOURCE_ACCESS_SHADER_SAMPLE:
                     layoutDesc.Add(VKW::DESCRIPTOR_TYPE_TEXTURE, info.m_Binding, info.m_Stages);
-                    writeDesc.AddSampledImage(m_ResourcesManager->GetTexture(info.mu_TextureID)->GetShaderView(), info.m_Binding);
+                    if (info.mu_TextureID != TextureID::ID_None)
+                        writeDesc.AddSampledImage(m_ResourcesManager->GetTexture(info.mu_TextureID)->GetShaderView(), info.m_Binding);
                     break;
                 }
             }

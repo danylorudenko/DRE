@@ -39,7 +39,10 @@ public:
     void RegisterDepthStencilTarget (BasePass* pass, TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height);
     void RegisterDepthOnlyTarget (BasePass* pass, TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height);
 
-    void RegisterStorageTexture     (BasePass* pass, TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding);
+    void RegisterTexture            (BasePass* pass, TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding);
+    void RegisterStandaloneTexture  (TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access);
+    void RegisterTextureSlot        (BasePass* pass, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding);
+
     void RegisterStorageBuffer      (BasePass* pass, BufferID id, std::uint32_t size, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding);
     void RegisterUniformBuffer      (BasePass* pass, VKW::Stages stage, std::uint32_t binding);
 

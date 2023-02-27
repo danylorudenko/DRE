@@ -304,7 +304,7 @@ void Context::CmdClearAttachments(AttachmentMask attachments, float depth, std::
     m_ImportTable->vkCmdClearAttachments(*m_CurrentCommandList, clears.Size(), clears.Data(), rects.Size(), rects.Data());
 }
 
-void Context::CmdBeginRendering(std::uint32_t attachmentCount, VKW::ImageResourceView const* attachments,
+void Context::CmdBeginRendering(std::uint32_t attachmentCount, VKW::ImageResourceView* const* attachments,
     VKW::ImageResourceView const* depthAttachment, VKW::ImageResourceView const* stencilAttachment)
 {
     DRE_ASSERT(attachmentCount <= VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS, "Exceeded maximum color attachment count.");
@@ -314,8 +314,8 @@ void Context::CmdBeginRendering(std::uint32_t attachmentCount, VKW::ImageResourc
 
     if (attachmentCount > 0)
     {
-        renderingWidth = attachments[0].GetImageWidth();
-        renderingHeight = attachments[0].GetImageHeight();
+        renderingWidth = attachments[0]->GetImageWidth();
+        renderingHeight = attachments[0]->GetImageHeight();
     }
 
     if (renderingWidth == 0 && depthAttachment != nullptr)
@@ -343,7 +343,7 @@ void Context::CmdBeginRendering(std::uint32_t attachmentCount, VKW::ImageResourc
         VkRenderingAttachmentInfoKHR& attachmentInfo = colorInfos.EmplaceBack();
         attachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
         attachmentInfo.pNext = nullptr;
-        attachmentInfo.imageView = attachments[i].handle_;
+        attachmentInfo.imageView = attachments[i]->handle_;
         attachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         attachmentInfo.resolveMode = VK_RESOLVE_MODE_NONE;
         attachmentInfo.resolveImageView = VK_NULL_HANDLE;

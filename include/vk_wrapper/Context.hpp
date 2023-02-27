@@ -121,7 +121,7 @@ public:
         ResourceAccess dstAccess, Stages dstStage);
 
 
-    void CmdBeginRendering(std::uint32_t attachmentCount, VKW::ImageResourceView const* attachments, VKW::ImageResourceView const* depthAttachment, VKW::ImageResourceView const* stencilAttachment);
+    void CmdBeginRendering(std::uint32_t attachmentCount, VKW::ImageResourceView* const* attachments, VKW::ImageResourceView const* depthAttachment, VKW::ImageResourceView const* stencilAttachment);
     void CmdClearAttachments(AttachmentMask attachments, float color[4]);
     void CmdClearAttachments(AttachmentMask attachments, float depth, std::uint32_t stencil);
     void CmdEndRendering();

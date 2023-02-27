@@ -6,6 +6,7 @@
 #include <utility>
 #include <charconv>
 #include <filesystem>
+#include <future>
 
 #include <foundation\memory\Memory.hpp>
 #include <foundation\memory\ByteBuffer.hpp>

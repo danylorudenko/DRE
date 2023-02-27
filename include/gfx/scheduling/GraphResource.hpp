@@ -10,8 +10,11 @@ enum class TextureID
     ID_None,
     MainDepth,
     ShadowMap,
-    ForwardRT,
+    ColorBuffer,
+    Velocity,
     DisplayEncodedImage,
+    ColorHistoryBuffer0,
+    ColorHistoryBuffer1,
     ID_MAX
 };
 
