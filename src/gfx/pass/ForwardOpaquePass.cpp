@@ -60,7 +60,7 @@ void ForwardObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::De
 
     //how to fucking write shadow uniform
 
-    glm::mat4 const mvp = view.GetViewProjectionM() * obj.GetModelM();
+    glm::mat4 const mvp = view.GetViewProjectionJitteredM() * obj.GetModelM();
     uniformProxy.WriteMember140(obj.GetModelM());
     uniformProxy.WriteMember140(mvp);
     uniformProxy.WriteMember140(mvp);

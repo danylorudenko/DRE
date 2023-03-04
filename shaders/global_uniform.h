@@ -21,6 +21,12 @@ layout(set = 2, binding = 0, std140) readonly uniform GlobalUniforms
     mat4 main_iViewM;
     mat4 main_ProjM;
     mat4 main_iProjM;
+    mat4 main_ProjJittM;
+    mat4 main_iProjJittM;
+    mat4 main_ViewProjM;
+    mat4 main_ViewProjJittM;
+    mat4 main_iViewProjM;
+    mat4 main_iViewProjJittM;
     vec4 main_LightDir;
     vec4 main_LightRadiance;
     // end
@@ -40,7 +46,9 @@ vec3    GetCameraDir() { return g_GlobalUniforms.main_CameraDir.xyz; }
 mat4    GetCameraViewM() { return g_GlobalUniforms.main_ViewM; }
 mat4    GetCameraiViewM() { return g_GlobalUniforms.main_iViewM; }
 mat4    GetCameraProjM() { return g_GlobalUniforms.main_ProjM; }
-mat4    GetCameraiProj() { return g_GlobalUniforms.main_iProjM; }
+mat4    GetCameraiProjM() { return g_GlobalUniforms.main_iProjM; }
+mat4    GetCameraProjJitteredM() { return g_GlobalUniforms.main_ProjJittM; }
+mat4    GetCameraiProjJitteredM() { return g_GlobalUniforms.main_iProjJittM; }
 
 vec3    GetMainLightDir() { return g_GlobalUniforms.main_LightDir.xyz; }
 vec3    GetMainLightRadiance() { return g_GlobalUniforms.main_LightRadiance.xyz; }

@@ -70,15 +70,37 @@ void GraphicsManager::CreateAllPasses()
     m_RenderGraph.InitGraphResources();
 }
 
+glm::vec2 constexpr s_HaltonSequence[16] = {
+    glm::vec2{ 0.500000, 0.333333 },
+    glm::vec2{ 0.250000, 0.666667 },
+    glm::vec2{ 0.750000, 0.111111 },
+    glm::vec2{ 0.125000, 0.444444 },
+    glm::vec2{ 0.625000, 0.777778 },
+    glm::vec2{ 0.375000, 0.222222 },
+    glm::vec2{ 0.875000, 0.555556 },
+    glm::vec2{ 0.062500, 0.888889 },
+    glm::vec2{ 0.562500, 0.037037 },
+    glm::vec2{ 0.312500, 0.370370 },
+    glm::vec2{ 0.812500, 0.703704 },
+    glm::vec2{ 0.187500, 0.148148 },
+    glm::vec2{ 0.687500, 0.481481 },
+    glm::vec2{ 0.437500, 0.814815 },
+    glm::vec2{ 0.937500, 0.259259 },
+    glm::vec2{ 0.031250, 0.592593 }
+};
+
 void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, std::uint64_t deltaTimeUS)
 {
     VKW::BufferResource* buffer = m_GlobalUniforms[GetCurrentFrameID()];
     void* dst = buffer->memory_.GetRegionMappedPtr();
-    
+
+    glm::vec2 const halton = s_HaltonSequence[GetCurrentGraphicsFrame() % (sizeof(s_HaltonSequence) / sizeof(glm::vec2))];
+    glm::vec2 const taaJitter = ((halton - 0.5f) / glm::vec2(m_MainView.GetSize())) * 2.0f;
+
     WORLD::Camera const& camera = scene.GetMainCamera();
     m_MainView.UpdatePlacement(camera.GetPosition(), camera.GetForward(), camera.GetUp());
     m_MainView.UpdateViewport(glm::uvec2{ 0, 0 }, glm::uvec2{ GetRenderingWidth(), GetRenderingHeight() });
-    m_MainView.UpdateProjection(camera.GetFOV(), camera.GetRange()[0], camera.GetRange()[1]);
+    m_MainView.UpdateProjection(camera.GetFOV(), camera.GetRange()[0], camera.GetRange()[1], taaJitter.x, taaJitter.y);
 
     WORLD::DirectionalLight const& sunLight = scene.GetMainSunLight();
     m_SunShadowView.UpdatePlacement(sunLight.GetPosition(), sunLight.GetForward(), sunLight.GetUp());
@@ -88,20 +110,26 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
         -C_SHADOW_MAP_WORLD_EXTENT, C_SHADOW_MAP_WORLD_EXTENT,
         -C_SHADOW_MAP_WORLD_EXTENT, C_SHADOW_MAP_WORLD_EXTENT);
 
+
     GlobalUniforms globalUniform{};
     globalUniform.viewportSize_deltaMS_0[0] = static_cast<float>(GetRenderingWidth());
     globalUniform.viewportSize_deltaMS_0[1] = static_cast<float>(GetRenderingHeight());
     globalUniform.viewportSize_deltaMS_0[2] = static_cast<float>(static_cast<double>(deltaTimeUS) / 1000.0);
     globalUniform.viewportSize_deltaMS_0[3] = 0.0f;
 
-    globalUniform.main_CameraPos     = glm::vec4{ scene.GetMainCamera().GetPosition(), 1.0f };
-    globalUniform.main_CameraDir     = glm::vec4{ scene.GetMainCamera().GetForward(), 0.0f };
-    globalUniform.main_ViewM         = m_MainView.GetViewM();
-    globalUniform.main_iViewM        = m_MainView.GetInvViewM();
-    globalUniform.main_ProjM         = m_MainView.GetProjectionM();
-    globalUniform.main_iProjM        = m_MainView.GetInvProjectionM();
-    globalUniform.main_LightDir      = glm::vec4{ scene.GetMainSunLight().GetForward(), 0.0f };
-    globalUniform.main_LightRadiance = glm::vec4{ scene.GetMainSunLight().GetRadiance(), 1.0f };
+    globalUniform.main_CameraPos        = glm::vec4{ scene.GetMainCamera().GetPosition(), 1.0f };
+    globalUniform.main_CameraDir        = glm::vec4{ scene.GetMainCamera().GetForward(), 0.0f };
+    globalUniform.main_ViewM            = m_MainView.GetViewM();
+    globalUniform.main_iViewM           = m_MainView.GetInvViewM();
+    globalUniform.main_ProjM            = m_MainView.GetProjectionM();
+    globalUniform.main_ProjJittM        = m_MainView.GetProjectionJitteredM();
+    globalUniform.main_iProjJittM       = m_MainView.GetInvProjectionJitteredM();
+    globalUniform.main_ViewProjM        = m_MainView.GetViewProjectionM();
+    globalUniform.main_ViewProjJittM    = m_MainView.GetViewProjectionJitteredM();
+    globalUniform.main_iViewProjM       = m_MainView.GetInvViewProjectionM();
+    globalUniform.main_iViewProjJittM   = m_MainView.GetInvViewProjectionJitteredM();
+    globalUniform.main_LightDir         = glm::vec4{ scene.GetMainSunLight().GetForward(), 0.0f };
+    globalUniform.main_LightRadiance    = glm::vec4{ scene.GetMainSunLight().GetRadiance(), 1.0f };
 
     std::memcpy(dst, &globalUniform, sizeof(globalUniform));
 
