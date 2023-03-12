@@ -56,6 +56,12 @@ void AntiAliasingPass::Render(RenderGraph& graph, VKW::Context& context)
     writeDesc.AddStorageImage(taaOutput, 4);    // output
     g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->WriteDescriptorSet(passSet, writeDesc);
 
+    {
+        glm::vec4 taaAlpha{ g_GraphicsManager->GetGraphicsSettings().m_AlphaTAA, 0.0f, 0.0f, 0.0f };
+        UniformProxy uniform = graph.GetPassUniform(GetID(), context, sizeof(taaAlpha));
+        uniform.WriteMember140(taaAlpha);
+    }
+
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, colorInput->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, velocity->parentResource_, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, history->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);

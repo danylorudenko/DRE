@@ -12,7 +12,7 @@ layout (set=3, binding=4, rgba8) uniform image2D     taa_output;
 
 layout (set=3, binding=0, std140) uniform PassUniform
 {
-    vec4 useTAA;
+    vec4 alpha;
 } passUniform;
 
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
@@ -24,7 +24,8 @@ void main()
     vec3 accum = SampleTexture(history, GetSamplerNearest(), uv).rgb;
     vec3 current = SampleTexture(color_buffer, GetSamplerNearest(), uv).rgb;
     
-    vec3 result = mix(current, accum, 0.9);
+	float alpha = passUniform.alpha.x;
+    vec3 result = mix(current, accum, alpha);
 
     imageStore(taa_output, coords, vec4(result, 1.0));
 }

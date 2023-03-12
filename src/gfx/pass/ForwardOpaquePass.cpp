@@ -60,10 +60,11 @@ void ForwardObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::De
 
     //how to fucking write shadow uniform
 
-    glm::mat4 const mvp = view.GetViewProjectionJitteredM() * obj.GetModelM();
+    glm::mat4 const mvp = view.GetViewProjectionM() * obj.GetModelM();
+    glm::mat4 const prev_mvp = view.GetPrevViewProjectionM() * obj.GetModelM(); // not prev model, since all geometry is static, prev is invalid
     uniformProxy.WriteMember140(obj.GetModelM());
     uniformProxy.WriteMember140(mvp);
-    uniformProxy.WriteMember140(mvp);
+    uniformProxy.WriteMember140(prev_mvp);
 
     std::uint32_t textureIDs[4] = {
        obj.GetDiffuseTexture()->GetShaderReadDescriptor().id_,

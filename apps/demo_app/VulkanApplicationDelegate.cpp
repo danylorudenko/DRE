@@ -14,7 +14,7 @@
 
 
 ////////////////
-constexpr bool C_COMPILE_GLSL_SOURCES_ON_START = false;
+constexpr bool C_COMPILE_GLSL_SOURCES_ON_START = true;
 ////////////////
 
 //////////////////////////////////////////
@@ -37,6 +37,7 @@ VulkanApplicationDelegate::VulkanApplicationDelegate(HINSTANCE instance, char co
     , m_EngineFrame{ 0 }
     , m_MainScene{ &DRE::g_MainAllocator }
     , m_RotateSun{ false }
+    , m_RotateCamera{ false }
 {
     WORLD::g_MainScene = &m_MainScene;
 }
@@ -141,6 +142,9 @@ void VulkanApplicationDelegate::update()
     if (m_RotateSun)
         m_MainScene.GetMainSunLight().Rotate(glm::vec3{ 0.0f, C_SUN_ROTATOR_MUL * m_DeltaMicroseconds, 0.0f });
 
+    if (m_RotateCamera)
+        m_MainScene.GetMainCamera().Rotate(glm::vec3{ 0.0f, C_SUN_ROTATOR_MUL * m_DeltaMicroseconds * 15.0f, 0.0f});
+
     m_GraphicsManager.RenderFrame(m_EngineFrame, m_DeltaMicroseconds);
 
     m_EngineFrame++;
@@ -240,6 +244,22 @@ void VulkanApplicationDelegate::ImGuiUser()
             ImGui::Checkbox("Rotate sun", &m_RotateSun);
             ImGui::Checkbox("Use ACES", &m_GraphicsManager.GetGraphicsSettings().m_UseACESEncoding);
             ImGui::SliderFloat("Exposure target EV", &m_GraphicsManager.GetGraphicsSettings().m_ExposureEV, -3.0f, 5.0f);
+
+            if (ImGui::Button("Enable TAA"))
+            {
+                m_GraphicsManager.GetGraphicsSettings().m_AlphaTAA = 0.9f;
+                m_GraphicsManager.GetGraphicsSettings().m_JitterScale = 2.0f;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Disable TAA"))
+            {
+                m_GraphicsManager.GetGraphicsSettings().m_AlphaTAA = 0.0f;
+                m_GraphicsManager.GetGraphicsSettings().m_JitterScale = 0.0f;
+            }
+
+            ImGui::SliderFloat("TAA Alpha", &m_GraphicsManager.GetGraphicsSettings().m_AlphaTAA, 0.0f, 1.0f);
+            ImGui::SliderFloat("TAA Jitter Scale", &m_GraphicsManager.GetGraphicsSettings().m_JitterScale, 0.0f, 5.0f);
+            ImGui::Checkbox("Rotate cam", &m_RotateCamera);
 
             ImGui::End();
         }

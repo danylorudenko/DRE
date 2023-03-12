@@ -24,7 +24,7 @@ layout(set = 4, binding = 0, std140) uniform InstanceUniform
 {
     mat4  model_mat;
     mat4  mvp_mat;
-    mat4  prev_mvp_mat;
+    mat4  prev_model_mat;
     uvec4 textureIDs;
 } instanceUniform;
 
@@ -67,62 +67,6 @@ vec3 FresnelShlick(float NdotH, vec3 color, float metalness)
 
 #define ENABLE_PCF 1
 #define ENABLE_PCF_POISSON 1
-
-const vec2 poisson32[32] =
-{
-    vec2(-0.397889, 0.542226),
-    vec2(-0.414755, -0.394183),
-    vec2(0.131764, -0.713506),
-    vec2(0.551543, 0.554334),
-    vec2(0.317522, -0.088899),
-    vec2(0.927145, 0.283128),
-    vec2(0.141766, 0.672284),
-    vec2(-0.626308, 0.079957),
-    vec2(-0.379704, -0.823208),
-    vec2(-0.165635, 0.116704),
-    vec2(0.477730, -0.835368),
-    vec2(0.823137, -0.082292),
-    vec2(-0.254509, 0.914898),
-    vec2(-0.029949, -0.332681),
-    vec2(-0.735420, 0.649945),
-    vec2(0.269829, 0.337499),
-    vec2(0.589355, 0.188804),
-    vec2(0.495027, -0.463772),
-    vec2(0.430761, 0.880621),
-    vec2(-0.740073, -0.226115),
-    vec2(-0.843081, 0.319486),
-    vec2(-0.118380, 0.503956),
-    vec2(-0.103058, -0.967695),
-    vec2(-0.989892, 0.031239),
-    vec2(-0.650113, -0.657721),
-    vec2(-0.395081, -0.071884),
-    vec2(-0.409406, 0.272306),
-    vec2(0.112218, 0.112523),
-    vec2(0.258025, -0.346162),
-    vec2(0.105651, 0.945739),
-    vec2(-0.164829, -0.660185),
-    vec2(0.700367, -0.693439)
-};
-
-const vec2 poisson16[16] =
-{
-    vec2(-0.376812, 0.649265),
-    vec2(-0.076855, -0.632508),
-    vec2(-0.833781, -0.268513),
-    vec2(0.398413, 0.027787),
-    vec2(0.360999, 0.766915),
-    vec2(0.584715, -0.809986),
-    vec2(-0.238882, 0.067867),
-    vec2(0.824410, 0.543863),
-    vec2(0.883033, -0.143517),
-    vec2(-0.581550, -0.809760),
-    vec2(-0.682282, 0.223546),
-    vec2(0.438031, -0.405749),
-    vec2(0.045340, 0.428813),
-    vec2(-0.311559, -0.328006),
-    vec2(-0.054146, 0.935302),
-    vec2(0.723339, 0.196795)
-};
 
 float CalculateShadow(vec3 wpos)
 {
@@ -203,14 +147,9 @@ void main()
 
     float shadow = CalculateShadow(in_wpos);
 
-    vec3 res = shadow * (kD * diffuse+ specular) * NdotL + ambient;
-    
-    // debug section
-    vec2 screenUV = gl_FragCoord.xy / GetViewportSize();
-    float shadowValue = texture(sampler2D(shadowMap, GetSamplerLinear()), screenUV).r;
-    
-    //finalColor = vec4(shadowValue.rrr, 1.0);
-    //finalColor = vec4(shadow.rrr, 1.0);
+    vec3 res = shadow * (kD * diffuse+ specular) * NdotL + ambient;    
+	
     finalColor = vec4(res, 1.0);
-    velocity = in_velocity;
+	velocity = in_velocity;
+	
 }

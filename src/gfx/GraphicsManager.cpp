@@ -91,11 +91,15 @@ glm::vec2 constexpr s_HaltonSequence[16] = {
 
 void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, std::uint64_t deltaTimeUS)
 {
+    m_MainView.UpdatePreviosFrame();
+    m_SunShadowView.UpdatePreviosFrame();
+    
     VKW::BufferResource* buffer = m_GlobalUniforms[GetCurrentFrameID()];
     void* dst = buffer->memory_.GetRegionMappedPtr();
 
     glm::vec2 const halton = s_HaltonSequence[GetCurrentGraphicsFrame() % (sizeof(s_HaltonSequence) / sizeof(glm::vec2))];
-    glm::vec2 const taaJitter = ((halton - 0.5f) / glm::vec2(m_MainView.GetSize())) * 2.0f;
+    glm::vec2 const taaJitter = ((halton - 0.5f) / glm::vec2(m_MainView.GetSize())) * 2.0f * glm::vec2{ GetGraphicsSettings().m_JitterScale };
+
 
     WORLD::Camera const& camera = scene.GetMainCamera();
     m_MainView.UpdatePlacement(camera.GetPosition(), camera.GetForward(), camera.GetUp());
@@ -119,6 +123,8 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
 
     globalUniform.main_CameraPos        = glm::vec4{ scene.GetMainCamera().GetPosition(), 1.0f };
     globalUniform.main_CameraDir        = glm::vec4{ scene.GetMainCamera().GetForward(), 0.0f };
+    globalUniform.main_Jitter           = glm::vec4{ taaJitter, 0.0f, 0.0f };
+
     globalUniform.main_ViewM            = m_MainView.GetViewM();
     globalUniform.main_iViewM           = m_MainView.GetInvViewM();
     globalUniform.main_ProjM            = m_MainView.GetProjectionM();
@@ -128,6 +134,17 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     globalUniform.main_ViewProjJittM    = m_MainView.GetViewProjectionJitteredM();
     globalUniform.main_iViewProjM       = m_MainView.GetInvViewProjectionM();
     globalUniform.main_iViewProjJittM   = m_MainView.GetInvViewProjectionJitteredM();
+
+    globalUniform.main_PrevViewM          = m_MainView.GetPrevViewM();
+    globalUniform.main_PreviViewM         = m_MainView.GetPrevInvViewM();
+    globalUniform.main_PrevProjM          = m_MainView.GetPrevProjectionM();
+    globalUniform.main_PrevProjJittM      = m_MainView.GetPrevProjectionJitteredM();
+    globalUniform.main_PreviProjJittM     = m_MainView.GetPrevInvProjectionJitteredM();
+    globalUniform.main_PrevViewProjM      = m_MainView.GetPrevViewProjectionM();
+    globalUniform.main_PrevViewProjJittM  = m_MainView.GetPrevViewProjectionJitteredM();
+    globalUniform.main_PreviViewProjM     = m_MainView.GetPrevInvViewProjectionM();
+    globalUniform.main_PreviViewProjJittM = m_MainView.GetPrevInvViewProjectionJitteredM();
+
     globalUniform.main_LightDir         = glm::vec4{ scene.GetMainSunLight().GetForward(), 0.0f };
     globalUniform.main_LightRadiance    = glm::vec4{ scene.GetMainSunLight().GetRadiance(), 1.0f };
 

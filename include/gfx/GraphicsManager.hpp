@@ -52,8 +52,10 @@ namespace GFX
 
 struct GraphicsSettings
 {
-    bool    m_UseACESEncoding       = true;
+    bool    m_UseACESEncoding       = false;
     float   m_ExposureEV            = 0.0f;
+    float   m_AlphaTAA              = 0.0f;
+    float   m_JitterScale           = 2.0f;
 };
 
 class GraphicsManager final

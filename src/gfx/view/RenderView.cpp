@@ -1,6 +1,5 @@
 #include <gfx\view\RenderView.hpp>
 
-#include <glm\ext\matrix_transform.hpp>
 #include <glm\ext\matrix_clip_space.hpp>
 
 #include <foundation\memory\AllocatorLinear.hpp>
@@ -9,36 +8,11 @@ namespace GFX
 {
 
 RenderView::RenderView()
-    : m_Offset{ 0, 0 }
-    , m_Size{ 0, 0 }
-    , m_Jitter{ 0.0f, 0.0f }
-    , m_V   { glm::identity<glm::mat4>() }
-    , m_iV  { glm::identity<glm::mat4>() }
-    , m_P   { glm::identity<glm::mat4>() }
-    , m_PJitt{ glm::identity<glm::mat4>() }
-    , m_iP  { glm::identity<glm::mat4>() }
-    , m_iPJitt{ glm::identity<glm::mat4>() }
-    , m_VP  { glm::identity<glm::mat4>() }
-    , m_VPJitt{ glm::identity<glm::mat4>() }
-    , m_iVP { glm::identity<glm::mat4>() }
-    , m_iVPJitt{ glm::identity<glm::mat4>() }
-    , m_Allocator{ nullptr }
+    : m_Allocator{ nullptr }
 {}
 
 RenderView::RenderView(DRE::DefaultAllocator* allocator)
-    : m_Offset{ 0, 0 }
-    , m_Size{ 0, 0 }
-    , m_V{ glm::identity<glm::mat4>() }
-    , m_iV{ glm::identity<glm::mat4>() }
-    , m_P{ glm::identity<glm::mat4>() }
-    , m_PJitt{ glm::identity<glm::mat4>() }
-    , m_iP{ glm::identity<glm::mat4>() }
-    , m_iPJitt{ glm::identity<glm::mat4>() }
-    , m_VP{ glm::identity<glm::mat4>() }
-    , m_VPJitt{ glm::identity<glm::mat4>() }
-    , m_iVP{ glm::identity<glm::mat4>() }
-    , m_iVPJitt{ glm::identity<glm::mat4>() }
-    , m_Allocator{ allocator }
+    : m_Allocator{ allocator }
     , m_Objects{ allocator }
 {
     m_Objects.Reserve(2048);
@@ -46,59 +20,64 @@ RenderView::RenderView(DRE::DefaultAllocator* allocator)
 
 void RenderView::UpdateViewport(glm::uvec2 offset, glm::uvec2 size)
 {
-    m_Offset = offset;
-    m_Size = size;
+    m_Current.offset = offset;
+    m_Current.size = size;
 }
 
 void RenderView::UpdatePlacement(glm::vec3 viewerPos, glm::vec3 viewDirection, glm::vec3 up)
 {
-    m_V = glm::lookAtRH(viewerPos, viewerPos + viewDirection, up);
-    m_iV = glm::transpose(m_V);
+    m_Current.V = glm::lookAtRH(viewerPos, viewerPos + viewDirection, up);
+    m_Current.iV = glm::transpose(m_Current.V);
 
-    m_VP = m_P * m_V;
-    m_iVP = m_iP * m_iV;
+    m_Current.VP = m_Current.P * m_Current.V;
+    m_Current.iVP = m_Current.iP * m_Current.iV;
 }
 
 void RenderView::UpdateProjection(float fov, float zNear, float zFar, float xJitter, float yJitter)
 {
-    m_Jitter.x = xJitter;
-    m_Jitter.y = yJitter;
+    m_Current.jitter.x = xJitter;
+    m_Current.jitter.y = yJitter;
 
-    float const aspect = static_cast<float>(m_Size[0]) / static_cast<float>(m_Size[1]);
-    m_P = glm::perspectiveRH_ZO(glm::radians(fov), aspect, zFar, zNear); // depth is reversed
-    m_P[1][1] *= -1.0f;
+    float const aspect = static_cast<float>(m_Current.size[0]) / static_cast<float>(m_Current.size[1]);
+    m_Current.P = glm::perspectiveRH_ZO(glm::radians(fov), aspect, zFar, zNear); // depth is reversed
+    m_Current.P[1][1] *= -1.0f;
 
-    m_PJitt = m_P;
-    m_PJitt[3][0] += xJitter;
-    m_PJitt[3][1] += yJitter;
+    m_Current.PJitt = m_Current.P;
+    m_Current.PJitt[3][0] += xJitter;
+    m_Current.PJitt[3][1] += yJitter;
 
-    m_iP = glm::inverse(m_P);
-    m_iPJitt = glm::inverse(m_PJitt);
+    m_Current.iP = glm::inverse(m_Current.P);
+    m_Current.iPJitt = glm::inverse(m_Current.PJitt);
 
-    m_VP = m_P * m_V;
-    m_VPJitt = m_PJitt * m_V;
-    m_iVP = m_iP * m_iV;
-    m_iVPJitt = m_iPJitt * m_iV;
+    m_Current.VP = m_Current.P * m_Current.V;
+    m_Current.VPJitt = m_Current.PJitt * m_Current.V;
+    m_Current.iVP = m_Current.iP * m_Current.iV;
+    m_Current.iVPJitt = m_Current.iPJitt * m_Current.iV;
 }
 
 void RenderView::UpdateProjection(float left, float right, float bottom, float top, float zNear, float zFar, float xJitter, float yJitter)
 {
-    m_Jitter.x = xJitter;
-    m_Jitter.y = yJitter;
+    m_Current.jitter.x = xJitter;
+    m_Current.jitter.y = yJitter;
 
-    m_P = glm::orthoRH_ZO(left, right, bottom, top, zFar, zNear); // depth is reversed
-    m_P[1][1] *= -1.0f;
+    m_Current.P = glm::orthoRH_ZO(left, right, bottom, top, zFar, zNear); // depth is reversed
+    m_Current.P[1][1] *= -1.0f;
 
-    m_PJitt = m_P;
-    m_PJitt[3][0] += xJitter;
-    m_PJitt[3][1] += yJitter;
+    m_Current.PJitt = m_Current.P;
+    m_Current.PJitt[3][0] += xJitter;
+    m_Current.PJitt[3][1] += yJitter;
 
-    m_iP = glm::inverse(m_P);
+    m_Current.iP = glm::inverse(m_Current.P);
 
-    m_VP = m_P * m_V;
-    m_VPJitt = m_PJitt * m_V;
-    m_iVP = m_iP * m_iV;
-    m_iVPJitt = m_iPJitt * m_iV;
+    m_Current.VP = m_Current.P * m_Current.V;
+    m_Current.VPJitt = m_Current.PJitt * m_Current.V;
+    m_Current.iVP = m_Current.iP * m_Current.iV;
+    m_Current.iVPJitt = m_Current.iPJitt * m_Current.iV;
+}
+
+void RenderView::UpdatePreviosFrame()
+{
+    m_Prev = m_Current;
 }
 
 void RenderView::AddObjects(std::uint32_t count, RenderableObject* objects)

@@ -29,14 +29,15 @@ layout(set = 4, binding = 0, std140) uniform InstanceUniform
 void main()
 {
     out_wpos = vec3(instanceUniform.model_mat * vec4(in_pos, 1.0));
-
     out_uv = in_uv;
 
-    vec4 ndc_pos = instanceUniform.mvp_mat * vec4(in_pos, 1.0);
-    vec4 prev_ndc_pos = instanceUniform.prev_mvp_mat * vec4(in_pos, 1.0);
-
+	vec4 ndc_pos = instanceUniform.mvp_mat * vec4(in_pos, 1.0);
     gl_Position = ndc_pos;
-    out_velocity = ndc_pos.xy - prev_ndc_pos.xy;
+	
+	vec4 prev_ndc_pos = instanceUniform.prev_mvp_mat * vec4(in_pos, 1.0);
+	
+    vec2 ndc_velocity = ndc_pos.xy - prev_ndc_pos.xy;
+	out_velocity = ndc_velocity * 0.5;
     
     vec3 T = normalize(vec3(instanceUniform.model_mat * vec4(in_tan, 0.0)));
     vec3 B = normalize(vec3(instanceUniform.model_mat * vec4(in_btan, 0.0)));

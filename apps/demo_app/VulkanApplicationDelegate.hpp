@@ -68,4 +68,5 @@ private:
 
     WORLD::Scene                        m_MainScene;
     bool                                m_RotateSun;
+    bool                                m_RotateCamera;
 };

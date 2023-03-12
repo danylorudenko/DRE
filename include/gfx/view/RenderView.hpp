@@ -9,6 +9,7 @@
 #include <glm\vec3.hpp>
 
 #include <glm\mat4x4.hpp>
+#include <glm\ext\matrix_transform.hpp>
 
 #include <gfx\renderer\RenderableObject.hpp>
 
@@ -27,22 +28,40 @@ public:
     void UpdatePlacement(glm::vec3 viewerPos, glm::vec3 viewDirection, glm::vec3 up);
     void UpdateProjection(float fov, float zNear, float zFar, float xJitter = 0.0f, float yJitter = 0.0f);
     void UpdateProjection(float left, float right, float bottom, float top, float zNear, float zFar, float xJitter = 0.0f, float yJitter = 0.0f);
+    void UpdatePreviosFrame();
 
-    inline glm::uvec2 const&    GetOffset() const { return m_Offset; }
-    inline glm::uvec2 const&    GetSize() const { return m_Size; }
+    inline glm::uvec2 const&    GetOffset() const { return m_Current.offset; }
+    inline glm::uvec2 const&    GetSize() const { return m_Current.size; }
 
-    inline glm::mat4 const&     GetViewM() const { return m_V; }
-    inline glm::mat4 const&     GetInvViewM() const { return m_iV; }
+    inline glm::mat4 const&     GetViewM() const { return m_Current.V; }
+    inline glm::mat4 const&     GetInvViewM() const { return m_Current.iV; }
 
-    inline glm::mat4 const&     GetProjectionM() const { return m_P; }
-    inline glm::mat4 const&     GetProjectionJitteredM() const { return m_PJitt; }
-    inline glm::mat4 const&     GetInvProjectionM() const{ return m_iP; }
-    inline glm::mat4 const&     GetInvProjectionJitteredM() const{ return m_iPJitt; }
+    inline glm::mat4 const&     GetProjectionM() const { return m_Current.P; }
+    inline glm::mat4 const&     GetProjectionJitteredM() const { return m_Current.PJitt; }
+    inline glm::mat4 const&     GetInvProjectionM() const{ return m_Current.iP; }
+    inline glm::mat4 const&     GetInvProjectionJitteredM() const{ return m_Current.iPJitt; }
 
-    inline glm::mat4 const&     GetViewProjectionM() const { return m_VP; }
-    inline glm::mat4 const&     GetViewProjectionJitteredM() const { return m_VPJitt; }
-    inline glm::mat4 const&     GetInvViewProjectionM() const { return m_iVP; }
-    inline glm::mat4 const&     GetInvViewProjectionJitteredM() const { return m_iVPJitt; }
+    inline glm::mat4 const&     GetViewProjectionM() const { return m_Current.VP; }
+    inline glm::mat4 const&     GetViewProjectionJitteredM() const { return m_Current.VPJitt; }
+    inline glm::mat4 const&     GetInvViewProjectionM() const { return m_Current.iVP; }
+    inline glm::mat4 const&     GetInvViewProjectionJitteredM() const { return m_Current.iVPJitt; }
+
+    inline glm::uvec2 const&    GetPrevOffset() const { return m_Prev.offset; }
+    inline glm::uvec2 const&    GetPrevSize() const { return m_Prev.size; }
+
+    inline glm::mat4 const&     GetPrevViewM() const { return m_Prev.V; }
+    inline glm::mat4 const&     GetPrevInvViewM() const { return m_Prev.iV; }
+
+    inline glm::mat4 const&     GetPrevProjectionM() const { return m_Prev.P; }
+    inline glm::mat4 const&     GetPrevProjectionJitteredM() const { return m_Prev.PJitt; }
+    inline glm::mat4 const&     GetPrevInvProjectionM() const{ return m_Prev.iP; }
+    inline glm::mat4 const&     GetPrevInvProjectionJitteredM() const{ return m_Prev.iPJitt; }
+
+    inline glm::mat4 const&     GetPrevViewProjectionM() const { return m_Prev.VP; }
+    inline glm::mat4 const&     GetPrevViewProjectionJitteredM() const { return m_Prev.VPJitt; }
+    inline glm::mat4 const&     GetPrevInvViewProjectionM() const { return m_Prev.iVP; }
+    inline glm::mat4 const&     GetPrevInvViewProjectionJitteredM() const { return m_Prev.iVPJitt; }
+
 
     inline auto const&          GetObjects() const { return m_Objects; }
 
@@ -50,22 +69,29 @@ public:
     void AddObjects(std::uint32_t count, RenderableObject* objects);
 
 private:
-    glm::uvec2 m_Offset;
-    glm::uvec2 m_Size;
-    glm::vec2  m_Jitter;
+    struct ViewParams
+    {
+        glm::uvec2 offset     = glm::uvec2{ 0, 0 };
+        glm::uvec2 size       = glm::uvec2{ 0, 0 };
+        glm::vec2  jitter     = glm::vec2{ 0.0f, 0.0f };
 
-    glm::mat4  m_V;
-    glm::mat4  m_iV;
+        glm::mat4  V          = glm::identity<glm::mat4>();
+        glm::mat4  iV         = glm::identity<glm::mat4>();
 
-    glm::mat4  m_P;
-    glm::mat4  m_PJitt;
-    glm::mat4  m_iP;
-    glm::mat4  m_iPJitt;
+        glm::mat4  P          = glm::identity<glm::mat4>();
+        glm::mat4  PJitt      = glm::identity<glm::mat4>();
+        glm::mat4  iP         = glm::identity<glm::mat4>();
+        glm::mat4  iPJitt     = glm::identity<glm::mat4>();
 
-    glm::mat4  m_VP;
-    glm::mat4  m_VPJitt;
-    glm::mat4  m_iVP;
-    glm::mat4  m_iVPJitt;
+        glm::mat4  VP         = glm::identity<glm::mat4>();
+        glm::mat4  VPJitt     = glm::identity<glm::mat4>();
+        glm::mat4  iVP        = glm::identity<glm::mat4>();
+        glm::mat4  iVPJitt    = glm::identity<glm::mat4>();
+    };
+
+    ViewParams m_Current;
+    ViewParams m_Prev;
+
 
     DRE::DefaultAllocator* m_Allocator;
 

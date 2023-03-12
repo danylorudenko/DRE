@@ -127,13 +127,20 @@ struct DREIncludeData
 class DREIncluder : public shaderc::CompileOptions::IncluderInterface
 {
 public:
+    DREIncluder(IOManager* manager)
+        : m_IOManager{ manager }
+    {}
+
     virtual shaderc_include_result* GetInclude(const char* requested_source,
         shaderc_include_type type,
         const char* requesting_source,
         size_t include_depth) override
     {
+        std::mutex& m = m_IOManager->GetShaderIncluderMutex();
+        m.lock();
         shaderc_include_result* result = DRE::g_FrameScratchAllocator.Alloc<shaderc_include_result>();
         DREIncludeData* data = new (DRE::g_FrameScratchAllocator.Alloc<DREIncludeData>()) DREIncludeData{};
+        m.unlock();
 
         data->contentName = "shaders\\";
         data->contentName.Append(requested_source);
@@ -161,6 +168,9 @@ public:
     }
 
     virtual ~DREIncluder() = default;
+
+private:
+    IOManager* m_IOManager;
 };
 
 DRE::ByteBuffer IOManager::CompileGLSL(char const* path)
@@ -188,7 +198,7 @@ DRE::ByteBuffer IOManager::CompileGLSL(char const* path)
     shaderc::Compiler compiler;
     shaderc::CompileOptions options;
     options.SetTargetEnvironment(shaderc_target_env::shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
-    options.SetIncluder(std::make_unique< DREIncluder>());
+    options.SetIncluder(std::make_unique<DREIncluder>(this));
 
     shaderc::PreprocessedSourceCompilationResult preprocess = compiler.PreprocessGlsl(sourceBlob.As<char*>(), sourceBlob.Size(), kind, path, options);
     if (preprocess.GetCompilationStatus() != shaderc_compilation_status_success)
@@ -511,21 +521,43 @@ void ParseShaderInterface(spirv_cross::Compiler& compiler, IOManager::ShaderInte
 void IOManager::CompileGLSLSources()
 {
     std::filesystem::recursive_directory_iterator dir_iterator{ "shaders", std::filesystem::directory_options::follow_directory_symlink };
+    DRE::Vector<DRE::String64, DRE::AllocatorLinear> fileNames{ &DRE::g_FrameScratchAllocator };
     
     for (auto const& entry : dir_iterator)
     {
         if (entry.path().has_extension() &&
             (entry.path().extension() == ".vert" || entry.path().extension() == ".frag" || entry.path().extension() == ".comp"))
         {
-            // .stem() is a filename without extension
-            DRE::String64 path{ entry.path().generic_string().c_str() };
-            DRE::ByteBuffer spirv = CompileGLSL(path.GetData());
-
-            DRE_ASSERT(spirv.Size() > 0, "Can't run with invalid shader.");
-
-            path.Append(".spv");
-            WriteNewFile(path.GetData(), spirv);
+            fileNames.EmplaceBack(entry.path().generic_string().c_str());
         }
+    }
+
+    std::uint32_t constexpr parallelFactor = 4;
+    std::uint32_t const parallelChunkSize = fileNames.Size() / parallelFactor + 1;
+
+    DRE::InplaceVector<std::future<void>, parallelFactor> parallelCompilations;
+    for (std::uint32_t i = 0; i < parallelFactor; i++)
+    {
+        parallelCompilations.EmplaceBack(std::async(std::launch::async, [parallelChunkSize, &parallelCompilations, &fileNames, this](std::uint32_t chunkID) 
+            {
+                std::uint32_t chunkStart = chunkID * parallelChunkSize;
+                std::uint32_t chunkEnd = DRE::Min((chunkID + 1) * parallelChunkSize, fileNames.Size());
+
+                for (std::uint32_t j = chunkStart; j < chunkEnd; j++)
+                {
+                    DRE::String64& name = fileNames[j];
+                    DRE::ByteBuffer spirv = CompileGLSL(name.GetData());
+                    DRE_ASSERT(spirv.Size() > 0, "Can't run with invalid shader.");
+                    name.Append(".spv");
+                    WriteNewFile(name.GetData(), spirv);
+                }
+            }, i));
+    }
+
+    // std::wait_all not available yet/experimental. Though we should be fine
+    for (std::uint32_t i = 0; i < parallelFactor; i++)
+    {
+        parallelCompilations[i].wait();
     }
 }
 

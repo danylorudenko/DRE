@@ -36,6 +36,7 @@ public:
     RenderableObject(VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount);
 
     inline glm::mat4x4 const&           GetModelM() const { return m_ModelM; }
+    inline glm::mat4x4 const&           GetPrevModelM() const { return m_PrevModelM; }
     inline VKW::Pipeline*               GetPipeline() const{ return m_Pipeline; }
     inline VKW::BufferResource*         GetVertexBuffer() const{ return m_VertexBuffer; }
     inline VKW::BufferResource*         GetIndexBuffer() const { return m_IndexBuffer; }
@@ -51,6 +52,7 @@ public:
 
 private:
     glm::mat4x4             m_ModelM;
+    glm::mat4x4             m_PrevModelM;
     VKW::Pipeline*          m_Pipeline;
     VKW::BufferResource*    m_VertexBuffer;
     VKW::BufferResource*    m_IndexBuffer;
