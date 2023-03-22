@@ -20,8 +20,10 @@ void main()
 {
     ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
     vec2 uv = (vec2(coords) + 0.5) / GetViewportSize();
+	vec2 vel = SampleTexture(velocity, GetSamplerNearest(), uv).xy;
+	vec2 uv_prev = uv - vel;
 
-    vec3 accum = SampleTexture(history, GetSamplerNearest(), uv).rgb;
+    vec3 accum = SampleTexture(history, GetSamplerNearest(), uv_prev).rgb;
     vec3 current = SampleTexture(color_buffer, GetSamplerNearest(), uv).rgb;
     
 	float alpha = passUniform.alpha.x;

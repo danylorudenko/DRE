@@ -65,6 +65,8 @@ mat4    GetCameraProjM() { return g_GlobalUniforms.main_ProjM; }
 mat4    GetCameraiProjM() { return g_GlobalUniforms.main_iProjM; }
 mat4    GetCameraProjJitteredM() { return g_GlobalUniforms.main_ProjJittM; }
 mat4    GetCameraiProjJitteredM() { return g_GlobalUniforms.main_iProjJittM; }
+mat4	GetCameraViewProjM() { return g_GlobalUniforms.main_ViewProjM; }
+mat4	GetCameraiViewProjM() { return g_GlobalUniforms.main_iViewProjM; }
 
 mat4    GetPrevCameraViewM() { return g_GlobalUniforms.main_PrevViewM; }
 mat4    GetPrevCameraiViewM() { return g_GlobalUniforms.main_PreviViewM; }
@@ -72,6 +74,8 @@ mat4    GetPrevCameraProjM() { return g_GlobalUniforms.main_PrevProjM; }
 mat4    GetPrevCameraiProjM() { return g_GlobalUniforms.main_PreviProjM; }
 mat4    GetPrevCameraProjJitteredM() { return g_GlobalUniforms.main_PrevProjJittM; }
 mat4    GetPrevCameraiProjJitteredM() { return g_GlobalUniforms.main_PreviProjJittM; }
+mat4	GetPrevCameraViewProjM() { return g_GlobalUniforms.main_PrevViewProjM; }
+mat4	GetPrevCameraiViewProjM() { return g_GlobalUniforms.main_PreviViewProjM; }
 
 vec3    GetMainLightDir() { return g_GlobalUniforms.main_LightDir.xyz; }
 vec3    GetMainLightRadiance() { return g_GlobalUniforms.main_LightRadiance.xyz; }

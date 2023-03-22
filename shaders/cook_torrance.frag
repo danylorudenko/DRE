@@ -7,7 +7,7 @@
 
 layout(location = 0) in vec3 in_wpos;
 layout(location = 1) in vec2 in_uv;
-layout(location = 2) in vec2 in_velocity;
+layout(location = 2) in vec4 in_prev_wpos;
 layout(location = 3) in mat3 in_TBN;
 
 layout(location = 0) out vec4 finalColor;
@@ -23,7 +23,6 @@ layout(set = 3, binding = 1, std140) uniform PassUniform
 layout(set = 4, binding = 0, std140) uniform InstanceUniform
 {
     mat4  model_mat;
-    mat4  mvp_mat;
     mat4  prev_model_mat;
     uvec4 textureIDs;
 } instanceUniform;
@@ -150,6 +149,16 @@ void main()
     vec3 res = shadow * (kD * diffuse+ specular) * NdotL + ambient;    
 	
     finalColor = vec4(res, 1.0);
-	velocity = in_velocity;
+	
+	vec4 prev_ndc = GetPrevCameraViewProjM() * in_prev_wpos;
+	prev_ndc /= prev_ndc.w;
+	
+	vec2 pixel_pos_uv = gl_FragCoord.xy / GetViewportSize();
+	vec2 pixel_pos_ndc = pixel_pos_uv * 2.0 - 1.0;
+	
+	vec2 vel = (pixel_pos_ndc - prev_ndc.xy);
+	vec2 vel_uv = vel * 0.5;
+	
+	velocity = vec2(vel_uv);
 	
 }

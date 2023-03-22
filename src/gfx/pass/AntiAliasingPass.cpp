@@ -63,7 +63,7 @@ void AntiAliasingPass::Render(RenderGraph& graph, VKW::Context& context)
     }
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, colorInput->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, velocity->parentResource_, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, velocity->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, history->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, taaOutput->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
 

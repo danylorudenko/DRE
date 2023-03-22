@@ -168,25 +168,25 @@ void VulkanApplicationDelegate::ImGuiUser()
         IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context. Refer to examples app!");
 
         ImGui::SetNextWindowContentSize(ImVec2{ 150.0f, 0.0f});
-        ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), ImGuiCond_Always);
+        ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), ImGuiCond_Once);
 
         ImGuiWindowFlags frameDataWindowFlags = 
-            ImGuiWindowFlags_NoMove | 
+            //ImGuiWindowFlags_NoMove | 
             ImGuiWindowFlags_NoResize | 
-            ImGuiWindowFlags_NoScrollbar | 
-            ImGuiWindowFlags_NoCollapse;
+            ImGuiWindowFlags_NoScrollbar;// | 
+            //ImGuiWindowFlags_NoCollapse;
         static bool frameDataOpened = false;
         if (ImGui::Begin("Frame Stats", nullptr, frameDataWindowFlags))
         {
             ImGui::Text("DT: %f ms", static_cast<double>(m_DeltaMicroseconds) / 1000);
             ImGui::Text("FPS: %f", 1.0 / (static_cast<double>(m_DeltaMicroseconds) / 1000000));
-            ImGui::End();
         }
+        ImGui::End();
 
-        ImGui::SetNextWindowPos(ImVec2(0.0f, 100.0f), ImGuiCond_Always);
+        ImGui::SetNextWindowPos(ImVec2(0.0f, 100.0f), ImGuiCond_Once);
         ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiCond_Always);
 
-        if (ImGui::Begin("Camera Controls", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+        if (ImGui::Begin("Camera Controls", nullptr, ImGuiWindowFlags_NoResize))
         {
             WORLD::Camera& camera = m_MainScene.GetMainCamera();
             glm::vec3 const& cameraEuler = camera.GetEulerOrientation();
@@ -261,7 +261,7 @@ void VulkanApplicationDelegate::ImGuiUser()
             ImGui::SliderFloat("TAA Jitter Scale", &m_GraphicsManager.GetGraphicsSettings().m_JitterScale, 0.0f, 5.0f);
             ImGui::Checkbox("Rotate cam", &m_RotateCamera);
 
-            ImGui::End();
         }
+        ImGui::End();
     }
 }

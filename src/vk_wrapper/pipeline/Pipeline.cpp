@@ -263,8 +263,8 @@ void Pipeline::Descriptor::AddColorOutput(Format format, BlendType blend)
         attachmentBlendState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
         attachmentBlendState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
         attachmentBlendState.colorBlendOp = VK_BLEND_OP_ADD;
-        attachmentBlendState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-        attachmentBlendState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        attachmentBlendState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        attachmentBlendState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
         attachmentBlendState.alphaBlendOp = VK_BLEND_OP_ADD;
         attachmentBlendState.colorWriteMask =
             VK_COLOR_COMPONENT_R_BIT |
