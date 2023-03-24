@@ -23,11 +23,25 @@ void main()
 	vec2 vel = SampleTexture(velocity, GetSamplerNearest(), uv).xy;
 	vec2 uv_prev = uv - vel;
 
-    vec3 accum = SampleTexture(history, GetSamplerNearest(), uv_prev).rgb;
+    vec3 hist_sample = SampleTexture(history, GetSamplerLinear(), uv_prev).rgb;
     vec3 current = SampleTexture(color_buffer, GetSamplerNearest(), uv).rgb;
-    
+	
+	vec2 uv_delta = vec2(1, 1) / GetViewportSize();
+	
+	vec3 rgb_aabb[2];
+	for(int x = -1; x < 2; x++) {
+		for(int y = -1; y < 2; y++) {
+			vec3 neighborhood = SampleTexture(color_buffer, GetSamplerLinear(), uv + uv_delta * vec2(x, y)).rgb;
+			rgb_aabb[0] = min(rgb_aabb[0], neighborhood);
+			rgb_aabb[1] = max(rgb_aabb[1], neighborhood);
+		}
+	}
+	
+	vec3 rectified_history = max(hist_sample, rgb_aabb[0]);
+	rectified_history = min(rectified_history, rgb_aabb[1]);
+	
 	float alpha = passUniform.alpha.x;
-    vec3 result = mix(current, accum, alpha);
+    vec3 result = mix(current, rectified_history, alpha);
 
     imageStore(taa_output, coords, vec4(result, 1.0));
 }

@@ -33,46 +33,33 @@ void RenderView::UpdatePlacement(glm::vec3 viewerPos, glm::vec3 viewDirection, g
     m_Current.iVP = m_Current.iP * m_Current.iV;
 }
 
-void RenderView::UpdateProjection(float fov, float zNear, float zFar, float xJitter, float yJitter)
+void RenderView::UpdateProjection(float fov, float zNear, float zFar)
 {
-    m_Current.jitter.x = xJitter;
-    m_Current.jitter.y = yJitter;
-
     float const aspect = static_cast<float>(m_Current.size[0]) / static_cast<float>(m_Current.size[1]);
     m_Current.P = glm::perspectiveRH_ZO(glm::radians(fov), aspect, zFar, zNear); // depth is reversed
     m_Current.P[1][1] *= -1.0f;
 
-    m_Current.PJitt = m_Current.P;
-    m_Current.PJitt[3][0] += xJitter;
-    m_Current.PJitt[3][1] += yJitter;
-
     m_Current.iP = glm::inverse(m_Current.P);
-    m_Current.iPJitt = glm::inverse(m_Current.PJitt);
 
     m_Current.VP = m_Current.P * m_Current.V;
-    m_Current.VPJitt = m_Current.PJitt * m_Current.V;
     m_Current.iVP = m_Current.iP * m_Current.iV;
-    m_Current.iVPJitt = m_Current.iPJitt * m_Current.iV;
 }
 
-void RenderView::UpdateProjection(float left, float right, float bottom, float top, float zNear, float zFar, float xJitter, float yJitter)
+void RenderView::UpdateProjection(float left, float right, float bottom, float top, float zNear, float zFar)
 {
-    m_Current.jitter.x = xJitter;
-    m_Current.jitter.y = yJitter;
-
     m_Current.P = glm::orthoRH_ZO(left, right, bottom, top, zFar, zNear); // depth is reversed
     m_Current.P[1][1] *= -1.0f;
 
-    m_Current.PJitt = m_Current.P;
-    m_Current.PJitt[3][0] += xJitter;
-    m_Current.PJitt[3][1] += yJitter;
-
     m_Current.iP = glm::inverse(m_Current.P);
 
     m_Current.VP = m_Current.P * m_Current.V;
-    m_Current.VPJitt = m_Current.PJitt * m_Current.V;
     m_Current.iVP = m_Current.iP * m_Current.iV;
-    m_Current.iVPJitt = m_Current.iPJitt * m_Current.iV;
+}
+
+void RenderView::UpdateJitter(float xJitter, float yJitter)
+{
+    m_Current.jitter.x = xJitter;
+    m_Current.jitter.y = yJitter;
 }
 
 void RenderView::UpdatePreviosFrame()

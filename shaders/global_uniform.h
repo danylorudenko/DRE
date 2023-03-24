@@ -23,12 +23,8 @@ layout(set = 2, binding = 0, std140) readonly uniform GlobalUniforms
     mat4 main_iViewM;
     mat4 main_ProjM;
     mat4 main_iProjM;
-    mat4 main_ProjJittM;
-    mat4 main_iProjJittM;
     mat4 main_ViewProjM;
-    mat4 main_ViewProjJittM;
     mat4 main_iViewProjM;
-    mat4 main_iViewProjJittM;
 	
     mat4 main_PrevViewM;
     mat4 main_PreviViewM;
@@ -37,9 +33,7 @@ layout(set = 2, binding = 0, std140) readonly uniform GlobalUniforms
     mat4 main_PrevProjJittM;
     mat4 main_PreviProjJittM;
     mat4 main_PrevViewProjM;
-    mat4 main_PrevViewProjJittM;
     mat4 main_PreviViewProjM;
-    mat4 main_PreviViewProjJittM;
 	
     vec4 main_LightDir;
     vec4 main_LightRadiance;
@@ -63,8 +57,6 @@ mat4    GetCameraViewM() { return g_GlobalUniforms.main_ViewM; }
 mat4    GetCameraiViewM() { return g_GlobalUniforms.main_iViewM; }
 mat4    GetCameraProjM() { return g_GlobalUniforms.main_ProjM; }
 mat4    GetCameraiProjM() { return g_GlobalUniforms.main_iProjM; }
-mat4    GetCameraProjJitteredM() { return g_GlobalUniforms.main_ProjJittM; }
-mat4    GetCameraiProjJitteredM() { return g_GlobalUniforms.main_iProjJittM; }
 mat4	GetCameraViewProjM() { return g_GlobalUniforms.main_ViewProjM; }
 mat4	GetCameraiViewProjM() { return g_GlobalUniforms.main_iViewProjM; }
 
@@ -72,8 +64,6 @@ mat4    GetPrevCameraViewM() { return g_GlobalUniforms.main_PrevViewM; }
 mat4    GetPrevCameraiViewM() { return g_GlobalUniforms.main_PreviViewM; }
 mat4    GetPrevCameraProjM() { return g_GlobalUniforms.main_PrevProjM; }
 mat4    GetPrevCameraiProjM() { return g_GlobalUniforms.main_PreviProjM; }
-mat4    GetPrevCameraProjJitteredM() { return g_GlobalUniforms.main_PrevProjJittM; }
-mat4    GetPrevCameraiProjJitteredM() { return g_GlobalUniforms.main_PreviProjJittM; }
 mat4	GetPrevCameraViewProjM() { return g_GlobalUniforms.main_PrevViewProjM; }
 mat4	GetPrevCameraiViewProjM() { return g_GlobalUniforms.main_PreviViewProjM; }
 

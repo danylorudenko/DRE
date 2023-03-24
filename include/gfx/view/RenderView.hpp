@@ -26,8 +26,9 @@ public:
 
     void UpdateViewport(glm::uvec2 offset, glm::uvec2 size);
     void UpdatePlacement(glm::vec3 viewerPos, glm::vec3 viewDirection, glm::vec3 up);
-    void UpdateProjection(float fov, float zNear, float zFar, float xJitter = 0.0f, float yJitter = 0.0f);
-    void UpdateProjection(float left, float right, float bottom, float top, float zNear, float zFar, float xJitter = 0.0f, float yJitter = 0.0f);
+    void UpdateProjection(float fov, float zNear, float zFar);
+    void UpdateProjection(float left, float right, float bottom, float top, float zNear, float zFar);
+    void UpdateJitter(float xJitter, float yJitter);
     void UpdatePreviosFrame();
 
     inline glm::uvec2 const&    GetOffset() const { return m_Current.offset; }
@@ -37,14 +38,10 @@ public:
     inline glm::mat4 const&     GetInvViewM() const { return m_Current.iV; }
 
     inline glm::mat4 const&     GetProjectionM() const { return m_Current.P; }
-    inline glm::mat4 const&     GetProjectionJitteredM() const { return m_Current.PJitt; }
     inline glm::mat4 const&     GetInvProjectionM() const{ return m_Current.iP; }
-    inline glm::mat4 const&     GetInvProjectionJitteredM() const{ return m_Current.iPJitt; }
 
     inline glm::mat4 const&     GetViewProjectionM() const { return m_Current.VP; }
-    inline glm::mat4 const&     GetViewProjectionJitteredM() const { return m_Current.VPJitt; }
     inline glm::mat4 const&     GetInvViewProjectionM() const { return m_Current.iVP; }
-    inline glm::mat4 const&     GetInvViewProjectionJitteredM() const { return m_Current.iVPJitt; }
 
     inline glm::uvec2 const&    GetPrevOffset() const { return m_Prev.offset; }
     inline glm::uvec2 const&    GetPrevSize() const { return m_Prev.size; }
@@ -53,14 +50,10 @@ public:
     inline glm::mat4 const&     GetPrevInvViewM() const { return m_Prev.iV; }
 
     inline glm::mat4 const&     GetPrevProjectionM() const { return m_Prev.P; }
-    inline glm::mat4 const&     GetPrevProjectionJitteredM() const { return m_Prev.PJitt; }
     inline glm::mat4 const&     GetPrevInvProjectionM() const{ return m_Prev.iP; }
-    inline glm::mat4 const&     GetPrevInvProjectionJitteredM() const{ return m_Prev.iPJitt; }
 
     inline glm::mat4 const&     GetPrevViewProjectionM() const { return m_Prev.VP; }
-    inline glm::mat4 const&     GetPrevViewProjectionJitteredM() const { return m_Prev.VPJitt; }
     inline glm::mat4 const&     GetPrevInvViewProjectionM() const { return m_Prev.iVP; }
-    inline glm::mat4 const&     GetPrevInvViewProjectionJitteredM() const { return m_Prev.iVPJitt; }
 
 
     inline auto const&          GetObjects() const { return m_Objects; }
@@ -79,14 +72,10 @@ private:
         glm::mat4  iV         = glm::identity<glm::mat4>();
 
         glm::mat4  P          = glm::identity<glm::mat4>();
-        glm::mat4  PJitt      = glm::identity<glm::mat4>();
         glm::mat4  iP         = glm::identity<glm::mat4>();
-        glm::mat4  iPJitt     = glm::identity<glm::mat4>();
 
         glm::mat4  VP         = glm::identity<glm::mat4>();
-        glm::mat4  VPJitt     = glm::identity<glm::mat4>();
         glm::mat4  iVP        = glm::identity<glm::mat4>();
-        glm::mat4  iVPJitt    = glm::identity<glm::mat4>();
     };
 
     ViewParams m_Current;
