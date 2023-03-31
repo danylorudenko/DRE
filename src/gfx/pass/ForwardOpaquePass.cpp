@@ -28,12 +28,12 @@ void ForwardOpaquePass::RegisterResources(RenderGraph& graph)
 
     graph.RegisterRenderTarget(this,
         TextureID::ColorBuffer,
-        VKW::FORMAT_B8G8R8A8_UNORM, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
+        g_GraphicsManager->GetMainColorFormat(), g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
         0);
 
     graph.RegisterRenderTarget(this,
         TextureID::Velocity,
-        VKW::FORMAT_R16G16_FLOAT, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
+        g_GraphicsManager->GetMainDepthFormat(), g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
         1);
 
     graph.RegisterDepthOnlyTarget(this,

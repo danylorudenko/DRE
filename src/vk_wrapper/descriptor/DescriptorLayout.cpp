@@ -25,7 +25,7 @@ DescriptorSetLayout::Descriptor::Descriptor(/*DescriptorStage stages*/)
 std::uint16_t DescriptorSetLayout::Descriptor::Add(DescriptorType type, std::uint32_t binding, VKW::DescriptorStage stage, std::uint32_t count)
 {
     DRE_ASSERT(!isClosed_, "Attempt to modify closed descriptor layout decorator.");
-    DRE_ASSERT((count_ + 1 < CONSTANTS::MAX_SET_LAYOUT_MEMBERS), "Maximum count of descriptor bindings in set is MAX_SET_LAYOUT_MEMBERS");
+    DRE_ASSERT((count_ + 1 <= CONSTANTS::MAX_SET_LAYOUT_MEMBERS), "Maximum count of descriptor bindings in set is MAX_SET_LAYOUT_MEMBERS");
     
     members_[count_].type_ = type;
     members_[count_].binding_ = binding;

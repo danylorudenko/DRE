@@ -38,6 +38,11 @@ void AntiAliasingPass::RegisterResources(RenderGraph& graph)
 
     graph.RegisterTextureSlot(this, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 3);
     graph.RegisterTextureSlot(this, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 4);
+
+    graph.RegisterTexture(this,
+        TextureID::MainDepth, g_GraphicsManager->GetMainDepthFormat(),
+        g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
+        VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 5);
 }
 
 
@@ -49,6 +54,7 @@ void AntiAliasingPass::Render(RenderGraph& graph, VKW::Context& context)
     VKW::ImageResourceView* velocity = graph.GetTexture(TextureID::Velocity)->GetShaderView();
     VKW::ImageResourceView* history = historyBuffers[g_GraphicsManager->GetPrevFrameID()]->GetShaderView();
     VKW::ImageResourceView* taaOutput = historyBuffers[g_GraphicsManager->GetCurrentFrameID()]->GetShaderView();
+    VKW::ImageResourceView* mainDepth = graph.GetTexture(TextureID::MainDepth)->GetShaderView();
 
     VKW::DescriptorSet passSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
     VKW::DescriptorManager::WriteDesc writeDesc;
@@ -66,6 +72,7 @@ void AntiAliasingPass::Render(RenderGraph& graph, VKW::Context& context)
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, velocity->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, history->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, taaOutput->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, mainDepth->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
 
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
     std::uint32_t const firstSet = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();

@@ -104,6 +104,9 @@ public:
     inline GraphicsSettings&            GetGraphicsSettings() { return m_Settings; }
     inline GraphicsSettings const&      GetGraphicsSettings() const { return m_Settings; }
 
+    static constexpr VKW::Format        GetMainColorFormat() { return VKW::FORMAT_B8G8R8A8_UNORM; }
+    static constexpr VKW::Format        GetMainDepthFormat() { return VKW::FORMAT_D32_FLOAT; }
+
 
 public:
     void                                Initialize();

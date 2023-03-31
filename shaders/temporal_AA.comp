@@ -9,6 +9,7 @@ layout (set=3, binding=1)        uniform texture2D   velocity;
 layout (set=3, binding=2)        uniform texture2D   color_buffer;
 layout (set=3, binding=3)        uniform texture2D   history;
 layout (set=3, binding=4, rgba8) uniform image2D     taa_output;
+layout (set=3, binding=5)  		 uniform texture2D   main_depth;
 
 layout (set=3, binding=0, std140) uniform PassUniform
 {
@@ -20,25 +21,33 @@ void main()
 {
     ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
     vec2 uv = (vec2(coords) + 0.5) / GetViewportSize();
-	vec2 vel = SampleTexture(velocity, GetSamplerNearest(), uv).xy;
+	float center_depth = SampleTexture(main_depth, GetSamplerNearest(), uv).x;
+	
+	vec2 uv_delta = vec2(1, 1) / GetViewportSize();
+	vec3 rgb_aabb[2];
+	
+	vec3 velocityUV_depth = vec3(uv, center_depth);
+	for(int x = -1; x < 2; x++) {
+		for(int y = -1; y < 2; y++) {
+			vec2 neighborhood_uv = uv + uv_delta * vec2(x, y);
+			vec3 neighborhood = SampleTexture(color_buffer, GetSamplerNearest(), neighborhood_uv).rgb;
+			rgb_aabb[0] = min(rgb_aabb[0], neighborhood);
+			rgb_aabb[1] = max(rgb_aabb[1], neighborhood);
+			
+			float depth = SampleTexture(main_depth, GetSamplerNearest(), neighborhood_uv).x;
+			if(depth > velocityUV_depth.z)
+				velocityUV_depth = vec3(neighborhood_uv, depth);
+		}
+	}
+	
+	
+	vec2 vel = SampleTexture(velocity, GetSamplerNearest(), velocityUV_depth.xy).xy;
 	vec2 uv_prev = uv - vel;
 
     vec3 hist_sample = SampleTexture(history, GetSamplerLinear(), uv_prev).rgb;
     vec3 current = SampleTexture(color_buffer, GetSamplerNearest(), uv).rgb;
 	
-	vec2 uv_delta = vec2(1, 1) / GetViewportSize();
-	
-	vec3 rgb_aabb[2];
-	for(int x = -1; x < 2; x++) {
-		for(int y = -1; y < 2; y++) {
-			vec3 neighborhood = SampleTexture(color_buffer, GetSamplerLinear(), uv + uv_delta * vec2(x, y)).rgb;
-			rgb_aabb[0] = min(rgb_aabb[0], neighborhood);
-			rgb_aabb[1] = max(rgb_aabb[1], neighborhood);
-		}
-	}
-	
-	vec3 rectified_history = max(hist_sample, rgb_aabb[0]);
-	rectified_history = min(rectified_history, rgb_aabb[1]);
+	vec3 rectified_history = clamp(hist_sample, rgb_aabb[0], rgb_aabb[1]);
 	
 	float alpha = passUniform.alpha.x;
     vec3 result = mix(current, rectified_history, alpha);

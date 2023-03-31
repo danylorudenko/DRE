@@ -185,7 +185,7 @@ ImageResource* ResourcesController::CreateImage(std::uint32_t width, std::uint32
     case ImageUsage::DEPTH:
     case ImageUsage::STENCIL:
     case ImageUsage::DEPTH_STENCIL:
-        info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+        info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         memoryDesc.memoryClass_ = MemoryClass::DeviceFast;
         break;
 
