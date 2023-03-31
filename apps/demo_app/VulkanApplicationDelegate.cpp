@@ -248,7 +248,7 @@ void VulkanApplicationDelegate::ImGuiUser()
             if (ImGui::Button("Enable TAA"))
             {
                 m_GraphicsManager.GetGraphicsSettings().m_AlphaTAA = 0.9f;
-                m_GraphicsManager.GetGraphicsSettings().m_JitterScale = 1.0f;
+                m_GraphicsManager.GetGraphicsSettings().m_JitterScale = 0.35f;
             }
             ImGui::SameLine();
             if (ImGui::Button("Disable TAA"))
@@ -259,6 +259,7 @@ void VulkanApplicationDelegate::ImGuiUser()
 
             ImGui::SliderFloat("TAA Alpha", &m_GraphicsManager.GetGraphicsSettings().m_AlphaTAA, 0.0f, 1.0f);
             ImGui::SliderFloat("TAA Jitter Scale", &m_GraphicsManager.GetGraphicsSettings().m_JitterScale, 0.0f, 2.0f);
+            ImGui::SliderFloat("TAA Variance Gamma", &m_GraphicsManager.GetGraphicsSettings().m_VarianceGammaTAA, 0.0f, 5.0f);
             ImGui::Checkbox("Rotate cam", &m_RotateCamera);
 
         }

@@ -63,9 +63,9 @@ void AntiAliasingPass::Render(RenderGraph& graph, VKW::Context& context)
     g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->WriteDescriptorSet(passSet, writeDesc);
 
     {
-        glm::vec4 taaAlpha{ g_GraphicsManager->GetGraphicsSettings().m_AlphaTAA, 0.0f, 0.0f, 0.0f };
-        UniformProxy uniform = graph.GetPassUniform(GetID(), context, sizeof(taaAlpha));
-        uniform.WriteMember140(taaAlpha);
+        glm::vec4 taaSettings{ g_GraphicsManager->GetGraphicsSettings().m_AlphaTAA, g_GraphicsManager->GetGraphicsSettings().m_VarianceGammaTAA, 0.0f, 0.0f };
+        UniformProxy uniform = graph.GetPassUniform(GetID(), context, sizeof(taaSettings));
+        uniform.WriteMember140(taaSettings);
     }
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, colorInput->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);

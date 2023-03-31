@@ -13,7 +13,7 @@ layout (set=3, binding=5)  		 uniform texture2D   main_depth;
 
 layout (set=3, binding=0, std140) uniform PassUniform
 {
-    vec4 alpha;
+    vec4 alpha_varianceGamma;
 } passUniform;
 
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
@@ -26,13 +26,20 @@ void main()
 	vec2 uv_delta = vec2(1, 1) / GetViewportSize();
 	vec3 rgb_aabb[2];
 	
+	vec3 m1 = vec3(0.0);
+	vec3 m2 = vec3(0.0);
+	
 	vec3 velocityUV_depth = vec3(uv, center_depth);
 	for(int x = -1; x < 2; x++) {
 		for(int y = -1; y < 2; y++) {
 			vec2 neighborhood_uv = uv + uv_delta * vec2(x, y);
 			vec3 neighborhood = SampleTexture(color_buffer, GetSamplerNearest(), neighborhood_uv).rgb;
-			rgb_aabb[0] = min(rgb_aabb[0], neighborhood);
-			rgb_aabb[1] = max(rgb_aabb[1], neighborhood);
+			
+			m1 += neighborhood;
+			m2 += neighborhood * neighborhood;
+			
+			//rgb_aabb[0] = min(rgb_aabb[0], neighborhood);
+			//rgb_aabb[1] = max(rgb_aabb[1], neighborhood);
 			
 			float depth = SampleTexture(main_depth, GetSamplerNearest(), neighborhood_uv).x;
 			if(depth > velocityUV_depth.z)
@@ -40,6 +47,13 @@ void main()
 		}
 	}
 	
+	const float N = 9;
+	vec3 mu = m1 / N;
+	vec3 sigma = sqrt(m2 / N - mu * mu);
+	
+	float gamma = passUniform.alpha_varianceGamma.y;
+	rgb_aabb[0] = mu - sigma * gamma;
+	rgb_aabb[1] = mu + sigma * gamma;
 	
 	vec2 vel = SampleTexture(velocity, GetSamplerNearest(), velocityUV_depth.xy).xy;
 	vec2 uv_prev = uv - vel;
@@ -49,7 +63,7 @@ void main()
 	
 	vec3 rectified_history = clamp(hist_sample, rgb_aabb[0], rgb_aabb[1]);
 	
-	float alpha = passUniform.alpha.x;
+	float alpha = passUniform.alpha_varianceGamma.x;
     vec3 result = mix(current, rectified_history, alpha);
 
     imageStore(taa_output, coords, vec4(result, 1.0));
