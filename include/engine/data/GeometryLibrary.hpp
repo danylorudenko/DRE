@@ -20,6 +20,7 @@ public:
     inline Geometry* GetGeometry(std::uint32_t id) { return m_Geometries.Find(id).value; }
     void AddGeometry(std::uint32_t id, Geometry&& data);
 
+
 private:
     DRE::HashTable<std::uint32_t, Geometry, DRE::DefaultAllocator> m_Geometries;
 };

@@ -28,13 +28,21 @@ class RenderableObject
     : public NonCopyable
 {
 public:
+    enum LayerBits
+    {
+        LAYER_NONE              = 0,
+        LAYER_OPAQUE_BIT        = 1 << 0,
+        LAYER_WATER_BIT         = 1 << 1
+    };
+
     using DescriptorSetVector = DRE::InplaceVector<VKW::DescriptorSet, VKW::CONSTANTS::FRAMES_BUFFERING>;
     using TexturesVector      = DRE::InplaceVector<ReadOnlyTexture*, Data::Material::TextureProperty::Slot::MAX>;
 
-    RenderableObject(VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount, TexturesVector&& textures, DescriptorSetVector&& sets);
-    RenderableObject(VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount, DescriptorSetVector&& sets);
-    RenderableObject(VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount);
+    RenderableObject(LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount, TexturesVector&& textures, DescriptorSetVector&& sets);
+    RenderableObject(LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount, DescriptorSetVector&& sets);
+    RenderableObject(LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount);
 
+    inline LayerBits                    GetLayer() const { return m_Layer; }
     inline glm::mat4x4 const&           GetModelM() const { return m_ModelM; }
     inline glm::mat4x4 const&           GetPrevModelM() const { return m_PrevModelM; }
     inline VKW::Pipeline*               GetPipeline() const{ return m_Pipeline; }
@@ -51,6 +59,7 @@ public:
     void                                Transform(glm::mat4 model);
 
 private:
+    LayerBits               m_Layer;
     glm::mat4x4             m_ModelM;
     glm::mat4x4             m_PrevModelM;
     VKW::Pipeline*          m_Pipeline;

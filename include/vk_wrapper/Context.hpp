@@ -54,15 +54,17 @@ class Context
     , public NonCopyable
 {
 public:
-    Context(VKW::ImportTable* table, VKW::Queue* queue);
+    Context(VKW::ImportTable* table, VKW::Queue* queue, DRE::AllocatorLinear* barrierAllocator);
     ~Context();
 
 public:
     inline VKW::Queue* GetParentQueue() const { return m_ParentQueue; }
 
+    void ResetDependenciesVectors(DRE::AllocatorLinear* allocator);
+    
     void FlushAll();
     void FlushOnlyPending();
-    void FlushResourceDependencies();
+    void WriteResourceDependencies();
 
     void FlushWaitSwapchain(PresentationContext& presentContext);
     void Present(PresentationContext& presentContext);
@@ -145,8 +147,6 @@ private:
 
     VkRect2D                m_RenderingRect;
 
-    DRE::ByteBuffer         m_BarrierMemory;
-    DRE::AllocatorLinear    m_BarrierAllocator;
     VKW::Dependency         m_PendingDependency;
 
 };

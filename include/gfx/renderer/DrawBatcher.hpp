@@ -11,6 +11,7 @@
 #include <vk_wrapper\descriptor\Descriptor.hpp>
 
 #include <gfx\buffer\TransientArena.hpp>
+#include <gfx\renderer\RenderableObject.hpp>
 
 namespace VKW
 {
@@ -53,15 +54,16 @@ public:
     DrawBatcher(DRE::AllocatorLinear* allocator, VKW::DescriptorManager* descriptorManager, UniformArena* uniformArena);
 
     using AtomDataDelegate = void(*)(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view);
-    void Batch(VKW::Context& context, RenderView const& view, AtomDataDelegate atomDelegate);
-    inline auto const& GetOpaqueDraws() const { return m_OpaqueDraws; }
+    void Batch(VKW::Context& context, RenderView const& view, RenderableObject::LayerBits layers, AtomDataDelegate atomDelegate);
+
+    inline auto const& GetDraws() const { return m_Draws; }
 
 private:
     DRE::AllocatorLinear*   m_Allocator;
     VKW::DescriptorManager* m_DescriptorManager;
     UniformArena*           m_UniformArena;
 
-    DRE::Vector<AtomDraw, DRE::AllocatorLinear> m_OpaqueDraws;
+    DRE::Vector<AtomDraw, DRE::AllocatorLinear> m_Draws;
 };
 
 }

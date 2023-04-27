@@ -55,6 +55,9 @@ private:
     Data::GeometryLibrary               m_GeometryLibrary;
     IO::IOManager                       m_IOManager;
 
+    Data::Geometry                      m_WaterGeometry;
+    Data::Material                      m_WaterMaterial;
+
     GFX::GraphicsManager                m_GraphicsManager;
 
     std::unique_ptr<ImGuiHelper>        m_ImGuiHelper;

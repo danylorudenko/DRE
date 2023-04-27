@@ -309,7 +309,7 @@ void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* a
         Data::Material* material = m_MaterialLibrary->GetMaterial(mesh->mMaterialIndex);
 
         Data::Geometry* geometry = m_GeometryLibrary->GetGeometry(node->mMeshes[i]);
-        WORLD::Entity& nodeEntity = targetScene.CreateRenderableEntity(gfxContext, transform, geometry, material);
+        WORLD::Entity& nodeEntity = targetScene.CreateOpaqueEntity(gfxContext, transform, geometry, material);
     }
 
     for (std::uint32_t i = 0; i < node->mNumChildren; i++)
@@ -371,19 +371,28 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* path)
     }
 }
 
+struct AssetVertex
+{
+    float pos[3];
+    float norm[3];
+    float tan[3];
+    float btan[3];
+    float uv0[2];
+};
+
 void IOManager::ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene)
 {
     for (std::uint32_t i = 0, size = scene->mNumMeshes; i < size; i++)
     {
         aiMesh* mesh = scene->mMeshes[i];
 
-        Data::Geometry geometry{ m_Allocator };
-        geometry.SetVertexCount(mesh->mNumVertices);
-        geometry.SetIndexCount(mesh->mNumFaces * 3);
+        Data::Geometry geometry{ sizeof(AssetVertex), 4 };
+        geometry.ResizeVertexStorage(mesh->mNumVertices);
+        geometry.ResizeIndexStorage(mesh->mNumFaces * 3);
 
         for (std::uint32_t j = 0, jSize = mesh->mNumVertices; j < jSize; j++)
         {
-            Data::Geometry::Vertex& v = geometry.GetVertex(j);
+            AssetVertex& v = geometry.GetVertex<AssetVertex>(j);
             v.pos[0] = mesh->mVertices[j].x;
             v.pos[1] = mesh->mVertices[j].y;
             v.pos[2] = mesh->mVertices[j].z;
@@ -406,9 +415,9 @@ void IOManager::ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene
 
         for (std::uint32_t j = 0, jSize = mesh->mNumFaces; j < jSize; j++)
         {
-            geometry.GetIndex(j*3 + 0) = mesh->mFaces[j].mIndices[0];
-            geometry.GetIndex(j*3 + 1) = mesh->mFaces[j].mIndices[1];
-            geometry.GetIndex(j*3 + 2) = mesh->mFaces[j].mIndices[2];
+            geometry.GetIndex<std::uint32_t>(j*3 + 0) = mesh->mFaces[j].mIndices[0];
+            geometry.GetIndex<std::uint32_t>(j*3 + 1) = mesh->mFaces[j].mIndices[1];
+            geometry.GetIndex<std::uint32_t>(j*3 + 2) = mesh->mFaces[j].mIndices[2];
         }
 
         m_GeometryLibrary->AddGeometry(i, DRE_MOVE(geometry));

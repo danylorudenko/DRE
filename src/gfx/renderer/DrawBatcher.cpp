@@ -3,7 +3,6 @@
 #include <vk_wrapper\descriptor\DescriptorManager.hpp>
 
 #include <gfx\GraphicsManager.hpp>
-#include <gfx\renderer\RenderableObject.hpp>
 #include <gfx\view\RenderView.hpp>
 
 #include <engine/scene/Scene.hpp>
@@ -17,20 +16,23 @@ DrawBatcher::DrawBatcher(DRE::AllocatorLinear* allocator, VKW::DescriptorManager
     : m_Allocator{ allocator }
     , m_DescriptorManager{ descriptorManager }
     , m_UniformArena{ uniformArena }
-    , m_OpaqueDraws{ allocator }
+    , m_Draws{ allocator }
 {
 }
 
-void DrawBatcher::Batch(VKW::Context& context, RenderView const& view, AtomDataDelegate atomDelegate)
+void DrawBatcher::Batch(VKW::Context& context, RenderView const& view, RenderableObject::LayerBits layers, AtomDataDelegate atomDelegate)
 {
     auto const& renderables = view.GetObjects();
     for (std::uint32_t i = 0, count = renderables.Size(); i < count; i++)
     {
         RenderableObject& obj = *renderables[i];
 
+        if ((obj.GetLayer() & layers) == 0)
+            continue;
+
         atomDelegate(obj, context, *m_DescriptorManager, *m_UniformArena, view);
 
-        AtomDraw& atom = m_OpaqueDraws.EmplaceBack();
+        AtomDraw& atom = m_Draws.EmplaceBack();
         atom.vertexBuffer  = obj.GetVertexBuffer();
         atom.vertexOffset  = 0;
         atom.vertexCount   = obj.GetVertexCount();

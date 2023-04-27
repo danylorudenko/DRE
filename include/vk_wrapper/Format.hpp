@@ -67,6 +67,8 @@ enum Format
 
 std::uint8_t FormatSize(Format format);
 
+VkImageAspectFlags Format2Aspect(Format format);
+
 VkFormat Format2VK(Format format);
 Format   VK2Format(VkFormat format);
 

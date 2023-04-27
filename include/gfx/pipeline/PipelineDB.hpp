@@ -53,6 +53,7 @@ private:
         char const* computeName);
 
     DRE::String64 const*    CreateGraphicsForwardPipeline(char const* name);
+    DRE::String64 const*    CreateGraphicsForwardWaterPipeline(char const* name);
     DRE::String64 const*    CreateGraphicsForwardShadowPipeline(char const* name);
     DRE::String64 const*    CreateComputePipeline(char const* name);
 

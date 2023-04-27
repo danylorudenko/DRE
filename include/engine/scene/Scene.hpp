@@ -38,7 +38,8 @@ public:
     inline auto&            GetEntities() { return m_SceneEntities; }
 
 
-    Entity&     CreateRenderableEntity(VKW::Context& context, Entity::TransformData const& transform, Data::Geometry* geometry, Data::Material* material);
+    Entity&     CreateOpaqueEntity(VKW::Context& context, Entity::TransformData const& transform, Data::Geometry* geometry, Data::Material* material);
+    Entity&     CreateWaterEntity(VKW::Context& context, Entity::TransformData const& transform, Data::Geometry* geometry, Data::Material* material);
 
 private:
     Camera m_MainCamera;

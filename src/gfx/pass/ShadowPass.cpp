@@ -56,13 +56,13 @@ void ShadowPass::Render(RenderGraph& graph, VKW::Context& context)
     // 1. take all RenderableObject's in main scene
     DrawBatcher batcher{ &DRE::g_FrameScratchAllocator, g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), &g_GraphicsManager->GetUniformArena() };
 
-    batcher.Batch(context, g_GraphicsManager->GetSunShadowRenderView(), GFX::ShadowObjectDelegate);
+    batcher.Batch(context, g_GraphicsManager->GetSunShadowRenderView(), RenderableObject::LAYER_OPAQUE_BIT, GFX::ShadowObjectDelegate);
 
     std::uint32_t const startSet = 
         g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount() +
         (graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID()).IsValid() ? 1 : 0);
 
-    auto& draws = batcher.GetOpaqueDraws();
+    auto& draws = batcher.GetDraws();
     for (std::uint32_t i = 0, size = draws.Size(); i < size; i++)
     {
         AtomDraw const& atom = draws[i];

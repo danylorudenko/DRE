@@ -23,13 +23,13 @@ void AntiAliasingPass::RegisterResources(RenderGraph& graph)
     graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 0);
 
     graph.RegisterTexture(this, 
-        TextureID::Velocity, VKW::FORMAT_R16G16_FLOAT, 
-        g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(), 
+        TextureID::Velocity, 
+        VKW::FORMAT_R16G16_FLOAT, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(), 
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 1);
 
     graph.RegisterTexture(this,
-        TextureID::ColorBuffer, VKW::FORMAT_B8G8R8A8_UNORM,
-        g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
+        TextureID::WaterColor, 
+        g_GraphicsManager->GetMainColorFormat(), g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 2);
 
     VKW::ResourceAccess historyAccess = VKW::ResourceAccess(VKW::RESOURCE_ACCESS_SHADER_SAMPLE | std::uint64_t(VKW::RESOURCE_ACCESS_SHADER_WRITE));
@@ -50,7 +50,7 @@ void AntiAliasingPass::Render(RenderGraph& graph, VKW::Context& context)
 {
     StorageTexture* historyBuffers[2] = { graph.GetTexture(TextureID::ColorHistoryBuffer0), graph.GetTexture(TextureID::ColorHistoryBuffer1) };
 
-    VKW::ImageResourceView* colorInput = graph.GetTexture(TextureID::ColorBuffer)->GetShaderView();
+    VKW::ImageResourceView* colorInput = graph.GetTexture(TextureID::WaterColor)->GetShaderView();
     VKW::ImageResourceView* velocity = graph.GetTexture(TextureID::Velocity)->GetShaderView();
     VKW::ImageResourceView* history = historyBuffers[g_GraphicsManager->GetPrevFrameID()]->GetShaderView();
     VKW::ImageResourceView* taaOutput = historyBuffers[g_GraphicsManager->GetCurrentFrameID()]->GetShaderView();

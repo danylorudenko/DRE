@@ -7,6 +7,7 @@
 #include <vk_wrapper\pipeline\ShaderModule.hpp>
 
 #include <gfx\pass\ForwardOpaquePass.hpp>
+#include <gfx\pass\WaterPass.hpp>
 #include <gfx\pass\AntiAliasingPass.hpp>
 #include <gfx\pass\ImGuiRenderPass.hpp>
 #include <gfx\pass\ShadowPass.hpp>
@@ -29,7 +30,7 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOMana
     : m_MainWindow{ window }
     , m_IOManager{ ioManager }
     , m_Device{ hInstance, window->NativeHandle(), debug}
-    , m_MainContext{ m_Device.GetFuncTable(), m_Device.GetMainQueue()}
+    , m_MainContext{ m_Device.GetFuncTable(), m_Device.GetMainQueue(), &DRE::g_FrameScratchAllocator }
     , m_GraphicsFrame{ 0 }
     , m_UploadArena{ &m_Device, C_DEFAULT_STAGING_ARENA_SIZE }
     , m_UniformArena{ &m_Device, C_DEFAULT_UNIFORM_ARENA_SIZE }
@@ -63,6 +64,7 @@ void GraphicsManager::CreateAllPasses()
 {
     m_RenderGraph.AddPass<ShadowPass>();
     m_RenderGraph.AddPass<ForwardOpaquePass>();
+    m_RenderGraph.AddPass<WaterPass>();
     m_RenderGraph.AddPass<AntiAliasingPass>();
     m_RenderGraph.AddPass<ColorEncodingPass>();
     m_RenderGraph.AddPass<ImGuiRenderPass>();
@@ -172,6 +174,7 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
     m_ReadbackArena.ResetAllocations(GetCurrentFrameID());
 
     VKW::Context& context = GetMainContext();
+    context.ResetDependenciesVectors(&DRE::g_FrameScratchAllocator);
     PrepareGlobalData(context,  *WORLD::g_MainScene, deltaTimeUS);
 
     // globalData
@@ -182,7 +185,11 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
 
     // presentation
     m_DependencyManager.ResourceBarrier(context, finalRT.GetResource(), VKW::RESOURCE_ACCESS_TRANSFER_SRC, VKW::STAGE_TRANSFER);
-    m_FrameProcessingCompletePoint[GetCurrentFrameID()] = TransferToSwapchainAndPresent(finalRT);
+
+    GetMainContext().FlushAll();
+
+    VKW::QueueExecutionPoint srcTransferComplete = TransferToSwapchainAndPresent(finalRT);
+    m_FrameProcessingCompletePoint[GetCurrentFrameID()] = srcTransferComplete;
 }
 
 VKW::QueueExecutionPoint GraphicsManager::TransferToSwapchainAndPresent(StorageTexture& src)
@@ -200,6 +207,8 @@ VKW::QueueExecutionPoint GraphicsManager::TransferToSwapchainAndPresent(StorageT
     GetMainContext().CmdResourceDependency(presentController->GetSwapchainResource(presentationContext),
         VKW::RESOURCE_ACCESS_CLEAR,   VKW::STAGE_TRANSFER,
         VKW::RESOURCE_ACCESS_PRESENT, VKW::STAGE_PRESENT);
+
+    GetMainContext().WriteResourceDependencies();
 
     VKW::QueueExecutionPoint transferCompletePoint = GetMainContext().SyncPoint();
 
@@ -268,15 +277,23 @@ RenderableObject* GraphicsManager::CreateRenderableObject(VKW::Context& context,
 {
     VKW::Pipeline* pipeline = nullptr;
     VKW::PipelineLayout* layout = nullptr;
+    RenderableObject::LayerBits layers = RenderableObject::LAYER_NONE;
     switch (material->GetRenderingProperties().GetMaterialType())
     {
     case Data::Material::RenderingProperties::MATERIAL_TYPE_DEFAULT_LIT:
         pipeline = GetPipelineDB().GetPipeline("default_lit");
         layout = GetPipelineDB().GetLayout("default_lit_layout");
+        layers = RenderableObject::LAYER_OPAQUE_BIT;
         break;
     case Data::Material::RenderingProperties::MATERIAL_TYPE_COOK_TORRANCE:
         pipeline = GetPipelineDB().GetPipeline("cook_torrance");
         layout = GetPipelineDB().GetLayout("cook_torrance_layout");
+        layers = RenderableObject::LAYER_OPAQUE_BIT;
+        break;
+    case Data::Material::RenderingProperties::MATERIAL_TYPE_WATER:
+        pipeline = GetPipelineDB().GetPipeline("water");
+        layout = GetPipelineDB().GetLayout("water_layout");
+        layers = RenderableObject::LAYER_WATER_BIT;
         break;
     default:
         DRE_ASSERT(false, "No corresponding pipeline in PipelineDB for this material type.");
@@ -305,13 +322,26 @@ RenderableObject* GraphicsManager::CreateRenderableObject(VKW::Context& context,
     {
         descriptors.EmplaceBack(descriptorManager->AllocateStandaloneSet(*layout->GetMember(itemDescriptorId)));
     }
-    return m_RenderableObjectPool.Alloc(pipeline, geometryGPU->vertexBuffer, geometry->GetVertexCount(), geometryGPU->indexBuffer, geometry->GetIndexCount(), DRE_MOVE(textures), DRE_MOVE(descriptors));
+    return m_RenderableObjectPool.Alloc(layers, pipeline, geometryGPU->vertexBuffer, geometry->GetVertexCount(), geometryGPU->indexBuffer, geometry->GetIndexCount(), DRE_MOVE(textures), DRE_MOVE(descriptors));
 }
 
-RenderableObject* GraphicsManager::CreateShadowRenderableObject(VKW::Context& context, Data::Geometry* geometry)
+RenderableObject* GraphicsManager::CreateShadowRenderableObject(VKW::Context& context, Data::Geometry* geometry, Data::Material* material)
 {
-    VKW::Pipeline* pipeline = GetPipelineDB().GetPipeline("forward_shadow");
-    VKW::PipelineLayout* layout = GetPipelineDB().GetLayout("forward_shadow_layout");
+    VKW::Pipeline* pipeline = nullptr;
+    VKW::PipelineLayout* layout = nullptr;
+    RenderableObject::LayerBits layers = RenderableObject::LAYER_NONE;
+    switch (material->GetRenderingProperties().GetMaterialType())
+    {
+    case Data::Material::RenderingProperties::MATERIAL_TYPE_DEFAULT_LIT:
+    case Data::Material::RenderingProperties::MATERIAL_TYPE_COOK_TORRANCE:
+        pipeline = GetPipelineDB().GetPipeline("forward_shadow");
+        layout = GetPipelineDB().GetLayout("forward_shadow_layout");
+        layers = RenderableObject::LAYER_OPAQUE_BIT;
+        break;
+    default:
+        DRE_ASSERT(false, "No corresponding pipeline in PipelineDB for this material type.");
+        break;
+    }
 
     // load geometry
     GeometryGPU* geometryGPU = m_GeometryGPUMap.Find(geometry).value;
@@ -328,7 +358,7 @@ RenderableObject* GraphicsManager::CreateShadowRenderableObject(VKW::Context& co
     {
         descriptors.EmplaceBack(descriptorManager->AllocateStandaloneSet(*layout->GetMember(itemDescriptorId)));
     }
-    return m_RenderableObjectPool.Alloc(pipeline, geometryGPU->vertexBuffer, geometry->GetVertexCount(), geometryGPU->indexBuffer, geometry->GetIndexCount(), DRE_MOVE(descriptors));
+    return m_RenderableObjectPool.Alloc(layers, pipeline, geometryGPU->vertexBuffer, geometry->GetVertexCount(), geometryGPU->indexBuffer, geometry->GetIndexCount(), DRE_MOVE(descriptors));
 }
 
 void GraphicsManager::FreeRenderableObject(RenderableObject* obj)

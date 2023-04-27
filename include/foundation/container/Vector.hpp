@@ -162,6 +162,18 @@ public:
         --m_Size;
     }
 
+    void Reset(TAllocator* allocator)
+    {
+        Clear();
+        m_Allocator->Free(m_Data);
+        m_Size = 0;
+        m_Capacity = 0;
+
+        m_Allocator = allocator;
+        Reserve(12);
+
+    }
+
     void Clear()
     {
         for (U32 i = 0; i < m_Size; i++)

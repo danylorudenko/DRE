@@ -56,7 +56,7 @@ struct GraphicsSettings
     float   m_ExposureEV            = 0.0f;
     float   m_AlphaTAA              = 0.9f;
     float   m_VarianceGammaTAA      = 1.0f;
-    float   m_JitterScale           = 0.35f;
+    float   m_JitterScale           = 0.15f;
 };
 
 class GraphicsManager final
@@ -116,7 +116,7 @@ public:
     void                                WaitIdle();
 
     RenderableObject*                   CreateRenderableObject(VKW::Context& context, Data::Geometry* geometry, Data::Material* material);
-    RenderableObject*                   CreateShadowRenderableObject(VKW::Context& context, Data::Geometry* geometry);
+    RenderableObject*                   CreateShadowRenderableObject(VKW::Context& context, Data::Geometry* geometry, Data::Material* material);
     void                                FreeRenderableObject(RenderableObject* obj);
 
 private:

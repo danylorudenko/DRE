@@ -234,21 +234,8 @@ void Dependency::Add(
     barrier.newLayout       = AccessToLayout(dstAccess);
     barrier.image           = resource->handle_;
 
-    ResourceAccess combinedAccess = ResourceAccess(srcAccess | dstAccess);
-    VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_NONE;
-    if (combinedAccess & RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT)
-    {
-        aspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
-    }
-    else if (combinedAccess & RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT)
-    {
-        aspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-    }
-    else
-    {
-        aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
-    }
-
+    VkImageAspectFlags aspectFlags = Format2Aspect(resource->format_);
+    
     barrier.subresourceRange = HELPER::DefaultImageSubresourceRange(aspectFlags);
 }
 
@@ -313,6 +300,15 @@ void Dependency::MergeWith(Dependency const& rhs)
     {
         imageBarriers_.EmplaceBack(rhs.imageBarriers_[i]);
     }
+}
+
+void Dependency::Reset(DRE::AllocatorLinear* allocator)
+{
+    DRE_ASSERT(memoryBarriers_.Empty() && bufferBarriers_.Empty() && imageBarriers_.Empty(), "Shouldn't reset VKW::Dependency when there're unsubmitted barriers left.");
+
+    memoryBarriers_.Reset(allocator);
+    bufferBarriers_.Reset(allocator);
+    imageBarriers_.Reset(allocator);
 }
 
 void Dependency::Clear()

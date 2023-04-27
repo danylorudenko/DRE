@@ -66,6 +66,7 @@ public:
         {
             MATERIAL_TYPE_DEFAULT_LIT,
             MATERIAL_TYPE_COOK_TORRANCE,
+            MATERIAL_TYPE_WATER,
             MATERIAL_TYPE_MAX
         };
 

@@ -1,10 +1,12 @@
 set(DEMO_HEADER_LIST
 	"${DRE_SOURCE_DIR}/apps/demo_app/Application.hpp"
+	"${DRE_SOURCE_DIR}/apps/demo_app/AppUtils.hpp"
 	"${DRE_SOURCE_DIR}/apps/demo_app/ImGuiHelper.hpp"
 	"${DRE_SOURCE_DIR}/apps/demo_app/VulkanApplicationDelegate.hpp")
 	
 set(DEMO_SOURCE_LIST
 	"${DRE_SOURCE_DIR}/apps/demo_app/Application.cpp"
+	"${DRE_SOURCE_DIR}/apps/demo_app/AppUtils.cpp"
 	"${DRE_SOURCE_DIR}/apps/demo_app/ImGuiHelper.cpp"
 	"${DRE_SOURCE_DIR}/apps/demo_app/main.cpp"
 	"${DRE_SOURCE_DIR}/apps/demo_app/VulkanApplicationDelegate.cpp")

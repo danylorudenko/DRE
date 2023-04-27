@@ -5,8 +5,9 @@
 namespace GFX
 {
 
-RenderableObject::RenderableObject(VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount, TexturesVector&& textures, DescriptorSetVector&& sets)
-    : m_ModelM{ glm::identity<glm::mat4>() }
+RenderableObject::RenderableObject(LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount, TexturesVector&& textures, DescriptorSetVector&& sets)
+    : m_Layer{ layers }
+    , m_ModelM{ glm::identity<glm::mat4>() }
     , m_PrevModelM{ glm::identity<glm::mat4>() }
     , m_Pipeline{ pipeline }
     , m_VertexBuffer{ vertexBuffer }
@@ -18,8 +19,10 @@ RenderableObject::RenderableObject(VKW::Pipeline* pipeline, VKW::BufferResource*
 {
 }
 
-RenderableObject::RenderableObject(VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount, DescriptorSetVector&& sets)
-    : m_ModelM{ glm::identity<glm::mat4>() }
+RenderableObject::RenderableObject(LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount, DescriptorSetVector&& sets)
+    : m_Layer{ layers } 
+    , m_ModelM{ glm::identity<glm::mat4>() }
+    , m_PrevModelM{ glm::identity<glm::mat4>() }
     , m_Pipeline{ pipeline }
     , m_VertexBuffer{ vertexBuffer }
     , m_IndexBuffer{ indexBuffer }
@@ -30,8 +33,9 @@ RenderableObject::RenderableObject(VKW::Pipeline* pipeline, VKW::BufferResource*
 {
 }
 
-RenderableObject::RenderableObject(VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount)
-    : m_ModelM{ glm::identity<glm::mat4>() }
+RenderableObject::RenderableObject(LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount)
+    : m_Layer{ layers } 
+    , m_ModelM{ glm::identity<glm::mat4>() }
     , m_PrevModelM{ glm::identity<glm::mat4>() }
     , m_Pipeline{ pipeline }
     , m_VertexBuffer{ vertexBuffer }

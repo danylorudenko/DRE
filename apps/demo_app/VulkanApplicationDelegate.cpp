@@ -1,7 +1,10 @@
 #include "VulkanApplicationDelegate.hpp"
 
+#include "AppUtils.hpp"
+
 #include <assimp\Importer.hpp>
 #include <glm\geometric.hpp>
+#include <glm\ext\matrix_transform.hpp>
 #include <imgui.h>
 
 #include <utility>
@@ -38,6 +41,8 @@ VulkanApplicationDelegate::VulkanApplicationDelegate(HINSTANCE instance, char co
     , m_MainScene{ &DRE::g_MainAllocator }
     , m_RotateSun{ false }
     , m_RotateCamera{ false }
+    , m_WaterGeometry{ 4 * 3, 4 }
+    , m_WaterMaterial{ "water_mat" }
 {
     WORLD::g_MainScene = &m_MainScene;
 }
@@ -62,7 +67,7 @@ LRESULT VulkanApplicationDelegate::WinProc(HWND handle, UINT message, WPARAM wpa
         if (code == RIM_INPUTSINK || code == RIM_INPUT)
             result = ::DefWindowProc(handle, message, wparam, lparam);
 
-        appDelegate->GetInputSystem().ProcessSystemInput(handle, wparam, lparam);
+        appDelegate->GetInputSystem().ProcessSystemInput(handle, wparam, lparam); 
         return result;
     }
     case WM_DESTROY:
@@ -106,6 +111,30 @@ void VulkanApplicationDelegate::start()
     m_GraphicsManager.Initialize();
 
     m_IOManager.ParseModelFile("data\\Sponza\\glTF\\Sponza.gltf", m_MainScene);
+
+    m_GraphicsManager.GetMainContext().FlushAll();
+
+
+    ////////////
+    DRE::ByteBuffer planeVertices;
+    DRE::ByteBuffer planeIndicies;
+    GeneratePlaneMesh(10, 10, planeVertices, planeIndicies);
+
+    m_WaterGeometry.SetVertexData(DRE_MOVE(planeVertices));
+    m_WaterGeometry.SetIndexData(DRE_MOVE(planeIndicies));
+
+    m_WaterMaterial.GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_WATER);
+
+    WORLD::Entity::TransformData trans;
+    
+    trans.model = glm::identity<glm::mat4>();
+    trans.model = glm::rotate(trans.model, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    //trans.model = glm::translate(trans.model, glm::vec3{ 1.0f, 5.5f, 0.0f });
+    trans.model[3][1] += 3.0f;
+    trans.model = glm::scale(trans.model, glm::vec3{ 0.2f });
+    WORLD::Entity& waterEntity = m_MainScene.CreateWaterEntity(m_GraphicsManager.GetMainContext(), trans, &m_WaterGeometry, &m_WaterMaterial);
+    
+    m_GraphicsManager.GetMainContext().FlushAll();
 }
 
 constexpr float C_SUN_ROTATOR_MUL = 1.0f / 100000.0f;

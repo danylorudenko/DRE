@@ -197,12 +197,12 @@ void Pipeline::Descriptor::SetLayout(PipelineLayout const* layout)
     pipelineLayout_ = layout;
 }
 
-void Pipeline::Descriptor::EnableDepthTest(Format depthFormat)
+void Pipeline::Descriptor::EnableDepthTest(Format depthFormat, bool write)
 {
     depthTestEnabled_ = true;
 
     depthStencilState_.depthTestEnable = VK_TRUE;
-    depthStencilState_.depthWriteEnable = VK_TRUE;
+    depthStencilState_.depthWriteEnable = write ? VK_TRUE : VK_FALSE;
     depthStencilState_.depthCompareOp = VK_COMPARE_OP_GREATER;
     depthStencilState_.depthBoundsTestEnable = VK_FALSE;
 

@@ -1,6 +1,6 @@
 #include <vk_wrapper\Context.hpp>
-#include <vk_wrapper\ImportTable.hpp>
 
+#include <vk_wrapper\ImportTable.hpp>
 #include <vk_wrapper\resources\Resource.hpp>
 #include <vk_wrapper\pipeline\Pipeline.hpp>
 #include <vk_wrapper\pipeline\RenderPass.hpp>
@@ -13,13 +13,11 @@ namespace VKW
 
 std::uint32_t constexpr BARRIER_MEM_SIZE = 256 * 1024;
 
-Context::Context(VKW::ImportTable* table, VKW::Queue* queue)
+Context::Context(VKW::ImportTable* table, VKW::Queue* queue, DRE::AllocatorLinear* barrierAllocator)
     : m_ImportTable{ table }
     , m_ParentQueue{ queue }
     , m_RenderingRect{}
-    , m_BarrierMemory{ BARRIER_MEM_SIZE }
-    , m_BarrierAllocator{ m_BarrierMemory.Data(), m_BarrierMemory.Size() }
-    , m_PendingDependency{ &m_BarrierAllocator }
+    , m_PendingDependency{ barrierAllocator }
 {
     m_CurrentCommandList = m_ParentQueue->GetFreeCommandList();
 }
@@ -29,9 +27,14 @@ Context::~Context()
     m_ParentQueue->ReturnCommandList(m_CurrentCommandList);
 }
 
+void Context::ResetDependenciesVectors(DRE::AllocatorLinear* allocator)
+{
+    m_PendingDependency.Reset(allocator);
+}
+
 void Context::FlushAll()
 {
-    FlushResourceDependencies();
+    WriteResourceDependencies();
     m_ParentQueue->Execute(m_CurrentCommandList);
     m_CurrentCommandList = m_ParentQueue->GetFreeCommandList();
 }
@@ -41,7 +44,7 @@ void Context::FlushOnlyPending()
     m_ParentQueue->ExecutePending();
 }
 
-void Context::FlushResourceDependencies()
+void Context::WriteResourceDependencies()
 {
     if (m_PendingDependency.IsEmpty())
         return;
@@ -54,7 +57,7 @@ void Context::FlushResourceDependencies()
 
 void Context::FlushWaitSwapchain(PresentationContext& presentContext)
 {
-    FlushResourceDependencies();
+    WriteResourceDependencies();
     m_ParentQueue->ExecuteWaitSwapchain(m_CurrentCommandList, presentContext);
     m_CurrentCommandList = m_ParentQueue->GetFreeCommandList();
 }
@@ -68,7 +71,7 @@ VKW::QueueExecutionPoint Context::SyncPoint(std::uint8_t waitCount, VKW::QueueEx
 {
     DRE_ASSERT(m_CurrentCommandList != nullptr, "Failed to submit CommandLists, current CmdList is nullptr.");
 
-    FlushResourceDependencies();
+    WriteResourceDependencies();
     VKW::QueueExecutionPoint point =  m_ParentQueue->ScheduleExecute(m_CurrentCommandList, waitCount, waits);
     m_CurrentCommandList = m_ParentQueue->GetFreeCommandList();
 
@@ -92,7 +95,7 @@ void Context::CmdDrawIndexed(std::uint32_t indexCount, std::uint32_t instanceCou
 
 void Context::CmdDispatch(std::uint32_t x, std::uint32_t y, std::uint32_t z)
 {
-    FlushResourceDependencies();
+    WriteResourceDependencies();
     m_ImportTable->vkCmdDispatch(*m_CurrentCommandList, x, y, z);
 }
 
@@ -204,14 +207,6 @@ void Context::CmdPushConstants(VKW::PipelineLayout const* layout, VKW::Descripto
     VkShaderStageFlags const shaderStages = VKW::HELPER::DescriptorStageToVK(stages);
     m_ImportTable->vkCmdPushConstants(*m_CurrentCommandList, layout->GetHandle(), shaderStages, offset, size, pValues);
 }
-
-//void Context::CmdPipelineBarrier(VKW::Dependency& dependency)
-//{
-//    VkDependencyInfoKHR info;
-//    dependency.GetDependency(info);
-//
-//    m_ImportTable->vkCmdPipelineBarrier2(*m_CurrentCommandList, &info);
-//}
 
 void Context::CmdResourceDependency(VKW::ImageResource const* resource,
     ResourceAccess srcAccess, Stages srcStage,
@@ -398,7 +393,7 @@ void Context::CmdBeginRendering(std::uint32_t attachmentCount, VKW::ImageResourc
     info.pDepthAttachment               = depthAttachment ? &depthInfo : nullptr;
     info.pStencilAttachment             = stencilAttachment ? &stencilInfo : nullptr;
 
-    FlushResourceDependencies();
+    WriteResourceDependencies();
     m_ImportTable->vkCmdBeginRendering(*m_CurrentCommandList, &info);
 }
 
@@ -432,7 +427,7 @@ void Context::CmdClearColorImage(VKW::ImageResource const* image, float color[4]
     value.float32[2] = color[2];
     value.float32[3] = color[3];
 
-    FlushResourceDependencies();
+    WriteResourceDependencies();
     m_ImportTable->vkCmdClearColorImage(*m_CurrentCommandList, image->handle_, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &value, 1, &range);
 }
 
@@ -443,7 +438,7 @@ void Context::CmdClearDepthStencilImage(VKW::ImageResource const* image, float d
     value.depth = depth;
     value.stencil = stencil;
 
-    FlushResourceDependencies();
+    WriteResourceDependencies();
     m_ImportTable->vkCmdClearDepthStencilImage(*m_CurrentCommandList, image->handle_, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &value, 1, &range);
 }
 
@@ -468,7 +463,7 @@ void Context::CmdCopyImageToImage(VKW::ImageResource const* dst, VKW::ImageResou
     region.dstOffset        = VkOffset3D{ 0, 0, 0 };
     region.extent           = VkExtent3D{ dst->width_, dst->height_, 1 };
 
-    FlushResourceDependencies();
+    WriteResourceDependencies();
     m_ImportTable->vkCmdCopyImage2(*m_CurrentCommandList, &info);
 }
 
@@ -497,7 +492,7 @@ void Context::CmdCopyBufferToImage(VKW::ImageResource const* dst, VKW::BufferRes
     copyInfo.regionCount = 1;
     copyInfo.pRegions = &copyDesc;
 
-    FlushResourceDependencies();
+    WriteResourceDependencies();
     m_ImportTable->vkCmdCopyBufferToImage2(*m_CurrentCommandList, &copyInfo);
 }
 
@@ -518,7 +513,7 @@ void Context::CmdCopyBufferToBuffer(VKW::BufferResource const* dst, std::uint32_
     info.regionCount = 1;
     info.pRegions = &region;
 
-    FlushResourceDependencies();
+    WriteResourceDependencies();
     m_ImportTable->vkCmdCopyBuffer2(*m_CurrentCommandList, &info);
 }
 

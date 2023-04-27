@@ -110,7 +110,8 @@ void ImGuiRenderPass::Render(RenderGraph& graph, VKW::Context& context)
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, imGuiRT->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
 
     context.CmdBeginRendering(1, &imGuiRT, nullptr, nullptr);
-    float clearColors[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    context.CmdSetViewport(2, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
+    context.CmdSetScissor(2, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
     context.CmdBindGraphicsDescriptorSets(layout, startSet, 1, &passSet);
     context.CmdBindPipeline(VKW::BindPoint::Graphics, pipelineDB.GetPipeline("imgui_draw"));
 

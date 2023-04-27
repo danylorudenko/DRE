@@ -61,7 +61,7 @@ public:
 
         void SetLayout              (PipelineLayout const* layout);
 
-        void EnableDepthTest        (Format depthFormat);
+        void EnableDepthTest        (Format depthFormat, bool write = true);
         void SetCullMode            (VkCullModeFlags mode);
         void SetWindingOrder        (WindingOrder order);
 

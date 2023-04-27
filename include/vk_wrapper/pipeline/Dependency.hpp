@@ -92,6 +92,7 @@ public:
 
     void MergeWith(Dependency const& rhs);
 
+    void Reset(DRE::AllocatorLinear* allocator);
     void Clear();
     bool IsEmpty() const;
 

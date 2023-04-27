@@ -4,7 +4,8 @@
 #include <glm\vec2.hpp>
 
 #include <foundation\memory\Memory.hpp>
-#include <foundation\container\Vector.hpp>
+#include <foundation\memory\ByteBuffer.hpp>
+#include <foundation\memory\Pointer.hpp>
 
 namespace Data
 {
@@ -12,53 +13,47 @@ namespace Data
 class Geometry
 {
 public:
-    Geometry(DRE::DefaultAllocator* allocator);
+    Geometry(std::uint16_t vertexStride, std::uint16_t indexSize);
 
     Geometry(Geometry&& rhs);
     Geometry& operator=(Geometry&& rhs);
 
+    inline void SetVertexData(DRE::ByteBuffer&& data) { m_VertexStorage = DRE_MOVE(data); }
+    inline void SetIndexData(DRE::ByteBuffer&& data) { m_IndexStorage = DRE_MOVE(data); }
 
-    using Index = std::uint32_t;
-
-    struct Vertex
+    inline void ResizeVertexStorage(std::uint32_t count)
     {
-        float pos[3];
-        float norm[3];
-        float tan[3];
-        float btan[3];
-        float uv0[2];
-    };
-
-    inline void SetVertexCount(std::uint32_t count)
-    {
-        m_VertexStorage.Resize(count);
+        m_VertexStorage.Resize(count * m_VertexStride);
     }
 
-    inline void SetIndexCount(std::uint32_t count)
+    inline void ResizeIndexStorage(std::uint32_t count)
     {
-        m_IndexStorage.Resize(count);
+        m_IndexStorage.Resize(count * m_IndexSize);
     }
 
-    inline Vertex const& GetVertex(std::uint32_t i) const { return m_VertexStorage[i]; }
-    inline Index const& GetIndex(std::uint32_t i) const { return m_IndexStorage[i]; }
+    template<typename T>
+    T& GetVertex(std::uint32_t i) { return *reinterpret_cast<T*>(DRE::PtrAdd(m_VertexStorage.Data(), i * m_VertexStride)); }
 
-    inline Vertex& GetVertex(std::uint32_t i) { return m_VertexStorage[i]; }
-    inline Index& GetIndex(std::uint32_t i) { return m_IndexStorage[i]; }
+    template<typename T>
+    T& GetIndex(std::uint32_t i) { return *reinterpret_cast<T*>(DRE::PtrAdd(m_IndexStorage.Data(), i * m_IndexSize)); }
+    
+    inline std::uint32_t GetVertexSizeInBytes() const { return m_VertexStorage.Size(); }
+    inline std::uint32_t GetIndexSizeInBytes() const { return m_IndexStorage.Size(); }
 
-    inline std::uint32_t GetVertexSizeInBytes() const { return m_VertexStorage.SizeInBytes(); }
-    inline std::uint32_t GetIndexSizeInBytes() const { return m_IndexStorage.SizeInBytes(); }
+    inline std::uint32_t GetVertexCount() const { return m_VertexStorage.Size() / m_VertexStride; }
+    inline std::uint32_t GetIndexCount() const { return m_IndexStorage.Size() / m_IndexSize; }
 
-    inline std::uint32_t GetVertexCount() const { return m_VertexStorage.Size(); }
-    inline std::uint32_t GetIndexCount() const { return m_IndexStorage.Size(); }
+    inline void const*   GetVertexData() const { return m_VertexStorage.Data(); }
+    inline void const*   GetIndexData() const { return m_IndexStorage.Data(); }
 
-    inline Vertex const* GetVertexData() const { return m_VertexStorage.Data(); }
-    inline Index const*  GetIndexData() const { return m_IndexStorage.Data(); }
-
-    inline bool          HasIndexBuffer() const { return !m_IndexStorage.Empty(); }
+    inline bool          HasIndexBuffer() const { return m_IndexStorage.Size() != 0; }
 
 private:
-    DRE::Vector<Vertex, DRE::DefaultAllocator>  m_VertexStorage;
-    DRE::Vector<Index, DRE::DefaultAllocator>   m_IndexStorage;
+    std::uint16_t m_VertexStride;
+    std::uint16_t m_IndexSize;
+
+    DRE::ByteBuffer m_VertexStorage;
+    DRE::ByteBuffer m_IndexStorage;
 };
 
 }
