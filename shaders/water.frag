@@ -7,7 +7,7 @@
 
 layout(location = 0) in vec3 in_wpos;
 layout(location = 1) in vec4 in_prev_wpos;
-layout(location = 2) in mat3 in_TBN;
+layout(location = 2) in vec3 in_normal;
 
 layout(location = 0) out vec4 finalColor;
 layout(location = 1) out vec2 velocity;
@@ -25,43 +25,6 @@ layout(set = 4, binding = 0, std140) uniform InstanceUniform
     mat4  model_mat;
     mat4  prev_model_mat;
 } instanceUniform;
-
-
-float GGX_NDF(float NdotH, float a)
-{
-    float a2 = a * a;
-    float nh2 = NdotH * NdotH;
-
-    float denom = nh2 * (a2 - 1.0) + 1.0;
-    denom = PI * denom * denom;
-
-    return a2 / denom;
-}
-
-float ShlickGGX(float NdotV, float k)
-{
-    float denom = NdotV * (1.0 - k) + k;
-
-    return NdotV / denom;
-}
-
-float SmithGGX(float NdotV, float NdotL, float a)
-{
-    float a1 = (a + 1);
-    float k = (a1 * a1) / 8.0;
-
-    float ggx1 = ShlickGGX(NdotV, k);
-    float ggx2 = ShlickGGX(NdotL, k);
-
-    return ggx1 * ggx2;
-}
-
-
-vec3 FresnelShlick(float NdotH, vec3 color, float metalness)
-{
-    vec3 F0 = mix(vec3(0.04), color, metalness);
-    return F0 + (vec3(1.0) - F0) * pow(1.0 - NdotH, 5.0);
-}
 
 #define ENABLE_PCF 1
 #define ENABLE_PCF_POISSON 1
@@ -110,47 +73,24 @@ float CalculateShadow(vec3 wpos)
 
 void main()
 {
-
-	const float roughness = 0.0;
-	const float metalness = 0.2;
 	const vec3 diffuse = vec3(3, 227, 252) / 255;
 	
+    vec3 n = in_normal;
+	n = vec3(instanceUniform.model_mat * vec4(n, 0.0));    
+	n = normalize(n);
 
-    vec3 n = normalize(in_TBN[2]);
-    vec3 v = normalize(GetCameraPos() - in_wpos);
-    vec3 L = -GetMainLightDir();
-    vec3 h = normalize(v + L);
-    
-    float NdotL = max(0.0, dot(n, L));
-    float NdotH = max(0.0, dot(n, h));
-    float NdotV = max(0.0, dot(n, v));
+	vec2 pixel_pos_uv = gl_FragCoord.xy / GetViewportSize();
+	vec3 worldSample = SampleTexture(forwardColorMap, GetSamplerNearest(), pixel_pos_uv).rgb;
 
-    float NDF = GGX_NDF(NdotH, roughness);
-    float G = SmithGGX(NdotV, NdotL, roughness);
-    vec3 F = FresnelShlick(NdotH, diffuse, metalness);
-
-    vec3 kS = F;
-    vec3 kD = vec3(1.0) - kS;
-
-    vec3 numerator = NDF * G * F;
-    float denum = 4.0 * NdotV * NdotL + 0.001;
-
-    vec3 specular = numerator / denum;
-
-    vec3 ambient = vec3(0.15, 0.15, 0.15) * diffuse;
-
-    float shadow = CalculateShadow(in_wpos);
-
-    vec3 res = shadow *(kD * diffuse+ specular) * NdotL + ambient;    
+	vec3 res = (dot(n, -GetMainLightDir())).rrr;
+	res = mix(res, worldSample, 0);
 	
     finalColor = vec4(res, 1.0);
 	
 	vec4 prev_ndc = GetPrevCameraViewProjM() * in_prev_wpos;
 	prev_ndc /= prev_ndc.w;
 	
-	vec2 pixel_pos_uv = gl_FragCoord.xy / GetViewportSize();
 	vec2 pixel_pos_ndc = pixel_pos_uv * 2.0 - 1.0;
-	
 	vec2 vel = (pixel_pos_ndc - prev_ndc.xy);
 	vec2 vel_uv = vel * 0.5;
 	

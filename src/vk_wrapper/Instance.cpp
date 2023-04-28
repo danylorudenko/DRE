@@ -301,7 +301,7 @@ VkBool32 Instance::DebugCallback(
 
     auto str = stringstream.str();
     std::cerr << str;
-    OutputDebugStringA(str.c_str());
+     OutputDebugStringA(str.c_str());
 
     return VK_FALSE;
 }

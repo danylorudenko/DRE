@@ -112,7 +112,7 @@ public:
 public:
     void                                Initialize();
     void                                ReloadShaders();
-    void                                RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS);
+    void                                RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS, float globalTimeS);
     void                                WaitIdle();
 
     RenderableObject*                   CreateRenderableObject(VKW::Context& context, Data::Geometry* geometry, Data::Material* material);
@@ -130,7 +130,7 @@ private:
     using GeometryGPUMap = DRE::InplaceHashTable<Data::Geometry*, GeometryGPU>;
     GeometryGPU* LoadGPUGeometry(VKW::Context& context, Data::Geometry* geometry);
 
-    void            PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, std::uint64_t deltaTimeUS);
+    void            PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, std::uint64_t deltaTimeUS, float globalTimeS);
     VKW::QueueExecutionPoint TransferToSwapchainAndPresent(StorageTexture& src);
 
 

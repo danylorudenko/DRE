@@ -63,6 +63,7 @@ public:
 
         void EnableDepthTest        (Format depthFormat, bool write = true);
         void SetCullMode            (VkCullModeFlags mode);
+        void SetPolygonMode         (VkPolygonMode mode);
         void SetWindingOrder        (WindingOrder order);
 
         void AddVertexAttribute     (Format format);

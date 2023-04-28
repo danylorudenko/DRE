@@ -118,7 +118,7 @@ void VulkanApplicationDelegate::start()
     ////////////
     DRE::ByteBuffer planeVertices;
     DRE::ByteBuffer planeIndicies;
-    GeneratePlaneMesh(10, 10, planeVertices, planeIndicies);
+    GeneratePlaneMesh(30, 30, planeVertices, planeIndicies);
 
     m_WaterGeometry.SetVertexData(DRE_MOVE(planeVertices));
     m_WaterGeometry.SetIndexData(DRE_MOVE(planeIndicies));
@@ -130,8 +130,8 @@ void VulkanApplicationDelegate::start()
     trans.model = glm::identity<glm::mat4>();
     trans.model = glm::rotate(trans.model, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     //trans.model = glm::translate(trans.model, glm::vec3{ 1.0f, 5.5f, 0.0f });
-    trans.model[3][1] += 3.0f;
-    trans.model = glm::scale(trans.model, glm::vec3{ 0.2f });
+    trans.model[3][1] += 1.5f;
+    trans.model = glm::scale(trans.model, glm::vec3{ 0.1f });
     WORLD::Entity& waterEntity = m_MainScene.CreateWaterEntity(m_GraphicsManager.GetMainContext(), trans, &m_WaterGeometry, &m_WaterMaterial);
     
     m_GraphicsManager.GetMainContext().FlushAll();
@@ -174,7 +174,8 @@ void VulkanApplicationDelegate::update()
     if (m_RotateCamera)
         m_MainScene.GetMainCamera().Rotate(glm::vec3{ 0.0f, C_SUN_ROTATOR_MUL * m_DeltaMicroseconds * 15.0f, 0.0f});
 
-    m_GraphicsManager.RenderFrame(m_EngineFrame, m_DeltaMicroseconds);
+    float const globalTimeSeconds = static_cast<float>(m_GlobalStopwatch.CurrentMilliseconds()) * 0.001f;
+    m_GraphicsManager.RenderFrame(m_EngineFrame, m_DeltaMicroseconds, globalTimeSeconds);
 
     m_EngineFrame++;
 }

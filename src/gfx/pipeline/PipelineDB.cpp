@@ -91,6 +91,7 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardWaterPipeline(char const* 
     desc.SetFragmentShader(fragModule);
     desc.SetLayout(GetLayout(layoutName->GetData()));
     desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
+    //desc.SetPolygonMode(VK_POLYGON_MODE_LINE);
     desc.EnableDepthTest(VKW::FORMAT_D32_FLOAT, false);
     desc.AddColorOutput(g_GraphicsManager->GetMainDevice()->GetSwapchain()->GetFormat(), VKW::BLEND_TYPE_NONE);
     desc.AddColorOutput(VKW::FORMAT_R16G16_FLOAT, VKW::BLEND_TYPE_NONE); // velocity vectors

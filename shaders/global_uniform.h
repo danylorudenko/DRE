@@ -14,7 +14,7 @@ layout(set = 2, binding = 0, std140) readonly uniform GlobalUniforms
 #endif
 {
     // uniform buffer layout
-    vec4 viewportSize_deltaMS_0;
+    vec4 viewportSize_deltaMS_timeS;
     vec4 main_CameraPos;
     vec4 main_CameraDir;
 	vec4 main_Jitter;
@@ -47,8 +47,9 @@ layout(set = 2, binding = 0, std140) readonly uniform GlobalUniforms
 } g_GlobalUniforms;
 
 // Global uniform values
-vec2    GetViewportSize() { return g_GlobalUniforms.viewportSize_deltaMS_0.xy; }
-float   GetDeltaTime() { return g_GlobalUniforms.viewportSize_deltaMS_0.z; }
+vec2    GetViewportSize() { return g_GlobalUniforms.viewportSize_deltaMS_timeS.xy; }
+float   GetDeltaTime() { return g_GlobalUniforms.viewportSize_deltaMS_timeS.z; }
+float   GetTimeS() { return g_GlobalUniforms.viewportSize_deltaMS_timeS.w; }
 vec3    GetCameraPos() { return g_GlobalUniforms.main_CameraPos.xyz; }
 vec3    GetCameraDir() { return g_GlobalUniforms.main_CameraDir.xyz; }
 vec2    GetJitter() { return g_GlobalUniforms.main_Jitter.xy; }

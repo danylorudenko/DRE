@@ -91,7 +91,7 @@ glm::vec2 constexpr s_HaltonSequence[16] = {
     glm::vec2{ 0.031250, 0.592593 }
 };
 
-void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, std::uint64_t deltaTimeUS)
+void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, std::uint64_t deltaTimeUS, float timeS)
 {
     m_MainView.UpdatePreviosFrame();
     m_SunShadowView.UpdatePreviosFrame();
@@ -119,10 +119,10 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
 
 
     GlobalUniforms globalUniform{};
-    globalUniform.viewportSize_deltaMS_0[0] = static_cast<float>(GetRenderingWidth());
-    globalUniform.viewportSize_deltaMS_0[1] = static_cast<float>(GetRenderingHeight());
-    globalUniform.viewportSize_deltaMS_0[2] = static_cast<float>(static_cast<double>(deltaTimeUS) / 1000.0);
-    globalUniform.viewportSize_deltaMS_0[3] = 0.0f;
+    globalUniform.viewportSize_deltaMS_timeS[0] = static_cast<float>(GetRenderingWidth());
+    globalUniform.viewportSize_deltaMS_timeS[1] = static_cast<float>(GetRenderingHeight());
+    globalUniform.viewportSize_deltaMS_timeS[2] = static_cast<float>(static_cast<double>(deltaTimeUS) / 1000.0);
+    globalUniform.viewportSize_deltaMS_timeS[3] = timeS;
 
     globalUniform.main_CameraPos        = glm::vec4{ scene.GetMainCamera().GetPosition(), 1.0f };
     globalUniform.main_CameraDir        = glm::vec4{ scene.GetMainCamera().GetForward(), 0.0f };
@@ -134,11 +134,11 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     globalUniform.main_ViewProjM        = m_MainView.GetViewProjectionM();
     globalUniform.main_iViewProjM       = m_MainView.GetInvViewProjectionM();
 
-    globalUniform.main_PrevViewM          = m_MainView.GetPrevViewM();
-    globalUniform.main_PreviViewM         = m_MainView.GetPrevInvViewM();
-    globalUniform.main_PrevProjM          = m_MainView.GetPrevProjectionM();
-    globalUniform.main_PrevViewProjM      = m_MainView.GetPrevViewProjectionM();
-    globalUniform.main_PreviViewProjM     = m_MainView.GetPrevInvViewProjectionM();
+    globalUniform.main_PrevViewM        = m_MainView.GetPrevViewM();
+    globalUniform.main_PreviViewM       = m_MainView.GetPrevInvViewM();
+    globalUniform.main_PrevProjM        = m_MainView.GetPrevProjectionM();
+    globalUniform.main_PrevViewProjM    = m_MainView.GetPrevViewProjectionM();
+    globalUniform.main_PreviViewProjM   = m_MainView.GetPrevInvViewProjectionM();
 
     globalUniform.main_LightDir         = glm::vec4{ scene.GetMainSunLight().GetForward(), 0.0f };
     globalUniform.main_LightRadiance    = glm::vec4{ scene.GetMainSunLight().GetRadiance(), 1.0f };
@@ -161,7 +161,7 @@ void GraphicsManager::ReloadShaders()
     }
 }
 
-void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS)
+void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS, float globalTimeS)
 {
     m_GraphicsFrame = frame;
 
@@ -175,7 +175,7 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
 
     VKW::Context& context = GetMainContext();
     context.ResetDependenciesVectors(&DRE::g_FrameScratchAllocator);
-    PrepareGlobalData(context,  *WORLD::g_MainScene, deltaTimeUS);
+    PrepareGlobalData(context,  *WORLD::g_MainScene, deltaTimeUS, globalTimeS);
 
     // globalData
     context.CmdBindGlobalDescriptorSets(*GetMainDevice()->GetDescriptorManager(), GetCurrentFrameID());

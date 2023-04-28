@@ -214,6 +214,11 @@ void Pipeline::Descriptor::SetCullMode(VkCullModeFlags flags)
     rasterizationState_.cullMode = flags;
 }
 
+void Pipeline::Descriptor::SetPolygonMode(VkPolygonMode mode)
+{
+    rasterizationState_.polygonMode = mode;
+}
+
 void Pipeline::Descriptor::SetWindingOrder(WindingOrder face)
 {
     rasterizationState_.frontFace = VkFrontFace(face);
