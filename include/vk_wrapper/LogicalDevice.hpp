@@ -57,8 +57,8 @@ public:
         std::vector<VkQueueFamilyProperties> queueFamilyProperties;
         std::vector<VkExtensionProperties> extensionProperties;
         std::vector<std::uint32_t> presentationFamilies;
+        VkPhysicalDeviceExtendedDynamicState3FeaturesEXT extendedDynamicState3FeaturesEXT;
         VkPhysicalDeviceFeatures2 features2;
-        //VkPhysicalDeviceVulkan11Features vulkan11Features;
         VkPhysicalDeviceVulkan12Features vulkan12Features;
         VkPhysicalDeviceVulkan13Features vulkan13Features;
     };

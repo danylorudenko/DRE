@@ -44,7 +44,7 @@ Device::Device(HINSTANCE hInstance, HWND hwnd, bool debug)
     VKW::DeviceDesc deviceDesc;
     deviceDesc.table_ = table_.get();
     deviceDesc.instance_ = instance_.get();
-    deviceDesc.requiredExtensions_ = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME };
+    deviceDesc.requiredExtensions_ = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME, VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME };
     deviceDesc.graphicsPresentQueueCount_ = 1;
     deviceDesc.computeQueueCount_ = 0;
     deviceDesc.transferQueueCount_ = 0;

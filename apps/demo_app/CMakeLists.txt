@@ -44,6 +44,14 @@ add_custom_command(TARGET demo_app POST_BUILD
 	COMMENT "Creating symlink to shaders in binary directory"
 )
 
+
+add_custom_command(TARGET demo_app POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E create_symlink
+	"${DRE_SOURCE_DIR}/textures"
+	"$<TARGET_FILE_DIR:demo_app>/textures"
+	COMMENT "Creating symlink to textures in binary directory"
+)
+
 add_custom_command(TARGET demo_app POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E create_symlink
 	"${DRE_SOURCE_DIR}/extern/glTF-Sample-Models/2.0"

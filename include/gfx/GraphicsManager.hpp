@@ -57,6 +57,7 @@ struct GraphicsSettings
     float   m_AlphaTAA              = 0.9f;
     float   m_VarianceGammaTAA      = 1.0f;
     float   m_JitterScale           = 0.15f;
+    bool    m_WaterWireframe        = false;
 };
 
 class GraphicsManager final

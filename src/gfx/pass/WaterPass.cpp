@@ -52,16 +52,20 @@ void WaterPass::Initialize(RenderGraph& graph)
 void WaterObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view)
 {
     std::uint32_t constexpr uniformSize =
-        sizeof(glm::mat4) * 2;
+        sizeof(glm::mat4) * 2 + sizeof(std::uint32_t) * 4;
 
     auto uniformAllocation = arena.AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), uniformSize, 256);
     VKW::DescriptorManager::WriteDesc writeDesc;
     writeDesc.AddUniform(uniformAllocation.m_Buffer, uniformAllocation.m_OffsetInBuffer, uniformAllocation.m_Size, 0);
     descriptorManager.WriteDescriptorSet(obj.GetDescriptorSets(g_GraphicsManager->GetCurrentFrameID()), writeDesc);
 
+    VKW::TextureDescriptorIndex const& normalIndex = obj.GetNormalTexture()->GetShaderReadDescriptor();
+
     UniformProxy uniformProxy{ &context, uniformAllocation };
     uniformProxy.WriteMember140(obj.GetModelM());
     uniformProxy.WriteMember140(obj.GetModelM()); // prev world matrix is same, geometry is static
+    uniformProxy.WriteMember140(normalIndex.id_);
+
 }
 
 void WaterPass::Render(RenderGraph& graph, VKW::Context& context)
@@ -92,6 +96,7 @@ void WaterPass::Render(RenderGraph& graph, VKW::Context& context)
 
     context.CmdSetViewport(2, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
     context.CmdSetScissor(2, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
+    context.CmdSetPolygonMode(g_GraphicsManager->GetGraphicsSettings().m_WaterWireframe ? VKW::POLYGON_WIREFRAME : VKW::POLYGON_FILL);
 
     {
         glm::mat4 const shadow_ViewProj = g_GraphicsManager->GetSunShadowRenderView().GetViewProjectionM();

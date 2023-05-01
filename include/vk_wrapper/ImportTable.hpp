@@ -170,6 +170,7 @@ public:
     PFN_vkCmdPushConstants vkCmdPushConstants = nullptr;
     PFN_vkCmdSetViewport vkCmdSetViewport = nullptr;
     PFN_vkCmdSetScissor vkCmdSetScissor = nullptr;
+    PFN_vkCmdSetPolygonModeEXT vkCmdSetPolygonModeEXT = nullptr;
 
     PFN_vkCmdDispatch vkCmdDispatch = nullptr;
 

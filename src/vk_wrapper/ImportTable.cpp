@@ -171,6 +171,7 @@ void ImportTable::GetDeviceProcAddresses(VkDevice device)
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdPushConstants);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdSetViewport);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdSetScissor);
+    VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdSetPolygonModeEXT);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdDispatch);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdPipelineBarrier);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdPipelineBarrier2);

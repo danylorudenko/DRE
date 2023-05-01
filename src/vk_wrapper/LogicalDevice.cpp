@@ -299,7 +299,8 @@ bool LogicalDevice::IsPhysicalDeviceValid(
     VKW::LogicalDevice::PhysicalDeviceProperties const& deviceProperties,
     std::vector<std::string> const& requiredExtensions)
 {
-    VkPhysicalDeviceVulkan12Features const& vulkan12Features = *((VkPhysicalDeviceVulkan12Features const*)deviceProperties.features2.pNext);
+    VkPhysicalDeviceExtendedDynamicState3FeaturesEXT const& extendedDynamicFeatures = *((VkPhysicalDeviceExtendedDynamicState3FeaturesEXT const*)deviceProperties.features2.pNext);
+    VkPhysicalDeviceVulkan12Features const& vulkan12Features = *((VkPhysicalDeviceVulkan12Features const*)extendedDynamicFeatures.pNext);
     VkPhysicalDeviceVulkan13Features const& vulkan13Features = *((VkPhysicalDeviceVulkan13Features const*)vulkan12Features.pNext);
 
     bool supportsGraphics = false;
@@ -341,7 +342,7 @@ bool LogicalDevice::IsPhysicalDeviceValid(
 
 void LogicalDevice::DisableHeavyPhysicalDeviceFeatures()
 {
-    VkPhysicalDeviceVulkan12Features& vulkan12Features = *((VkPhysicalDeviceVulkan12Features*)physicalDeviceProperties_.features2.pNext);
+    VkPhysicalDeviceExtendedDynamicState3FeaturesEXT& dynamicStateFeatures = *((VkPhysicalDeviceExtendedDynamicState3FeaturesEXT*)physicalDeviceProperties_.features2.pNext);
     VkPhysicalDeviceFeatures& features = physicalDeviceProperties_.features2.features;
     
     RELEASE_ONLY(features.robustBufferAccess        = VK_FALSE);
@@ -360,6 +361,38 @@ void LogicalDevice::DisableHeavyPhysicalDeviceFeatures()
     features.sparseResidency8Samples                = VK_FALSE;
     features.sparseResidency16Samples               = VK_FALSE;
     features.sparseResidencyAliased                 = VK_FALSE;
+
+    dynamicStateFeatures.extendedDynamicState3TessellationDomainOrigin           = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3DepthClampEnable                   = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3PolygonMode                        = VK_TRUE; /////// VK_TRUE
+    dynamicStateFeatures.extendedDynamicState3RasterizationSamples               = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3SampleMask                         = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3AlphaToCoverageEnable              = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3AlphaToOneEnable                   = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3LogicOpEnable                      = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3ColorBlendEnable                   = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3ColorBlendEquation                 = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3ColorWriteMask                     = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3RasterizationStream                = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3ConservativeRasterizationMode      = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3ExtraPrimitiveOverestimationSize   = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3DepthClipEnable                    = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3SampleLocationsEnable              = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3ColorBlendAdvanced                 = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3ProvokingVertexMode                = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3LineRasterizationMode              = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3LineStippleEnable                  = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3DepthClipNegativeOneToOne          = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3ViewportWScalingEnable             = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3ViewportSwizzle                    = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3CoverageToColorEnable              = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3CoverageToColorLocation            = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3CoverageModulationMode             = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3CoverageModulationTableEnable      = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3CoverageModulationTable            = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3CoverageReductionMode              = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3RepresentativeFragmentTestEnable   = VK_FALSE;
+    dynamicStateFeatures.extendedDynamicState3ShadingRateImageEnable             = VK_FALSE;
 
 }
 
@@ -400,10 +433,10 @@ void LogicalDevice::RequestDeviceProperties(
 
 
     deviceProperties.features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-    deviceProperties.features2.pNext = &deviceProperties.vulkan12Features;
+    deviceProperties.features2.pNext = &deviceProperties.extendedDynamicState3FeaturesEXT;
 
-    //deviceProperties.vulkan11Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
-    //deviceProperties.vulkan11Features.pNext = &deviceProperties.vulkan11Features;
+    deviceProperties.extendedDynamicState3FeaturesEXT.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT;
+    deviceProperties.extendedDynamicState3FeaturesEXT.pNext = &deviceProperties.vulkan12Features;
 
     deviceProperties.vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
     deviceProperties.vulkan12Features.pNext = &deviceProperties.vulkan13Features;
@@ -715,7 +748,8 @@ void LogicalDevice::PrintPhysicalDeviceData(VKW::LogicalDevice::PhysicalDevicePr
     std::cout << "\t\t" << "variableMultisampleRate: " << features.variableMultisampleRate << std::endl;
     std::cout << "\t\t" << "inheritedQueries: " << features.inheritedQueries << std::endl << std::endl;
 
-    VkPhysicalDeviceVulkan12Features const& vulkan12Features = *((VkPhysicalDeviceVulkan12Features const*)deviceProperties.features2.pNext);
+    VkPhysicalDeviceExtendedDynamicState3FeaturesEXT const& dynamicStateFeatures = *((VkPhysicalDeviceExtendedDynamicState3FeaturesEXT const*)deviceProperties.features2.pNext);
+    VkPhysicalDeviceVulkan12Features const& vulkan12Features = *((VkPhysicalDeviceVulkan12Features const*)dynamicStateFeatures.pNext);
     std::cout << "\tDescriptor Indexing Feataures:" << std::endl;
     std::cout << "\t\t" << "shaderInputAttachmentArrayDynamicIndexing: "        << vulkan12Features.shaderInputAttachmentArrayDynamicIndexing << std::endl;
     std::cout << "\t\t" << "shaderUniformTexelBufferArrayDynamicIndexing: "     << vulkan12Features.shaderUniformTexelBufferArrayDynamicIndexing << std::endl;

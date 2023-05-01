@@ -4,6 +4,7 @@
 #extension GL_GOOGLE_include_directive : enable
 
 #include "shaders_common.h"
+#include "shaders_defines.h"
 
 layout (set=3, binding=1)        uniform texture2D   velocity;
 layout (set=3, binding=2)        uniform texture2D   color_buffer;

@@ -4,6 +4,7 @@
 #extension GL_GOOGLE_include_directive : enable
 
 #include "shaders_common.h"
+#include "shaders_defines.h"
 
 layout(location = 0) in vec2 in_uv;
 layout(location = 1) in vec4 in_color;
@@ -19,6 +20,6 @@ layout(set = 3, binding = 0) uniform ImGuiData
 
 void main()
 {
-	float textureValue = texture(sampler2D(GetGlobalTexture(imGuiData.textureID), GetSamplerLinearClamp()), in_uv).x;
+	float textureValue = SampleGlobalTextureLinear(imGuiData.textureID, in_uv).x;
 	finalColor = vec4(in_color.rgb * textureValue, textureValue);
 }

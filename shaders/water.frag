@@ -4,6 +4,8 @@
 #extension GL_GOOGLE_include_directive : enable
 
 #include "shaders_common.h"
+#include "shaders_defines.h"
+#include "poisson.h"
 
 layout(location = 0) in vec3 in_wpos;
 layout(location = 1) in vec4 in_prev_wpos;
@@ -24,7 +26,11 @@ layout(set = 4, binding = 0, std140) uniform InstanceUniform
 {
     mat4  model_mat;
     mat4  prev_model_mat;
+	uvec4 textureID;
+	
 } instanceUniform;
+
+#define NormalTextureID instanceUniform.textureID[0]
 
 #define ENABLE_PCF 1
 #define ENABLE_PCF_POISSON 1
@@ -77,13 +83,22 @@ void main()
 	
     vec3 n = in_normal;
 	n = vec3(instanceUniform.model_mat * vec4(n, 0.0));    
-	n = normalize(n);
+	
+	vec3 normalMap0 = SampleGlobalTextureLinear(NormalTextureID, in_wpos.xz / 2 + GetTimeS() / 12).rgb;
+	vec3 normalMap1 = SampleGlobalTextureLinear(NormalTextureID, in_wpos.zx + GetTimeS() / 11).rgb;
+	
+	vec3 normalMap = mix(normalMap0, normalMap1, 0.5);
+	
+	normalMap = (normalMap * 2 - 1) * 0.1;
+	n = normalize(n + normalMap);
 
 	vec2 pixel_pos_uv = gl_FragCoord.xy / GetViewportSize();
 	vec3 worldSample = SampleTexture(forwardColorMap, GetSamplerNearest(), pixel_pos_uv).rgb;
 
-	vec3 res = (dot(n, -GetMainLightDir())).rrr;
-	res = mix(res, worldSample, 0);
+	vec3 res = diffuse * dot(n, -GetMainLightDir());
+	vec3 halfwayDir = normalize(-GetMainLightDir() + GetCameraDir());  
+    vec3 spec = pow(max(dot(n, halfwayDir), 0.0), 64.0).rrr;
+	res = mix(res + spec, worldSample, 0.1);
 	
     finalColor = vec4(res, 1.0);
 	

@@ -112,6 +112,7 @@ void ImGuiRenderPass::Render(RenderGraph& graph, VKW::Context& context)
     context.CmdBeginRendering(1, &imGuiRT, nullptr, nullptr);
     context.CmdSetViewport(2, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
     context.CmdSetScissor(2, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
+    context.CmdSetPolygonMode(VKW::POLYGON_FILL);
     context.CmdBindGraphicsDescriptorSets(layout, startSet, 1, &passSet);
     context.CmdBindPipeline(VKW::BindPoint::Graphics, pipelineDB.GetPipeline("imgui_draw"));
 

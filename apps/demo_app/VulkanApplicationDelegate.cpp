@@ -103,8 +103,11 @@ void VulkanApplicationDelegate::start()
     m_IOManager.LoadShaderBinaries();
 
     m_MainScene.GetMainCamera().SetFOV(60.0f);
-    m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 7.28f, 5.57f, -1.07f });
-    m_MainScene.GetMainCamera().SetEulerOrientation(glm::vec3{ -17.26f, 107.37f, 0.0f });
+    //m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 7.28f, 5.57f, -1.07f });
+    //m_MainScene.GetMainCamera().SetEulerOrientation(glm::vec3{ -17.26f, 107.37f, 0.0f });
+
+    m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 2.01f, 2.35f, 0.28f });
+    m_MainScene.GetMainCamera().SetEulerOrientation(glm::vec3{ -22.21f, 68.29f, 0.0f });
 
     m_MainScene.GetMainSunLight().SetEulerOrientation(glm::vec3{ -70.0f, 45.0f, 0.0f });
 
@@ -118,20 +121,22 @@ void VulkanApplicationDelegate::start()
     ////////////
     DRE::ByteBuffer planeVertices;
     DRE::ByteBuffer planeIndicies;
-    GeneratePlaneMesh(30, 30, planeVertices, planeIndicies);
+    GeneratePlaneMesh(100, 100, planeVertices, planeIndicies);
 
     m_WaterGeometry.SetVertexData(DRE_MOVE(planeVertices));
     m_WaterGeometry.SetIndexData(DRE_MOVE(planeIndicies));
-
+    Data::Texture2D waterNormalMap = m_IOManager.ReadTexture2D("textures\\water_normal0.jpg", Data::TEXTURE_VARIATION_RGBA);
+    
+    m_WaterMaterial.AssignTextureToSlot(Data::Material::TextureProperty::NORMAL, DRE_MOVE(waterNormalMap));
     m_WaterMaterial.GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_WATER);
 
     WORLD::Entity::TransformData trans;
     
     trans.model = glm::identity<glm::mat4>();
     trans.model = glm::rotate(trans.model, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    //trans.model = glm::translate(trans.model, glm::vec3{ 1.0f, 5.5f, 0.0f });
     trans.model[3][1] += 1.5f;
-    trans.model = glm::scale(trans.model, glm::vec3{ 0.1f });
+    trans.model[3][2] -= 0.4f;
+    trans.model = glm::scale(trans.model, glm::vec3{ 0.035f });
     WORLD::Entity& waterEntity = m_MainScene.CreateWaterEntity(m_GraphicsManager.GetMainContext(), trans, &m_WaterGeometry, &m_WaterMaterial);
     
     m_GraphicsManager.GetMainContext().FlushAll();
@@ -272,6 +277,8 @@ void VulkanApplicationDelegate::ImGuiUser()
             ImGui::Text("Camera rot: %.2f, %.2f, %.2f", camera.GetEulerOrientation()[0], camera.GetEulerOrientation()[1], camera.GetEulerOrientation()[2]);
 
             ImGui::Checkbox("Rotate sun", &m_RotateSun);
+            ImGui::Checkbox("Rotate cam", &m_RotateCamera);
+            ImGui::Checkbox("Water wireframe", &m_GraphicsManager.GetGraphicsSettings().m_WaterWireframe);
             ImGui::Checkbox("Use ACES", &m_GraphicsManager.GetGraphicsSettings().m_UseACESEncoding);
             ImGui::SliderFloat("Exposure target EV", &m_GraphicsManager.GetGraphicsSettings().m_ExposureEV, -3.0f, 5.0f);
 
@@ -290,7 +297,6 @@ void VulkanApplicationDelegate::ImGuiUser()
             ImGui::SliderFloat("TAA Alpha", &m_GraphicsManager.GetGraphicsSettings().m_AlphaTAA, 0.0f, 1.0f);
             ImGui::SliderFloat("TAA Jitter Scale", &m_GraphicsManager.GetGraphicsSettings().m_JitterScale, 0.0f, 2.0f);
             ImGui::SliderFloat("TAA Variance Gamma", &m_GraphicsManager.GetGraphicsSettings().m_VarianceGammaTAA, 0.0f, 5.0f);
-            ImGui::Checkbox("Rotate cam", &m_RotateCamera);
 
         }
         ImGui::End();

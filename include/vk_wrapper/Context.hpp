@@ -43,6 +43,12 @@ enum AttachmentMaskBits
     ATTACHMENT_MASK_COLOR_4 = 1 << 6
 };
 
+enum PolygonModeBits
+{
+    POLYGON_FILL,
+    POLYGON_WIREFRAME
+};
+
 using AttachmentMask = std::uint32_t;
 
 ////////////////////////////////////////
@@ -103,6 +109,8 @@ public:
 
     void CmdSetViewport(std::uint32_t viewportCount, std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height);
     void CmdSetScissor(std::uint32_t scissorCount, std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height);
+
+    void CmdSetPolygonMode(PolygonModeBits mode);
 
     void CmdPushConstants(VKW::PipelineLayout const* layout, VKW::DescriptorStage stages, std::uint32_t offset, std::uint32_t size, void const* pValues);
 

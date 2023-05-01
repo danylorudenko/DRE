@@ -106,7 +106,7 @@ public:
         VkFormat                                    depthAttachmentFormat_;
         VkFormat                                    stencilAttachmentFormat_;
 
-        VkDynamicState                              dynamicStateItems_[2];
+        VkDynamicState                              dynamicStateItems_[3];
         VkPipelineDynamicStateCreateInfo            dynamicState_;
 
         PipelineLayout const*                       pipelineLayout_;

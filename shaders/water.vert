@@ -4,6 +4,7 @@
 #extension GL_GOOGLE_include_directive : enable
 
 #include "shaders_common.h"
+#include "shaders_defines.h"
 
 layout(location = 0) in vec3 in_pos;
 
@@ -19,32 +20,54 @@ layout(set = 4, binding = 0, std140) uniform InstanceUniform
 	mat4  prev_model_mat;
 } instanceUniform;
 
+
+
 vec3 GenerateWave(vec3 local_pos, vec2 dir, float t, float scale, float wavelength, float speed)
 {
-	vec3 wave_pos = local_pos;
+	vec3 offsets = vec3(0,0,0);
 	
 	float phase = dot(local_pos.xz, dir);
-	phase *= (2 * PI) /wavelength;
+	phase *= (2 * PI) / wavelength;
 	
-	wave_pos.x += scale * sin(t * speed + phase) * dir.x;
-	wave_pos.y += scale * cos(t * speed + phase);
-	wave_pos.z += scale * sin(t * speed + phase) * dir.y;
+	offsets.x = (scale * sin(t * speed + phase)) * dir.x;
+	offsets.y = scale * cos(t * speed + phase);
+	offsets.z = (scale * sin(t * speed + phase)) * dir.y;
 	
-	return wave_pos;
+	return offsets;
 }
+
+vec3 GenerateComplexWave(vec3 local_pos, vec2 dir, float t, float scale, float wavelength, float speed, int count)
+{
+	vec3 offsets = vec3(0,0,0);
+	
+	offsets += GenerateWave(local_pos, dir, t, scale, wavelength, speed);
+	
+	offsets += GenerateWave(local_pos, normalize(dir + vec2(0.2, 0)), t, scale / 10, wavelength / 5, speed / 2);
+	offsets += GenerateWave(local_pos, normalize(dir + vec2(0.1, 0)), t, scale / 8, wavelength / 4, speed / 2.5);
+	offsets += GenerateWave(local_pos, vec2(-dir.y, dir.x), t, scale / 3, wavelength, speed * 2);
+	
+	return offsets;
+	
+}
+
 
 void main()
 {
-	vec2 wave_dir = normalize(vec2(1,1));
+	vec2 wave_dir = normalize(vec2(0,1));
 	
 	vec3 offset_inpos = in_pos;
-	offset_inpos.xz += (wave_dir * 0.05);
+	offset_inpos.xz += (wave_dir * 0.01);
 	
 	float t = GetTimeS();
-	//float t = 0;
 	
-	vec3 wave_pos = GenerateWave(in_pos, wave_dir, t, 1, 10, 1);
-	vec3 offset_wave_pos = GenerateWave(offset_inpos, wave_dir, t , 1, 10, 1);
+	float scale = 4;
+	float wavelength = 75;
+	float speed = 1;
+	
+	int complexity = 2;
+	
+	vec3 wave_pos = in_pos + GenerateComplexWave(in_pos, wave_dir, t, scale, wavelength, speed, complexity);
+	vec3 offset_wave_pos = offset_inpos + GenerateComplexWave(offset_inpos, wave_dir, t , scale, wavelength, speed, complexity);
 	
 	vec3 tan = normalize(wave_pos - offset_wave_pos);
 	vec3 btan = (vec3(-wave_dir.y, 0.0, wave_dir.x));

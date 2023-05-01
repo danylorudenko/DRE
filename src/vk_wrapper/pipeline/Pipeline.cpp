@@ -123,11 +123,12 @@ Pipeline::Descriptor::Descriptor()
 
     dynamicStateItems_[0] = VK_DYNAMIC_STATE_SCISSOR;
     dynamicStateItems_[1] = VK_DYNAMIC_STATE_VIEWPORT;
+    dynamicStateItems_[2] = VK_DYNAMIC_STATE_POLYGON_MODE_EXT;
 
     dynamicState_.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamicState_.pNext = nullptr;
     dynamicState_.flags = VK_FLAGS_NONE;
-    dynamicState_.dynamicStateCount = 2;
+    dynamicState_.dynamicStateCount = 3;
     dynamicState_.pDynamicStates = dynamicStateItems_;
 }
 
