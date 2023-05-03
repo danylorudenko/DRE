@@ -53,7 +53,7 @@ LogicalDevice::LogicalDevice(DeviceDesc const& desc)
                 validPhysicalDevices.emplace_back(physicalDevices[i]);
             }
 
-            //PrintPhysicalDeviceData(*deviceProperties);
+            PrintPhysicalDeviceData(*deviceProperties);
 
             *deviceProperties = PhysicalDeviceProperties{};
         }
@@ -336,6 +336,9 @@ bool LogicalDevice::IsPhysicalDeviceValid(
     if (deviceProperties.presentationFamilies.size() > 0) {
         supportsSurface = true;
     }
+
+    std::cerr << "SUPPORT REPORT: ";
+        std::cerr << supportsGraphics << ' ' << supportsExtensions << ' ' << supportsSurface << ' ' << supports13 << ' ' << supportsFeatures << std::endl;
 
     return supportsGraphics && supportsExtensions && supportsSurface && supports13 && supportsFeatures;
 }

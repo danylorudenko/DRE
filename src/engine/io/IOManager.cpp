@@ -259,9 +259,6 @@ void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiM
     case Data::Material::TextureProperty::ROUGHNESS:
         aiType = aiTextureType_DIFFUSE_ROUGHNESS;
         break;
-    case Data::Material::TextureProperty::OCCLUSION:
-        aiType = aiTextureType_AMBIENT_OCCLUSION;
-        break;
     default:
         DRE_ASSERT(false, "Unsupported Data::Material::TextureProperty::Slot while parsing material textures.");
     }
@@ -318,7 +315,7 @@ void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* a
     }
 }
 
-void IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene)
+void IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene, char const* defaultShader, glm::mat4 pt, Data::TextureChannelVariations metalnessRoughnessOverride)
 {
     Assimp::Importer importer = Assimp::Importer();
 
@@ -329,14 +326,19 @@ void IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene)
         return;
 
     ParseAssimpMeshes(GFX::g_GraphicsManager->GetMainContext(), scene);
-    ParseAssimpMaterials(scene, path);
+    ParseAssimpMaterials(scene, path, defaultShader, metalnessRoughnessOverride);
 
-    aiMatrix4x4 rootTransform{};
+    aiMatrix4x4 rootTransform{
+        pt[0][0], pt[0][1], pt[0][2], pt[0][3],
+        pt[1][0], pt[1][1], pt[1][2], pt[1][3],
+        pt[2][0], pt[2][1], pt[2][2], pt[2][3],
+        pt[3][0], pt[3][1], pt[3][2], pt[3][3],
+    };
     ParseAssimpNodeRecursive(GFX::g_GraphicsManager->GetMainContext(), path, scene, scene->mRootNode, rootTransform, targetScene);
     GFX::g_GraphicsManager->GetMainContext().FlushAll();
 }
 
-void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* path)
+void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* path, char const* defaultShader, Data::TextureChannelVariations metalnessRoughnessOverride)
 {
     // get folder with texture files
     DRE::String256 textureFilePath = path;
@@ -362,23 +364,23 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* path)
         // PROCESS TEXTURES
         ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::DIFFUSE, Data::TEXTURE_VARIATION_RGBA);
         ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::NORMAL, Data::TEXTURE_VARIATION_RGBA);
-        ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::METALNESS, Data::TEXTURE_VARIATION_GRAY);
-        ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::ROUGHNESS, Data::TEXTURE_VARIATION_GRAY);
-        ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::OCCLUSION, Data::TEXTURE_VARIATION_GRAY);
+
+        if (metalnessRoughnessOverride == Data::TEXTURE_VARIATION_INVALID)
+        {
+            ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::METALNESS, Data::TEXTURE_VARIATION_GRAY);
+            ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::ROUGHNESS, Data::TEXTURE_VARIATION_GRAY);
+        }
+        else
+        {
+            // it means we have texture with merged metalness and roughness attributes. Let it lie in metalness
+            ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::METALNESS, metalnessRoughnessOverride);
+        }
         // TODO: load rgb here
 
-        material->GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_COOK_TORRANCE);
+        material->GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE);
+        material->GetRenderingProperties().SetShader(defaultShader);
     }
 }
-
-struct AssetVertex
-{
-    float pos[3];
-    float norm[3];
-    float tan[3];
-    float btan[3];
-    float uv0[2];
-};
 
 void IOManager::ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene)
 {
@@ -386,13 +388,13 @@ void IOManager::ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene
     {
         aiMesh* mesh = scene->mMeshes[i];
 
-        Data::Geometry geometry{ sizeof(AssetVertex), 4 };
+        Data::Geometry geometry{ sizeof(Data::DREVertex), 4 };
         geometry.ResizeVertexStorage(mesh->mNumVertices);
         geometry.ResizeIndexStorage(mesh->mNumFaces * 3);
 
         for (std::uint32_t j = 0, jSize = mesh->mNumVertices; j < jSize; j++)
         {
-            AssetVertex& v = geometry.GetVertex<AssetVertex>(j);
+            Data::DREVertex& v = geometry.GetVertex<Data::DREVertex>(j);
             v.pos[0] = mesh->mVertices[j].x;
             v.pos[1] = mesh->mVertices[j].y;
             v.pos[2] = mesh->mVertices[j].z;

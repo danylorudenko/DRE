@@ -96,7 +96,9 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
 
     context.CmdSetViewport(2, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
     context.CmdSetScissor(2, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
+#ifndef DRE_COMPILE_FOR_RENDERDOC
     context.CmdSetPolygonMode(VKW::POLYGON_FILL);
+#endif // DRE_COMPILE_FOR_RENDERDOC
 
     {
         glm::mat4 const shadow_ViewProj = g_GraphicsManager->GetSunShadowRenderView().GetViewProjectionM();

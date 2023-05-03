@@ -29,9 +29,13 @@ void PipelineDB::CreateDefaultPipelines()
     // default plane material shader
     {
         CreateGraphicsForwardPipeline("default_lit");
-        CreateGraphicsForwardPipeline("cook_torrance");
+        CreateGraphicsForwardPipeline("default_pbr");
+        CreateGraphicsForwardPipeline("gltf_spheres");
+        CreateGraphicsForwardPipeline("sand_beach");
         CreateGraphicsForwardWaterPipeline("water");
+
         CreateGraphicsForwardShadowPipeline("forward_shadow");
+
         CreateComputePipeline("color_encode");
         CreateComputePipeline("temporal_AA");
     }
@@ -91,12 +95,16 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardWaterPipeline(char const* 
     desc.SetFragmentShader(fragModule);
     desc.SetLayout(GetLayout(layoutName->GetData()));
     desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
-    desc.SetPolygonMode(VK_POLYGON_MODE_LINE);
+    //desc.SetPolygonMode(VK_POLYGON_MODE_LINE);
     desc.EnableDepthTest(VKW::FORMAT_D32_FLOAT, false);
     desc.AddColorOutput(g_GraphicsManager->GetMainDevice()->GetSwapchain()->GetFormat(), VKW::BLEND_TYPE_NONE);
     desc.AddColorOutput(VKW::FORMAT_R16G16_FLOAT, VKW::BLEND_TYPE_NONE); // velocity vectors
 
     desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // pos
+    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // norm
+    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // tan
+    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // btan
+    desc.AddVertexAttribute(VKW::FORMAT_R32G32_FLOAT);    // uv
 
     CreatePipeline(name, desc);
     return m_Pipelines.Find(name).key;

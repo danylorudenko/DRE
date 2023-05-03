@@ -167,9 +167,6 @@ private:
     using RenderablePool        = DRE::InplaceObjectAllocator<RenderableObject, 2048>;
     RenderablePool              m_RenderableObjectPool;
 
-    using MaterialLayoutMap     = DRE::InplaceHashTable<Data::Material::RenderingProperties::MaterialType, VKW::DescriptorSetLayout>;
-    MaterialLayoutMap           m_MaterialLayoutMap; // store signature for similar materials
-
     GeometryGPUMap              m_GeometryGPUMap;
 
     GraphicsSettings            m_Settings;

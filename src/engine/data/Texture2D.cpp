@@ -31,10 +31,6 @@ void Texture2D::ReadFromFile(char const* filePath, TextureChannelVariations chan
         break;
     case Data::TEXTURE_VARIATION_GRAY_ALPHA:
         desiredChannels = STBI_grey_alpha;
-        format_ = VKW::FORMAT_R8G8B8A8_UNORM;
-        break;
-    case Data::TEXTURE_VARIATION_RGB:
-        desiredChannels = STBI_rgb;
         format_ = VKW::FORMAT_R8G8_UNORM;
         break;
     case Data::TEXTURE_VARIATION_RGBA:

@@ -123,12 +123,18 @@ Pipeline::Descriptor::Descriptor()
 
     dynamicStateItems_[0] = VK_DYNAMIC_STATE_SCISSOR;
     dynamicStateItems_[1] = VK_DYNAMIC_STATE_VIEWPORT;
+#ifndef DRE_COMPILE_FOR_RENDERDOC
     dynamicStateItems_[2] = VK_DYNAMIC_STATE_POLYGON_MODE_EXT;
+#endif // DRE_COMPILE_FOR_RENDERDOC
 
     dynamicState_.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamicState_.pNext = nullptr;
     dynamicState_.flags = VK_FLAGS_NONE;
+#ifndef DRE_COMPILE_FOR_RENDERDOC
     dynamicState_.dynamicStateCount = 3;
+#else
+    dynamicState_.dynamicStateCount = 2;
+#endif // DRE_COMPILE_FOR_RENDERDOC
     dynamicState_.pDynamicStates = dynamicStateItems_;
 }
 

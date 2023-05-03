@@ -7,10 +7,15 @@
 #include "shaders_defines.h"
 
 layout(location = 0) in vec3 in_pos;
+layout(location = 1) in vec3 in_norm;
+layout(location = 2) in vec3 in_tan;
+layout(location = 3) in vec3 in_btan;
+layout(location = 4) in vec2 in_uv;
 
 layout(location = 0) out vec3 out_wpos;
 layout(location = 1) out vec4 out_prev_wpos;
-layout(location = 2) out vec3 out_normal;
+layout(location = 2) out vec2 out_uv;
+layout(location = 3) out mat3 out_TBN;
 
 
 
@@ -70,7 +75,7 @@ void main()
 	vec3 offset_wave_pos = offset_inpos + GenerateComplexWave(offset_inpos, wave_dir, t , scale, wavelength, speed, complexity);
 	
 	vec3 tan = normalize(wave_pos - offset_wave_pos);
-	vec3 btan = (vec3(-wave_dir.y, 0.0, wave_dir.x));
+	vec3 btan = -(vec3(-wave_dir.y, 0.0, wave_dir.x));
 	vec3 norm = (cross(btan, tan));
 	
     out_wpos = vec3(instanceUniform.model_mat * vec4(wave_pos, 1.0));
@@ -81,5 +86,6 @@ void main()
     gl_Position = ndc_pos;
 	out_prev_wpos = instanceUniform.prev_model_mat * vec4(wave_pos, 1.0);
 	
-	out_normal = norm;
+	out_uv = in_uv;
+	out_TBN = mat3(tan, btan, norm);
 }

@@ -11,6 +11,9 @@
 #include <engine\data\Texture2D.hpp>
 #include <engine\data\Material.hpp>
 
+#include <glm\mat4x4.hpp>
+#include <glm\gtc\matrix_transform.hpp>
+
 #include <assimp\matrix4x4.h>
 
 #include <thread>
@@ -84,7 +87,7 @@ public:
     ShaderData* GetShaderData(char const* name) { return m_ShaderData.Find(name).value; }
 
     Data::Texture2D ReadTexture2D(char const* path, Data::TextureChannelVariations channels);
-    void            ParseModelFile(char const* path, WORLD::Scene& targetScene);
+    void            ParseModelFile(char const* path, WORLD::Scene& targetScene, char const* defaultShader, glm::mat4 parentTransform = glm::identity<glm::mat4>(), Data::TextureChannelVariations metalnessRoughnessOverride = Data::TEXTURE_VARIATION_INVALID);
 
 
     static std::uint64_t    ReadFileToBuffer(char const* path, DRE::ByteBuffer* buffer);
@@ -99,7 +102,7 @@ public:
 
 private:
     void ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene);
-    void ParseAssimpMaterials(aiScene const* scene, char const* path);
+    void ParseAssimpMaterials(aiScene const* scene, char const* path, char const* defaultShader, Data::TextureChannelVariations metalnessRoughnessOverride);
     void ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, aiNode const* node, aiMatrix4x4 const& parentTransform, WORLD::Scene& targetScene);
 
     void ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiMat, DRE::String256 const& assetFolderPath, Data::Material* material, Data::Material::TextureProperty::Slot slot, Data::TextureChannelVariations channels);

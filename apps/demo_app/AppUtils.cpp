@@ -5,7 +5,7 @@
 
 void GeneratePlaneMesh(std::uint32_t width, std::uint32_t height, DRE::ByteBuffer& vertexOut, DRE::ByteBuffer& indexOut)
 {
-	std::uint32_t constexpr vertexSize = sizeof(float) * 3;
+	std::uint32_t constexpr vertexSize = sizeof(Data::DREVertex);
 	std::uint32_t constexpr indexSize = sizeof(std::uint32_t);
 
 	std::uint32_t const vertexMemorySize = (width + 1) * (height + 1) * vertexSize;
@@ -17,16 +17,31 @@ void GeneratePlaneMesh(std::uint32_t width, std::uint32_t height, DRE::ByteBuffe
 	void* vertexMemory = vertexOut.Data();
 	void* indexMemory = indexOut.Data();
 
-	float pos[3];
-	for (std::uint32_t x = 0; x < width + 1; x++)
+	Data::DREVertex v;
+	for (std::uint32_t y = 0; y < height + 1; y++)
 	{
-		for (std::uint32_t y = 0; y < height + 1; y++)
+		for (std::uint32_t x = 0; x < width + 1; x++)
 		{
-			pos[0] = static_cast<float>(x) - static_cast<float>(width) / 2;
-			pos[1] = 0.0f;
-			pos[2] = static_cast<float>(y) - static_cast<float>(height) / 2;
+			v.pos[0] = static_cast<float>(x) - static_cast<float>(width) / 2;
+			v.pos[1] = 0.0f;
+			v.pos[2] = static_cast<float>(y) - static_cast<float>(height) / 2;
 
-			DRE::WriteMemorySequence(vertexMemory, pos, sizeof(pos));
+			v.norm[0] = 0.0f;
+			v.norm[1] = 1.0f;
+			v.norm[2] = 0.0f;
+
+			v.tan[0] = 1.0f;
+			v.tan[1] = 0.0f;
+			v.tan[2] = 0.0f;
+
+			v.btan[0] = 0.0f;
+			v.btan[1] = 0.0f;
+			v.btan[2] = 1.0f;
+
+			v.uv0[0] = static_cast<float>(x) / (width + 1);
+			v.uv0[1] = static_cast<float>(y) / (height + 1);
+
+			DRE::WriteMemorySequence(vertexMemory, &v, sizeof(v));
 		}
 	}
 
@@ -61,4 +76,9 @@ void GeneratePlaneMesh(std::uint32_t width, std::uint32_t height, DRE::ByteBuffe
 
 		DRE::WriteMemorySequence(indexMemory, ids, sizeof(ids));
 	}
+}
+
+void GenerateSphereMesh(std::uint32_t resolution, DRE::ByteBuffer& vertexOut, DRE::ByteBuffer& indexOut)
+{
+
 }

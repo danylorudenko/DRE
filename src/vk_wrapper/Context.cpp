@@ -202,11 +202,13 @@ void Context::CmdSetScissor(std::uint32_t scissorCount, std::uint32_t x, std::ui
     m_ImportTable->vkCmdSetScissor(*m_CurrentCommandList, 0, scissorCount, sc);
 }
 
+#ifndef DRE_COMPILE_FOR_RENDERDOC
 void Context::CmdSetPolygonMode(PolygonModeBits mode)
 {
     VkPolygonMode const vkMode = mode == POLYGON_WIREFRAME ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL;
     m_ImportTable->vkCmdSetPolygonModeEXT(*m_CurrentCommandList, vkMode);
 }
+#endif // DRE_COMPILE_FOR_RENDERDOC
 
 void Context::CmdPushConstants(VKW::PipelineLayout const* layout, VKW::DescriptorStage stages, std::uint32_t offset, std::uint32_t size, void const* pValues)
 {

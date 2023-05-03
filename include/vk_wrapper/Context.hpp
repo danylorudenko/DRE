@@ -110,7 +110,9 @@ public:
     void CmdSetViewport(std::uint32_t viewportCount, std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height);
     void CmdSetScissor(std::uint32_t scissorCount, std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height);
 
+#ifndef DRE_COMPILE_FOR_RENDERDOC
     void CmdSetPolygonMode(PolygonModeBits mode);
+#endif // DRE_COMPILE_FOR_RENDERDOC
 
     void CmdPushConstants(VKW::PipelineLayout const* layout, VKW::DescriptorStage stages, std::uint32_t offset, std::uint32_t size, void const* pValues);
 

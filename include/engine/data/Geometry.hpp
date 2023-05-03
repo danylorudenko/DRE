@@ -10,6 +10,15 @@
 namespace Data
 {
 
+struct DREVertex
+{
+    float pos[3];
+    float norm[3];
+    float tan[3];
+    float btan[3];
+    float uv0[2];
+};
+
 class Geometry
 {
 public:

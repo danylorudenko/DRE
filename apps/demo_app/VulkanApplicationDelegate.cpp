@@ -40,9 +40,11 @@ VulkanApplicationDelegate::VulkanApplicationDelegate(HINSTANCE instance, char co
     , m_EngineFrame{ 0 }
     , m_MainScene{ &DRE::g_MainAllocator }
     , m_RotateSun{ false }
+    , m_SunElevation{ 70.0f }
     , m_RotateCamera{ false }
     , m_WaterGeometry{ 4 * 3, 4 }
     , m_WaterMaterial{ "water_mat" }
+    , m_BeachMaterial{ "beach_mat" }
 {
     WORLD::g_MainScene = &m_MainScene;
 }
@@ -97,7 +99,7 @@ void VulkanApplicationDelegate::start()
         InitImGui();
 
     if (C_COMPILE_GLSL_SOURCES_ON_START)
-    {
+    {  
         m_IOManager.CompileGLSLSources();
     }
     m_IOManager.LoadShaderBinaries();
@@ -109,11 +111,19 @@ void VulkanApplicationDelegate::start()
     m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 2.01f, 2.35f, 0.28f });
     m_MainScene.GetMainCamera().SetEulerOrientation(glm::vec3{ -22.21f, 68.29f, 0.0f });
 
-    m_MainScene.GetMainSunLight().SetEulerOrientation(glm::vec3{ -70.0f, 45.0f, 0.0f });
+    m_MainScene.GetMainSunLight().SetEulerOrientation(glm::vec3{ m_SunElevation, 45.0f, 0.0f });
 
     m_GraphicsManager.Initialize();
 
-    m_IOManager.ParseModelFile("data\\Sponza\\glTF\\Sponza.gltf", m_MainScene);
+
+
+    /////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////
+    glm::mat spheresTransform = glm::rotate(glm::identity<glm::mat4>(), glm::radians(180.0f), glm::vec3{ 1.0f, 0.0, 0.0f });
+    spheresTransform[3][3] += 5.0f;
+    m_IOManager.ParseModelFile("data\\Sponza\\glTF\\Sponza.gltf", m_MainScene, "default_pbr");
+    //m_IOManager.ParseModelFile("data\\MetalRoughSpheres\\glTF\\MetalRoughSpheres.gltf", m_MainScene, "gltf_spheres", spheresTransform, Data::TEXTURE_VARIATION_RGBA);
 
     m_GraphicsManager.GetMainContext().FlushAll();
 
@@ -129,16 +139,33 @@ void VulkanApplicationDelegate::start()
     
     m_WaterMaterial.AssignTextureToSlot(Data::Material::TextureProperty::NORMAL, DRE_MOVE(waterNormalMap));
     m_WaterMaterial.GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_WATER);
+    m_WaterMaterial.GetRenderingProperties().SetShader("water");
 
-    WORLD::Entity::TransformData trans;
+
+    WORLD::Entity::TransformData wTrans; // water transform
     
-    trans.model = glm::identity<glm::mat4>();
-    trans.model = glm::rotate(trans.model, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    trans.model[3][1] += 1.5f;
-    trans.model[3][2] -= 0.4f;
-    trans.model = glm::scale(trans.model, glm::vec3{ 0.035f });
-    WORLD::Entity& waterEntity = m_MainScene.CreateWaterEntity(m_GraphicsManager.GetMainContext(), trans, &m_WaterGeometry, &m_WaterMaterial);
+    wTrans.model = glm::identity<glm::mat4>();
+    //wTrans.model = glm::rotate(wTrans.model, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    wTrans.model[3][1] += 1.5f;
+    wTrans.model[3][2] -= 0.4f;
+    wTrans.model = glm::scale(wTrans.model, glm::vec3{ 0.035f });
+    WORLD::Entity& waterEntity = m_MainScene.CreateWaterEntity(m_GraphicsManager.GetMainContext(), wTrans, &m_WaterGeometry, &m_WaterMaterial);
     
+
+    ////////////
+    m_BeachMaterial.GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE);
+    m_BeachMaterial.GetRenderingProperties().SetShader("sand_beach");
+    m_BeachMaterial.AssignTextureToSlot(Data::Material::TextureProperty::DIFFUSE, m_IOManager.ReadTexture2D("textures\\wavy-sand_albedo.png", Data::TEXTURE_VARIATION_RGBA));
+    m_BeachMaterial.AssignTextureToSlot(Data::Material::TextureProperty::NORMAL, m_IOManager.ReadTexture2D("textures\\wavy-sand_normal-dx.png", Data::TEXTURE_VARIATION_RGBA));
+    m_BeachMaterial.AssignTextureToSlot(Data::Material::TextureProperty::METALNESS, m_IOManager.ReadTexture2D("textures\\wavy-sand_metallic.png", Data::TEXTURE_VARIATION_GRAY));
+    m_BeachMaterial.AssignTextureToSlot(Data::Material::TextureProperty::ROUGHNESS, m_IOManager.ReadTexture2D("textures\\wavy-sand_roughness.png", Data::TEXTURE_VARIATION_GRAY));
+
+    WORLD::Entity::TransformData bTrans = wTrans; // beach transform
+    //bTrans.model = glm::rotate(bTrans.model, glm::radians(20.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    WORLD::Entity& beachEntity = m_MainScene.CreateOpaqueEntity(m_GraphicsManager.GetMainContext(), bTrans, &m_WaterGeometry, &m_BeachMaterial); // reuse water geometry
+
+
+    ////////////
     m_GraphicsManager.GetMainContext().FlushAll();
 }
 
@@ -173,6 +200,8 @@ void VulkanApplicationDelegate::update()
         }
     }
 
+    glm::vec3 const sun_orient = m_MainScene.GetMainSunLight().GetEulerOrientation();
+    m_MainScene.GetMainSunLight().SetEulerOrientation(glm::vec3{ -m_SunElevation, sun_orient.y, sun_orient.z });
     if (m_RotateSun)
         m_MainScene.GetMainSunLight().Rotate(glm::vec3{ 0.0f, C_SUN_ROTATOR_MUL * m_DeltaMicroseconds, 0.0f });
 
@@ -277,6 +306,10 @@ void VulkanApplicationDelegate::ImGuiUser()
             ImGui::Text("Camera rot: %.2f, %.2f, %.2f", camera.GetEulerOrientation()[0], camera.GetEulerOrientation()[1], camera.GetEulerOrientation()[2]);
 
             ImGui::Checkbox("Rotate sun", &m_RotateSun);
+            ImGui::SliderFloat("Sun Elevation", &m_SunElevation, 0.0f, 90.0f);
+            //ImGui::SliderAngle("Sun Elevation", &m_SunElevation, 0.0f, 90.0f);
+
+
             ImGui::Checkbox("Rotate cam", &m_RotateCamera);
             ImGui::Checkbox("Water wireframe", &m_GraphicsManager.GetGraphicsSettings().m_WaterWireframe);
             ImGui::Checkbox("Use ACES", &m_GraphicsManager.GetGraphicsSettings().m_UseACESEncoding);

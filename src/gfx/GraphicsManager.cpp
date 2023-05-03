@@ -21,8 +21,8 @@ namespace GFX
 {
 
 static constexpr std::uint32_t C_DEFAULT_STAGING_ARENA_SIZE     = 1024 * 1024 * 128;
-static constexpr std::uint32_t C_DEFAULT_UNIFORM_ARENA_SIZE     = DRE_U16_MAX - 1;
-static constexpr std::uint32_t C_DEFAULT_READBACK_ARENA_SIZE    = DRE_U16_MAX - 1;
+static constexpr std::uint32_t C_DEFAULT_UNIFORM_ARENA_SIZE     = DRE_U16_MAX * 2 - 1;
+static constexpr std::uint32_t C_DEFAULT_READBACK_ARENA_SIZE    = DRE_U16_MAX * 2 - 1;
 
 GraphicsManager* g_GraphicsManager = nullptr;
 
@@ -275,24 +275,19 @@ void EmplaceRenderableObjectTexture(Data::Material* material, Data::Material::Te
 
 RenderableObject* GraphicsManager::CreateRenderableObject(VKW::Context& context, Data::Geometry* geometry, Data::Material* material)
 {
-    VKW::Pipeline* pipeline = nullptr;
-    VKW::PipelineLayout* layout = nullptr;
+    DRE::String64 name = material->GetRenderingProperties().GetShader();
+    VKW::Pipeline* pipeline = m_PipelineDB.GetPipeline(name.GetData());
+
+    name.Append("_layout");
+    VKW::PipelineLayout* layout = m_PipelineDB.GetLayout(name.GetData());
+
     RenderableObject::LayerBits layers = RenderableObject::LAYER_NONE;
     switch (material->GetRenderingProperties().GetMaterialType())
     {
-    case Data::Material::RenderingProperties::MATERIAL_TYPE_DEFAULT_LIT:
-        pipeline = GetPipelineDB().GetPipeline("default_lit");
-        layout = GetPipelineDB().GetLayout("default_lit_layout");
-        layers = RenderableObject::LAYER_OPAQUE_BIT;
-        break;
-    case Data::Material::RenderingProperties::MATERIAL_TYPE_COOK_TORRANCE:
-        pipeline = GetPipelineDB().GetPipeline("cook_torrance");
-        layout = GetPipelineDB().GetLayout("cook_torrance_layout");
+    case Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE:
         layers = RenderableObject::LAYER_OPAQUE_BIT;
         break;
     case Data::Material::RenderingProperties::MATERIAL_TYPE_WATER:
-        pipeline = GetPipelineDB().GetPipeline("water");
-        layout = GetPipelineDB().GetLayout("water_layout");
         layers = RenderableObject::LAYER_WATER_BIT;
         break;
     default:
@@ -332,8 +327,7 @@ RenderableObject* GraphicsManager::CreateShadowRenderableObject(VKW::Context& co
     RenderableObject::LayerBits layers = RenderableObject::LAYER_NONE;
     switch (material->GetRenderingProperties().GetMaterialType())
     {
-    case Data::Material::RenderingProperties::MATERIAL_TYPE_DEFAULT_LIT:
-    case Data::Material::RenderingProperties::MATERIAL_TYPE_COOK_TORRANCE:
+    case Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE:
         pipeline = GetPipelineDB().GetPipeline("forward_shadow");
         layout = GetPipelineDB().GetLayout("forward_shadow_layout");
         layers = RenderableObject::LAYER_OPAQUE_BIT;

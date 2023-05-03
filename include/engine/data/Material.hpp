@@ -25,7 +25,7 @@ public:
             NORMAL,
             METALNESS,
             ROUGHNESS,
-            OCCLUSION,
+            //OCCLUSION,
             MAX
         };
 
@@ -64,17 +64,20 @@ public:
     public:
         enum MaterialType
         {
-            MATERIAL_TYPE_DEFAULT_LIT,
-            MATERIAL_TYPE_COOK_TORRANCE,
+            MATERIAL_TYPE_OPAQUE,
             MATERIAL_TYPE_WATER,
             MATERIAL_TYPE_MAX
         };
+
+        inline void SetShader(char const* name) { m_Shader = name; }
+        inline char const* GetShader() const { return m_Shader.GetData(); }
 
         inline void SetMaterialType(MaterialType type) { m_Type = type; }
         inline MaterialType GetMaterialType() const { return m_Type; }
 
     private:
         MaterialType m_Type = MATERIAL_TYPE_MAX;
+        DRE::String32 m_Shader;
     };
 
 

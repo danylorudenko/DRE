@@ -57,6 +57,7 @@ private:
 
     Data::Geometry                      m_WaterGeometry;
     Data::Material                      m_WaterMaterial;
+    Data::Material                      m_BeachMaterial;
 
     GFX::GraphicsManager                m_GraphicsManager;
 
@@ -71,5 +72,6 @@ private:
 
     WORLD::Scene                        m_MainScene;
     bool                                m_RotateSun;
+    float                               m_SunElevation;
     bool                                m_RotateCamera;
 };

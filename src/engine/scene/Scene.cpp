@@ -38,7 +38,6 @@ Entity& Scene::CreateWaterEntity(VKW::Context& context, Entity::TransformData co
     GFX::RenderableObject* renderable = GFX::g_GraphicsManager->CreateRenderableObject(context, geometry, material);
 
     GFX::RenderView& mainView = GFX::g_GraphicsManager->GetMainRenderView();
-    GFX::RenderView& shadowView = GFX::g_GraphicsManager->GetSunShadowRenderView();
 
     mainView.AddObject(renderable);
 

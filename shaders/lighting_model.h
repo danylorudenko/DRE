@@ -51,3 +51,4 @@ vec3 CookTorranceBRDF(float NdotH, float NdotV, float NdotL, vec3 diffuse, float
     return (kD * diffuse+ specular) * NdotL;
 }
 
+

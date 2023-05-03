@@ -6,10 +6,12 @@
 #include "shaders_common.h"
 #include "shaders_defines.h"
 #include "poisson.h"
+#include "lighting_model.h"
 
 layout(location = 0) in vec3 in_wpos;
 layout(location = 1) in vec4 in_prev_wpos;
-layout(location = 2) in vec3 in_normal;
+layout(location = 2) in vec2 in_uv;
+layout(location = 3) in mat3 in_TBN;
 
 layout(location = 0) out vec4 finalColor;
 layout(location = 1) out vec2 velocity;
@@ -77,30 +79,56 @@ float CalculateShadow(vec3 wpos)
 }
 
 
+vec3 WaterBRDF(float NdotH, float NdotV, float NdotL, vec3 diffuse, float roughness, float metalness, out vec3 transmission)
+{
+	float NDF = GGX_NDF(NdotH, roughness);
+    float G = SmithGGX(NdotV, NdotL, roughness);
+    vec3 F = FresnelShlick(NdotH, diffuse, metalness);
+
+    vec3 kS = F;
+    vec3 kD = vec3(1.0) - kS;
+
+    vec3 numerator = NDF * G * F;
+    float denum = 4.0 * NdotV * NdotL + 0.001;
+
+    vec3 specular = numerator / denum;
+
+	transmission = kD;
+    return specular;
+}
+
 void main()
 {
 	const vec3 diffuse = vec3(3, 227, 252) / 255;
 	
-    vec3 n = in_normal;
-	n = vec3(instanceUniform.model_mat * vec4(n, 0.0));    
-	
 	vec3 normalMap0 = SampleGlobalTextureLinear(NormalTextureID, in_wpos.xz / 2 + GetTimeS() / 12).rgb;
 	vec3 normalMap1 = SampleGlobalTextureLinear(NormalTextureID, in_wpos.zx + GetTimeS() / 11).rgb;
 	
-	vec3 normalMap = mix(normalMap0, normalMap1, 0.5);
+	vec3 normalMap = normalize(mix(normalMap0, normalMap1, 0.5));
 	
-	normalMap = (normalMap * 2 - 1) * 0.1;
-	n = normalize(n + normalMap);
+	normalMap = (normalMap * 2 - 1);
+	vec3 n = normalize(in_TBN * normalMap);
+	
+	vec3 l = -GetMainLightDir();
+	vec3 v = normalize(GetCameraPos() - in_wpos);
+	vec3 h = normalize(l + v);
+	
+	float NdotL = max(0.0, dot(n, l));
+	float NdotV = max(0.0, dot(n, v));
+	float NdotH = max(0.0, dot(n, h));
+	
+	vec3 transmissionCoef = vec3(0,0,0);
+	vec3 brdf = CookTorranceBRDF(NdotH, NdotV, NdotL, diffuse, 0.01, 0.99);
 
 	vec2 pixel_pos_uv = gl_FragCoord.xy / GetViewportSize();
 	vec3 worldSample = SampleTexture(forwardColorMap, GetSamplerNearest(), pixel_pos_uv).rgb;
 
-	vec3 res = diffuse * dot(n, -GetMainLightDir());
-	vec3 halfwayDir = normalize(-GetMainLightDir() + GetCameraDir());  
-    vec3 spec = pow(max(dot(n, halfwayDir), 0.0), 64.0).rrr;
-	res = mix(res + spec, worldSample, 0.1);
+
+	vec3 ambient = vec3(0.15, 0.15, 0.15) * diffuse;
+	vec3 res = mix(brdf, worldSample, transmissionCoef) + ambient;
 	
     finalColor = vec4(res, 1.0);
+    //finalColor = vec4(in_TBN[2], 1.0);
 	
 	vec4 prev_ndc = GetPrevCameraViewProjM() * in_prev_wpos;
 	prev_ndc /= prev_ndc.w;

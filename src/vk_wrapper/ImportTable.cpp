@@ -1,5 +1,7 @@
 #include <vk_wrapper\ImportTable.hpp>
 
+#include <vk_wrapper\Constant.hpp>
+
 #define VKW_IMPORT_VULKAN_FUNCTION(name) name = vulkanLibrary.GetProcAddress<PFN_##name##>(#name)
 #define VKW_IMPORT_VULKAN_INSTANCE_FUNCTION(name) name = reinterpret_cast<PFN_##name##>(vkGetInstanceProcAddr(instance, #name))
 #define VKW_IMPORT_VULKAN_DEVICE_FUNCTION(name) name = reinterpret_cast<PFN_##name##>(vkGetDeviceProcAddr(device, #name))
@@ -171,7 +173,6 @@ void ImportTable::GetDeviceProcAddresses(VkDevice device)
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdPushConstants);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdSetViewport);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdSetScissor);
-    VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdSetPolygonModeEXT);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdDispatch);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdPipelineBarrier);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdPipelineBarrier2);
@@ -183,6 +184,10 @@ void ImportTable::GetDeviceProcAddresses(VkDevice device)
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdClearAttachments);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdDraw);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdDrawIndexed);
+
+#ifndef DRE_COMPILE_FOR_RENDERDOC
+    VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdSetPolygonModeEXT);
+#endif // DRE_COMPILE_FOR_RENDERDOC
 }
 
 }
