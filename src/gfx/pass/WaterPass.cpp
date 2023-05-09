@@ -28,7 +28,12 @@ void WaterPass::RegisterResources(RenderGraph& graph)
         g_GraphicsManager->GetMainColorFormat(), g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT, 1);
 
-    graph.RegisterUniformBuffer(this, VKW::STAGE_FRAGMENT, 2);
+    graph.RegisterTexture(this,
+        TextureID::MainDepth,
+        g_GraphicsManager->GetMainDepthFormat(), g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
+        VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT, 2);
+
+    graph.RegisterUniformBuffer(this, VKW::STAGE_FRAGMENT, 3);
 
     graph.RegisterRenderTarget(this,
         TextureID::WaterColor,
@@ -83,7 +88,7 @@ void WaterPass::Render(RenderGraph& graph, VKW::Context& context)
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, waterAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, velocityAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->parentResource_, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_ALL_GRAPHICS); // but also used as depth readonly attachment
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, shadowMap->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, color->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT);
 

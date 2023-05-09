@@ -74,4 +74,6 @@ private:
     bool                                m_RotateSun;
     float                               m_SunElevation;
     bool                                m_RotateCamera;
+    bool                                m_PauseTime;
+    float                               m_TimeOffset;
 };

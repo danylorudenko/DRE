@@ -8,7 +8,7 @@ void GeneratePlaneMesh(std::uint32_t width, std::uint32_t height, DRE::ByteBuffe
 	std::uint32_t constexpr vertexSize = sizeof(Data::DREVertex);
 	std::uint32_t constexpr indexSize = sizeof(std::uint32_t);
 
-	std::uint32_t const vertexMemorySize = (width + 1) * (height + 1) * vertexSize;
+	std::uint32_t const vertexMemorySize = (width) * (height) * vertexSize;
 	std::uint32_t const indexMemorySize = indexSize * width * height * 6;
 
 	vertexOut.Resize(vertexMemorySize);
@@ -18,9 +18,9 @@ void GeneratePlaneMesh(std::uint32_t width, std::uint32_t height, DRE::ByteBuffe
 	void* indexMemory = indexOut.Data();
 
 	Data::DREVertex v;
-	for (std::uint32_t y = 0; y < height + 1; y++)
+	for (std::uint32_t y = 0; y < height; y++)
 	{
-		for (std::uint32_t x = 0; x < width + 1; x++)
+		for (std::uint32_t x = 0; x < width; x++)
 		{
 			v.pos[0] = static_cast<float>(x) - static_cast<float>(width) / 2;
 			v.pos[1] = 0.0f;
@@ -38,8 +38,8 @@ void GeneratePlaneMesh(std::uint32_t width, std::uint32_t height, DRE::ByteBuffe
 			v.btan[1] = 0.0f;
 			v.btan[2] = 1.0f;
 
-			v.uv0[0] = static_cast<float>(x) / (width + 1);
-			v.uv0[1] = static_cast<float>(y) / (height + 1);
+			v.uv0[0] = static_cast<float>(x) / (width);
+			v.uv0[1] = static_cast<float>(y) / (height);
 
 			DRE::WriteMemorySequence(vertexMemory, &v, sizeof(v));
 		}
@@ -54,14 +54,14 @@ void GeneratePlaneMesh(std::uint32_t width, std::uint32_t height, DRE::ByteBuffe
 	1--------3
 	
 	*/
-	std::uint32_t const quadCount = width * height;
+	std::uint32_t const quadCount = (width - 1) * (height - 1);
 	for (std::uint32_t i = 0; i < quadCount; i++)
 	{
-		std::uint32_t const quadX = i % height;
-		std::uint32_t const quadY = i / height;
+		std::uint32_t const quadX = i % width;
+		std::uint32_t const quadY = i / width;
 
-		std::uint32_t const v0 = quadX + quadY * (height + 1);
-		std::uint32_t const v1 = v0 + width + 1;
+		std::uint32_t const v0 = quadX + quadY * (width);
+		std::uint32_t const v1 = v0 + width;
 		std::uint32_t const v2 = v0 + 1;
 		std::uint32_t const v3 = v1 + 1;
 

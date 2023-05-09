@@ -65,9 +65,9 @@ void main()
 	
 	float t = GetTimeS();
 	
-	float scale = 4;
-	float wavelength = 75;
-	float speed = 1;
+	float scale = 3;
+	float wavelength = 40;
+	float speed = 0.5;
 	
 	int complexity = 2;
 	

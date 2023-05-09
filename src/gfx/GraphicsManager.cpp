@@ -124,7 +124,7 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     globalUniform.viewportSize_deltaMS_timeS[2] = static_cast<float>(static_cast<double>(deltaTimeUS) / 1000.0);
     globalUniform.viewportSize_deltaMS_timeS[3] = timeS;
 
-    globalUniform.main_CameraPos        = glm::vec4{ scene.GetMainCamera().GetPosition(), 1.0f };
+    globalUniform.main_CameraPos_GenericScalar = glm::vec4{ scene.GetMainCamera().GetPosition(), GetGraphicsSettings().m_GenericScalar };
     globalUniform.main_CameraDir        = glm::vec4{ scene.GetMainCamera().GetForward(), 0.0f };
     globalUniform.main_Jitter           = glm::vec4{ taaJitter, 0.0f, 0.0f };
 

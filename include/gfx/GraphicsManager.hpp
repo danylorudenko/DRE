@@ -54,10 +54,11 @@ struct GraphicsSettings
 {
     bool    m_UseACESEncoding       = true;
     float   m_ExposureEV            = 0.0f;
-    float   m_AlphaTAA              = 0.9f;
+    float   m_AlphaTAA              =0;//= 0.9f;
     float   m_VarianceGammaTAA      = 1.0f;
-    float   m_JitterScale           = 0.15f;
+    float   m_JitterScale           =0;//= 0.15f;
     bool    m_WaterWireframe        = false;
+    float   m_GenericScalar         = 1.0f;
 };
 
 class GraphicsManager final

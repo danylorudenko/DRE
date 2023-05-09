@@ -15,6 +15,8 @@
 #include <vk_wrapper\resources\Framebuffer.hpp>
 #include <vk_wrapper\pipeline\ShaderModule.hpp>
 
+#include <engine\data\Geometry.hpp>
+
 
 ////////////////
 constexpr bool C_COMPILE_GLSL_SOURCES_ON_START = true;
@@ -42,7 +44,9 @@ VulkanApplicationDelegate::VulkanApplicationDelegate(HINSTANCE instance, char co
     , m_RotateSun{ false }
     , m_SunElevation{ 70.0f }
     , m_RotateCamera{ false }
-    , m_WaterGeometry{ 4 * 3, 4 }
+    , m_PauseTime{ false }
+    , m_TimeOffset{ 0.0f }
+    , m_WaterGeometry{ sizeof(Data::DREVertex), 4 }
     , m_WaterMaterial{ "water_mat" }
     , m_BeachMaterial{ "beach_mat" }
 {
@@ -108,10 +112,10 @@ void VulkanApplicationDelegate::start()
     //m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 7.28f, 5.57f, -1.07f });
     //m_MainScene.GetMainCamera().SetEulerOrientation(glm::vec3{ -17.26f, 107.37f, 0.0f });
 
-    m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 2.01f, 2.35f, 0.28f });
-    m_MainScene.GetMainCamera().SetEulerOrientation(glm::vec3{ -22.21f, 68.29f, 0.0f });
+    m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 0.81f, 2.82f, 2.41f });
+    m_MainScene.GetMainCamera().SetEulerOrientation(glm::vec3{ -24.32f, 13.83f, 0.0f });
 
-    m_MainScene.GetMainSunLight().SetEulerOrientation(glm::vec3{ m_SunElevation, 45.0f, 0.0f });
+    m_MainScene.GetMainSunLight().SetEulerOrientation(glm::vec3{ m_SunElevation, 45.0f + 180.0f, 0.0f });
 
     m_GraphicsManager.Initialize();
 
@@ -122,8 +126,8 @@ void VulkanApplicationDelegate::start()
     /////////////////////////////////////////////////////////////////////
     glm::mat spheresTransform = glm::rotate(glm::identity<glm::mat4>(), glm::radians(180.0f), glm::vec3{ 1.0f, 0.0, 0.0f });
     spheresTransform[3][3] += 5.0f;
-    m_IOManager.ParseModelFile("data\\Sponza\\glTF\\Sponza.gltf", m_MainScene, "default_pbr");
-    //m_IOManager.ParseModelFile("data\\MetalRoughSpheres\\glTF\\MetalRoughSpheres.gltf", m_MainScene, "gltf_spheres", spheresTransform, Data::TEXTURE_VARIATION_RGBA);
+    //m_IOManager.ParseModelFile("data\\Sponza\\glTF\\Sponza.gltf", m_MainScene, "default_pbr");
+    m_IOManager.ParseModelFile("data\\MetalRoughSpheres\\glTF\\MetalRoughSpheres.gltf", m_MainScene, "gltf_spheres", spheresTransform, Data::TEXTURE_VARIATION_RGBA);
 
     m_GraphicsManager.GetMainContext().FlushAll();
 
@@ -131,7 +135,7 @@ void VulkanApplicationDelegate::start()
     ////////////
     DRE::ByteBuffer planeVertices;
     DRE::ByteBuffer planeIndicies;
-    GeneratePlaneMesh(100, 100, planeVertices, planeIndicies);
+    GeneratePlaneMesh(100, 200, planeVertices, planeIndicies);
 
     m_WaterGeometry.SetVertexData(DRE_MOVE(planeVertices));
     m_WaterGeometry.SetIndexData(DRE_MOVE(planeIndicies));
@@ -147,8 +151,8 @@ void VulkanApplicationDelegate::start()
     wTrans.model = glm::identity<glm::mat4>();
     //wTrans.model = glm::rotate(wTrans.model, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     wTrans.model[3][1] += 1.5f;
-    wTrans.model[3][2] -= 0.4f;
-    wTrans.model = glm::scale(wTrans.model, glm::vec3{ 0.035f });
+    //wTrans.model[3][2] -= 0.4f;
+    wTrans.model = glm::scale(wTrans.model, glm::vec3{ 0.1f });
     WORLD::Entity& waterEntity = m_MainScene.CreateWaterEntity(m_GraphicsManager.GetMainContext(), wTrans, &m_WaterGeometry, &m_WaterMaterial);
     
 
@@ -161,7 +165,9 @@ void VulkanApplicationDelegate::start()
     m_BeachMaterial.AssignTextureToSlot(Data::Material::TextureProperty::ROUGHNESS, m_IOManager.ReadTexture2D("textures\\wavy-sand_roughness.png", Data::TEXTURE_VARIATION_GRAY));
 
     WORLD::Entity::TransformData bTrans = wTrans; // beach transform
-    //bTrans.model = glm::rotate(bTrans.model, glm::radians(20.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    //bTrans.model = glm::scale(bTrans.model, glm::vec3(1.5f));
+    bTrans.model = glm::rotate(bTrans.model, glm::radians(20.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    bTrans.model[3][2] -= 6.0f;
     WORLD::Entity& beachEntity = m_MainScene.CreateOpaqueEntity(m_GraphicsManager.GetMainContext(), bTrans, &m_WaterGeometry, &m_BeachMaterial); // reuse water geometry
 
 
@@ -208,7 +214,15 @@ void VulkanApplicationDelegate::update()
     if (m_RotateCamera)
         m_MainScene.GetMainCamera().Rotate(glm::vec3{ 0.0f, C_SUN_ROTATOR_MUL * m_DeltaMicroseconds * 15.0f, 0.0f});
 
-    float const globalTimeSeconds = static_cast<float>(m_GlobalStopwatch.CurrentMilliseconds()) * 0.001f;
+    if (m_PauseTime != m_GlobalStopwatch.IsPaused())
+    {
+        if (m_PauseTime)
+            m_GlobalStopwatch.Pause();
+        else
+            m_GlobalStopwatch.Unpause();
+    }
+
+    float const globalTimeSeconds = static_cast<float>(m_GlobalStopwatch.CurrentMilliseconds()) * 0.001f + m_TimeOffset;
     m_GraphicsManager.RenderFrame(m_EngineFrame, m_DeltaMicroseconds, globalTimeSeconds);
 
     m_EngineFrame++;
@@ -240,10 +254,11 @@ void VulkanApplicationDelegate::ImGuiUser()
             ImGuiWindowFlags_NoScrollbar;// | 
             //ImGuiWindowFlags_NoCollapse;
         static bool frameDataOpened = false;
-        if (ImGui::Begin("Frame Stats", nullptr, frameDataWindowFlags))
+        if (ImGui::Begin("Stats", nullptr, frameDataWindowFlags))
         {
             ImGui::Text("DT: %f ms", static_cast<double>(m_DeltaMicroseconds) / 1000);
             ImGui::Text("FPS: %f", 1.0 / (static_cast<double>(m_DeltaMicroseconds) / 1000000));
+            ImGui::Text("Global T(s): %f", static_cast<float>(m_GlobalStopwatch.CurrentMilliseconds()) * 0.001f);
         }
         ImGui::End();
 
@@ -330,6 +345,9 @@ void VulkanApplicationDelegate::ImGuiUser()
             ImGui::SliderFloat("TAA Alpha", &m_GraphicsManager.GetGraphicsSettings().m_AlphaTAA, 0.0f, 1.0f);
             ImGui::SliderFloat("TAA Jitter Scale", &m_GraphicsManager.GetGraphicsSettings().m_JitterScale, 0.0f, 2.0f);
             ImGui::SliderFloat("TAA Variance Gamma", &m_GraphicsManager.GetGraphicsSettings().m_VarianceGammaTAA, 0.0f, 5.0f);
+            ImGui::Checkbox("Pause time", &m_PauseTime);
+            ImGui::SliderFloat("Time offset", &m_TimeOffset, -10.0f, 10.0);
+            ImGui::SliderFloat("Generic Scalar", &m_GraphicsManager.GetGraphicsSettings().m_GenericScalar, -2.0f, 2.0f);
 
         }
         ImGui::End();
