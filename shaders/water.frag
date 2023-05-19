@@ -107,6 +107,20 @@ float SimpleWaterDepth(float currentDepth, float comparedDepth)
 	return (comparedDepth - currentDepth);
 }
 
+vec3 CausticContribution(vec3 wpos, vec3 l, vec3 v, vec3 n)
+{
+	vec3 result = vec3(0,0,0);
+	
+	vec3 vFlat = normalize(vec3(v.x, 0, v.z));
+	vec3 offset = vFlat * dot(v, vFlat);
+	
+	result = dot(n, vec3(0, 1, 0)).rrr;
+	result = offset;
+	
+	//return 0;
+	return result;
+}
+
 void main()
 {
 	const vec3 diffuse = vec3(0, 57, 74) / 255;
@@ -115,8 +129,8 @@ void main()
 	
 	vec2 pixel_pos_uv = gl_FragCoord.xy / GetViewportSize();
 	
-	vec3 normalMap0 = sRGB2Linear(SampleGlobalTextureLinear(NormalTextureID, in_wpos.xz / 2 + GetTimeS() / 12).rgb);
-	vec3 normalMap1 = sRGB2Linear(SampleGlobalTextureLinear(NormalTextureID, in_wpos.zx + GetTimeS() / 11).rgb);
+	vec3 normalMap0 = sRGB2Linear(SampleGlobalTextureLinear(NormalTextureID, in_wpos.xz / 10 + GetTimeS() / 48).rgb);
+	vec3 normalMap1 = sRGB2Linear(SampleGlobalTextureLinear(NormalTextureID, in_wpos.zx / 4 + GetTimeS() / 44).rgb);
 	
 	vec3 normalMap = (normalMap0 + normalMap1);
 	normalMap = normalize(normalMap);
@@ -154,6 +168,8 @@ void main()
 	
 	float refractedWaterDepth = SimpleWaterDepth(currentDepthLinear, depthSampleRefractedLinear);
 	vec3 water_diffuse = mix(worldSample, diffuse, clamp(refractedWaterDepth * 30 + 0.2, 0, 1));
+	//vec3 water_diffuse = mix(worldSample, diffuse, 0);
+	
 	vec3 res = specular + water_diffuse;
 	
     finalColor = vec4(res, 1.0);

@@ -9,9 +9,10 @@
 #include <gfx\pass\ForwardOpaquePass.hpp>
 #include <gfx\pass\WaterPass.hpp>
 #include <gfx\pass\AntiAliasingPass.hpp>
+#include <gfx\pass\CausticPass.hpp>
+#include <gfx\pass\ColorEncodingPass.hpp>
 #include <gfx\pass\ImGuiRenderPass.hpp>
 #include <gfx\pass\ShadowPass.hpp>
-#include <gfx\pass\ColorEncodingPass.hpp>
 
 #include <engine\io\IOManager.hpp>
 #include <engine\scene\Scene.hpp>
@@ -46,6 +47,9 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOMana
 {
     g_GraphicsManager = this;
 
+    m_Settings.m_RenderingWidth = m_MainWindow->Width();
+    m_Settings.m_RenderingHeight = m_MainWindow->Height();
+
     for (std::uint32_t i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
     {
         m_GlobalUniforms[i] = m_Device.GetResourcesController()->CreateBuffer(sizeof(GlobalUniforms), VKW::BufferUsage::UNIFORM);
@@ -63,6 +67,7 @@ void GraphicsManager::Initialize()
 void GraphicsManager::CreateAllPasses()
 {
     m_RenderGraph.AddPass<ShadowPass>();
+    m_RenderGraph.AddPass<CausticPass>();
     m_RenderGraph.AddPass<ForwardOpaquePass>();
     m_RenderGraph.AddPass<WaterPass>();
     m_RenderGraph.AddPass<AntiAliasingPass>();
@@ -105,7 +110,7 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
 
     WORLD::Camera const& camera = scene.GetMainCamera();
     m_MainView.UpdatePlacement(camera.GetPosition(), camera.GetForward(), camera.GetUp());
-    m_MainView.UpdateViewport(glm::uvec2{ 0, 0 }, glm::uvec2{ GetRenderingWidth(), GetRenderingHeight() });
+    m_MainView.UpdateViewport(glm::uvec2{ 0, 0 }, glm::uvec2{ m_Settings.m_RenderingWidth, m_Settings.m_RenderingHeight });
     m_MainView.UpdateProjection(camera.GetFOV(), camera.GetRange()[0], camera.GetRange()[1]);
     m_MainView.UpdateJitter(taaJitter.x, taaJitter.y);
 
@@ -119,8 +124,8 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
 
 
     GlobalUniforms globalUniform{};
-    globalUniform.viewportSize_deltaMS_timeS[0] = static_cast<float>(GetRenderingWidth());
-    globalUniform.viewportSize_deltaMS_timeS[1] = static_cast<float>(GetRenderingHeight());
+    globalUniform.viewportSize_deltaMS_timeS[0] = static_cast<float>(m_Settings.m_RenderingWidth);
+    globalUniform.viewportSize_deltaMS_timeS[1] = static_cast<float>(m_Settings.m_RenderingHeight);
     globalUniform.viewportSize_deltaMS_timeS[2] = static_cast<float>(static_cast<double>(deltaTimeUS) / 1000.0);
     globalUniform.viewportSize_deltaMS_timeS[3] = timeS;
 

@@ -20,12 +20,14 @@ void ColorEncodingPass::Initialize(RenderGraph& graph)
 
 void ColorEncodingPass::RegisterResources(RenderGraph& graph)
 {
+    std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
+
     graph.RegisterTextureSlot(this, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE, 0);
-    graph.RegisterStandaloneTexture(TextureID::ColorHistoryBuffer0, VKW::FORMAT_B8G8R8A8_UNORM, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(), VKW::RESOURCE_ACCESS_SHADER_READ);
-    graph.RegisterStandaloneTexture(TextureID::ColorHistoryBuffer1, VKW::FORMAT_B8G8R8A8_UNORM, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(), VKW::RESOURCE_ACCESS_SHADER_READ);
+    graph.RegisterStandaloneTexture(TextureID::ColorHistoryBuffer0, VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_READ);
+    graph.RegisterStandaloneTexture(TextureID::ColorHistoryBuffer1, VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_READ);
 
     graph.RegisterTexture(this, TextureID::DisplayEncodedImage, 
-        VKW::FORMAT_B8G8R8A8_UNORM, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(), VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 1);
+        VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 1);
 
     graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 2);
 }
@@ -60,7 +62,7 @@ void ColorEncodingPass::Render(RenderGraph& graph, VKW::Context& context)
     context.CmdBindComputeDescriptorSets(layout, firstSet, 1, &set);
     context.CmdBindComputePipeline(pipeline);
 
-    glm::uvec2 rtSize{ g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight() };
+    glm::uvec2 rtSize{ g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight };
     glm::uvec2 const groupSize{ 8, 8 };
     glm::uvec2 const dispatchSize = rtSize / groupSize + glm::uvec2{ 1, 1 };
     context.CmdDispatch(dispatchSize.x, dispatchSize.y, 1);

@@ -42,7 +42,7 @@ void DrawBatcher::Batch(VKW::Context& context, RenderView const& view, Renderabl
         atom.indexCount    = obj.GetIndexCount();
 
         atom.pipeline      = obj.GetPipeline();
-        atom.descriptorSet = obj.GetDescriptorSets(g_GraphicsManager->GetCurrentFrameID());
+        atom.descriptorSet = obj.GetDescriptorSet(g_GraphicsManager->GetCurrentFrameID());
 
     }
 }

@@ -67,7 +67,7 @@ public:
         void SetWindingOrder        (WindingOrder order);
 
         void AddVertexAttribute     (Format format);
-        void AddColorOutput      (Format format, BlendType blend);
+        void AddColorOutput         (Format format, BlendType blend = BLEND_TYPE_NONE);
 
         VkGraphicsPipelineCreateInfo const& CompileGraphicPipelineCreateInfo();
         VkComputePipelineCreateInfo const& CompileComputePipelineCreateInfo();

@@ -25,6 +25,7 @@ layout(set = 3, binding = 1, std140) uniform PassUniform
     mat4  shadow_VP;
     vec4  shadow_size;
 } passUniform;
+layout(set = 3, binding = 2) uniform texture2D causticMap;
 
 layout(set = 4, binding = 0, std140) uniform InstanceUniform
 {

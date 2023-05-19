@@ -1,5 +1,12 @@
 #include "poisson.h"
 
+vec2 CalculateShadowUV(in vec3 wpos, in mat4 shadowViewProj)
+{
+	vec3 lightspaceCoord = (shadowViewProj * vec4(wpos, 1.0)).xyz;
+    vec2 shadowUV = lightspaceCoord.xy * 0.5 + 0.5;
+	return shadowUV;
+}
+
 float CalculateShadow(in vec3 wpos, in mat4 shadowViewProj, vec2 shadowMapDims, in texture2D shadowMap)
 {
     vec3 lightspaceCoord = (shadowViewProj * vec4(wpos, 1.0)).xyz;

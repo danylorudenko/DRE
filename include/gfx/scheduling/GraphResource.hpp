@@ -10,6 +10,8 @@ enum class TextureID
     ID_None,
     MainDepth,
     ShadowMap,
+    CausticEnvMap,
+    CausticMap,
     ForwardColor,
     WaterColor,
     Velocity,

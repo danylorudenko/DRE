@@ -25,6 +25,7 @@ layout(set = 3, binding = 1, std140) uniform PassUniform
     mat4  shadow_VP;
     vec4  shadow_size;
 } passUniform;
+layout(set = 3, binding = 2) uniform texture2D causticMap;
 
 layout(set = 4, binding = 0, std140) uniform InstanceUniform
 {
@@ -61,11 +62,14 @@ void main()
     vec3 brdf = CookTorranceBRDF(NdotH, NdotV, NdotL, diffuse, roughness, metalness);
 
     vec3 ambient = vec3(0.15, 0.15, 0.15) * diffuse;
+	
+	vec2 light_uv = CalculateShadowUV(in_wpos, passUniform.shadow_VP);
+	float caustics = SampleTexture(causticMap, GetSamplerLinear(), light_uv).r;
 
     float shadow = CalculateShadow(in_wpos, passUniform.shadow_VP, passUniform.shadow_size.xy, shadowMap);
 
-	shadow = 1;
-    vec3 res = shadow * brdf + ambient;    
+	//shadow = 1;
+    vec3 res = caustics.rrr * shadow + shadow * brdf + ambient;    
 	
     finalColor = vec4(res, 1.0);
     //finalColor = vec4(in_TBN[2], 1.0);

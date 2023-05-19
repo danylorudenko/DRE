@@ -125,9 +125,9 @@ void VulkanApplicationDelegate::start()
     /////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////
     glm::mat spheresTransform = glm::rotate(glm::identity<glm::mat4>(), glm::radians(180.0f), glm::vec3{ 1.0f, 0.0, 0.0f });
-    spheresTransform[3][3] += 5.0f;
+    //spheresTransform[3][3] += 5.0f;
     //m_IOManager.ParseModelFile("data\\Sponza\\glTF\\Sponza.gltf", m_MainScene, "default_pbr");
-    m_IOManager.ParseModelFile("data\\MetalRoughSpheres\\glTF\\MetalRoughSpheres.gltf", m_MainScene, "gltf_spheres", spheresTransform, Data::TEXTURE_VARIATION_RGBA);
+    //m_IOManager.ParseModelFile("data\\MetalRoughSpheres\\glTF\\MetalRoughSpheres.gltf", m_MainScene, "gltf_spheres", spheresTransform, Data::TEXTURE_VARIATION_RGBA);
 
     m_GraphicsManager.GetMainContext().FlushAll();
 

@@ -22,26 +22,27 @@ void AntiAliasingPass::RegisterResources(RenderGraph& graph)
 {
     graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 0);
 
+    std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
+
     graph.RegisterTexture(this, 
         TextureID::Velocity, 
-        VKW::FORMAT_R16G16_FLOAT, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(), 
+        VKW::FORMAT_R16G16_FLOAT, renderWidth, renderHeight, 
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 1);
 
     graph.RegisterTexture(this,
         TextureID::WaterColor, 
-        g_GraphicsManager->GetMainColorFormat(), g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
+        g_GraphicsManager->GetMainColorFormat(), renderWidth, renderHeight,
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 2);
 
     VKW::ResourceAccess historyAccess = VKW::ResourceAccess(VKW::RESOURCE_ACCESS_SHADER_SAMPLE | std::uint64_t(VKW::RESOURCE_ACCESS_SHADER_WRITE));
-    graph.RegisterStandaloneTexture(TextureID::ColorHistoryBuffer0, VKW::FORMAT_B8G8R8A8_UNORM, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(), historyAccess);
-    graph.RegisterStandaloneTexture(TextureID::ColorHistoryBuffer1, VKW::FORMAT_B8G8R8A8_UNORM, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(), historyAccess);
+    graph.RegisterStandaloneTexture(TextureID::ColorHistoryBuffer0, VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, historyAccess);
+    graph.RegisterStandaloneTexture(TextureID::ColorHistoryBuffer1, VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, historyAccess);
 
     graph.RegisterTextureSlot(this, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 3);
     graph.RegisterTextureSlot(this, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 4);
 
     graph.RegisterTexture(this,
-        TextureID::MainDepth, g_GraphicsManager->GetMainDepthFormat(),
-        g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
+        TextureID::MainDepth, g_GraphicsManager->GetMainDepthFormat(), renderWidth, renderHeight,
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 5);
 }
 
@@ -81,7 +82,7 @@ void AntiAliasingPass::Render(RenderGraph& graph, VKW::Context& context)
     VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("temporal_AA");
     context.CmdBindComputePipeline(pipeline);
 
-    glm::uvec2 rtSize{ g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight() };
+    glm::uvec2 rtSize{ g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight };
     glm::uvec2 const groupSize{ 8, 8 };
     glm::uvec2 const dispatchSize = rtSize / groupSize + glm::uvec2{ 1, 1 };
     context.CmdDispatch(dispatchSize.x, dispatchSize.y, 1);

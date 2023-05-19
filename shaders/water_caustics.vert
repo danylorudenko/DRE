@@ -12,12 +12,15 @@ layout(location = 2) in vec3 in_tan;
 layout(location = 3) in vec3 in_btan;
 layout(location = 4) in vec2 in_uv;
 
-layout(location = 0) out vec3 out_wpos;
-layout(location = 1) out vec4 out_prev_wpos;
-layout(location = 2) out vec2 out_uv;
-layout(location = 3) out mat3 out_TBN;
+layout(location = 0) out vec3 out_ray_start;
+layout(location = 1) out vec3 out_ray_end;
 
-
+layout(set = 3, binding = 0, std140) uniform PassUniform
+{
+	mat4 light_ViewProjM;
+	mat4 light_InvViewProjM;
+} passUniform;
+layout(set = 3, binding = 1) uniform texture2D envMap;
 
 layout(set = 4, binding = 0, std140) uniform InstanceUniform
 {
@@ -59,6 +62,9 @@ vec3 GenerateComplexWave(vec3 local_pos, vec2 dir, float t, float scale, float w
 
 void main()
 {
+	const float REF_INDEX = 0.57;
+	
+	
 	vec2 wave_dir = normalize(vec2(0,1));
 	
 	vec3 offset_inpos = in_pos;
@@ -79,14 +85,35 @@ void main()
 	vec3 btan = -(vec3(-wave_dir.y, 0.0, wave_dir.x));
 	vec3 norm = (cross(btan, tan));
 	
-    out_wpos = vec3(instanceUniform.model_mat * vec4(wave_pos, 1.0));
-
-	vec4 ndc_pos = GetCameraViewProjM() * vec4(out_wpos, 1.0);
-	ndc_pos.xy += (GetJitter() * ndc_pos.w); // perspective-correct jitter
+    vec3 wpos = vec3(instanceUniform.model_mat * vec4(wave_pos, 1.0));
+	vec4 ndc_pos = passUniform.light_ViewProjM * vec4(wpos, 1.0);
 	
     gl_Position = ndc_pos;
-	out_prev_wpos = instanceUniform.prev_model_mat * vec4(wave_pos, 1.0);
 	
-	out_uv = in_uv;
-	out_TBN = mat3(tan, btan, norm);
+	vec2 uv = ndc_pos.xy * 0.5 + 0.5;
+	vec4 env_map_sample = SampleTexture(envMap, GetSamplerLinear(), uv);
+	
+	vec3 world_norm = vec3(instanceUniform.model_mat * vec4(norm, 0.0));
+	vec3 refracted_light = refract(GetMainLightDir(), world_norm, REF_INDEX);
+	vec2 uv_refract_dir = ((passUniform.light_ViewProjM * vec4(refracted_light, 0.0)).xy) / GetViewportSize();
+	vec3 ray_pos = env_map_sample.xyz;
+	vec2 sample_uv = uv;
+	for(int i = 0; i < 3; i++)
+	{
+		if(ray_pos.y < env_map_sample.y || (length(env_map_sample.xyz) < 0.001))
+		{
+			break;
+		}
+		else
+		{
+			ray_pos = env_map_sample.xyz;
+			sample_uv += uv_refract_dir;
+			env_map_sample = SampleTexture(envMap, GetSamplerLinear(), sample_uv);
+		}
+	}
+	
+	gl_Position = (passUniform.light_ViewProjM * vec4(env_map_sample.xyz, 1.0));
+	out_ray_start = wpos;
+	out_ray_end = ray_pos;
+	
 }

@@ -34,7 +34,7 @@ PassID ImGuiRenderPass::GetID() const
 void ImGuiRenderPass::RegisterResources(RenderGraph& graph)
 {
     graph.RegisterRenderTarget(this, TextureID::DisplayEncodedImage, VKW::FORMAT_B8G8R8A8_UNORM,
-        g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
+        g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight,
         0);
 
     graph.RegisterUniformBuffer(this, VKW::STAGE_VERTEX | VKW::STAGE_FRAGMENT, 0);
@@ -109,9 +109,11 @@ void ImGuiRenderPass::Render(RenderGraph& graph, VKW::Context& context)
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, imGuiRT->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
 
+    std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
+
     context.CmdBeginRendering(1, &imGuiRT, nullptr, nullptr);
-    context.CmdSetViewport(2, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
-    context.CmdSetScissor(2, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
+    context.CmdSetViewport(2, 0, 0, renderWidth, renderHeight);
+    context.CmdSetScissor(2, 0, 0, renderWidth, renderHeight);
     context.CmdBindGraphicsDescriptorSets(layout, startSet, 1, &passSet);
     context.CmdBindPipeline(VKW::BindPoint::Graphics, pipelineDB.GetPipeline("imgui_draw"));
 #ifndef DRE_COMPILE_FOR_RENDERDOC

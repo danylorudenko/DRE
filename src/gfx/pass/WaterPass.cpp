@@ -19,35 +19,37 @@ PassID GFX::WaterPass::GetID() const
 
 void WaterPass::RegisterResources(RenderGraph& graph)
 {
+    std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
+
     graph.RegisterTexture(this,
         TextureID::ShadowMap,
         VKW::FORMAT_D16_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT, 0);
 
     graph.RegisterTexture(this,
         TextureID::ForwardColor,
-        g_GraphicsManager->GetMainColorFormat(), g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
+        g_GraphicsManager->GetMainColorFormat(), renderWidth, renderHeight,
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT, 1);
 
     graph.RegisterTexture(this,
         TextureID::MainDepth,
-        g_GraphicsManager->GetMainDepthFormat(), g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
+        g_GraphicsManager->GetMainDepthFormat(), renderWidth, renderHeight,
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT, 2);
 
     graph.RegisterUniformBuffer(this, VKW::STAGE_FRAGMENT, 3);
 
     graph.RegisterRenderTarget(this,
         TextureID::WaterColor,
-        g_GraphicsManager->GetMainColorFormat(), g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
+        g_GraphicsManager->GetMainColorFormat(), renderWidth, renderHeight,
         0);
 
     graph.RegisterRenderTarget(this,
         TextureID::Velocity,
-        VKW::FORMAT_R16G16_FLOAT, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight(),
+        VKW::FORMAT_R16G16_FLOAT, renderWidth, renderHeight,
         1);
 
     graph.RegisterDepthOnlyTarget(this,
         TextureID::MainDepth,
-        g_GraphicsManager->GetMainDepthFormat(), g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
+        g_GraphicsManager->GetMainDepthFormat(), renderWidth, renderHeight);
 }
 
 void WaterPass::Initialize(RenderGraph& graph)
@@ -56,20 +58,20 @@ void WaterPass::Initialize(RenderGraph& graph)
 
 void WaterObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view)
 {
-    std::uint32_t constexpr uniformSize =
-        sizeof(glm::mat4) * 2 + sizeof(std::uint32_t) * 4;
-
-    auto uniformAllocation = arena.AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), uniformSize, 256);
-    VKW::DescriptorManager::WriteDesc writeDesc;
-    writeDesc.AddUniform(uniformAllocation.m_Buffer, uniformAllocation.m_OffsetInBuffer, uniformAllocation.m_Size, 0);
-    descriptorManager.WriteDescriptorSet(obj.GetDescriptorSets(g_GraphicsManager->GetCurrentFrameID()), writeDesc);
-
-    VKW::TextureDescriptorIndex const& normalIndex = obj.GetNormalTexture()->GetShaderReadDescriptor();
-
-    UniformProxy uniformProxy{ &context, uniformAllocation };
-    uniformProxy.WriteMember140(obj.GetModelM());
-    uniformProxy.WriteMember140(obj.GetModelM()); // prev world matrix is same, geometry is static
-    uniformProxy.WriteMember140(normalIndex.id_);
+    //std::uint32_t constexpr uniformSize =
+    //    sizeof(glm::mat4) * 2 + sizeof(std::uint32_t) * 4;
+    //
+    //auto uniformAllocation = arena.AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), uniformSize, 256);
+    //VKW::DescriptorManager::WriteDesc writeDesc;
+    //writeDesc.AddUniform(uniformAllocation.m_Buffer, uniformAllocation.m_OffsetInBuffer, uniformAllocation.m_Size, 0);
+    //descriptorManager.WriteDescriptorSet(obj.GetDescriptorSet(g_GraphicsManager->GetCurrentFrameID()), writeDesc);
+    //
+    //VKW::TextureDescriptorIndex const& normalIndex = obj.GetNormalTexture()->GetShaderReadDescriptor();
+    //
+    //UniformProxy uniformProxy{ &context, uniformAllocation };
+    //uniformProxy.WriteMember140(obj.GetModelM());
+    //uniformProxy.WriteMember140(obj.GetModelM()); // prev world matrix is same, geometry is static
+    //uniformProxy.WriteMember140(normalIndex.id_);
 
 }
 
@@ -99,8 +101,9 @@ void WaterPass::Render(RenderGraph& graph, VKW::Context& context)
 
     context.CmdBeginRendering(2, attachments, depthAttachment, nullptr);
 
-    context.CmdSetViewport(2, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
-    context.CmdSetScissor(2, 0, 0, g_GraphicsManager->GetRenderingWidth(), g_GraphicsManager->GetRenderingHeight());
+    std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
+    context.CmdSetViewport(2, 0, 0, renderWidth, renderHeight);
+    context.CmdSetScissor(2, 0, 0, renderWidth, renderHeight);
 #ifndef DRE_COMPILE_FOR_RENDERDOC
     context.CmdSetPolygonMode(g_GraphicsManager->GetGraphicsSettings().m_WaterWireframe ? VKW::POLYGON_WIREFRAME : VKW::POLYGON_FILL);
 #endif // DRE_COMPILE_FOR_RENDERDOC

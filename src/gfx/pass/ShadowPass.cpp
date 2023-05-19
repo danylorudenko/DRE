@@ -20,6 +20,10 @@ void ShadowPass::Initialize(RenderGraph& graph)
 
 void ShadowPass::RegisterResources(RenderGraph& graph)
 {
+    graph.RegisterRenderTarget(this,
+        TextureID::CausticEnvMap,
+        VKW::FORMAT_R16G16B16A16_FLOAT, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, 0);
+
     graph.RegisterDepthOnlyTarget(this,
         TextureID::ShadowMap,
         VKW::FORMAT_D16_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_WIDTH);
@@ -28,26 +32,32 @@ void ShadowPass::RegisterResources(RenderGraph& graph)
 
 void ShadowObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view)
 {
-    std::uint32_t constexpr uniformSize = sizeof(glm::mat4);
+    std::uint32_t constexpr uniformSize = sizeof(glm::mat4) * 2;
 
     auto uniformAllocation = arena.AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), uniformSize, 256);
     VKW::DescriptorManager::WriteDesc writeDesc;
     writeDesc.AddUniform(uniformAllocation.m_Buffer, uniformAllocation.m_OffsetInBuffer, uniformAllocation.m_Size, 0);
-    descriptorManager.WriteDescriptorSet(obj.GetDescriptorSets(g_GraphicsManager->GetCurrentFrameID()), writeDesc);
+    descriptorManager.WriteDescriptorSet(obj.GetDescriptorSet(g_GraphicsManager->GetCurrentFrameID()), writeDesc);
 
     UniformProxy uniformProxy{ &context, uniformAllocation };
 
     glm::mat4 const mvp = view.GetViewProjectionM() * obj.GetModelM();
     uniformProxy.WriteMember140(mvp);
+    uniformProxy.WriteMember140(obj.GetModelM());
 }
 
 
 void ShadowPass::Render(RenderGraph& graph, VKW::Context& context)
 {
+    VKW::ImageResourceView* wposAttachment = graph.GetTexture(TextureID::CausticEnvMap)->GetShaderView();
     VKW::ImageResourceView* depthAttachment = graph.GetTexture(TextureID::ShadowMap)->GetShaderView();
 
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, wposAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->parentResource_, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
-    context.CmdBeginRendering(0, nullptr, depthAttachment, nullptr);
+
+    context.CmdBeginRendering(1, &wposAttachment, depthAttachment, nullptr);
+    float clearValues[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_0, clearValues);
     context.CmdClearAttachments(VKW::ATTACHMENT_MASK_DEPTH, 0.0f, 0);
 
     context.CmdSetViewport(1, 0, 0, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT);

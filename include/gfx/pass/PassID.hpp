@@ -8,6 +8,7 @@ enum class PassID
     BulletForward,
     ForwardOpaque,
     Shadow,
+    Caustic,
     Water,
     AntiAliasing,
     ImGuiRender,

@@ -56,6 +56,10 @@ private:
     DRE::String64 const*    CreateGraphicsForwardWaterPipeline(char const* name);
     DRE::String64 const*    CreateGraphicsForwardShadowPipeline(char const* name);
     DRE::String64 const*    CreateComputePipeline(char const* name);
+    DRE::String64 const*    CreateCustomGraphicsPipeline(char const* name, VKW::Pipeline::Descriptor& descriptor);
+    DRE::String64 const*    CreateCustomComputePipeline(char const* name, VKW::Pipeline::Descriptor& descriptor);
+
+    static void             AddDREVertexAttributes(VKW::Pipeline::Descriptor& descriptor);
 
 private:
     VKW::Device*        m_Device;

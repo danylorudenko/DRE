@@ -50,7 +50,7 @@ public:
     inline VKW::BufferResource*         GetIndexBuffer() const { return m_IndexBuffer; }
     inline std::uint32_t                GetVertexCount() const { return m_VertexCount; }
     inline std::uint32_t                GetIndexCount() const { return m_IndexCount; }
-    inline VKW::DescriptorSet const&    GetDescriptorSets(FrameID frameID) const { return m_DescriptorSets[frameID]; }
+    inline VKW::DescriptorSet const&    GetDescriptorSet(FrameID frameID) const { return m_DescriptorSets[frameID]; }
     inline ReadOnlyTexture*             GetDiffuseTexture() const { return m_Textures[0]; }
     inline ReadOnlyTexture*             GetNormalTexture() const { return m_Textures[1]; }
     inline ReadOnlyTexture*             GetMetalnessTexture() const { return m_Textures[2]; }

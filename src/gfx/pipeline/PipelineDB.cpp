@@ -34,11 +34,58 @@ void PipelineDB::CreateDefaultPipelines()
         CreateGraphicsForwardPipeline("sand_beach");
         CreateGraphicsForwardWaterPipeline("water");
 
-        CreateGraphicsForwardShadowPipeline("forward_shadow");
+        //CreateGraphicsForwardPipeline("forward_shadow");
 
         CreateComputePipeline("color_encode");
         CreateComputePipeline("temporal_AA");
+
+
+        VKW::Pipeline::Descriptor waterCausticDesc;
+        waterCausticDesc.SetPipelineType(VKW::PIPELINE_TYPE_GRAPHIC);
+        //waterCausticDesc.EnableDepthTest(g_GraphicsManager->GetMainDepthFormat(), false);
+        AddDREVertexAttributes(waterCausticDesc);
+        waterCausticDesc.AddColorOutput(VKW::FORMAT_R8_UNORM);
+        CreateCustomGraphicsPipeline("water_caustics", waterCausticDesc);
+
+        VKW::Pipeline::Descriptor shadowDesc;
+        shadowDesc.SetPipelineType(VKW::PIPELINE_TYPE_GRAPHIC);
+        shadowDesc.EnableDepthTest(VKW::FORMAT_D16_UNORM);
+        shadowDesc.AddColorOutput(VKW::FORMAT_R16G16B16A16_FLOAT);
+        AddDREVertexAttributes(shadowDesc);
+        CreateCustomGraphicsPipeline("forward_shadow", shadowDesc);
     }
+}
+
+void PipelineDB::AddDREVertexAttributes(VKW::Pipeline::Descriptor& desc)
+{
+    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // pos
+    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // norm
+    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // tan
+    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // btan
+    desc.AddVertexAttribute(VKW::FORMAT_R32G32_FLOAT);    // uv
+}
+
+DRE::String64 const* PipelineDB::CreateCustomGraphicsPipeline(char const* name, VKW::Pipeline::Descriptor& descriptor)
+{
+    DRE::String64 vertName{ name }; vertName.Append(".vert");
+    DRE::String64 fragName{ name }; fragName.Append(".frag");
+
+    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName.GetData(), fragName.GetData(), nullptr);
+
+    IO::IOManager::ShaderData const* vertData = m_IOManager->GetShaderData(vertName.GetData());
+    IO::IOManager::ShaderData const* fragData = m_IOManager->GetShaderData(fragName.GetData());
+
+    VKW::ShaderModule vertModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData->m_Binary, vertData->m_ModuleType, "main" };
+    VKW::ShaderModule fragModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragData->m_Binary, fragData->m_ModuleType, "main" };
+
+    descriptor.SetVertexShader(vertModule);
+    descriptor.SetFragmentShader(fragModule);
+    descriptor.SetLayout(GetLayout(layoutName->GetData()));
+    descriptor.SetCullMode(VK_CULL_MODE_BACK_BIT);
+
+    CreatePipeline(name, descriptor);
+    return m_Pipelines.Find(name).key;
+
 }
 
 DRE::String64 const* PipelineDB::CreateGraphicsForwardPipeline(char const* name)
@@ -61,15 +108,11 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardPipeline(char const* name)
     desc.SetFragmentShader(fragModule);
     desc.SetLayout(GetLayout(layoutName->GetData()));
     desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
-    desc.EnableDepthTest(VKW::FORMAT_D32_FLOAT);
-    desc.AddColorOutput(g_GraphicsManager->GetMainDevice()->GetSwapchain()->GetFormat(), VKW::BLEND_TYPE_NONE);
-    desc.AddColorOutput(VKW::FORMAT_R16G16_FLOAT, VKW::BLEND_TYPE_NONE); // velocity vectors
+    desc.EnableDepthTest(g_GraphicsManager->GetMainDepthFormat());
+    desc.AddColorOutput(g_GraphicsManager->GetMainColorFormat());
+    desc.AddColorOutput(VKW::FORMAT_R16G16_FLOAT); // velocity vectors
 
-    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // pos
-    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // norm
-    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // tan
-    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // btan
-    desc.AddVertexAttribute(VKW::FORMAT_R32G32_FLOAT);    // uv
+    AddDREVertexAttributes(desc);
 
     CreatePipeline(name, desc);
     return m_Pipelines.Find(name).key;
@@ -96,15 +139,11 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardWaterPipeline(char const* 
     desc.SetLayout(GetLayout(layoutName->GetData()));
     desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
     //desc.SetPolygonMode(VK_POLYGON_MODE_LINE);
-    desc.EnableDepthTest(VKW::FORMAT_D32_FLOAT, false);
-    desc.AddColorOutput(g_GraphicsManager->GetMainDevice()->GetSwapchain()->GetFormat(), VKW::BLEND_TYPE_NONE);
-    desc.AddColorOutput(VKW::FORMAT_R16G16_FLOAT, VKW::BLEND_TYPE_NONE); // velocity vectors
+    desc.EnableDepthTest(g_GraphicsManager->GetMainDepthFormat(), false);
+    desc.AddColorOutput(g_GraphicsManager->GetMainColorFormat());
+    desc.AddColorOutput(VKW::FORMAT_R16G16_FLOAT); // velocity vectors
 
-    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // pos
-    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // norm
-    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // tan
-    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // btan
-    desc.AddVertexAttribute(VKW::FORMAT_R32G32_FLOAT);    // uv
+    AddDREVertexAttributes(desc);
 
     CreatePipeline(name, desc);
     return m_Pipelines.Find(name).key;
@@ -125,13 +164,9 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardShadowPipeline(char const*
     desc.SetVertexShader(vertModule);
     desc.SetLayout(GetLayout(layoutName->GetData()));
     desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
-    desc.EnableDepthTest(VKW::FORMAT_D16_UNORM);
+    desc.EnableDepthTest(g_GraphicsManager->GetMainDepthFormat());
 
-    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // pos
-    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // norm
-    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // tan
-    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT); // btan
-    desc.AddVertexAttribute(VKW::FORMAT_R32G32_FLOAT);    // uv
+    AddDREVertexAttributes(desc);
 
     CreatePipeline(name, desc);
     return m_Pipelines.Find(name).key;
@@ -272,18 +307,18 @@ DRE::String64 const* PipelineDB::CreatePipelineLayoutFromShader(char const* shad
     std::uint32_t const globalLayoutsCount = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();
 
     // next used set after global descriptor sets
-    std::uint32_t const startSetId = shaderInterface.m_Members.FindIf([globalLayoutsCount](auto const& data) { return data.set >= globalLayoutsCount; });
+    std::uint32_t const startMemberId = shaderInterface.m_Members.FindIf([globalLayoutsCount](auto const& data) { return data.set >= globalLayoutsCount; });
 
     auto& layouts = m_ShaderLayouts[shaderName];
-    if (startSetId != shaderInterface.m_Members.Size())
+    if (startMemberId != shaderInterface.m_Members.Size())
     {
-        std::uint8_t prevSet = shaderInterface.m_Members[startSetId - 1].set;
-        std::uint8_t currentSet = shaderInterface.m_Members[startSetId].set;
+        std::uint8_t prevSet = shaderInterface.m_Members[startMemberId - 1].set;
+        std::uint8_t currentSet = shaderInterface.m_Members[startMemberId].set;
         DRE_ASSERT(currentSet == prevSet + 1, "Descriptor sets must be continuous");
 
         VKW::DescriptorSetLayout::Descriptor setLayoutDesc{};
 
-        for (std::uint32_t i = startSetId, size = shaderInterface.m_Members.Size(); i < size; i++)
+        for (std::uint32_t i = startMemberId, size = shaderInterface.m_Members.Size(); i < size; i++)
         {
             auto const& m = shaderInterface.m_Members[i];
             if (m.set != currentSet)

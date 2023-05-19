@@ -25,7 +25,7 @@
 
 static constexpr std::uint32_t C_SHADOW_MAP_WIDTH = 2048;
 static constexpr std::uint32_t C_SHADOW_MAP_HEIGHT = 2048;
-static constexpr float C_SHADOW_MAP_WORLD_EXTENT = 30.0f;
+static constexpr float C_SHADOW_MAP_WORLD_EXTENT = 20.0f;
 
 namespace VKW
 {
@@ -52,13 +52,19 @@ namespace GFX
 
 struct GraphicsSettings
 {
-    bool    m_UseACESEncoding       = true;
-    float   m_ExposureEV            = 0.0f;
-    float   m_AlphaTAA              =0;//= 0.9f;
-    float   m_VarianceGammaTAA      = 1.0f;
-    float   m_JitterScale           =0;//= 0.15f;
-    bool    m_WaterWireframe        = false;
-    float   m_GenericScalar         = 1.0f;
+    bool            m_UseACESEncoding       = true;
+    float           m_ExposureEV            = 0.0f;
+    float           m_AlphaTAA              =0;//= 0.9f;
+    float           m_VarianceGammaTAA      = 1.0f;
+    float           m_JitterScale           =0;//= 0.15f;
+    bool            m_WaterWireframe        = false;
+    float           m_GenericScalar         = 1.0f;
+
+    std::uint32_t   m_ShadowMapWidth        = 1024;
+    std::uint32_t   m_ShadowMapHeight       = 1024;
+
+    std::uint32_t   m_RenderingWidth        = 0;
+    std::uint32_t   m_RenderingHeight       = 0;
 };
 
 class GraphicsManager final
@@ -70,9 +76,6 @@ public:
     ~GraphicsManager();
 
     inline Window*                      GetMainWindow() { return m_MainWindow; }
-
-    inline std::uint32_t                GetRenderingWidth() { return m_MainWindow->Width(); }
-    inline std::uint32_t                GetRenderingHeight() { return m_MainWindow->Height(); }
 
     inline VKW::Device*                 GetMainDevice() { return &m_Device; }
 
