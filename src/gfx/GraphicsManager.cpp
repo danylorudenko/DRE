@@ -8,11 +8,13 @@
 
 #include <gfx\pass\ForwardOpaquePass.hpp>
 #include <gfx\pass\WaterPass.hpp>
+#include <gfx\pass\FFTWaterPass.hpp>
 #include <gfx\pass\AntiAliasingPass.hpp>
 #include <gfx\pass\CausticPass.hpp>
 #include <gfx\pass\ColorEncodingPass.hpp>
 #include <gfx\pass\ImGuiRenderPass.hpp>
 #include <gfx\pass\ShadowPass.hpp>
+#include <gfx\pass\DebugPass.hpp>
 
 #include <engine\io\IOManager.hpp>
 #include <engine\scene\Scene.hpp>
@@ -69,9 +71,14 @@ void GraphicsManager::CreateAllPasses()
     m_RenderGraph.AddPass<ShadowPass>();
     m_RenderGraph.AddPass<CausticPass>();
     m_RenderGraph.AddPass<ForwardOpaquePass>();
+    m_RenderGraph.AddPass<FFTButterflyGenPass>();
+    m_RenderGraph.AddPass<FFTWaterH0GenPass>();
+    m_RenderGraph.AddPass<FFTWaterHxtGenPass>();
+    m_RenderGraph.AddPass<FFTWaterHeightGenPass>();
     m_RenderGraph.AddPass<WaterPass>();
     m_RenderGraph.AddPass<AntiAliasingPass>();
     m_RenderGraph.AddPass<ColorEncodingPass>();
+    //m_RenderGraph.AddPass<DebugPass>();
     m_RenderGraph.AddPass<ImGuiRenderPass>();
     m_RenderGraph.ParseGraph();
     m_RenderGraph.InitGraphResources();

@@ -26,6 +26,7 @@
 static constexpr std::uint32_t C_SHADOW_MAP_WIDTH = 2048;
 static constexpr std::uint32_t C_SHADOW_MAP_HEIGHT = 2048;
 static constexpr float C_SHADOW_MAP_WORLD_EXTENT = 20.0f;
+static constexpr std::uint32_t WATER_DIM = 256;
 
 namespace VKW
 {

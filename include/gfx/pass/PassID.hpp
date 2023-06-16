@@ -10,9 +10,15 @@ enum class PassID
     Shadow,
     Caustic,
     Water,
+    FFTButterflyGen,
+    FFTWaterH0Gen,
+    FFTWaterHxtGen,
+    FFTWaterHeightGen,
+    FFTWater,
     AntiAliasing,
     ImGuiRender,
     ColorEncoding,
+    Debug,
     MAX
 };
 

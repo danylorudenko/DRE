@@ -62,7 +62,7 @@ vec3 GenerateComplexWave(vec3 local_pos, vec2 dir, float t, float scale, float w
 
 void main()
 {
-	const float REF_INDEX = 0.57;
+	float REF_INDEX = GetGenericScalar();
 	
 	
 	vec2 wave_dir = normalize(vec2(0,1));

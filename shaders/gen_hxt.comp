@@ -1,0 +1,67 @@
+#version 450 core
+
+#extension GL_EXT_nonuniform_qualifier : enable
+#extension GL_GOOGLE_include_directive : enable
+
+#include "shaders_common.h"
+#include "shaders_defines.h"
+
+layout(set = 3, binding = 0, rg32f) uniform image2D timedSpectumTexture;
+layout(set = 3, binding = 1, rgba32f) uniform image2D spectrumTexture;
+
+layout(set = 3, binding = 2, std140) uniform Data
+{
+	vec4 N_winddir;
+	
+} data;
+
+struct complex
+{
+	float r;
+	float i;
+};
+
+complex add(complex lhs, complex rhs)
+{
+	return complex(lhs.r + rhs.r, lhs.i + rhs.i);
+}
+
+complex multiply(complex lhs, complex rhs)
+{
+	return complex(lhs.r * rhs.r - lhs.i * rhs.i, lhs.r * rhs.i + lhs.i * rhs.r);
+}
+
+complex conjugate(complex x)
+{
+	return complex(x.r, -x.i);
+}
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+void main()
+{
+    float N = data.N_winddir.x;
+	vec2 windDir = data.N_winddir.yz;
+	
+	ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
+	
+	vec2 k = ((vec2(coords) - N / 2) * 2 * PI) / N;
+	
+	vec4 spectrum = imageLoad(spectrumTexture, coords);
+	complex h0k = complex(spectrum.x, spectrum.y);
+	complex h0_minK = complex(spectrum.z, spectrum.w);
+	
+	complex hK = complex(spectrum.x, spectrum.y);
+	complex hMinusK = complex(spectrum.z, spectrum.w);
+	
+	float w = sqrt(9.8 * length(k));
+	float t = GetTimeS();
+	
+	
+	complex eiwt = complex(cos(w * t), sin(w * t));
+	complex e_minus_iwt = complex(cos(w * t), -sin(w * t));
+	
+	complex hkt = add(multiply(h0k, eiwt), multiply(h0_minK, e_minus_iwt));
+	
+	imageStore(timedSpectumTexture, coords, vec4(hkt.r, hkt.i, 0.0, 0.0));
+	
+}

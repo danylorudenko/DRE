@@ -14,6 +14,8 @@
 #define GetSamplerAnisotropic() g_GlobalSamplers[3]
 
 #define SampleTexture(textureObj, samplerObj, uv_coords) texture(sampler2D(textureObj, samplerObj), uv_coords)
+#define TexelFetchLvl(textureObj, pos, lvl) texelFetch(sampler2D(textureObj, GetSamplerNearest(), pos, lvl)
+#define TexelFetch(textureObj, pos) texelFetch(sampler2D(textureObj, GetSamplerNearest()), pos, 0)
 
 vec4 SampleGlobalTextureLinear(uint id, vec2 uv)
 {

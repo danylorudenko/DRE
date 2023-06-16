@@ -1,0 +1,62 @@
+#version 450 core
+
+#extension GL_EXT_nonuniform_qualifier : enable
+#extension GL_GOOGLE_include_directive : enable
+
+#include "shaders_common.h"
+#include "shaders_defines.h"
+
+layout(set = 3, binding = 0, rgba32f) uniform image2D spectrumTexture;
+
+layout(set = 3, binding = 1, std140) uniform Data
+{
+	vec4 N_winddir_noiseID;
+	
+} data;
+
+vec4 gaussRND(vec2 coords)
+{
+	float N = data.N_winddir_noiseID.x;
+	uint texID = floatBitsToUint(data.N_winddir_noiseID.w);
+	
+	vec4 noise = clamp(SampleGlobalTextureLinear(texID, coords / N), 0.001, 1.0);
+	
+	float u0 = 2.0 * PI * noise.x;
+	float v0 = sqrt(-2.0 * PI * log(noise.y));
+	float u1 = 2.0 * PI * noise.z;
+	float v1 = sqrt(-2.0 * PI * log(noise.w));
+	
+	return vec4(v0 * cos(u0), v0 * sin(u0), v1 * cos(u1), v1 * sin(u1));
+}
+
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+void main()
+{
+    float N = data.N_winddir_noiseID.x;
+	vec2 windDir = data.N_winddir_noiseID.yz;
+	
+	const float G = 9.8;
+	
+	ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
+	vec2 x = coords - vec2(N / 2, N / 2);
+	
+	
+	
+	vec2 k = (2 * PI * x) / N; // 2-dim vector K
+	float kLen = length(k);
+	float L = 100 / 9.8; // V^2 / g - wind speed squared
+	
+	float phyllips_spectrum_pos = exp(-1 / pow(kLen * L, 2)) / pow(kLen, 4) * pow(dot(normalize(windDir), normalize(k)), 2);
+	float phyllips_spectrum_neg = exp(-1 / pow(-kLen * L, 2)) / pow(kLen, 4) * pow(dot(normalize(windDir), normalize(k)), 2);
+	vec4 rnd = gaussRND(coords);
+	
+	vec2 hK 			= (rnd.xy * sqrt(phyllips_spectrum_pos)) / sqrt(2);
+	vec2 h_minusK_conj 	= (rnd.zw * sqrt(phyllips_spectrum_neg)) / sqrt(2);
+	
+	//vec2 hK 			= rnd.xy;
+	//vec2 h_minusK_conj 	= rnd.zw;
+	//h_minusK_conj.y 	= -h_minusK_conj.y;
+	
+	imageStore(spectrumTexture, coords, vec4(hK, h_minusK_conj));
+}

@@ -1,0 +1,64 @@
+#version 450 core
+
+#extension GL_EXT_nonuniform_qualifier : enable
+#extension GL_GOOGLE_include_directive : enable
+
+#include "shaders_common.h"
+#include "shaders_defines.h"
+
+layout(set = 3, binding = 0, rgba32f) uniform image2D butterflyImage;
+
+layout(set = 3, binding = 1, std140) uniform ButterflyData
+{
+	uvec4 n;
+	uint bit_reversed[256];
+} butterflyData;
+
+struct complex
+{
+	float r;
+	float i;
+};
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+void main()
+{
+    ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
+	uint N = butterflyData.n[0];
+	
+	int index = coords.y;
+	int stage = coords.x;
+	
+	
+	
+	float k = mod((index * N) / exp2(stage + 1), N);
+	complex twiddle = complex(cos(2.0 * PI * k / float(N)) , sin(2.0 * PI * k / float(N)));
+	int span = int(pow(2, stage));
+	
+	bool isTopOp = mod(index, exp2(stage + 1)) < exp2(stage);
+	
+	vec4 result = vec4(0,0,0,0);
+	
+	if(stage == 0)
+	{
+		if(isTopOp)
+		{
+			imageStore(butterflyImage, coords, vec4(twiddle.r, twiddle.i, butterflyData.bit_reversed[index], butterflyData.bit_reversed[index + 1]));
+		}
+		else
+		{
+			imageStore(butterflyImage, coords, vec4(twiddle.r, twiddle.i, butterflyData.bit_reversed[index - 1], butterflyData.bit_reversed[index]));
+		}
+	}
+	else
+	{
+		if(isTopOp)
+		{
+			imageStore(butterflyImage, coords, vec4(twiddle.r, twiddle.i, index, index + span));
+		}
+		else
+		{
+			imageStore(butterflyImage, coords, vec4(twiddle.r, twiddle.i, index - span, index));
+		}
+	}
+}

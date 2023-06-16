@@ -43,6 +43,22 @@ void TextureBank::LoadDefaultTextures()
     LoadTexture2DSync("one_r", 1, 1, VKW::FORMAT_R8_UNORM, oneBuffer);
 }
 
+struct Complex
+{
+    float r;
+    float i;
+
+    Complex operator+(Complex const& rhs)
+    {
+        return Complex{ rhs.r, rhs.i };
+    }
+
+    Complex operator*(Complex const& rhs)
+    {
+        return Complex{ r * rhs.r - i * rhs.i, r * rhs.i + rhs.r * i };
+    }
+};
+
 ReadOnlyTexture* TextureBank::LoadTexture2DSync(DRE::String128 const& name, std::uint32_t width, std::uint32_t height, VKW::Format format, DRE::ByteBuffer const& textureData)
 {
     UploadArena& transientArena = g_GraphicsManager->GetUploadArena();
@@ -76,6 +92,32 @@ ReadOnlyTexture* TextureBank::LoadTexture2DSync(DRE::String128 const& name, std:
     VKW::TextureDescriptorIndex descriptorHandle = m_DescriptorAllocator->AllocateTextureDescriptor(imageView);
 
     return &(m_DiscTextures[name] = ReadOnlyTexture{ g_GraphicsManager->GetMainDevice(), imageResource, imageView, descriptorHandle});
+}
+
+void TextureBank::GenFFTIndexTexture(std::uint32_t n)
+{
+    /*
+    DRE_ASSERT(DRE::IsPowOf2(n), "FFT sample count must be PowOf2!");
+
+    UploadArena& transientArena = g_GraphicsManager->GetUploadArena();
+    //auto allocation = transientArena.AllocateTransientRegion().
+
+    std::uint32_t const height = glm::log2(float(n));
+
+    for (std::uint32_t row = 0; row < height; row++)
+    {
+        for (std::uint32_t column = 0; column < n; column++)
+        {
+            std::uint32_t k = ((row * n) / (glm::pow(2, column + 1)));
+            k %= n;
+
+            bool topOp = glm::pow(2, column + 1) < glm::pow(2, column);
+
+
+        }
+    }
+
+    */
 }
 
 }

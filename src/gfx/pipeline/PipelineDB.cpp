@@ -38,6 +38,11 @@ void PipelineDB::CreateDefaultPipelines()
 
         CreateComputePipeline("color_encode");
         CreateComputePipeline("temporal_AA");
+        CreateComputePipeline("gen_butterfly");
+        CreateComputePipeline("gen_h0");
+        CreateComputePipeline("gen_hxt");
+        CreateComputePipeline("gen_water_height");
+        CreateComputePipeline("debug_view");
 
 
         VKW::Pipeline::Descriptor waterCausticDesc;

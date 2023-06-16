@@ -33,6 +33,9 @@ public:
     ReadOnlyTexture*    FindTexture         (DRE::String128 const& name);
 
 private:
+    void                GenFFTIndexTexture  (std::uint32_t n);
+
+private:
     VKW::ResourcesController* m_ResourcesController;
     VKW::DescriptorManager*   m_DescriptorAllocator;
     VKW::Context*             m_LoadingContext;
