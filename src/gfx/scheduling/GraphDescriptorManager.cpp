@@ -38,6 +38,13 @@ void GraphDescriptorManager::RegisterUniformBuffer(PassID pass, VKW::DescriptorS
     setInfo.uniformStage = stages;
 }
 
+void GraphDescriptorManager::RegisterPushConstant(PassID pass, std::uint32_t size, VKW::DescriptorStage stages)
+{
+    SetInfo& setInfo = m_DescriptorsInfo[pass];
+    setInfo.pushConstantStage = stages;
+    setInfo.pushConstantSize = size;
+}
+
 void GraphDescriptorManager::InitDescriptors()
 {
     m_PassDescriptors.Clear();
@@ -47,6 +54,9 @@ void GraphDescriptorManager::InitDescriptors()
     VKW::DescriptorManager* allocator = m_ParentDevice->GetDescriptorManager();
     m_DescriptorsInfo.ForEach([table, device, allocator, this](auto const& pair)
     {
+            //if (*pair.key == PassID::Debug)
+            //    DebugBreak();
+
         PerPassDescriptors& perPassDescriptors = m_PassDescriptors[*pair.key];
         SetInfo& setInfo = *pair.value;
 
@@ -107,6 +117,11 @@ void GraphDescriptorManager::InitDescriptors()
         VKW::PipelineLayout::Descriptor pipelinelayoutDesc;
         m_PipelineDB->AddGlobalLayouts(pipelinelayoutDesc);
         pipelinelayoutDesc.Add(perPassDescriptors.m_DescriptorLayout);
+        
+        if (setInfo.pushConstantSize != DRE_U32_MAX)
+        {
+            pipelinelayoutDesc.AddPushConstant(setInfo.pushConstantSize, setInfo.pushConstantStage);
+        }
 
         std::sprintf(name, "pass_layout_%i", int(*pair.key));
         perPassDescriptors.m_PipelineLayout = m_PipelineDB->CreatePipelineLayout(name, pipelinelayoutDesc);

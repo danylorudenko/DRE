@@ -31,6 +31,7 @@ public:
     void RegisterTexture        (PassID pass, TextureID id, VKW::ResourceAccess access, VKW::DescriptorStage stages, std::uint8_t binding);
     void RegisterBuffer         (PassID pass, BufferID id,  VKW::ResourceAccess access, VKW::DescriptorStage stages, std::uint8_t binding);
     void RegisterUniformBuffer  (PassID pass, VKW::DescriptorStage stages, std::uint8_t binding);
+    void RegisterPushConstant   (PassID pass, std::uint32_t size, VKW::DescriptorStage stages);
 
     void InitDescriptors();
 
@@ -67,6 +68,8 @@ private:
         DRE::InplaceVector<DescriptorInfo, VKW::CONSTANTS::MAX_SET_LAYOUT_MEMBERS> descriptorInfos;
         std::uint32_t           uniformBinding      = DRE_U32_MAX;
         VKW::DescriptorStage    uniformStage        = VKW::DESCRIPTOR_STAGE_NONE;
+        VKW::DescriptorStage    pushConstantStage   = VKW::DESCRIPTOR_STAGE_NONE;
+        std::uint32_t           pushConstantSize    = DRE_U32_MAX;
     };
 
     DRE::InplaceHashTable<PassID, SetInfo> m_DescriptorsInfo;

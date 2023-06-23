@@ -17,6 +17,16 @@ layout(location = 1) out vec4 out_prev_wpos;
 layout(location = 2) out vec2 out_uv;
 layout(location = 3) out mat3 out_TBN;
 
+layout(set = 3, binding = 0) uniform texture2D shadowMap;
+layout(set = 3, binding = 1) uniform texture2D forwardColorMap;
+layout(set = 3, binding = 2) uniform texture2D depthMap;
+layout(set = 3, binding = 3) uniform texture2D heightMap;
+layout(set = 3, binding = 4, std140) uniform PassUniform
+{
+    mat4  shadow_VP;
+    vec4  shadow_size;
+	vec4  isFFT;
+} passUniform;
 
 
 layout(set = 4, binding = 0, std140) uniform InstanceUniform
@@ -71,9 +81,30 @@ void main()
 	float speed = 0.5;
 	
 	int complexity = 2;
+	bool isFFT = passUniform.isFFT.x > 0.5;
 	
-	vec3 wave_pos = in_pos + GenerateComplexWave(in_pos, wave_dir, t, scale, wavelength, speed, complexity);
-	vec3 offset_wave_pos = offset_inpos + GenerateComplexWave(offset_inpos, wave_dir, t , scale, wavelength, speed, complexity);
+	vec3 wave_pos;
+	vec3 offset_wave_pos;
+	
+	if(isFFT)
+	{
+		vec2 uv = in_pos.xz / (256.0 * 3);
+		vec2 offset_uv = (in_pos.xz + wave_dir) / (256.0 * 3);
+		
+		float height = SampleTexture(heightMap, GetSamplerLinear(), uv).r;
+		float offset_height = SampleTexture(heightMap, GetSamplerLinear(), uv).r;
+		
+		wave_pos = in_pos;
+		wave_pos.y += height;
+		
+		offset_wave_pos = offset_inpos;
+		offset_wave_pos.y += offset_height;
+	}
+	else
+	{
+		wave_pos = in_pos + GenerateComplexWave(in_pos, wave_dir, t, scale, wavelength, speed, complexity);
+		offset_wave_pos = offset_inpos + GenerateComplexWave(offset_inpos, wave_dir, t , scale, wavelength, speed, complexity);
+	}
 	
 	vec3 tan = normalize(wave_pos - offset_wave_pos);
 	vec3 btan = -(vec3(-wave_dir.y, 0.0, wave_dir.x));

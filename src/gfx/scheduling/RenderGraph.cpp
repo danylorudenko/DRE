@@ -67,6 +67,11 @@ void RenderGraph::RegisterUniformBuffer(BasePass* pass, VKW::Stages stage, std::
     m_DescriptorManager.RegisterUniformBuffer(pass->GetID(), VKW::StageToDescriptorStage(stage), binding);
 }
 
+void RenderGraph::RegisterPushConstant(BasePass* pass, std::uint32_t size, VKW::Stages stage)
+{
+    m_DescriptorManager.RegisterPushConstant(pass->GetID(), size, VKW::StageToDescriptorStage(stage));
+}
+
 StorageTexture* RenderGraph::GetTexture(TextureID id)
 {
     return m_ResourcesManager.GetTexture(id);

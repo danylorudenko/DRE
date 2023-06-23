@@ -31,5 +31,13 @@ inline std::uint32_t BitReverse(std::uint32_t x)
     return((x >> 16) | (x << 16));
 }
 
+inline std::uint8_t BitReverse(std::uint8_t x)
+{
+    x = (x & 0xF0) >> 4 | (x & 0x0F) << 4;
+    x = (x & 0xCC) >> 2 | (x & 0x33) << 2;
+    x = (x & 0xAA) >> 1 | (x & 0x55) << 1;
+    return x;
+}
+
 DRE_END_NAMESPACE
 

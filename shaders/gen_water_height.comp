@@ -6,13 +6,12 @@
 #include "shaders_common.h"
 #include "shaders_defines.h"
 
-layout(set = 3, binding = 0, rg32f) uniform image2D spectrumTexture;
-layout(set = 3, binding = 1, rgba32f) uniform image2D butterflyTexture;
+layout(set = 3, binding = 0, rgba32f) uniform image2D butterflyTexture;
 
-layout(set = 3, binding = 2, rg32f) uniform image2D fftInput;
-layout(set = 3, binding = 3, rg32f) uniform image2D fftOutput;
+layout(set = 3, binding = 1, rg32f) uniform image2D fftInput;
+layout(set = 3, binding = 2, rg32f) uniform image2D fftOutput;
 
-layout(set = 3, binding = 4, std140) uniform Data
+layout(set = 3, binding = 3, std140) uniform Data
 {
 	vec4 isVertical_stage;
 	
@@ -49,9 +48,9 @@ void main()
 	
 	if(isVertical)
 	{
-		vec4 butterflyData = imageLoad(butterflyTexture, ivec2(stage, coords.y));
-		vec2 paramsCoords = butterflyData.xy;
-		complex w = complex(butterflyData.z, butterflyData.w);
+		vec4 butterflyData = imageLoad(butterflyTexture, ivec2(stage, coords.y)).zwxy;
+		vec2 paramsCoords = butterflyData.zw;
+		complex w = complex(butterflyData.x, butterflyData.y);
 		
 		vec2 inp1 = imageLoad(fftInput, ivec2(coords.x, paramsCoords.x)).xy;
 		vec2 inp0 = imageLoad(fftInput, ivec2(coords.x, paramsCoords.y)).xy;
@@ -62,12 +61,13 @@ void main()
 		complex result = add(G, multiply(w, H));
 		
 		imageStore(fftOutput, coords, vec4(result.r, result.i, 0.0, 0.0));
+		//imageStore(fftOutput, coords, vec4(0.5, 0, 0.0, 0.0));
 	}
 	else 
 	{
 		vec4 butterflyData = imageLoad(butterflyTexture, ivec2(stage, coords.x));
-		vec2 paramsCoords = butterflyData.xy;
-		complex w = complex(butterflyData.z, butterflyData.w);
+		vec2 paramsCoords = butterflyData.zw;
+		complex w = complex(butterflyData.x, butterflyData.y);
 		
 		vec2 inp0 = imageLoad(fftInput, ivec2(paramsCoords.x, coords.y)).xy;
 		vec2 inp1 = imageLoad(fftInput, ivec2(paramsCoords.y, coords.y)).xy;
@@ -78,6 +78,7 @@ void main()
 		complex result = add(G, multiply(w, H));
 		
 		imageStore(fftOutput, coords, vec4(result.r, result.i, 0.0, 0.0));
+		//imageStore(fftOutput, coords, vec4(0.5, 0, 0.0, 0.0));
 	}
 	
 }

@@ -42,6 +42,7 @@ void PipelineDB::CreateDefaultPipelines()
         CreateComputePipeline("gen_h0");
         CreateComputePipeline("gen_hxt");
         CreateComputePipeline("gen_water_height");
+        CreateComputePipeline("fft_inv_perm");
         CreateComputePipeline("debug_view");
 
 
@@ -295,15 +296,26 @@ DRE::String64 const* PipelineDB::CreatePipelineLayoutFromShader(char const* shad
     IO::IOManager::ShaderData const* fragShader = fragName != nullptr ? m_IOManager->GetShaderData(fragName) : nullptr;
     IO::IOManager::ShaderData const* compShader = compName != nullptr ? m_IOManager->GetShaderData(compName) : nullptr;
 
+    IO::IOManager::ShaderData const* pushConstantShader = nullptr;
+
     IO::IOManager::ShaderInterface shaderInterface;
-    if(vertShader != nullptr)
+    if (vertShader != nullptr)
+    {
         shaderInterface.Merge(vertShader->m_Interface);
+        pushConstantShader = vertShader->m_Interface.m_PushConstantPresent ? vertShader : nullptr;
+    }
 
-    if(fragShader != nullptr)
+    if (fragShader != nullptr)
+    {
         shaderInterface.Merge(fragShader->m_Interface);
+        pushConstantShader = fragShader->m_Interface.m_PushConstantPresent ? fragShader : nullptr;
+    }
 
-    if(compShader != nullptr)
+    if (compShader != nullptr)
+    {
         shaderInterface.Merge(compShader->m_Interface);
+        pushConstantShader = compShader->m_Interface.m_PushConstantPresent ? compShader : nullptr;
+    }
 
     shaderInterface.m_Members.SortBubble([](auto const& lhs, auto const& rhs) {
         return (lhs.set <= rhs.set);
@@ -349,6 +361,11 @@ DRE::String64 const* PipelineDB::CreatePipelineLayoutFromShader(char const* shad
     for (std::uint32_t i = 0, size = layouts.Size(); i < size; i++)
     {
         layoutDesc.Add(&layouts[i]);
+    }
+
+    if (pushConstantShader != nullptr)
+    {
+        layoutDesc.AddPushConstant(pushConstantShader->m_Interface.m_PushConstantSize, pushConstantShader->m_Interface.m_PushConstantStages);
     }
 
     DRE::String64 layoutName{ shaderName }; layoutName.Append("_layout");

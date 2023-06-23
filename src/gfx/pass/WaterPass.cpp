@@ -35,7 +35,12 @@ void WaterPass::RegisterResources(RenderGraph& graph)
         g_GraphicsManager->GetMainDepthFormat(), renderWidth, renderHeight,
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT, 2);
 
-    graph.RegisterUniformBuffer(this, VKW::STAGE_FRAGMENT, 3);
+    graph.RegisterTexture(this,
+        TextureID::WaterHeight,
+        VKW::FORMAT_R32_FLOAT, WATER_DIM, WATER_DIM,
+        VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_VERTEX, 3);
+
+    graph.RegisterUniformBuffer(this, VKW::STAGE_FRAGMENT, 4);
 
     graph.RegisterRenderTarget(this,
         TextureID::WaterColor,
@@ -81,6 +86,7 @@ void WaterPass::Render(RenderGraph& graph, VKW::Context& context)
     VKW::ImageResourceView* velocityAttachment = graph.GetTexture(TextureID::Velocity)->GetShaderView();
     VKW::ImageResourceView* depthAttachment = graph.GetTexture(TextureID::MainDepth)->GetShaderView();
     VKW::ImageResourceView* shadowMap       = graph.GetTexture(TextureID::ShadowMap)->GetShaderView();
+    VKW::ImageResourceView* heightMap       = graph.GetTexture(TextureID::WaterHeight)->GetShaderView();
     VKW::ImageResourceView* color           = graph.GetTexture(TextureID::ForwardColor)->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, waterAttachment->parentResource_, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
@@ -92,6 +98,7 @@ void WaterPass::Render(RenderGraph& graph, VKW::Context& context)
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, velocityAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_ALL_GRAPHICS); // but also used as depth readonly attachment
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, shadowMap->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, heightMap->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_VERTEX);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, color->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT);
 
     VKW::ImageResourceView* attachments[2] = { waterAttachment, velocityAttachment };
@@ -111,12 +118,14 @@ void WaterPass::Render(RenderGraph& graph, VKW::Context& context)
     {
         glm::mat4 const shadow_ViewProj = g_GraphicsManager->GetSunShadowRenderView().GetViewProjectionM();
         glm::vec4 const shadow_Size = glm::vec4{ C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, 0.0f, 0.0f };
+        glm::vec4 const useFFT = glm::vec4{ g_GraphicsManager->GetGraphicsSettings().m_UseFFTWater ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f };
 
-        std::uint32_t constexpr passUniformSize = sizeof(shadow_ViewProj) + sizeof(shadow_Size);
+        std::uint32_t constexpr passUniformSize = sizeof(shadow_ViewProj) + sizeof(shadow_Size) + sizeof(useFFT);
 
         UniformProxy passUniformProxy = graph.GetPassUniform(GetID(), context, passUniformSize);
         passUniformProxy.WriteMember140(shadow_ViewProj);
         passUniformProxy.WriteMember140(shadow_Size);
+        passUniformProxy.WriteMember140(useFFT);
     }
 
     VKW::DescriptorSet passSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());

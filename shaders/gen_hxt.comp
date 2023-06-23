@@ -62,6 +62,15 @@ void main()
 	
 	complex hkt = add(multiply(h0k, eiwt), multiply(h0_minK, e_minus_iwt));
 	
-	imageStore(timedSpectumTexture, coords, vec4(hkt.r, hkt.i, 0.0, 0.0));
+	//imageStore(timedSpectumTexture, coords, vec4(hkt.r, hkt.i, 0.0, 0.0));
+	if(coords.x == 0 && coords.y == 0)
+	{
+		imageStore(timedSpectumTexture, coords, vec4(1, 1, 1, 1) * 100);
+	}
+	else
+	{
+		imageStore(timedSpectumTexture, coords, vec4(0, 0, 0, 0));
+	}
+	//imageStore(timedSpectumTexture, coords, vec4(1.0, 0.0, 0.0, 0.0));
 	
 }

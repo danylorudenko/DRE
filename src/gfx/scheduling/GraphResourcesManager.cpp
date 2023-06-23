@@ -24,6 +24,9 @@ void GraphResourcesManager::RegisterTexture(TextureID id, VKW::Format format, st
 {
     AccumulatedInfo& info = m_AccumulatedTextureInfo[id];
 
+    //if (id == TextureID::FFTHxt)
+    //    DebugBreak();
+
     DRE_DEBUG_ONLY(if (info.access != VKW::RESOURCE_ACCESS_UNDEFINED))
         DRE_ASSERT(info.size0 == width && info.size1 == height && info.depth == 1, "Different sized specified for same resource");
 
@@ -81,6 +84,8 @@ void GraphResourcesManager::PrepareResources()
             imageAspect = VK_IMAGE_ASPECT_DEPTH_BIT;
         }
  
+        //if (*pair.key == TextureID::FFTHxt)
+        //    DebugBreak();
 
         VKW::ImageResource* image    = m_Device->GetResourcesController()->CreateImage(info.size0, info.size1, info.format, usage);
 

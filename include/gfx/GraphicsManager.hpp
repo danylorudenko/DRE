@@ -59,6 +59,7 @@ struct GraphicsSettings
     float           m_VarianceGammaTAA      = 1.0f;
     float           m_JitterScale           =0;//= 0.15f;
     bool            m_WaterWireframe        = false;
+    bool            m_UseFFTWater           = false;
     float           m_GenericScalar         = 1.0f;
 
     std::uint32_t   m_ShadowMapWidth        = 1024;

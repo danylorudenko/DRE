@@ -249,7 +249,7 @@ void VulkanApplicationDelegate::ImGuiUser()
         IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context. Refer to examples app!");
 
         ImGui::SetNextWindowContentSize(ImVec2{ 150.0f, 0.0f});
-        ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), ImGuiCond_Once);
+        ImGui::SetNextWindowPos(ImVec2(1100.0f, 0.0f), ImGuiCond_Once);
 
         ImGuiWindowFlags frameDataWindowFlags = 
             //ImGuiWindowFlags_NoMove | 
@@ -265,7 +265,7 @@ void VulkanApplicationDelegate::ImGuiUser()
         }
         ImGui::End();
 
-        ImGui::SetNextWindowPos(ImVec2(0.0f, 100.0f), ImGuiCond_Once);
+        ImGui::SetNextWindowPos(ImVec2(1100.0f, 100.0f), ImGuiCond_Once);
         ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiCond_Always);
 
         if (ImGui::Begin("Camera Controls", nullptr, ImGuiWindowFlags_NoResize))
@@ -330,6 +330,7 @@ void VulkanApplicationDelegate::ImGuiUser()
 
             ImGui::Checkbox("Rotate cam", &m_RotateCamera);
             ImGui::Checkbox("Water wireframe", &m_GraphicsManager.GetGraphicsSettings().m_WaterWireframe);
+            ImGui::Checkbox("FFT Water", &m_GraphicsManager.GetGraphicsSettings().m_UseFFTWater);
             ImGui::Checkbox("Use ACES", &m_GraphicsManager.GetGraphicsSettings().m_UseACESEncoding);
             ImGui::SliderFloat("Exposure target EV", &m_GraphicsManager.GetGraphicsSettings().m_ExposureEV, -3.0f, 5.0f);
 

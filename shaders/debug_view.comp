@@ -8,19 +8,43 @@
 
 layout (set=3, binding=0, rgba8) uniform image2D outputTexture;
 
-//layout (set=3, binding=1) uniform texture2D texture_h0k;
-//layout (set=3, binding=2) uniform texture2D texture_h0_minusK;
-layout (set=3, binding=1) uniform texture2D texture_hkt;
+layout (set=3, binding=1) uniform texture2D texture_h0;
+layout (set=3, binding=2) uniform texture2D texture_hkt;
+layout (set=3, binding=3) uniform texture2D texture_height;
+layout (set=3, binding=4) uniform texture2D texture_pingpong;
+
+//layout(push_constant) uniform PushConstant {
+//	float debug_iteration;
+//	float offset;
+//} constant;
 
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 void main()
 {
 	ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
-	vec2 uv = vec2(coords) / GetViewportSize();
+	vec2 uv = vec2(coords) / 256;
 	
-	vec4 value = SampleTexture(texture_hkt, GetSamplerLinear(), uv);
+	vec4 value;
+	value = SampleTexture(texture_pingpong, GetSamplerLinear(), uv);
+	ivec2 result_location;
 	
-	imageStore(outputTexture, coords, vec4(value.rgb, 1.0));
-	//imageStore(outputTexture, coords, vec4(1.0, 0.0, 1.0, 1.0));
+	if(coords.x > 255 * 3)
+	{
+		value = SampleTexture(texture_h0, GetSamplerLinear(), uv);
+	}
+	else if(coords.x > 255 * 2)
+	{
+		value = SampleTexture(texture_hkt, GetSamplerLinear(), uv);
+	}
+	else if(coords.x > 255)
+	{
+		value = SampleTexture(texture_pingpong, GetSamplerLinear(), uv);
+	}
+	else if(coords.x < 255)
+	{
+		value = SampleTexture(texture_height, GetSamplerNearest(), uv);
+	}
+	
+	imageStore(outputTexture, coords, value);
 	
 }

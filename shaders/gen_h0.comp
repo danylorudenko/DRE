@@ -47,8 +47,8 @@ void main()
 	float kLen = length(k);
 	float L = 100 / 9.8; // V^2 / g - wind speed squared
 	
-	float phyllips_spectrum_pos = exp(-1 / pow(kLen * L, 2)) / pow(kLen, 4) * pow(dot(normalize(windDir), normalize(k)), 2);
-	float phyllips_spectrum_neg = exp(-1 / pow(-kLen * L, 2)) / pow(kLen, 4) * pow(dot(normalize(windDir), normalize(k)), 2);
+	float phyllips_spectrum_pos = exp(-1 / pow(kLen * L, 2)) / pow(kLen, 4);// * pow(dot(normalize(windDir), normalize(k)), 4);
+	float phyllips_spectrum_neg = exp(-1 / pow(-kLen * L, 2)) / pow(-kLen, 4);// * pow(dot(normalize(windDir), normalize(k)), 4);
 	vec4 rnd = gaussRND(coords);
 	
 	vec2 hK 			= (rnd.xy * sqrt(phyllips_spectrum_pos)) / sqrt(2);
@@ -59,4 +59,6 @@ void main()
 	//h_minusK_conj.y 	= -h_minusK_conj.y;
 	
 	imageStore(spectrumTexture, coords, vec4(hK, h_minusK_conj));
+	//imageStore(spectrumTexture, coords, vec4(0.1, 0.1, 0.0, 0.0));
+	//imageStore(spectrumTexture, coords, vec4(h_minusK_conj, hK));
 }

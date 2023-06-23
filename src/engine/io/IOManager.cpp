@@ -524,8 +524,10 @@ void ParseShaderInterface(spirv_cross::Compiler& compiler, IOManager::ShaderInte
     if (!resources.push_constant_buffers.empty())
     {
         spirv_cross::Resource const& res = resources.push_constant_buffers[0];
-        resultInterface.m_PushBufferBinding = compiler.get_decoration(res.id, spv::DecorationBinding);
-        resultInterface.m_PushBufferPresent = 1;
+        const spirv_cross::SPIRType& type = compiler.get_type(res.base_type_id);
+        resultInterface.m_PushConstantSize = compiler.get_declared_struct_size(type);
+        resultInterface.m_PushConstantPresent = 1;
+        resultInterface.m_PushConstantStages = SPVExecutionModelToVKWStage(compiler.get_execution_model());
     }
 }
 

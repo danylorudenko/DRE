@@ -11,7 +11,7 @@ layout(set = 3, binding = 0, rgba32f) uniform image2D butterflyImage;
 layout(set = 3, binding = 1, std140) uniform ButterflyData
 {
 	uvec4 n;
-	uint bit_reversed[256];
+	uvec4 bit_reversed[256 / 4];
 } butterflyData;
 
 struct complex
@@ -19,6 +19,11 @@ struct complex
 	float r;
 	float i;
 };
+
+uint GetBitReversedID(int i)
+{
+	return butterflyData.bit_reversed[i / 4][int(mod(i, 4))];
+}
 
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 void main()
@@ -37,17 +42,15 @@ void main()
 	
 	bool isTopOp = mod(index, exp2(stage + 1)) < exp2(stage);
 	
-	vec4 result = vec4(0,0,0,0);
-	
 	if(stage == 0)
 	{
 		if(isTopOp)
 		{
-			imageStore(butterflyImage, coords, vec4(twiddle.r, twiddle.i, butterflyData.bit_reversed[index], butterflyData.bit_reversed[index + 1]));
+			imageStore(butterflyImage, coords, vec4(twiddle.r, twiddle.i, GetBitReversedID(index), GetBitReversedID(index + 1)));
 		}
 		else
 		{
-			imageStore(butterflyImage, coords, vec4(twiddle.r, twiddle.i, butterflyData.bit_reversed[index - 1], butterflyData.bit_reversed[index]));
+			imageStore(butterflyImage, coords, vec4(twiddle.r, twiddle.i, GetBitReversedID(index - 1), GetBitReversedID(index)));
 		}
 	}
 	else

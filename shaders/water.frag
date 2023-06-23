@@ -19,7 +19,8 @@ layout(location = 1) out vec2 velocity;
 layout(set = 3, binding = 0) uniform texture2D shadowMap;
 layout(set = 3, binding = 1) uniform texture2D forwardColorMap;
 layout(set = 3, binding = 2) uniform texture2D depthMap;
-layout(set = 3, binding = 3, std140) uniform PassUniform
+layout(set = 3, binding = 3) uniform texture2D heightMap;
+layout(set = 3, binding = 4, std140) uniform PassUniform
 {
     mat4  shadow_VP;
     vec4  shadow_size;

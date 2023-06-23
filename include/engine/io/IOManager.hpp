@@ -64,9 +64,10 @@ public:
             bool operator!=(Member const& rhs) const;
         };
 
-        DRE::InplaceVector<Member, 9> m_Members;
-        std::uint8_t m_PushBufferBinding : 7;
-        std::uint8_t m_PushBufferPresent : 1;
+        DRE::InplaceVector<Member, 16> m_Members;
+        std::uint8_t m_PushConstantSize     : 7;
+        std::uint8_t m_PushConstantPresent  : 1;
+        VKW::DescriptorStage m_PushConstantStages = VKW::DESCRIPTOR_STAGE_NONE;
 
         void Merge(ShaderInterface const& rhs);
     };
