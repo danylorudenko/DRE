@@ -27,10 +27,10 @@ void DebugPass::RegisterResources(RenderGraph& graph)
         VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE,
         0);
 
-    graph.RegisterTexture(this, TextureID::FFTH0, VKW::FORMAT_R32G32B32A32_FLOAT, WATER_DIM, WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 1);
-    graph.RegisterTexture(this, TextureID::FFTHxt, VKW::FORMAT_R32G32_FLOAT, WATER_DIM, WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 2);
-    graph.RegisterTexture(this, TextureID::WaterHeight, VKW::FORMAT_R32_FLOAT, WATER_DIM, WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 3);
-    graph.RegisterTexture(this, TextureID::FFTPingPong0, VKW::FORMAT_R32G32_FLOAT, WATER_DIM, WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 4);
+    graph.RegisterTexture(this, TextureID::FFTH0, VKW::FORMAT_R32G32B32A32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 1);
+    graph.RegisterTexture(this, TextureID::FFTHxt, VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 2);
+    graph.RegisterTexture(this, TextureID::WaterHeight, VKW::FORMAT_R32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 3);
+    graph.RegisterTexture(this, TextureID::FFTPingPong0, VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 4);
 
     //graph.RegisterPushConstant(this, 8, VKW::STAGE_COMPUTE);
 }
@@ -60,7 +60,7 @@ void DebugPass::Render(RenderGraph& graph, VKW::Context& context)
     context.CmdBindComputeDescriptorSets(pipeline->GetLayout(), firstSet, 1, &set);
     context.CmdBindComputePipeline(pipeline);
 
-    glm::uvec2 imageSize{ WATER_DIM, WATER_DIM };
+    glm::uvec2 imageSize{ C_WATER_DIM, C_WATER_DIM };
     glm::uvec2 const groupSize{ 8, 8 };
     glm::uvec2 const dispatchSize = imageSize / groupSize;
 

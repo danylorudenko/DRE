@@ -9,15 +9,12 @@
 layout(set = 3, binding = 0, rgba32f) uniform image2D spectrumTexture;
 
 layout(set = 3, binding = 1, std140) uniform Data
-{
-	vec4 N_winddir_noiseID;
-	
-} data;
+#include "fft_water_uniform.h"
 
 vec4 gaussRND(vec2 coords)
 {
-	float N = data.N_winddir_noiseID.x;
-	uint texID = floatBitsToUint(data.N_winddir_noiseID.w);
+	float N = GetFFTSize();
+	uint texID = floatBitsToUint(GetNoiseTextureID());
 	
 	vec4 noise = clamp(SampleGlobalTextureLinear(texID, coords / N), 0.001, 1.0);
 	
@@ -33,8 +30,8 @@ vec4 gaussRND(vec2 coords)
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 void main()
 {
-    float N = data.N_winddir_noiseID.x;
-	vec2 windDir = data.N_winddir_noiseID.yz;
+    float N = GetFFTSize();
+	vec2 windDir = GetWindDir();
 	
 	const float G = 9.8;
 	
@@ -57,5 +54,5 @@ void main()
 	//vec2 hK 			= (sqrt(phyllips_spectrum_pos)).xx;
 	//vec2 h_minusK_conj 	= (sqrt(phyllips_spectrum_neg)).xx;
 	
-	imageStore(spectrumTexture, coords, vec4(hK, h_minusK_conj) * 100);
+	imageStore(spectrumTexture, coords, vec4(hK, h_minusK_conj) * 30);
 }

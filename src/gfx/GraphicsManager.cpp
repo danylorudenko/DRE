@@ -79,7 +79,7 @@ void GraphicsManager::CreateAllPasses()
     m_RenderGraph.AddPass<WaterPass>();
     m_RenderGraph.AddPass<AntiAliasingPass>();
     m_RenderGraph.AddPass<ColorEncodingPass>();
-    m_RenderGraph.AddPass<DebugPass>();
+    //m_RenderGraph.AddPass<DebugPass>();
     m_RenderGraph.AddPass<ImGuiRenderPass>();
     m_RenderGraph.ParseGraph();
     m_RenderGraph.InitGraphResources();

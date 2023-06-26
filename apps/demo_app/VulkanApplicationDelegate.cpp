@@ -135,7 +135,7 @@ void VulkanApplicationDelegate::start()
     ////////////
     DRE::ByteBuffer planeVertices;
     DRE::ByteBuffer planeIndicies;
-    GeneratePlaneMesh(100, 200, planeVertices, planeIndicies);
+    GeneratePlaneMesh(C_WATER_VERTEX_X, C_WATER_VERTEX_Z, planeVertices, planeIndicies);
 
     m_WaterGeometry.SetVertexData(DRE_MOVE(planeVertices));
     m_WaterGeometry.SetIndexData(DRE_MOVE(planeIndicies));
@@ -329,8 +329,21 @@ void VulkanApplicationDelegate::ImGuiUser()
 
 
             ImGui::Checkbox("Rotate cam", &m_RotateCamera);
-            ImGui::Checkbox("Water wireframe", &m_GraphicsManager.GetGraphicsSettings().m_WaterWireframe);
-            ImGui::Checkbox("FFT Water", &m_GraphicsManager.GetGraphicsSettings().m_UseFFTWater);
+            if (ImGui::BeginCombo("Water settings", nullptr, ImGuiComboFlags_None))
+            {
+                /*
+    float           m_WaterSpeed            = 1.0f;
+    float           m_WaterSizeMeters       = 10.0f;
+    float           m_WindDirectionX        = 0.0f;
+    float           m_WindSpeed             = 1.0f;*/
+                ImGui::Checkbox("Water wireframe", &m_GraphicsManager.GetGraphicsSettings().m_WaterWireframe);
+                ImGui::Checkbox("FFT Water", &m_GraphicsManager.GetGraphicsSettings().m_UseFFTWater);
+                ImGui::SliderFloat("Water speed", &m_GraphicsManager.GetGraphicsSettings().m_WaterSpeed, 0.0f, 3.0f);
+                ImGui::SliderFloat("Water size meters", &m_GraphicsManager.GetGraphicsSettings().m_WaterSizeMeters, 1.0f, 100.0f);
+                ImGui::SliderFloat("Water wind dir X", &m_GraphicsManager.GetGraphicsSettings().m_WindDirectionX, -1.0f, 1.0f);
+                ImGui::SliderFloat("Water wind speed", &m_GraphicsManager.GetGraphicsSettings().m_WindSpeed, 0.0f, 100.0f);
+                ImGui::EndCombo();
+            }
             ImGui::Checkbox("Use ACES", &m_GraphicsManager.GetGraphicsSettings().m_UseACESEncoding);
             ImGui::SliderFloat("Exposure target EV", &m_GraphicsManager.GetGraphicsSettings().m_ExposureEV, -3.0f, 5.0f);
 
@@ -350,6 +363,10 @@ void VulkanApplicationDelegate::ImGuiUser()
             ImGui::SliderFloat("TAA Jitter Scale", &m_GraphicsManager.GetGraphicsSettings().m_JitterScale, 0.0f, 2.0f);
             ImGui::SliderFloat("TAA Variance Gamma", &m_GraphicsManager.GetGraphicsSettings().m_VarianceGammaTAA, 0.0f, 5.0f);
             ImGui::Checkbox("Pause time", &m_PauseTime);
+            if(ImGui::Button("Reset global time"))
+            {
+                m_GlobalStopwatch.Reset();
+            }
             ImGui::SliderFloat("Time offset", &m_TimeOffset, -10.0f, 10.0);
             ImGui::SliderFloat("Generic Scalar", &m_GraphicsManager.GetGraphicsSettings().m_GenericScalar, -2.0f, 2.0f);
 

@@ -10,22 +10,19 @@ layout(set = 3, binding = 0, rg32f) uniform image2D fftIntermediate;
 layout(set = 3, binding = 1, r32f) uniform image2D heightMap;
 
 layout(set = 3, binding = 2, std140) uniform Data
-{
-	vec4 N;
-	
-} data;
+#include "fft_water_uniform.h"
 
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 void main()
 {
-    float N = data.N.x;
+    float N = GetFFTSize();
 	
 	ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
 	
 	float perms[] = { 1.0, -1.0 };
 	int index = int(mod(int(coords.x + coords.y), 2));
-	//float perm = perms[index];
-	float perm = perms[0];
+	float perm = perms[index];
+	//float perm = perms[0];
 	
 	float h = imageLoad(fftIntermediate, coords).r;
 	imageStore(heightMap, coords, vec4(perm * (h/ (N*N)), 0.0, 0.0, 0.0));

@@ -23,10 +23,12 @@
 #include <engine\data\Geometry.hpp>
 #include <engine\data\Material.hpp>
 
-static constexpr std::uint32_t C_SHADOW_MAP_WIDTH = 2048;
-static constexpr std::uint32_t C_SHADOW_MAP_HEIGHT = 2048;
-static constexpr float C_SHADOW_MAP_WORLD_EXTENT = 20.0f;
-static constexpr std::uint32_t WATER_DIM = 256;
+constexpr std::uint32_t C_SHADOW_MAP_WIDTH = 2048;
+constexpr std::uint32_t C_SHADOW_MAP_HEIGHT = 2048;
+constexpr float C_SHADOW_MAP_WORLD_EXTENT = 20.0f;
+constexpr std::uint32_t C_WATER_DIM = 256;
+constexpr std::uint32_t C_WATER_VERTEX_X = 100;
+constexpr std::uint32_t C_WATER_VERTEX_Z = 200;
 
 namespace VKW
 {
@@ -59,7 +61,11 @@ struct GraphicsSettings
     float           m_VarianceGammaTAA      = 1.0f;
     float           m_JitterScale           =0;//= 0.15f;
     bool            m_WaterWireframe        = false;
-    bool            m_UseFFTWater           = false;
+    bool            m_UseFFTWater           = true;
+    float           m_WaterSpeed            = 1.0f;
+    float           m_WaterSizeMeters       = 10.0f;
+    float           m_WindDirectionX        = 0.0f;
+    float           m_WindSpeed             = 1.0f;
     float           m_GenericScalar         = 1.0f;
 
     std::uint32_t   m_ShadowMapWidth        = 1024;

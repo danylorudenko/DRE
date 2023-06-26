@@ -25,8 +25,10 @@ layout(set = 3, binding = 4, std140) uniform PassUniform
 {
     mat4  shadow_VP;
     vec4  shadow_size;
-	vec4  isFFT;
+	vec4  isFFT_XZ;
 } passUniform;
+
+vec2 GetWaterVertexDims() { return passUniform.isFFT_XZ.yz; }
 
 
 layout(set = 4, binding = 0, std140) uniform InstanceUniform
@@ -66,6 +68,10 @@ vec3 GenerateComplexWave(vec3 local_pos, vec2 dir, float t, float scale, float w
 	
 }
 
+vec2 CalculateWaterHeightUV(in vec3 local_pos)
+{
+	return (local_pos.xz + (GetWaterVertexDims() / 2)) / GetWaterVertexDims();
+}
 
 void main()
 {
@@ -81,19 +87,19 @@ void main()
 	float speed = 0.5;
 	
 	int complexity = 2;
-	bool isFFT = passUniform.isFFT.x > 0.5;
+	bool isFFT = passUniform.isFFT_XZ.x > 0.5;
 	
 	vec3 wave_pos;
 	vec3 offset_wave_pos;
 	
+	vec2 custom_uv = CalculateWaterHeightUV(in_pos);
+	
 	if(isFFT)
 	{
 		//float uv_scalar = 1 / (256.0 * 10);
+		vec2 offset_uv = CalculateWaterHeightUV(offset_inpos);
 		
-		vec2 uv = in_uv;
-		vec2 offset_uv = uv + wave_dir * 0.001;
-		
-		float height = SampleTexture(heightMap, GetSamplerLinear(), uv).r;
+		float height = SampleTexture(heightMap, GetSamplerLinear(), custom_uv).r;
 		float offset_height = SampleTexture(heightMap, GetSamplerLinear(), offset_uv).r;
 		
 		wave_pos = in_pos;
@@ -120,6 +126,6 @@ void main()
     gl_Position = ndc_pos;
 	out_prev_wpos = instanceUniform.prev_model_mat * vec4(wave_pos, 1.0);
 	
-	out_uv = in_uv;
+	out_uv = custom_uv;
 	out_TBN = mat3(tan, btan, norm);
 }

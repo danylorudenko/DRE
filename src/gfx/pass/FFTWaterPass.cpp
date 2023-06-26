@@ -14,6 +14,25 @@ namespace GFX
 
 static glm::vec2 WIND_DIR = glm::vec2{ 1.0f, 1.0f };
 
+static std::uint32_t constexpr WATER_UNIFORM_SIZE = sizeof(glm::vec4) * 2;
+
+void FillWaterUniform(UniformProxy& uniform, ReadOnlyTexture const& noiseTexture)
+{
+    GraphicsSettings const& s = g_GraphicsManager->GetGraphicsSettings();
+
+    WIND_DIR[0] = s.m_WindDirectionX;
+    WIND_DIR = glm::normalize(WIND_DIR);
+
+    VKW::TextureDescriptorIndex id = noiseTexture.GetShaderReadDescriptor();
+    float noiseTexID = *reinterpret_cast<float*>(&id.id_);
+
+    glm::vec4 _0{ C_WATER_DIM, WIND_DIR[0], WIND_DIR[1], noiseTexID };
+    glm::vec4 _1{ s.m_WindSpeed, s.m_WaterSpeed, s.m_WaterSizeMeters, 0.0f };
+
+    uniform.WriteMember140(_0);
+    uniform.WriteMember140(_1);
+}
+
 PassID GFX::FFTButterflyGenPass::GetID() const
 {
     return PassID::FFTButterflyGen;
@@ -21,8 +40,8 @@ PassID GFX::FFTButterflyGenPass::GetID() const
 
 void FFTButterflyGenPass::RegisterResources(RenderGraph& graph)
 {
-    std::uint32_t stagesCount = std::uint32_t(glm::log2(float(WATER_DIM)));
-    graph.RegisterTexture(this, TextureID::FFTButterfly, VKW::FORMAT_R32G32B32A32_FLOAT, stagesCount, WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 0);
+    std::uint32_t stagesCount = std::uint32_t(glm::log2(float(C_WATER_DIM)));
+    graph.RegisterTexture(this, TextureID::FFTButterfly, VKW::FORMAT_R32G32B32A32_FLOAT, stagesCount, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 0);
     graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 1);
 }
 
@@ -33,20 +52,20 @@ void FFTButterflyGenPass::Initialize(RenderGraph& graph)
 
 void FFTButterflyGenPass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    DRE_ASSERT(WATER_DIM <= 256, "Can't do dimentions more that 256 (for now)");
+    DRE_ASSERT(C_WATER_DIM <= 256, "Can't do dimentions more that 256 (for now)");
 
-    std::uint32_t* bit_reversed = (std::uint32_t*)DRE::g_FrameScratchAllocator.Alloc(WATER_DIM * sizeof(std::uint32_t), alignof(std::uint32_t));
-    for (std::uint32_t i = 0; i < WATER_DIM; i++)
+    std::uint32_t* bit_reversed = (std::uint32_t*)DRE::g_FrameScratchAllocator.Alloc(C_WATER_DIM * sizeof(std::uint32_t), alignof(std::uint32_t));
+    for (std::uint32_t i = 0; i < C_WATER_DIM; i++)
     {
         bit_reversed[i] = DRE::BitReverse(static_cast<std::uint8_t>(i));
     }
 
 
-    std::uint32_t const uniformSize = sizeof(glm::uvec4) + sizeof(std::uint32_t) * WATER_DIM;
+    std::uint32_t const uniformSize = sizeof(glm::uvec4) + sizeof(std::uint32_t) * C_WATER_DIM;
 
     UniformProxy uniform = graph.GetPassUniform(GetID(), context, uniformSize);
-    uniform.WriteMember140(glm::ivec4{ WATER_DIM, 0, 0, 0 });
-    uniform.WriteMember140(bit_reversed, WATER_DIM * sizeof(*bit_reversed));
+    uniform.WriteMember140(glm::ivec4{ C_WATER_DIM, 0, 0, 0 });
+    uniform.WriteMember140(bit_reversed, C_WATER_DIM * sizeof(*bit_reversed));
 
     VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("gen_butterfly");
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
@@ -59,10 +78,10 @@ void FFTButterflyGenPass::Render(RenderGraph& graph, VKW::Context& context)
     VKW::DescriptorSet set = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
     context.CmdBindComputeDescriptorSets(layout, firstSet, 1, &set);
     
-    std::uint32_t stagesCount = std::uint32_t(glm::log2(float(WATER_DIM)));
+    std::uint32_t stagesCount = std::uint32_t(glm::log2(float(C_WATER_DIM)));
     std::uint32_t group_dims[2] = { 8, 8 };
     context.CmdBindComputePipeline(pipeline);
-    context.CmdDispatch(std::max(stagesCount / group_dims[0], 1u), WATER_DIM / group_dims[1], 1);
+    context.CmdDispatch(std::max(stagesCount / group_dims[0], 1u), C_WATER_DIM / group_dims[1], 1);
 }
 
 
@@ -77,7 +96,7 @@ PassID GFX::FFTWaterH0GenPass::GetID() const
 
 void FFTWaterH0GenPass::RegisterResources(RenderGraph& graph)
 {
-    graph.RegisterTexture(this, TextureID::FFTH0, VKW::FORMAT_R32G32B32A32_FLOAT, WATER_DIM, WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 0);
+    graph.RegisterTexture(this, TextureID::FFTH0, VKW::FORMAT_R32G32B32A32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 0);
     graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 1);
 }
 
@@ -87,13 +106,8 @@ void FFTWaterH0GenPass::Initialize(RenderGraph& graph)
 
 void FFTWaterH0GenPass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    std::uint32_t const uniformSize = sizeof(glm::uvec4);
-    
-    VKW::TextureDescriptorIndex noiseTexture = g_GraphicsManager->GetTextureBank().FindTexture("blue_noise_256")->GetShaderReadDescriptor();
-    float noiseTexID = *reinterpret_cast<float*>(&noiseTexture.id_);
-
-    UniformProxy uniform = graph.GetPassUniform(GetID(), context, uniformSize);
-    uniform.WriteMember140(glm::vec4{ static_cast<float>(WATER_DIM), WIND_DIR[0], WIND_DIR[1], noiseTexID });
+    UniformProxy uniform = graph.GetPassUniform(GetID(), context, WATER_UNIFORM_SIZE);
+    FillWaterUniform(uniform, *g_GraphicsManager->GetTextureBank().FindTexture("blue_noise_256"));
 
     VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("gen_h0");
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
@@ -108,7 +122,7 @@ void FFTWaterH0GenPass::Render(RenderGraph& graph, VKW::Context& context)
     
     std::uint32_t group_dims[2] = { 8, 8 };
     context.CmdBindComputePipeline(pipeline);
-    context.CmdDispatch(WATER_DIM / group_dims[0], WATER_DIM / group_dims[1], 1);
+    context.CmdDispatch(C_WATER_DIM / group_dims[0], C_WATER_DIM / group_dims[1], 1);
 }
 
 
@@ -123,8 +137,8 @@ PassID GFX::FFTWaterHxtGenPass::GetID() const
 
 void FFTWaterHxtGenPass::RegisterResources(RenderGraph& graph)
 {
-    graph.RegisterTexture(this, TextureID::FFTHxt, VKW::FORMAT_R32G32_FLOAT, WATER_DIM, WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 0);
-    graph.RegisterTexture(this, TextureID::FFTH0, VKW::FORMAT_R32G32B32A32_FLOAT, WATER_DIM, WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE, 1);
+    graph.RegisterTexture(this, TextureID::FFTHxt, VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 0);
+    graph.RegisterTexture(this, TextureID::FFTH0, VKW::FORMAT_R32G32B32A32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE, 1);
 
     graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 2);
 }
@@ -135,10 +149,8 @@ void FFTWaterHxtGenPass::Initialize(RenderGraph& graph)
 
 void FFTWaterHxtGenPass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    std::uint32_t const uniformSize = sizeof(glm::uvec4);
-
-    UniformProxy uniform = graph.GetPassUniform(GetID(), context, uniformSize);
-    uniform.WriteMember140(glm::vec4{static_cast<float>(WATER_DIM), WIND_DIR[0], WIND_DIR[1], 0 });
+    UniformProxy uniform = graph.GetPassUniform(GetID(), context, WATER_UNIFORM_SIZE);
+    FillWaterUniform(uniform, *g_GraphicsManager->GetTextureBank().FindTexture("blue_noise_256"));
 
     VKW::ImageResourceView* fftHxt = graph.GetTexture(TextureID::FFTHxt)->GetShaderView();
     VKW::ImageResourceView* fftH0 = graph.GetTexture(TextureID::FFTH0)->GetShaderView();
@@ -155,7 +167,7 @@ void FFTWaterHxtGenPass::Render(RenderGraph& graph, VKW::Context& context)
 
     std::uint32_t group_dims[2] = { 8, 8 };
     context.CmdBindComputePipeline(pipeline);
-    context.CmdDispatch(WATER_DIM / group_dims[0], WATER_DIM / group_dims[1], 1);
+    context.CmdDispatch(C_WATER_DIM / group_dims[0], C_WATER_DIM / group_dims[1], 1);
 }
 
 
@@ -170,24 +182,24 @@ PassID GFX::FFTWaterHeightGenPass::GetID() const
 
 void FFTWaterHeightGenPass::RegisterResources(RenderGraph& graph)
 {
-    std::uint32_t stagesCount = std::uint32_t(glm::log2(float(WATER_DIM)));
+    std::uint32_t stagesCount = std::uint32_t(glm::log2(float(C_WATER_DIM)));
 
-    graph.RegisterTexture(this, TextureID::FFTButterfly, VKW::FORMAT_R32G32B32A32_FLOAT, stagesCount, WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE, 0);
+    graph.RegisterTexture(this, TextureID::FFTButterfly, VKW::FORMAT_R32G32B32A32_FLOAT, stagesCount, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE, 0);
 
     graph.RegisterTextureSlot(this, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE, 1);
     graph.RegisterTextureSlot(this, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 2);
 
     graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 3);
 
-    graph.RegisterStandaloneTexture(TextureID::FFTPingPong0, VKW::FORMAT_R32G32_FLOAT, WATER_DIM, WATER_DIM, VKW::ResourceAccess(VKW::RESOURCE_ACCESS_SHADER_RW));
-    graph.RegisterStandaloneTexture(TextureID::FFTPingPong1, VKW::FORMAT_R32G32_FLOAT, WATER_DIM, WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_RW);
+    graph.RegisterStandaloneTexture(TextureID::FFTPingPong0, VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::ResourceAccess(VKW::RESOURCE_ACCESS_SHADER_RW));
+    graph.RegisterStandaloneTexture(TextureID::FFTPingPong1, VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_RW);
 }
 
 void FFTWaterHeightGenPass::Initialize(RenderGraph& graph)
 {
     VKW::DescriptorManager* manager = g_GraphicsManager->GetMainDevice()->GetDescriptorManager();
     VKW::DescriptorSetLayout const* layout = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID()).GetLayout();
-    std::uint32_t stagesCount = std::uint32_t(glm::log2(float(WATER_DIM)));
+    std::uint32_t stagesCount = std::uint32_t(glm::log2(float(C_WATER_DIM)));
     for (std::uint32_t i = 0; i < stagesCount * 2; i++)
     {
         m_StageSets0.EmplaceBack(manager->AllocateStandaloneSet(*layout));
@@ -216,14 +228,14 @@ void FFTWaterHeightGenPass::Render(RenderGraph& graph, VKW::Context& context)
 
     VKW::DescriptorManager* manager = g_GraphicsManager->GetMainDevice()->GetDescriptorManager();
 
-    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("gen_water_height");
+    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("fft_iter");
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
 
     std::uint32_t const firstSet = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();
 
     auto& setVector = g_GraphicsManager->GetCurrentGraphicsFrame() % 2 == 0 ? m_StageSets0 : m_StageSets1;
 
-    std::uint32_t stagesCount = std::uint32_t(glm::log2(float(WATER_DIM)));
+    std::uint32_t stagesCount = std::uint32_t(glm::log2(float(C_WATER_DIM)));
 
     context.CmdBindComputePipeline(pipeline);
 
@@ -255,7 +267,7 @@ void FFTWaterHeightGenPass::Render(RenderGraph& graph, VKW::Context& context)
             g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, input->parentResource_, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE);
             g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, output->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
 
-            context.CmdDispatch(WATER_DIM / 8, WATER_DIM / 8, 1);
+            context.CmdDispatch(C_WATER_DIM / 8, C_WATER_DIM / 8, 1);
 
             DRE_SWAP(input, output);
         }
@@ -275,8 +287,8 @@ PassID GFX::FFTInvPermutationPass::GetID() const
 
 void FFTInvPermutationPass::RegisterResources(RenderGraph& graph)
 {
-    graph.RegisterTexture(this, TextureID::FFTPingPong0, VKW::FORMAT_R32G32_FLOAT, WATER_DIM, WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 0);
-    graph.RegisterTexture(this, TextureID::WaterHeight, VKW::FORMAT_R32_FLOAT, WATER_DIM, WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE, 1);
+    graph.RegisterTexture(this, TextureID::FFTPingPong0, VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 0);
+    graph.RegisterTexture(this, TextureID::WaterHeight, VKW::FORMAT_R32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE, 1);
 
     graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 2);
 }
@@ -292,11 +304,9 @@ void FFTInvPermutationPass::Render(RenderGraph& graph, VKW::Context& context)
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, input->parentResource_, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, heightMap->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
-    
-    std::uint32_t const uniformSize = sizeof(glm::vec4);
 
-    UniformProxy uniform = graph.GetPassUniform(GetID(), context, uniformSize);
-    uniform.WriteMember140(glm::vec4{ static_cast<float>(WATER_DIM), 0.0f, 0.0f, 0.0f });
+    UniformProxy uniform = graph.GetPassUniform(GetID(), context, WATER_UNIFORM_SIZE);
+    FillWaterUniform(uniform, *g_GraphicsManager->GetTextureBank().FindTexture("blue_noise_256"));
 
     VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("fft_inv_perm");
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
@@ -308,7 +318,7 @@ void FFTInvPermutationPass::Render(RenderGraph& graph, VKW::Context& context)
 
     std::uint32_t group_dims[2] = { 8, 8 };
     context.CmdBindComputePipeline(pipeline);
-    context.CmdDispatch(WATER_DIM / group_dims[0], WATER_DIM / group_dims[1], 1);
+    context.CmdDispatch(C_WATER_DIM / group_dims[0], C_WATER_DIM / group_dims[1], 1);
 }
 
 }

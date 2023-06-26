@@ -41,7 +41,7 @@ void PipelineDB::CreateDefaultPipelines()
         CreateComputePipeline("gen_butterfly");
         CreateComputePipeline("gen_h0");
         CreateComputePipeline("gen_hxt");
-        CreateComputePipeline("gen_water_height");
+        CreateComputePipeline("fft_iter");
         CreateComputePipeline("fft_inv_perm");
         CreateComputePipeline("debug_view");
 
