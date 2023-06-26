@@ -24,9 +24,10 @@ void main()
 	
 	float perms[] = { 1.0, -1.0 };
 	int index = int(mod(int(coords.x + coords.y), 2));
-	float perm = perms[index];
+	//float perm = perms[index];
+	float perm = perms[0];
 	
 	float h = imageLoad(fftIntermediate, coords).r;
-	//imageStore(heightMap, coords, vec4(perm * (h/ (N*N)), 0.0, 0.0, 0.0));
-	imageStore(heightMap, coords, vec4(perm * (h) / N, 0.0, 0.0, 0.0));
+	imageStore(heightMap, coords, vec4(perm * (h/ (N*N)), 0.0, 0.0, 0.0));
+	//imageStore(heightMap, coords, vec4(perm * (h) / (N*N), 0.0, 0.0, 0.0));
 }

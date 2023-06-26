@@ -222,7 +222,6 @@ void FFTWaterHeightGenPass::Render(RenderGraph& graph, VKW::Context& context)
     std::uint32_t const firstSet = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();
 
     auto& setVector = g_GraphicsManager->GetCurrentGraphicsFrame() % 2 == 0 ? m_StageSets0 : m_StageSets1;
-//    g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->WriteDescriptorSet(set, descWrite);
 
     std::uint32_t stagesCount = std::uint32_t(glm::log2(float(WATER_DIM)));
 
@@ -239,7 +238,7 @@ void FFTWaterHeightGenPass::Render(RenderGraph& graph, VKW::Context& context)
             {
                 UniformProxy uniform{ &context, uniformAllocation };
                 float const isVertical = i >= stagesCount ? 1.0f : 0.0f;
-                uniform.WriteMember140(glm::vec4{ isVertical, i, 0.0f, 0.0f });
+                uniform.WriteMember140(glm::vec4{ isVertical, i % stagesCount, 0.0f, 0.0f });
             }
 
             VKW::DescriptorManager::WriteDesc writeDesc;

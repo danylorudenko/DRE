@@ -67,10 +67,14 @@ void main()
 	{
 		imageStore(timedSpectumTexture, coords, vec4(1, 1, 1, 1) * 100);
 	}
+	else if (coords.x == 1 && coords.y == 1)
+	{
+		imageStore(timedSpectumTexture, coords, vec4(1, 1, 1, 1) * 100);
+	}
 	else
 	{
 		imageStore(timedSpectumTexture, coords, vec4(0, 0, 0, 0));
 	}
-	//imageStore(timedSpectumTexture, coords, vec4(1.0, 0.0, 0.0, 0.0));
+	imageStore(timedSpectumTexture, coords, vec4(h0k.r, h0k.i, 0, 0));
 	
 }

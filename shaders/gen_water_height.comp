@@ -48,12 +48,12 @@ void main()
 	
 	if(isVertical)
 	{
-		vec4 butterflyData = imageLoad(butterflyTexture, ivec2(stage, coords.y)).zwxy;
+		vec4 butterflyData = imageLoad(butterflyTexture, ivec2(stage, coords.y));
 		vec2 paramsCoords = butterflyData.zw;
 		complex w = complex(butterflyData.x, butterflyData.y);
 		
-		vec2 inp1 = imageLoad(fftInput, ivec2(coords.x, paramsCoords.x)).xy;
-		vec2 inp0 = imageLoad(fftInput, ivec2(coords.x, paramsCoords.y)).xy;
+		vec2 inp0 = imageLoad(fftInput, ivec2(coords.x, paramsCoords.x)).xy;
+		vec2 inp1 = imageLoad(fftInput, ivec2(coords.x, paramsCoords.y)).xy;
 		
 		complex G = complex(inp0.x, inp0.y);
 		complex H = complex(inp1.x, inp1.y);
@@ -61,7 +61,6 @@ void main()
 		complex result = add(G, multiply(w, H));
 		
 		imageStore(fftOutput, coords, vec4(result.r, result.i, 0.0, 0.0));
-		//imageStore(fftOutput, coords, vec4(0.5, 0, 0.0, 0.0));
 	}
 	else 
 	{
@@ -78,7 +77,6 @@ void main()
 		complex result = add(G, multiply(w, H));
 		
 		imageStore(fftOutput, coords, vec4(result.r, result.i, 0.0, 0.0));
-		//imageStore(fftOutput, coords, vec4(0.5, 0, 0.0, 0.0));
 	}
 	
 }

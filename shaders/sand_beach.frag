@@ -64,12 +64,12 @@ void main()
     vec3 ambient = vec3(0.15, 0.15, 0.15) * diffuse;
 	
 	vec2 light_uv = CalculateShadowUV(in_wpos, passUniform.shadow_VP);
-	float caustics = SampleTexture(causticMap, GetSamplerLinear(), light_uv).r;
+	//float caustics = SampleTexture(causticMap, GetSamplerLinear(), light_uv).r;
 
     float shadow = CalculateShadow(in_wpos, passUniform.shadow_VP, passUniform.shadow_size.xy, shadowMap);
 
 	//shadow = 1;
-    vec3 res = caustics.rrr * shadow + shadow * brdf + ambient;    
+    vec3 res = /*caustics.rrr *shadow + */shadow * brdf + ambient;    
 	
     finalColor = vec4(res, 1.0);
     //finalColor = vec4(in_TBN[2], 1.0);

@@ -88,11 +88,13 @@ void main()
 	
 	if(isFFT)
 	{
-		vec2 uv = in_pos.xz / (256.0 * 3);
-		vec2 offset_uv = (in_pos.xz + wave_dir) / (256.0 * 3);
+		//float uv_scalar = 1 / (256.0 * 10);
+		
+		vec2 uv = in_uv;
+		vec2 offset_uv = uv + wave_dir * 0.001;
 		
 		float height = SampleTexture(heightMap, GetSamplerLinear(), uv).r;
-		float offset_height = SampleTexture(heightMap, GetSamplerLinear(), uv).r;
+		float offset_height = SampleTexture(heightMap, GetSamplerLinear(), offset_uv).r;
 		
 		wave_pos = in_pos;
 		wave_pos.y += height;
