@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-//#define DRE_COMPILE_FOR_RENDERDOC
+#define DRE_COMPILE_FOR_RENDERDOC
 
 namespace VKW
 {

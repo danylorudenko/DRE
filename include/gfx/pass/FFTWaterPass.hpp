@@ -40,7 +40,7 @@ public:
     virtual void    Render(RenderGraph& graph, VKW::Context& context) override;
 };
 
-class FFTWaterHeightGenPass : public BasePass
+class FFTWaterFFTPass : public BasePass
 {
 public:
     virtual PassID  GetID() const override;

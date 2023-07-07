@@ -340,8 +340,10 @@ void VulkanApplicationDelegate::ImGuiUser()
                 ImGui::Checkbox("FFT Water", &m_GraphicsManager.GetGraphicsSettings().m_UseFFTWater);
                 ImGui::SliderFloat("Water speed", &m_GraphicsManager.GetGraphicsSettings().m_WaterSpeed, 0.0f, 3.0f);
                 ImGui::SliderFloat("Water size meters", &m_GraphicsManager.GetGraphicsSettings().m_WaterSizeMeters, 1.0f, 100.0f);
+                ImGui::SliderFloat("Water amplitude", &m_GraphicsManager.GetGraphicsSettings().m_WaterAmplitude, 0.0f, 1000.0f);
                 ImGui::SliderFloat("Water wind dir X", &m_GraphicsManager.GetGraphicsSettings().m_WindDirectionX, -1.0f, 1.0f);
                 ImGui::SliderFloat("Water wind speed", &m_GraphicsManager.GetGraphicsSettings().m_WindSpeed, 0.0f, 100.0f);
+                ImGui::SliderFloat("Water wind dir factor", &m_GraphicsManager.GetGraphicsSettings().m_WindDirFactor, 0.0f, 100.0f);
                 ImGui::EndCombo();
             }
             ImGui::Checkbox("Use ACES", &m_GraphicsManager.GetGraphicsSettings().m_UseACESEncoding);

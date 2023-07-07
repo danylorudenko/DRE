@@ -59,7 +59,7 @@ void main()
 	complex hMinusK = complex(spectrum.z, spectrum.w);
 	
 	float w = sqrt(9.8 * length(k));
-	float t = GetTimeS();
+	float t = GetTimeS() + 1000;
 	
 	float wt = w * t * GetWaterSimSpeed();
 	//wt = 0.0;
@@ -69,10 +69,6 @@ void main()
 	
 	complex hkt = add(multiply(h0k, eiwt), multiply(h0_minK, e_minus_iwt));
 	
-	//imageStore(timedSpectumTexture, coords, vec4(k, 0.0, 0.0));
 	imageStore(timedSpectumTexture, coords, vec4(hkt.r, hkt.i, 0.0, 0.0));
-	
-	//imageStore(timedSpectumTexture, coords, vec4(h0k.r, h0k.i, 0, 0));
-	//imageStore(timedSpectumTexture, coords, vec4(h0_minK.r, h0_minK.i, 0, 0));
 	
 }

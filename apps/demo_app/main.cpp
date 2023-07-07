@@ -11,7 +11,7 @@ int main()
     bool imguiEnabled = true;
 
     VulkanApplicationDelegate* appDelegate = (VulkanApplicationDelegate*)DRE::g_PersistentDataAllocator.Alloc(sizeof(VulkanApplicationDelegate), alignof(VulkanApplicationDelegate));
-    new (appDelegate) VulkanApplicationDelegate{ instance, "DRE", 1900u, 1200u, 2u, DEBUG_OR_RELEASE(true, false), imguiEnabled };
+    new (appDelegate) VulkanApplicationDelegate{ instance, "DRE", 1600u, 900u, 2u, DEBUG_OR_RELEASE(true, false), imguiEnabled };
 
     Application* application = (Application*)DRE::g_PersistentDataAllocator.Alloc(sizeof(Application), alignof(Application));
     new (application) Application{ appDelegate };

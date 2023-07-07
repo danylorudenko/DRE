@@ -14,7 +14,7 @@ namespace GFX
 
 static glm::vec2 WIND_DIR = glm::vec2{ 1.0f, 1.0f };
 
-static std::uint32_t constexpr WATER_UNIFORM_SIZE = sizeof(glm::vec4) * 2;
+static std::uint32_t constexpr WATER_UNIFORM_SIZE = sizeof(glm::vec4) * 3;
 
 void FillWaterUniform(UniformProxy& uniform, ReadOnlyTexture const& noiseTexture)
 {
@@ -27,10 +27,12 @@ void FillWaterUniform(UniformProxy& uniform, ReadOnlyTexture const& noiseTexture
     float noiseTexID = *reinterpret_cast<float*>(&id.id_);
 
     glm::vec4 _0{ C_WATER_DIM, WIND_DIR[0], WIND_DIR[1], noiseTexID };
-    glm::vec4 _1{ s.m_WindSpeed, s.m_WaterSpeed, s.m_WaterSizeMeters, 0.0f };
+    glm::vec4 _1{ s.m_WindSpeed, s.m_WaterSpeed, s.m_WaterSizeMeters, s.m_WaterAmplitude };
+    glm::vec4 _2{ s.m_WindDirFactor, 0.0f, 0.0f, 0.0f };
 
     uniform.WriteMember140(_0);
     uniform.WriteMember140(_1);
+    uniform.WriteMember140(_2);
 }
 
 PassID GFX::FFTButterflyGenPass::GetID() const
@@ -175,12 +177,12 @@ void FFTWaterHxtGenPass::Render(RenderGraph& graph, VKW::Context& context)
 ////////////////////////////
 ////////////////////////////
 ////////////////////////////
-PassID GFX::FFTWaterHeightGenPass::GetID() const
+PassID GFX::FFTWaterFFTPass::GetID() const
 {
     return PassID::FFTWaterHeightGen;
 }
 
-void FFTWaterHeightGenPass::RegisterResources(RenderGraph& graph)
+void FFTWaterFFTPass::RegisterResources(RenderGraph& graph)
 {
     std::uint32_t stagesCount = std::uint32_t(glm::log2(float(C_WATER_DIM)));
 
@@ -195,7 +197,7 @@ void FFTWaterHeightGenPass::RegisterResources(RenderGraph& graph)
     graph.RegisterStandaloneTexture(TextureID::FFTPingPong1, VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_RW);
 }
 
-void FFTWaterHeightGenPass::Initialize(RenderGraph& graph)
+void FFTWaterFFTPass::Initialize(RenderGraph& graph)
 {
     VKW::DescriptorManager* manager = g_GraphicsManager->GetMainDevice()->GetDescriptorManager();
     VKW::DescriptorSetLayout const* layout = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID()).GetLayout();
@@ -209,7 +211,7 @@ void FFTWaterHeightGenPass::Initialize(RenderGraph& graph)
 
 static VKW::ImageResourceView* fftOutput = nullptr;
 
-void FFTWaterHeightGenPass::Render(RenderGraph& graph, VKW::Context& context)
+void FFTWaterFFTPass::Render(RenderGraph& graph, VKW::Context& context)
 {
     VKW::ImageResourceView* fftHxt = graph.GetTexture(TextureID::FFTHxt)->GetShaderView();
     VKW::ImageResourceView* fftButterfly = graph.GetTexture(TextureID::FFTButterfly)->GetShaderView();

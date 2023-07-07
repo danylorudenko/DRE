@@ -25,11 +25,12 @@ layout(set = 3, binding = 4, std140) uniform PassUniform
 {
     mat4  shadow_VP;
     vec4  shadow_size;
-	vec4  isFFT_XZ;
+	vec4  isFFT_XZ_windX;
 } passUniform;
 
-vec2 GetWaterVertexDims() { return passUniform.isFFT_XZ.yz; }
-
+vec2 GetWaterVertexDims() { return passUniform.isFFT_XZ_windX.yz; }
+bool IsFFT() { return passUniform.isFFT_XZ_windX.x > 0.5; }
+float WindXDir() { return passUniform.isFFT_XZ_windX.w; }
 
 layout(set = 4, binding = 0, std140) uniform InstanceUniform
 {
@@ -75,7 +76,7 @@ vec2 CalculateWaterHeightUV(in vec3 local_pos)
 
 void main()
 {
-	vec2 wave_dir = normalize(vec2(0,1));
+	vec2 wave_dir = normalize(vec2(WindXDir(),1));
 	
 	vec3 offset_inpos = in_pos;
 	offset_inpos.xz += (wave_dir * 0.01);
@@ -87,14 +88,13 @@ void main()
 	float speed = 0.5;
 	
 	int complexity = 2;
-	bool isFFT = passUniform.isFFT_XZ.x > 0.5;
 	
 	vec3 wave_pos;
 	vec3 offset_wave_pos;
 	
 	vec2 custom_uv = CalculateWaterHeightUV(in_pos);
 	
-	if(isFFT)
+	if(IsFFT())
 	{
 		//float uv_scalar = 1 / (256.0 * 10);
 		vec2 offset_uv = CalculateWaterHeightUV(offset_inpos);

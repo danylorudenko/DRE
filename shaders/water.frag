@@ -24,7 +24,12 @@ layout(set = 3, binding = 4, std140) uniform PassUniform
 {
     mat4  shadow_VP;
     vec4  shadow_size;
+	vec4  isFFT_XZ_windX;
 } passUniform;
+
+vec2 GetWaterVertexDims() { return passUniform.isFFT_XZ_windX.yz; }
+bool IsFFT() { return passUniform.isFFT_XZ_windX.x > 0.5; }
+float WindXDir() { return passUniform.isFFT_XZ_windX.w; }
 
 layout(set = 4, binding = 0, std140) uniform InstanceUniform
 {
@@ -127,11 +132,12 @@ void main()
 	const vec3 diffuse = vec3(0, 57, 74) / 255;
 	//const vec3 diffuse = vec3(0, 255, 0) / 255;
 	const vec3 F0 = vec3(39, 39, 39) / 255;
+	vec2 windDir = normalize(vec2(WindXDir(), 1));
 	
 	vec2 pixel_pos_uv = gl_FragCoord.xy / GetViewportSize();
 	
-	vec3 normalMap0 = sRGB2Linear(SampleGlobalTextureLinear(NormalTextureID, in_wpos.xz / 10 + GetTimeS() / 48).rgb);
-	vec3 normalMap1 = sRGB2Linear(SampleGlobalTextureLinear(NormalTextureID, in_wpos.zx / 4 + GetTimeS() / 44).rgb);
+	vec3 normalMap0 = sRGB2Linear(SampleGlobalTextureLinear(NormalTextureID, in_wpos.xz / 10 + windDir * (GetTimeS() / 48)).rgb);
+	vec3 normalMap1 = sRGB2Linear(SampleGlobalTextureLinear(NormalTextureID, in_wpos.zx / 4 + windDir * (GetTimeS() / 44)).rgb);
 	
 	vec3 normalMap = (normalMap0 + normalMap1);
 	normalMap = normalize(normalMap);

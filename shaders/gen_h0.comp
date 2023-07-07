@@ -26,6 +26,21 @@ vec4 gaussRND(vec2 coords)
 	return vec4(v0 * cos(u0), v0 * sin(u0), v1 * cos(u1), v1 * sin(u1));
 }
 
+float phillips_spectrum(vec2 k)
+{
+	float kLen = length(k);
+	
+	if(kLen < 0.001)
+		return 0.0;
+	
+	float kw = pow(dot(k, GetWindDir()), 4);
+	float L = 0.001;
+	
+	float p = GetWaterAmplitude() * (exp(-1 / kLen * L * L) / pow(kLen, 4)) * kw;
+	p *= exp(-1.0 * kLen * kLen * 0.00001);
+	
+	return p;
+}
 
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 void main()
@@ -42,17 +57,23 @@ void main()
 	
 	vec2 k = (2 * PI * x) / N; // 2-dim vector K
 	float kLen = length(k);
-	float L = 100 / 9.8; // V^2 / g - wind speed squared
+	float L = GetWindSpeed() / 9.8; // V^2 / g - wind speed squared
 	
-	float phyllips_spectrum_pos = exp(-1 / pow(max(kLen,   0.0001) * L, 2)) / pow(max(kLen,   0.0001), 4);// * pow(dot(normalize(windDir), normalize(k)), 4);
-	float phyllips_spectrum_neg = exp(-1 / pow(min(-kLen, -0.0001) * L, 2)) / pow(min(-kLen, -0.0001), 4);// * pow(dot(normalize(windDir), normalize(k)), 4);
+	//float phyllips_spectrum_pos = exp(-1 / pow(max(kLen,   0.0001) * L, 2)) / pow(max(kLen,   0.0001), 4);// * pow(dot(normalize(windDir), normalize(k)), 4);
+	//float phyllips_spectrum_neg = exp(-1 / pow(min(-kLen, -0.0001) * L, 2)) / pow(min(-kLen, -0.0001), 4);// * pow(dot(normalize(windDir), normalize(k)), 4);
+	
+	float phillips_pos = phillips_spectrum(k);
+	float phillips_neg = phillips_spectrum(-k);
 	vec4 rnd = gaussRND(coords);
 	
-	vec2 hK 			= (rnd.xy * sqrt(phyllips_spectrum_pos)) / sqrt(2);
-	vec2 h_minusK_conj 	= (rnd.zw * sqrt(phyllips_spectrum_neg)) / sqrt(2);
+	//vec2 hK 			= (rnd.xy * sqrt(phyllips_spectrum_pos)) / sqrt(2);
+	//vec2 h_minusK_conj 	= (rnd.zw * sqrt(phyllips_spectrum_neg)) / sqrt(2);
+	
+	vec2 hK 		= (1 / sqrt(2)) * rnd.xy * sqrt(phillips_pos);
+	vec2 h_minK 	= (1 / sqrt(2)) * rnd.zw * sqrt(phillips_neg);
 	
 	//vec2 hK 			= (sqrt(phyllips_spectrum_pos)).xx;
 	//vec2 h_minusK_conj 	= (sqrt(phyllips_spectrum_neg)).xx;
 	
-	imageStore(spectrumTexture, coords, vec4(hK, h_minusK_conj) * 30);
+	imageStore(spectrumTexture, coords, vec4(hK, h_minK));
 }

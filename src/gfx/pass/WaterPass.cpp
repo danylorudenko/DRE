@@ -118,7 +118,7 @@ void WaterPass::Render(RenderGraph& graph, VKW::Context& context)
     {
         glm::mat4 const shadow_ViewProj = g_GraphicsManager->GetSunShadowRenderView().GetViewProjectionM();
         glm::vec4 const shadow_Size = glm::vec4{ C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, 0.0f, 0.0f };
-        glm::vec4 const useFFT = glm::vec4{ g_GraphicsManager->GetGraphicsSettings().m_UseFFTWater ? 1.0f : 0.0f, C_WATER_VERTEX_X, C_WATER_VERTEX_Z, 0.0f };
+        glm::vec4 const useFFT = glm::vec4{ g_GraphicsManager->GetGraphicsSettings().m_UseFFTWater ? 1.0f : 0.0f, C_WATER_VERTEX_X, C_WATER_VERTEX_Z, g_GraphicsManager->GetGraphicsSettings().m_WindDirectionX };
 
         std::uint32_t constexpr passUniformSize = sizeof(shadow_ViewProj) + sizeof(shadow_Size) + sizeof(useFFT);
 

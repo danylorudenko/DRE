@@ -64,8 +64,10 @@ struct GraphicsSettings
     bool            m_UseFFTWater           = true;
     float           m_WaterSpeed            = 1.0f;
     float           m_WaterSizeMeters       = 10.0f;
+    float           m_WaterAmplitude        = 1000.0f;
     float           m_WindDirectionX        = 0.0f;
     float           m_WindSpeed             = 1.0f;
+    float           m_WindDirFactor         = 2.0f;
     float           m_GenericScalar         = 1.0f;
 
     std::uint32_t   m_ShadowMapWidth        = 1024;

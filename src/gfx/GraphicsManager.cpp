@@ -74,12 +74,12 @@ void GraphicsManager::CreateAllPasses()
     m_RenderGraph.AddPass<FFTButterflyGenPass>();
     m_RenderGraph.AddPass<FFTWaterH0GenPass>();
     m_RenderGraph.AddPass<FFTWaterHxtGenPass>();
-    m_RenderGraph.AddPass<FFTWaterHeightGenPass>();
+    m_RenderGraph.AddPass<FFTWaterFFTPass>();
     m_RenderGraph.AddPass<FFTInvPermutationPass>();
     m_RenderGraph.AddPass<WaterPass>();
     m_RenderGraph.AddPass<AntiAliasingPass>();
     m_RenderGraph.AddPass<ColorEncodingPass>();
-    //m_RenderGraph.AddPass<DebugPass>();
+    m_RenderGraph.AddPass<DebugPass>();
     m_RenderGraph.AddPass<ImGuiRenderPass>();
     m_RenderGraph.ParseGraph();
     m_RenderGraph.InitGraphResources();
