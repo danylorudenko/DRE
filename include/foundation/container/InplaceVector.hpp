@@ -163,6 +163,11 @@ public:
         return STORAGE_SIZE * sizeof(T);
     }
 
+    U32 constexpr Capacity() const
+    {
+         return STORAGE_SIZE;
+    }
+
     U32 Find(T const& rhs) const
     {
         for (U32 i = 0; i < m_Size; i++)

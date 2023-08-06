@@ -1,6 +1,7 @@
 #pragma once
 
 #include <foundation\Common.hpp>
+#include <foundation\container\InplaceVector.hpp>
 
 DRE_BEGIN_NAMESPACE
 
@@ -103,7 +104,9 @@ public:
             return;
 
         Clear();
-        m_Allocator->Free(m_Data);
+
+        if (m_Capacity > C_SVO_CAPACITY)
+            m_Allocator->Free(m_Data);
     }
 
     inline U32 Size() const
@@ -145,7 +148,7 @@ public:
     inline T& EmplaceBack(TArgs&&... args)
     {
         if (m_Size + 1 > m_Capacity)
-            Reserve(m_Capacity == 0 ? 12 : m_Capacity + m_Capacity / 2 + 1);
+            Reserve(m_Capacity == 0 ? C_SVO_CAPACITY : m_Capacity + m_Capacity);
 
         return *(new (m_Data + m_Size++) T{ std::forward<TArgs>(args)... });
     }
@@ -165,13 +168,12 @@ public:
     void Reset(TAllocator* allocator)
     {
         Clear();
-        m_Allocator->Free(m_Data);
+        if (m_Capacity > C_SVO_CAPACITY)
+            m_Allocator->Free(m_Data);
         m_Size = 0;
         m_Capacity = 0;
 
         m_Allocator = allocator;
-        Reserve(12);
-
     }
 
     void Clear()
@@ -189,13 +191,20 @@ public:
         if (capacity <= m_Capacity)
             return;
 
+        if (capacity <= C_SVO_CAPACITY)
+        {
+            m_Data = reinterpret_cast<T*>(m_SVOBuffer);
+            m_Capacity = C_SVO_CAPACITY;
+            return;
+        }
+
         T* newStorage = reinterpret_cast<T*>(m_Allocator->Alloc(capacity * sizeof(T), alignof(T)));
         for (U32 i = 0; i < m_Size; i++)
         {
             new (newStorage + i) T{ DRE_MOVE(m_Data[i]) };
         }
 
-        if (m_Capacity > 0)
+        if (m_Capacity > C_SVO_CAPACITY)
             m_Allocator->Free(m_Data);
 
         m_Data = newStorage;
@@ -226,6 +235,11 @@ public:
     }
 
 private:
+    static constexpr U32 C_SVO_CAPACITY = 12;
+
+    alignas(alignof(T))
+    U8  m_SVOBuffer[C_SVO_CAPACITY * sizeof(T)]; // Small Vector Optimization
+
     TAllocator* m_Allocator;
     T*          m_Data;
     U32         m_Size;
