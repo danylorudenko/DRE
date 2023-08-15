@@ -11,51 +11,48 @@ namespace WORLD
 Scene* g_MainScene = nullptr;
 
 Scene::Scene(DRE::DefaultAllocator* allocator)
-    : m_SceneEntities{ allocator }
+    : m_SceneEntities{}
+    , m_EntityCounter{ 0u }
+    , m_Nodes{}
+    , m_NodeCounter{ 0u }
+    , m_RootNode{ nullptr }
 {
+    m_RootNode = CreateSceneNode();
+
+    SceneNode* cameraNode = CreateSceneNode(m_RootNode);
+    m_MainCamera.SetSceneNode(cameraNode);
+
+    SceneNode* sunNode = CreateSceneNode(m_RootNode);
+    m_MainSunLight.SetSceneNode(sunNode);
 }
 
-Entity& Scene::CreateOpaqueEntity(VKW::Context& context, Entity::TransformData const& transform, Data::Geometry* geometry, Data::Material* material)
+Entity* Scene::CreateOpaqueEntity(VKW::Context& context, Data::Geometry* geometry, Data::Material* material, SceneNode* parent)
 {
     GFX::RenderableObject* renderable = GFX::g_GraphicsManager->CreateRenderableObject(context, geometry, material);
-    GFX::RenderableObject* renderableShadow = GFX::g_GraphicsManager->CreateShadowRenderableObject(context, geometry, material);
+    SceneNode* node = CreateSceneNode(parent == nullptr ? m_RootNode : parent);
 
     GFX::RenderView& mainView = GFX::g_GraphicsManager->GetMainRenderView();
     GFX::RenderView& shadowView = GFX::g_GraphicsManager->GetSunShadowRenderView();
 
     mainView.AddObject(renderable);
-    shadowView.AddObject(renderableShadow);
+    shadowView.AddObject(renderable);
 
-    Entity& entity = m_SceneEntities.EmplaceBack(transform, renderable, renderableShadow);
-    entity.SetMaterial(material);
-    entity.SetGeometry(geometry);
-
-    return entity;
-}
-
-Entity& Scene::CreateWaterEntity(VKW::Context& context, Entity::TransformData const& transform, Data::Geometry* geometry, Data::Material* material)
-{
-    GFX::RenderableObject* renderable = GFX::g_GraphicsManager->CreateRenderableObject(context, geometry, material);
-
-    GFX::RenderView& mainView = GFX::g_GraphicsManager->GetMainRenderView();
-
-    mainView.AddObject(renderable);
-
-    Entity& entity = m_SceneEntities.EmplaceBack(transform, renderable, nullptr);
-    entity.SetMaterial(material);
-    entity.SetGeometry(geometry);
+    Entity* entity = CreateEntity(renderable);
+    entity->SetMaterial(material);
+    entity->SetGeometry(geometry);
+    entity->SetSceneNode(node);
 
     return entity;
 }
 
 Scene::~Scene()
 {
-    for (std::uint32_t i = 0, size = m_SceneEntities.Size(); i < size; i++)
+    m_SceneEntities.ForEach([](auto& pair)
     {
-        Entity& entity = m_SceneEntities[i];
-        if (entity.GetRenderableObject() != nullptr)
-            GFX::g_GraphicsManager->FreeRenderableObject(entity.GetRenderableObject());
-    }
+        Entity* entity = pair.value;;
+        if (entity->GetRenderableObject() != nullptr)
+            GFX::g_GraphicsManager->FreeRenderableObject(entity->GetRenderableObject());
+    });
 }
 
 }

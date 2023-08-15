@@ -5,7 +5,7 @@
 
 DRE_BEGIN_NAMESPACE
 
-class HashDummyClass{};
+class DummyAllocatorClass{};
 
 template<typename TKey, typename TValue, typename TDummyType, U32 BUCKET_COUNT>
 class InplaceHashTableImpl : public HashTableBase<TKey, TValue, TDummyType, BUCKET_COUNT, InplaceHashTableImpl<TKey, TValue, TDummyType, BUCKET_COUNT>>
@@ -48,7 +48,7 @@ protected:
 };
 
 template<typename TKey, typename TValue, U32 BUCKET_COUNT = 256>
-using InplaceHashTable = InplaceHashTableImpl<TKey, TValue, HashDummyClass, BUCKET_COUNT>;
+using InplaceHashTable = InplaceHashTableImpl<TKey, TValue, DummyAllocatorClass, BUCKET_COUNT>;
 
 DRE_END_NAMESPACE
 

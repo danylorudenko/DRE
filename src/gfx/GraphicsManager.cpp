@@ -117,13 +117,13 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
 
 
     WORLD::Camera const& camera = scene.GetMainCamera();
-    m_MainView.UpdatePlacement(camera.GetPosition(), camera.GetForward(), camera.GetUp());
+    m_MainView.UpdatePlacement(camera.GetSceneNode()->GetPosition(), camera.GetSceneNode()->GetForward(), camera.GetSceneNode()->GetUp());
     m_MainView.UpdateViewport(glm::uvec2{ 0, 0 }, glm::uvec2{ m_Settings.m_RenderingWidth, m_Settings.m_RenderingHeight });
     m_MainView.UpdateProjection(camera.GetFOV(), camera.GetRange()[0], camera.GetRange()[1]);
     m_MainView.UpdateJitter(taaJitter.x, taaJitter.y);
 
     WORLD::DirectionalLight const& sunLight = scene.GetMainSunLight();
-    m_SunShadowView.UpdatePlacement(sunLight.GetPosition(), sunLight.GetForward(), sunLight.GetUp());
+    m_SunShadowView.UpdatePlacement(sunLight.GetSceneNode()->GetPosition(), sunLight.GetSceneNode()->GetForward(), sunLight.GetSceneNode()->GetUp());
     m_SunShadowView.UpdateViewport(glm::uvec2{ 0, 0 }, glm::uvec2{ C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT });
     m_SunShadowView.UpdateProjection(
         -C_SHADOW_MAP_WORLD_EXTENT, C_SHADOW_MAP_WORLD_EXTENT,
@@ -137,8 +137,8 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     globalUniform.viewportSize_deltaMS_timeS[2] = static_cast<float>(static_cast<double>(deltaTimeUS) / 1000.0);
     globalUniform.viewportSize_deltaMS_timeS[3] = timeS;
 
-    globalUniform.main_CameraPos_GenericScalar = glm::vec4{ scene.GetMainCamera().GetPosition(), GetGraphicsSettings().m_GenericScalar };
-    globalUniform.main_CameraDir        = glm::vec4{ scene.GetMainCamera().GetForward(), 0.0f };
+    globalUniform.main_CameraPos_GenericScalar = glm::vec4{ scene.GetMainCamera().GetSceneNode()->GetPosition(), GetGraphicsSettings().m_GenericScalar };
+    globalUniform.main_CameraDir        = glm::vec4{ scene.GetMainCamera().GetSceneNode()->GetForward(), 0.0f };
     globalUniform.main_Jitter           = glm::vec4{ taaJitter, 0.0f, 0.0f };
 
     globalUniform.main_ViewM            = m_MainView.GetViewM();
@@ -153,7 +153,7 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     globalUniform.main_PrevViewProjM    = m_MainView.GetPrevViewProjectionM();
     globalUniform.main_PreviViewProjM   = m_MainView.GetPrevInvViewProjectionM();
 
-    globalUniform.main_LightDir         = glm::vec4{ scene.GetMainSunLight().GetForward(), 0.0f };
+    globalUniform.main_LightDir         = glm::vec4{ scene.GetMainSunLight().GetSceneNode()->GetForward(), 0.0f };
     globalUniform.main_LightRadiance    = glm::vec4{ scene.GetMainSunLight().GetRadiance(), 1.0f };
 
     std::memcpy(dst, &globalUniform, sizeof(globalUniform));
@@ -290,9 +290,11 @@ RenderableObject* GraphicsManager::CreateRenderableObject(VKW::Context& context,
 {
     DRE::String64 name = material->GetRenderingProperties().GetShader();
     VKW::Pipeline* pipeline = m_PipelineDB.GetPipeline(name.GetData());
+    VKW::Pipeline* shadowPipeline = m_PipelineDB.GetPipeline("forward_shadow");
 
     name.Append("_layout");
     VKW::PipelineLayout* layout = m_PipelineDB.GetLayout(name.GetData());
+    VKW::PipelineLayout* shadowLayout = m_PipelineDB.GetLayout("forward_shadow_layout");
 
     RenderableObject::LayerBits layers = RenderableObject::LAYER_NONE;
     switch (material->GetRenderingProperties().GetMaterialType())
@@ -321,51 +323,30 @@ RenderableObject* GraphicsManager::CreateRenderableObject(VKW::Context& context,
         geometryGPU = LoadGPUGeometry(context, geometry);
 
     RenderableObject::DescriptorSetVector descriptors;
+    RenderableObject::DescriptorSetVector shadowDescriptors;
 
     VKW::DescriptorManager* descriptorManager = GetMainDevice()->GetDescriptorManager();
+
     std::uint8_t const mainRenderingPassSetCount = m_RenderGraph.GetPassDescriptorSet(PassID::ForwardOpaque, GetCurrentFrameID()).IsValid() ? 1 : 0;
-    std::uint8_t const itemDescriptorId = std::uint8_t(descriptorManager->GetGlobalSetLayoutsCount() + mainRenderingPassSetCount); // globals + pass set
-    DRE_ASSERT(layout->GetMemberCount() == itemDescriptorId + 1, "All renderable items should currently contain everything in one set.");
+    std::uint8_t const shadowPassSetCount = m_RenderGraph.GetPassDescriptorSet(PassID::ForwardOpaque, GetCurrentFrameID()).IsValid() ? 1 : 0;
+
+    std::uint8_t const layoutMemberId = std::uint8_t(descriptorManager->GetGlobalSetLayoutsCount() + mainRenderingPassSetCount); // globals + pass set
+    std::uint8_t const shadowLayoutMemberId = std::uint8_t(descriptorManager->GetGlobalSetLayoutsCount() + shadowPassSetCount); // globals + pass set
+
+    DRE_ASSERT(layout->GetMemberCount() == layoutMemberId + 1, "All renderable items should currently contain everything in one set.");
     for (std::uint8_t i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
     {
-        descriptors.EmplaceBack(descriptorManager->AllocateStandaloneSet(*layout->GetMember(itemDescriptorId)));
-    }
-    return m_RenderableObjectPool.Alloc(layers, pipeline, geometryGPU->vertexBuffer, geometry->GetVertexCount(), geometryGPU->indexBuffer, geometry->GetIndexCount(), DRE_MOVE(textures), DRE_MOVE(descriptors));
-}
-
-RenderableObject* GraphicsManager::CreateShadowRenderableObject(VKW::Context& context, Data::Geometry* geometry, Data::Material* material)
-{
-    VKW::Pipeline* pipeline = nullptr;
-    VKW::PipelineLayout* layout = nullptr;
-    RenderableObject::LayerBits layers = RenderableObject::LAYER_NONE;
-    switch (material->GetRenderingProperties().GetMaterialType())
-    {
-    case Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE:
-        pipeline = GetPipelineDB().GetPipeline("forward_shadow");
-        layout = GetPipelineDB().GetLayout("forward_shadow_layout");
-        layers = RenderableObject::LAYER_OPAQUE_BIT;
-        break;
-    default:
-        DRE_ASSERT(false, "No corresponding pipeline in PipelineDB for this material type.");
-        break;
+        descriptors.EmplaceBack(descriptorManager->AllocateStandaloneSet(*layout->GetMember(layoutMemberId)));
     }
 
-    // load geometry
-    GeometryGPU* geometryGPU = m_GeometryGPUMap.Find(geometry).value;
-    if (geometryGPU == nullptr)
-        geometryGPU = LoadGPUGeometry(context, geometry);
-
-    RenderableObject::DescriptorSetVector descriptors;
-
-    VKW::DescriptorManager* descriptorManager = GetMainDevice()->GetDescriptorManager();
-    std::uint8_t const mainRenderingPassSetCount = m_RenderGraph.GetPassDescriptorSet(PassID::Shadow, GetCurrentFrameID()).IsValid() ? 1 : 0;
-    std::uint8_t const itemDescriptorId = std::uint8_t(descriptorManager->GetGlobalSetLayoutsCount() + mainRenderingPassSetCount); // globals + pass set
-    DRE_ASSERT(layout->GetMemberCount() == itemDescriptorId + 1, "All renderable items should currently contain everything in one set.");
     for (std::uint8_t i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
     {
-        descriptors.EmplaceBack(descriptorManager->AllocateStandaloneSet(*layout->GetMember(itemDescriptorId)));
+        shadowDescriptors.EmplaceBack(descriptorManager->AllocateStandaloneSet(*shadowLayout->GetMember(shadowLayoutMemberId)));
     }
-    return m_RenderableObjectPool.Alloc(layers, pipeline, geometryGPU->vertexBuffer, geometry->GetVertexCount(), geometryGPU->indexBuffer, geometry->GetIndexCount(), DRE_MOVE(descriptors));
+
+    return m_RenderableObjectPool.Alloc(layers, pipeline, geometryGPU->vertexBuffer, geometry->GetVertexCount(),
+        geometryGPU->indexBuffer, geometry->GetIndexCount(),
+        DRE_MOVE(textures), DRE_MOVE(descriptors), DRE_MOVE(shadowDescriptors));
 }
 
 void GraphicsManager::FreeRenderableObject(RenderableObject* obj)

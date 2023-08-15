@@ -292,12 +292,13 @@ void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiM
 void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, aiNode const* node, aiMatrix4x4 const& parentTransform, WORLD::Scene& targetScene)
 {
     aiMatrix4x4 const t = node->mTransformation * parentTransform;
-    WORLD::Entity::TransformData const transform {{
+    glm::mat4 const transform {
             t.a1, t.a2, t.a3, t.a4,
             t.b1, t.b2, t.b3, t.b4,
             t.c1, t.c2, t.c3, t.c4,
             t.d1, t.d2, t.d3, t.d4
-    }};
+    };
+    transforms go nowhere
 
     for (std::uint32_t i = 0, count = node->mNumMeshes; i < count; i++)
     {
@@ -306,7 +307,7 @@ void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* a
         Data::Material* material = m_MaterialLibrary->GetMaterial(mesh->mMaterialIndex);
 
         Data::Geometry* geometry = m_GeometryLibrary->GetGeometry(node->mMeshes[i]);
-        WORLD::Entity& nodeEntity = targetScene.CreateOpaqueEntity(gfxContext, transform, geometry, material);
+        WORLD::Entity* nodeEntity = targetScene.CreateOpaqueEntity(gfxContext, geometry, material);
     }
 
     for (std::uint32_t i = 0; i < node->mNumChildren; i++)

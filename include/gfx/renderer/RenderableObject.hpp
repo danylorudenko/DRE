@@ -38,8 +38,8 @@ public:
     using DescriptorSetVector = DRE::InplaceVector<VKW::DescriptorSet, VKW::CONSTANTS::FRAMES_BUFFERING>;
     using TexturesVector      = DRE::InplaceVector<ReadOnlyTexture*, Data::Material::TextureProperty::Slot::MAX>;
 
-    RenderableObject(LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount, TexturesVector&& textures, DescriptorSetVector&& sets);
-    RenderableObject(LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount, DescriptorSetVector&& sets);
+    RenderableObject(LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount, TexturesVector&& textures, DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets);
+    RenderableObject(LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount, DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets);
     RenderableObject(LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount);
 
     inline LayerBits                    GetLayer() const { return m_Layer; }
@@ -51,6 +51,7 @@ public:
     inline std::uint32_t                GetVertexCount() const { return m_VertexCount; }
     inline std::uint32_t                GetIndexCount() const { return m_IndexCount; }
     inline VKW::DescriptorSet const&    GetDescriptorSet(FrameID frameID) const { return m_DescriptorSets[frameID]; }
+    inline VKW::DescriptorSet const&    GetShadowDescriptorSet(FrameID frameID) const { return m_DescriptorSetsShadow[frameID]; }
     inline ReadOnlyTexture*             GetDiffuseTexture() const { return m_Textures[0]; }
     inline ReadOnlyTexture*             GetNormalTexture() const { return m_Textures[1]; }
     inline ReadOnlyTexture*             GetMetalnessTexture() const { return m_Textures[2]; }
@@ -72,6 +73,7 @@ private:
     TexturesVector          m_Textures;
 
     DescriptorSetVector     m_DescriptorSets;
+    DescriptorSetVector     m_DescriptorSetsShadow;
 };
 
 }

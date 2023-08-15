@@ -9,7 +9,7 @@ set(ENGINE_HEADER_LIST
 	"${DRE_SOURCE_DIR}/include/engine/scene/Camera.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/scene/Entity.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/scene/Light.hpp"
-	"${DRE_SOURCE_DIR}/include/engine/scene/Positional.hpp"
+	"${DRE_SOURCE_DIR}/include/engine/scene/SceneNode.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/scene/Scene.hpp")
 
 set(ENGINE_SOURCE_LIST
@@ -23,7 +23,7 @@ set(ENGINE_SOURCE_LIST
 	"${DRE_SOURCE_DIR}/src/engine/scene/Camera.cpp"
 	"${DRE_SOURCE_DIR}/src/engine/scene/Entity.cpp"
 	"${DRE_SOURCE_DIR}/src/engine/scene/Light.cpp"
-	"${DRE_SOURCE_DIR}/src/engine/scene/Positional.cpp"
+	"${DRE_SOURCE_DIR}/src/engine/scene/SceneNode.cpp"
 	"${DRE_SOURCE_DIR}/src/engine/scene/Scene.cpp")
 	
 add_library(engine STATIC ${ENGINE_HEADER_LIST} ${ENGINE_SOURCE_LIST})

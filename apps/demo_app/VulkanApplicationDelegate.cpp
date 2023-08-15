@@ -112,10 +112,10 @@ void VulkanApplicationDelegate::start()
     //m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 7.28f, 5.57f, -1.07f });
     //m_MainScene.GetMainCamera().SetEulerOrientation(glm::vec3{ -17.26f, 107.37f, 0.0f });
 
-    m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 0.81f, 2.82f, 2.41f });
-    m_MainScene.GetMainCamera().SetEulerOrientation(glm::vec3{ -24.32f, 13.83f, 0.0f });
+    m_MainScene.GetMainCamera().GetSceneNode()->SetPosition(glm::vec3{ 0.81f, 2.82f, 2.41f });
+    m_MainScene.GetMainCamera().GetSceneNode()->SetEulerOrientation(glm::vec3{ -24.32f, 13.83f, 0.0f });
 
-    m_MainScene.GetMainSunLight().SetEulerOrientation(glm::vec3{ m_SunElevation, 45.0f + 180.0f, 0.0f });
+    m_MainScene.GetMainSunLight().GetSceneNode()->SetEulerOrientation(glm::vec3{ m_SunElevation, 45.0f + 180.0f, 0.0f });
 
     m_GraphicsManager.Initialize();
 
@@ -209,13 +209,13 @@ void VulkanApplicationDelegate::update()
         }
     }
 
-    glm::vec3 const sun_orient = m_MainScene.GetMainSunLight().GetEulerOrientation();
-    m_MainScene.GetMainSunLight().SetEulerOrientation(glm::vec3{ -m_SunElevation, sun_orient.y, sun_orient.z });
+    glm::vec3 const sun_orient = m_MainScene.GetMainSunLight().GetSceneNode()->GetGlobalOrientation();
+    m_MainScene.GetMainSunLight().GetSceneNode()->SetEulerOrientation(glm::vec3{ -m_SunElevation, sun_orient.y, sun_orient.z });
     if (m_RotateSun)
-        m_MainScene.GetMainSunLight().Rotate(glm::vec3{ 0.0f, C_SUN_ROTATOR_MUL * m_DeltaMicroseconds, 0.0f });
+        m_MainScene.GetMainSunLight().GetSceneNode()->Rotate(glm::vec3{ 0.0f, C_SUN_ROTATOR_MUL * m_DeltaMicroseconds, 0.0f });
 
     if (m_RotateCamera)
-        m_MainScene.GetMainCamera().Rotate(glm::vec3{ 0.0f, C_SUN_ROTATOR_MUL * m_DeltaMicroseconds * 15.0f, 0.0f});
+        m_MainScene.GetMainCamera().GetSceneNode()->Rotate(glm::vec3{ 0.0f, C_SUN_ROTATOR_MUL * m_DeltaMicroseconds * 15.0f, 0.0f});
 
     if (m_PauseTime != m_GlobalStopwatch.IsPaused())
     {
@@ -270,7 +270,7 @@ void VulkanApplicationDelegate::ImGuiUser()
 
         if (ImGui::Begin("Camera Controls", nullptr, ImGuiWindowFlags_NoResize))
         {
-            WORLD::Camera& camera = m_MainScene.GetMainCamera();
+            WORLD::SceneNode& camera = *m_MainScene.GetMainCamera().GetSceneNode();
             glm::vec3 const& cameraEuler = camera.GetEulerOrientation();
             glm::vec3 const& cameraForward = camera.GetForward();
             glm::vec3 const& cameraRight = camera.GetRight();

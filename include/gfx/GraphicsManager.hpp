@@ -131,7 +131,6 @@ public:
     void                                WaitIdle();
 
     RenderableObject*                   CreateRenderableObject(VKW::Context& context, Data::Geometry* geometry, Data::Material* material);
-    RenderableObject*                   CreateShadowRenderableObject(VKW::Context& context, Data::Geometry* geometry, Data::Material* material);
     void                                FreeRenderableObject(RenderableObject* obj);
 
 private:

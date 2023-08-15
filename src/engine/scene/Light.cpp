@@ -6,9 +6,9 @@
 namespace WORLD
 {
 
-DirectionalLight::DirectionalLight()
-    : Positional{}
-    , m_Radiance{ 1.0f, 1.0f, 1.0f }
+DirectionalLight::DirectionalLight(SceneNode* node)
+    : m_Radiance{ 1.0f, 1.0f, 1.0f }
+    , m_SceneNode{ node }
 {}
 
 }

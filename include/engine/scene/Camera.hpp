@@ -1,24 +1,28 @@
 #pragma once
 
-#include <engine\scene\Positional.hpp>
+#include <glm\vec2.hpp>
+
+#include <engine\scene\SceneNode.hpp>
 
 namespace WORLD
 {
 
-class Camera : public Positional
+class Camera
 {
 public:
-    Camera();
+    Camera(SceneNode* node = nullptr);
 
     inline glm::vec2        GetRange() const { return glm::vec2{ 0.1f, 100.0f }; }
     inline float            GetFOV() const { return m_FOV; }
     void                    SetFOV(float fov);
 
-protected:
-    virtual void            CalculateVectors() override;
+    inline void             SetSceneNode(SceneNode* node) { m_SceneNode = node; }
+    inline SceneNode*       GetSceneNode() const { return m_SceneNode; }
+
 
 private:
     float       m_FOV;
+    SceneNode*  m_SceneNode;
 };
 
 }

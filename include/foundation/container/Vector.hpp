@@ -234,6 +234,17 @@ public:
         m_Size = size;
     }
 
+    U32 Find(T const& rhs) const
+    {
+        for (U32 i = 0; i < m_Size; i++)
+        {
+            if (operator[](i) == rhs)
+                return i;
+        }
+
+        return Size();
+    }
+
 private:
     static constexpr U32 C_SVO_CAPACITY = 12;
 
