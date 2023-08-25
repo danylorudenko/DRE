@@ -10,6 +10,7 @@ set(ENGINE_HEADER_LIST
 	"${DRE_SOURCE_DIR}/include/engine/scene/Entity.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/scene/Light.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/scene/SceneNode.hpp"
+	"${DRE_SOURCE_DIR}/include/engine/scene/ISceneNodeUser.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/scene/Scene.hpp")
 
 set(ENGINE_SOURCE_LIST

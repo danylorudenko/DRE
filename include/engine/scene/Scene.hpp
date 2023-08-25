@@ -51,10 +51,10 @@ public:
 
 
     Entity*                         CreateOpaqueEntity(VKW::Context& context, Data::Geometry* geometry, Data::Material* material, SceneNode* parent = nullptr);
+    inline SceneNode*               CreateSceneNode(SceneNode* parent = nullptr) { NodeID const id = m_NodeCounter++; return &m_Nodes.Emplace(id, parent); }
 
 
 private:
-    inline SceneNode*               CreateSceneNode(SceneNode* parent = nullptr) { NodeID const id = m_NodeCounter++; return &m_Nodes.Emplace(id, parent); }
     inline Entity*                  CreateEntity(GFX::RenderableObject* renderable = nullptr) { EntityID const id = m_EntityCounter++; return &m_SceneEntities.Emplace(id, renderable); }
 
 private:

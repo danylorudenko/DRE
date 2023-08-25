@@ -55,6 +55,7 @@ public:
 
     using AtomDataDelegate = void(*)(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view);
     void Batch(VKW::Context& context, RenderView const& view, RenderableObject::LayerBits layers, AtomDataDelegate atomDelegate);
+    void BatchShadow(VKW::Context& context, RenderView const& view, RenderableObject::LayerBits layers, AtomDataDelegate atomDelegate);
 
     inline auto const& GetDraws() const { return m_Draws; }
 

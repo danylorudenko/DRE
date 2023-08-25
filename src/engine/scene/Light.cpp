@@ -7,8 +7,8 @@ namespace WORLD
 {
 
 DirectionalLight::DirectionalLight(SceneNode* node)
-    : m_Radiance{ 1.0f, 1.0f, 1.0f }
-    , m_SceneNode{ node }
+    : ISceneNodeUser{ node }
+    , m_Radiance{ 1.0f, 1.0f, 1.0f }
 {}
 
 }

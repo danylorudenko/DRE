@@ -112,10 +112,10 @@ void VulkanApplicationDelegate::start()
     //m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 7.28f, 5.57f, -1.07f });
     //m_MainScene.GetMainCamera().SetEulerOrientation(glm::vec3{ -17.26f, 107.37f, 0.0f });
 
-    m_MainScene.GetMainCamera().GetSceneNode()->SetPosition(glm::vec3{ 0.81f, 2.82f, 2.41f });
-    m_MainScene.GetMainCamera().GetSceneNode()->SetEulerOrientation(glm::vec3{ -24.32f, 13.83f, 0.0f });
+    m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 0.81f, 2.82f, 2.41f });
+    m_MainScene.GetMainCamera().SetCameraEuler(glm::vec3{ -24.32f, 13.83f, 0.0f });
 
-    m_MainScene.GetMainSunLight().GetSceneNode()->SetEulerOrientation(glm::vec3{ m_SunElevation, 45.0f + 180.0f, 0.0f });
+    m_MainScene.GetMainSunLight().SetEulerOrientation(glm::vec3{ m_SunElevation, 45.0f + 180.0f, 0.0f });
 
     m_GraphicsManager.Initialize();
 
@@ -146,15 +146,14 @@ void VulkanApplicationDelegate::start()
     m_WaterMaterial.GetRenderingProperties().SetShader("water");
 
 
-    WORLD::Entity::TransformData wTrans; // water transform
-    
-    wTrans.model = glm::identity<glm::mat4>();
+
+    glm::mat4 waterTransform = glm::identity<glm::mat4>();
     //wTrans.model = glm::rotate(wTrans.model, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    wTrans.model[3][1] += 1.5f;
+    waterTransform[3][1] += 1.5f;
     //wTrans.model[3][2] -= 0.4f;
-    wTrans.model = glm::scale(wTrans.model, glm::vec3{ 0.1f });
-    WORLD::Entity& waterEntity = m_MainScene.CreateWaterEntity(m_GraphicsManager.GetMainContext(), wTrans, &m_WaterGeometry, &m_WaterMaterial);
-    
+    waterTransform = glm::scale(waterTransform, glm::vec3{ 0.1f });
+    WORLD::Entity* waterEntity = m_MainScene.CreateOpaqueEntity(m_GraphicsManager.GetMainContext(), &m_WaterGeometry, &m_WaterMaterial);
+    waterEntity->SetMatrix(waterTransform);
 
     ////////////
     m_BeachMaterial.GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE);
@@ -164,11 +163,12 @@ void VulkanApplicationDelegate::start()
     m_BeachMaterial.AssignTextureToSlot(Data::Material::TextureProperty::METALNESS, m_IOManager.ReadTexture2D("textures\\wavy-sand_metallic.png", Data::TEXTURE_VARIATION_GRAY));
     m_BeachMaterial.AssignTextureToSlot(Data::Material::TextureProperty::ROUGHNESS, m_IOManager.ReadTexture2D("textures\\wavy-sand_roughness.png", Data::TEXTURE_VARIATION_GRAY));
 
-    WORLD::Entity::TransformData bTrans = wTrans; // beach transform
+    glm::mat4 beachTransform = waterTransform; // beach transform
     //bTrans.model = glm::scale(bTrans.model, glm::vec3(1.5f));
-    bTrans.model = glm::rotate(bTrans.model, glm::radians(20.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    bTrans.model[3][2] -= 6.0f;
-    WORLD::Entity& beachEntity = m_MainScene.CreateOpaqueEntity(m_GraphicsManager.GetMainContext(), bTrans, &m_WaterGeometry, &m_BeachMaterial); // reuse water geometry
+    beachTransform = glm::rotate(beachTransform, glm::radians(20.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    beachTransform[3][2] -= 6.0f;
+    WORLD::Entity* beachEntity = m_MainScene.CreateOpaqueEntity(m_GraphicsManager.GetMainContext(), &m_WaterGeometry, &m_BeachMaterial); // reuse water geometry
+    beachEntity->SetMatrix(beachTransform);
 
     Data::Texture2D blueNoise256 = m_IOManager.ReadTexture2D("textures\\blue_noise_rgba.png", Data::TEXTURE_VARIATION_RGBA);
     m_GraphicsManager.GetTextureBank().LoadTexture2DSync("blue_noise_256", 256, 256, VKW::FORMAT_R8G8B8A8_UNORM, blueNoise256.GetBuffer());
@@ -209,13 +209,13 @@ void VulkanApplicationDelegate::update()
         }
     }
 
-    glm::vec3 const sun_orient = m_MainScene.GetMainSunLight().GetSceneNode()->GetGlobalOrientation();
-    m_MainScene.GetMainSunLight().GetSceneNode()->SetEulerOrientation(glm::vec3{ -m_SunElevation, sun_orient.y, sun_orient.z });
+    glm::vec3 const sun_orient = m_MainScene.GetMainSunLight().GetEulerOrientation();
+    m_MainScene.GetMainSunLight().SetEulerOrientation(glm::vec3{ -m_SunElevation, sun_orient.y, sun_orient.z });
     if (m_RotateSun)
-        m_MainScene.GetMainSunLight().GetSceneNode()->Rotate(glm::vec3{ 0.0f, C_SUN_ROTATOR_MUL * m_DeltaMicroseconds, 0.0f });
+        m_MainScene.GetMainSunLight().Rotate(glm::vec3{ 0.0f, C_SUN_ROTATOR_MUL * m_DeltaMicroseconds, 0.0f });
 
     if (m_RotateCamera)
-        m_MainScene.GetMainCamera().GetSceneNode()->Rotate(glm::vec3{ 0.0f, C_SUN_ROTATOR_MUL * m_DeltaMicroseconds * 15.0f, 0.0f});
+        m_MainScene.GetMainCamera().Rotate(glm::vec3{ 0.0f, C_SUN_ROTATOR_MUL * m_DeltaMicroseconds * 15.0f, 0.0f});
 
     if (m_PauseTime != m_GlobalStopwatch.IsPaused())
     {
@@ -270,7 +270,7 @@ void VulkanApplicationDelegate::ImGuiUser()
 
         if (ImGui::Begin("Camera Controls", nullptr, ImGuiWindowFlags_NoResize))
         {
-            WORLD::SceneNode& camera = *m_MainScene.GetMainCamera().GetSceneNode();
+            WORLD::Camera& camera = m_MainScene.GetMainCamera();
             glm::vec3 const& cameraEuler = camera.GetEulerOrientation();
             glm::vec3 const& cameraForward = camera.GetForward();
             glm::vec3 const& cameraRight = camera.GetRight();
@@ -294,10 +294,10 @@ void VulkanApplicationDelegate::ImGuiUser()
                 camera.Move(-cameraRight * moveMul * cameraMod);
             ImGui::SameLine(0.0f, 20.0f);
             if (ImGui::ArrowButton("upr", ImGuiDir_Up))
-                camera.Rotate(glm::vec3{ rotMul * cameraMod, 0.0f, 0.0f });
+                camera.RotateCamera(glm::vec3{ rotMul * cameraMod, 0.0f, 0.0f });
             ImGui::SameLine();
             if (ImGui::ArrowButton("leftr", ImGuiDir_Left))
-                camera.Rotate(glm::vec3{ 0.0f, rotMul * cameraMod, 0.0f });
+                camera.RotateCamera(glm::vec3{ 0.0f, rotMul * cameraMod, 0.0f });
             ImGui::SameLine();
             if(ImGui::Button("UP"))
                 camera.Move(glm::vec3{ 0.0f, moveMul * cameraMod, 0.0f });
@@ -310,10 +310,10 @@ void VulkanApplicationDelegate::ImGuiUser()
                 camera.Move(cameraRight * moveMul * cameraMod);
             ImGui::SameLine(0.0f, 20.0f);
             if (ImGui::ArrowButton("downr", ImGuiDir_Down))
-                camera.Rotate(glm::vec3{ -rotMul * cameraMod, 0.0f, 0.0f });
+                camera.RotateCamera(glm::vec3{ -rotMul * cameraMod, 0.0f, 0.0f });
             ImGui::SameLine();
             if (ImGui::ArrowButton("rightr", ImGuiDir_Right))
-                camera.Rotate(glm::vec3{ 0.0f, -rotMul * cameraMod, 0.0f });
+                camera.RotateCamera(glm::vec3{ 0.0f, -rotMul * cameraMod, 0.0f });
             ImGui::SameLine();
             if (ImGui::Button("DOWN"))
                 camera.Move(glm::vec3{ 0.0f, -moveMul * cameraMod, 0.0f });

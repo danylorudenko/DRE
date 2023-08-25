@@ -47,5 +47,34 @@ void DrawBatcher::Batch(VKW::Context& context, RenderView const& view, Renderabl
     }
 }
 
+void DrawBatcher::BatchShadow(VKW::Context& context, RenderView const& view, RenderableObject::LayerBits layers, AtomDataDelegate atomDelegate)
+{
+    VKW::Pipeline* shadowGenericPipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("forward_shadow");
+
+    auto const& renderables = view.GetObjects();
+    for (std::uint32_t i = 0, count = renderables.Size(); i < count; i++)
+    {
+        RenderableObject& obj = *renderables[i];
+
+        if ((obj.GetLayer() & layers) == 0)
+            continue;
+
+        atomDelegate(obj, context, *m_DescriptorManager, *m_UniformArena, view);
+
+        AtomDraw& atom = m_Draws.EmplaceBack();
+        atom.vertexBuffer  = obj.GetVertexBuffer();
+        atom.vertexOffset  = 0;
+        atom.vertexCount   = obj.GetVertexCount();
+
+        atom.indexBuffer   = obj.GetIndexBuffer();
+        atom.indexOffset   = 0;
+        atom.indexCount    = obj.GetIndexCount();
+
+        atom.pipeline      = shadowGenericPipeline;
+        atom.descriptorSet = obj.GetShadowDescriptorSet(g_GraphicsManager->GetCurrentFrameID());
+
+    }
+}
+
 
 }

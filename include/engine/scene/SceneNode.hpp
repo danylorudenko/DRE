@@ -2,6 +2,7 @@
 
 #include <glm\vec3.hpp>
 #include <glm\mat4x4.hpp>
+#include <glm\gtc\quaternion.hpp>
 
 #include <foundation\memory\Memory.hpp>
 #include <foundation\Container\InplaceVector.hpp>
@@ -31,7 +32,8 @@ public:
     void RemoveChild(SceneNode* child);
 
     inline glm::vec3 const& GetPosition() const { return m_Position; }
-    inline glm::vec3 const& GetEulerOrientation() const { return m_Orientation; }
+    inline glm::quat const& GetOrientation() const { return m_Orientation; }
+    glm::vec3               GetEulerOrientation() const;
     inline float            GetScale() const { return m_Scale; }
 
     inline glm::vec3 const& GetForward() const { return m_Forward; }
@@ -39,7 +41,8 @@ public:
     inline glm::vec3 const& GetUp() const { return m_Up; }
 
     glm::vec3               GetGlobalPosition() const;
-    glm::vec3               GetGlobalOrientation() const;
+    glm::quat               GetGlobalOrientation() const;
+    glm::vec3               GetGlobalEulerOrientation() const;
     float                   GetGlobalScale() const;
 
     glm::mat4               GetGlobalMatrix() const;
@@ -49,11 +52,13 @@ public:
 
 
     inline void             SetPosition(glm::vec3 const& position) { m_Position = position; }
-    inline void             SetEulerOrientation(glm::vec3 const& orientation) { m_Orientation = orientation; }
+    void                    SetOrientation(glm::quat const& orientation);
+    void                    SetEulerOrientation(glm::vec3 const& orientation);
     inline void             SetScale(float scale) { m_Scale = scale; }
 
     inline void             Move(glm::vec3 const& movement) { m_Position += movement; }
-    inline void             Rotate(glm::vec3 const& rotation) { m_Orientation += rotation; }
+    void                    Rotate(glm::quat const& rotation);
+    void                    Rotate(glm::vec3 const& eulerRotation);
 
 
     inline SceneNode* GetParent() const { return m_Parent; }
@@ -67,7 +72,7 @@ private:
 
     glm::vec3   m_Position;
 
-    glm::vec3   m_Orientation;
+    glm::quat   m_Orientation;
     glm::vec3   m_Forward;
     glm::vec3   m_Right;
     glm::vec3   m_Up;

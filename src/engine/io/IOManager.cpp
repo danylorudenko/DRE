@@ -289,34 +289,35 @@ void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiM
     }
 }
 
-void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, aiNode const* node, aiMatrix4x4 const& parentTransform, WORLD::Scene& targetScene)
+void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, aiNode const* node, WORLD::Scene& targetScene, WORLD::SceneNode* parentNode)
 {
-    aiMatrix4x4 const t = node->mTransformation * parentTransform;
+    aiMatrix4x4 const t = node->mTransformation;
     glm::mat4 const transform {
             t.a1, t.a2, t.a3, t.a4,
             t.b1, t.b2, t.b3, t.b4,
             t.c1, t.c2, t.c3, t.c4,
             t.d1, t.d2, t.d3, t.d4
     };
-    transforms go nowhere
+
+    WORLD::SceneNode* sceneNode = targetScene.CreateSceneNode(parentNode);
+    sceneNode->SetMatrix(transform);
 
     for (std::uint32_t i = 0, count = node->mNumMeshes; i < count; i++)
     {
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 
         Data::Material* material = m_MaterialLibrary->GetMaterial(mesh->mMaterialIndex);
-
         Data::Geometry* geometry = m_GeometryLibrary->GetGeometry(node->mMeshes[i]);
-        WORLD::Entity* nodeEntity = targetScene.CreateOpaqueEntity(gfxContext, geometry, material);
+        WORLD::Entity* entity = targetScene.CreateOpaqueEntity(gfxContext, geometry, material, sceneNode);
     }
 
     for (std::uint32_t i = 0; i < node->mNumChildren; i++)
     {
-        ParseAssimpNodeRecursive(gfxContext, assetPath, scene, node->mChildren[i], t, targetScene);
+        ParseAssimpNodeRecursive(gfxContext, assetPath, scene, node->mChildren[i], targetScene, sceneNode);
     }
 }
 
-void IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene, char const* defaultShader, glm::mat4 pt, Data::TextureChannelVariations metalnessRoughnessOverride)
+void IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene, char const* defaultShader, glm::mat4 parentTransform, Data::TextureChannelVariations metalnessRoughnessOverride)
 {
     Assimp::Importer importer = Assimp::Importer();
 
@@ -329,13 +330,10 @@ void IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene, char
     ParseAssimpMeshes(GFX::g_GraphicsManager->GetMainContext(), scene);
     ParseAssimpMaterials(scene, path, defaultShader, metalnessRoughnessOverride);
 
-    aiMatrix4x4 rootTransform{
-        pt[0][0], pt[0][1], pt[0][2], pt[0][3],
-        pt[1][0], pt[1][1], pt[1][2], pt[1][3],
-        pt[2][0], pt[2][1], pt[2][2], pt[2][3],
-        pt[3][0], pt[3][1], pt[3][2], pt[3][3],
-    };
-    ParseAssimpNodeRecursive(GFX::g_GraphicsManager->GetMainContext(), path, scene, scene->mRootNode, rootTransform, targetScene);
+    WORLD::SceneNode* parentNode = targetScene.CreateSceneNode();
+    parentNode->SetMatrix(parentTransform);
+
+    ParseAssimpNodeRecursive(GFX::g_GraphicsManager->GetMainContext(), path, scene, scene->mRootNode, targetScene, parentNode);
     GFX::g_GraphicsManager->GetMainContext().FlushAll();
 }
 

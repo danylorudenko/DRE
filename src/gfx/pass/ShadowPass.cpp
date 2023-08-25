@@ -37,7 +37,7 @@ void ShadowObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::Des
     auto uniformAllocation = arena.AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), uniformSize, 256);
     VKW::DescriptorManager::WriteDesc writeDesc;
     writeDesc.AddUniform(uniformAllocation.m_Buffer, uniformAllocation.m_OffsetInBuffer, uniformAllocation.m_Size, 0);
-    descriptorManager.WriteDescriptorSet(obj.GetDescriptorSet(g_GraphicsManager->GetCurrentFrameID()), writeDesc);
+    descriptorManager.WriteDescriptorSet(obj.GetShadowDescriptorSet(g_GraphicsManager->GetCurrentFrameID()), writeDesc);
 
     UniformProxy uniformProxy{ &context, uniformAllocation };
 
@@ -69,7 +69,7 @@ void ShadowPass::Render(RenderGraph& graph, VKW::Context& context)
     // 1. take all RenderableObject's in main scene
     DrawBatcher batcher{ &DRE::g_FrameScratchAllocator, g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), &g_GraphicsManager->GetUniformArena() };
 
-    batcher.Batch(context, g_GraphicsManager->GetSunShadowRenderView(), RenderableObject::LAYER_OPAQUE_BIT, GFX::ShadowObjectDelegate);
+    batcher.BatchShadow(context, g_GraphicsManager->GetSunShadowRenderView(), RenderableObject::LAYER_OPAQUE_BIT, GFX::ShadowObjectDelegate);
 
     std::uint32_t const startSet = 
         g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount() +

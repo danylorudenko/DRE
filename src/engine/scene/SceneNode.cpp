@@ -11,7 +11,7 @@ namespace WORLD
 SceneNode::SceneNode()
     : m_Parent{ nullptr }
     , m_Position{ 0.0f, 0.0f, 0.0f }
-    , m_Orientation{ 0.0f, 0.0f, 0.0f }
+    , m_Orientation{ glm::identity<glm::quat>() }
     , m_Forward{ 0.0f, 0.0f, -1.0f }
     , m_Right{ 1.0f, 0.0f, 0.0f }
     , m_Up{ 0.0f, 1.0f, 0.0f }
@@ -22,7 +22,7 @@ SceneNode::SceneNode()
 SceneNode::SceneNode(SceneNode* parent)
     : m_Parent{ parent }
     , m_Position{ 0.0f, 0.0f, 0.0f }
-    , m_Orientation{ 0.0f, 0.0f, 0.0f }
+    , m_Orientation{ glm::identity<glm::quat>() }
     , m_Forward{ 0.0f, 0.0f, -1.0f }
     , m_Right{ 1.0f, 0.0f, 0.0f }
     , m_Up{ 0.0f, 1.0f, 0.0f }
@@ -52,9 +52,14 @@ glm::vec3 SceneNode::GetGlobalPosition() const
     return m_Parent != nullptr ? m_Parent->GetGlobalPosition() + m_Position : m_Position;
 }
 
-glm::vec3 SceneNode::GetGlobalOrientation() const
+glm::quat SceneNode::GetGlobalOrientation() const
 {
-    return m_Parent != nullptr ? m_Parent->GetGlobalOrientation() + m_Orientation : m_Orientation;
+    return m_Parent != nullptr ? m_Parent->GetGlobalOrientation() * m_Orientation : m_Orientation;
+}
+
+glm::vec3 SceneNode::GetGlobalEulerOrientation() const
+{
+    return m_Parent != nullptr ? m_Parent->GetGlobalEulerOrientation() + GetEulerOrientation() : GetEulerOrientation();
 }
 
 float SceneNode::GetGlobalScale() const
@@ -67,6 +72,11 @@ void SceneNode::SetParent(SceneNode* parent)
     m_Parent = parent;
 }
 
+glm::vec3 SceneNode::GetEulerOrientation() const
+{
+    return glm::degrees(glm::eulerAngles(m_Orientation));
+}
+
 glm::mat4 SceneNode::GetGlobalMatrix() const
 {
     glm::mat4x4 matrix{
@@ -76,11 +86,7 @@ glm::mat4 SceneNode::GetGlobalMatrix() const
         0.0f, 0.0f, 0.0f, 1.0f
     };
 
-    glm::vec3 const euler = glm::radians(m_Orientation);
-
-    matrix = glm::rotate(matrix, euler.y, glm::vec3{ 0.0f, 1.0f, 0.0f }); // yaw
-    matrix = glm::rotate(matrix, euler.x, glm::vec3{ 1.0f, 0.0f, 0.0f }); // pitch
-    matrix = glm::rotate(matrix, euler.z, glm::vec3{ 0.0f, 0.0f, 1.0f }); // roll
+    matrix = glm::mat4{ m_Orientation } * matrix;
 
     matrix[3][0] = m_Position.x;
     matrix[3][1] = m_Position.y;
@@ -98,11 +104,7 @@ glm::mat4 SceneNode::GetGlobalMatrixNoScale() const
         0.0f, 0.0f, 0.0f, 1.0f
     };
 
-    glm::vec3 const euler = glm::radians(m_Orientation);
-
-    matrix = glm::rotate(matrix, euler.y, glm::vec3{ 0.0f, 1.0f, 0.0f }); // yaw
-    matrix = glm::rotate(matrix, euler.x, glm::vec3{ 1.0f, 0.0f, 0.0f }); // pitch
-    matrix = glm::rotate(matrix, euler.z, glm::vec3{ 0.0f, 0.0f, 1.0f }); // roll
+    matrix = glm::mat4{ m_Orientation } *matrix;
 
     matrix[3][0] = m_Position.x;
     matrix[3][1] = m_Position.y;
@@ -113,17 +115,49 @@ glm::mat4 SceneNode::GetGlobalMatrixNoScale() const
 
 void SceneNode::SetMatrix(glm::mat4 const& matrix)
 {
-    I STOPPED HERE
+    m_Position[0] = matrix[3][0];
+    m_Position[1] = matrix[3][1];
+    m_Position[2] = matrix[3][2];
+
+    glm::mat3 mat = glm::mat3(matrix);
+    glm::vec3 scale = glm::vec3{ glm::length(mat[0]), glm::length(mat[1]), glm::length(mat[2]) };
+
+    mat[0] /= scale[0];
+    mat[1] /= scale[1];
+    mat[2] /= scale[2];
+
+    m_Orientation = glm::quat{ mat };
+}
+
+void SceneNode::SetOrientation(glm::quat const& orientation)
+{
+    m_Orientation = orientation;
+    CalculateDirectionVectors();
+}
+
+void SceneNode::SetEulerOrientation(glm::vec3 const& orientation)
+{
+    m_Orientation = glm::quat{ glm::radians(orientation) };
+    CalculateDirectionVectors();
+}
+
+void SceneNode::Rotate(glm::quat const& rotation)
+{
+    m_Orientation *= rotation;
+    CalculateDirectionVectors();
+}
+
+void SceneNode::Rotate(glm::vec3 const& eulerRotation)
+{
+    m_Orientation *= glm::quat{ glm::radians(eulerRotation) };
+    CalculateDirectionVectors();
 }
 
 void SceneNode::CalculateDirectionVectors()
 {
-    glm::vec3 const euler = glm::radians(GetGlobalOrientation());
+    glm::quat orientation = GetGlobalOrientation();
 
-    glm::mat4 rotationM = glm::identity<glm::mat4>();
-    rotationM = glm::rotate(rotationM, euler.y, glm::vec3{ 0.0f, 1.0f, 0.0f }); // yaw
-    rotationM = glm::rotate(rotationM, euler.x, glm::vec3{ 1.0f, 0.0f, 0.0f }); // pitch
-    rotationM = glm::rotate(rotationM, euler.z, glm::vec3{ 0.0f, 0.0f, 1.0f }); // roll
+    glm::mat4 rotationM = glm::mat4_cast(orientation);
 
     m_Forward = rotationM * glm::vec4{ 0.0f, 0.0f, -1.0f, 0.0f };
     m_Right = rotationM * glm::vec4{ 1.0f, 0.0f, 0.0f, 0.0f };
