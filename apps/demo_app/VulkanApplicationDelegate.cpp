@@ -16,6 +16,7 @@
 #include <vk_wrapper\pipeline\ShaderModule.hpp>
 
 #include <engine\data\Geometry.hpp>
+#include <engine\ApplicationContext.hpp>
 
 
 ////////////////
@@ -23,14 +24,14 @@ constexpr bool C_COMPILE_GLSL_SOURCES_ON_START = true;
 ////////////////
 
 //////////////////////////////////////////
-VulkanApplicationDelegate::VulkanApplicationDelegate(HINSTANCE instance, char const* title, std::uint32_t windowWidth, std::uint32_t windowHeight, std::uint32_t buffering, bool vkDebug, bool imguiEnabled)
+DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* title, std::uint32_t windowWidth, std::uint32_t windowHeight, std::uint32_t buffering, bool vkDebug, bool imguiEnabled)
     : m_MainWindow {
         instance,
         title,
         windowWidth,
         windowHeight,
         "VulkanRenderWindow",
-        VulkanApplicationDelegate::WinProc,
+        DREApplicationDelegate::WinProc,
         this }
     , m_InputSystem{ m_MainWindow.NativeHandle() }
     , m_MaterialLibrary{ &DRE::g_MainAllocator }
@@ -38,14 +39,7 @@ VulkanApplicationDelegate::VulkanApplicationDelegate(HINSTANCE instance, char co
     , m_IOManager{ &DRE::g_MainAllocator, &m_MaterialLibrary, &m_GeometryLibrary }
     , m_GraphicsManager{ instance, &m_MainWindow, &m_IOManager, vkDebug }
     , m_ImGuiEnabled{ imguiEnabled }
-    , m_DeltaMicroseconds{ 0 }
-    , m_EngineFrame{ 0 }
     , m_MainScene{ &DRE::g_MainAllocator }
-    , m_RotateSun{ false }
-    , m_SunElevation{ 70.0f }
-    , m_RotateCamera{ false }
-    , m_PauseTime{ false }
-    , m_TimeOffset{ 0.0f }
     , m_WaterGeometry{ sizeof(Data::DREVertex), 4 }
     , m_WaterMaterial{ "water_mat" }
     , m_BeachMaterial{ "beach_mat" }
@@ -54,15 +48,15 @@ VulkanApplicationDelegate::VulkanApplicationDelegate(HINSTANCE instance, char co
 }
 
 //////////////////////////////////////////
-VulkanApplicationDelegate::~VulkanApplicationDelegate()
+DREApplicationDelegate::~DREApplicationDelegate()
 {
 
 }
 
 //////////////////////////////////////////
-LRESULT VulkanApplicationDelegate::WinProc(HWND handle, UINT message, WPARAM wparam, LPARAM lparam)
+LRESULT DREApplicationDelegate::WinProc(HWND handle, UINT message, WPARAM wparam, LPARAM lparam)
 {
-    auto* appDelegate = reinterpret_cast<VulkanApplicationDelegate*>(::GetWindowLongPtr(handle, GWLP_USERDATA));
+    auto* appDelegate = reinterpret_cast<DREApplicationDelegate*>(::GetWindowLongPtr(handle, GWLP_USERDATA));
     
     switch (message)
     {
@@ -87,17 +81,17 @@ LRESULT VulkanApplicationDelegate::WinProc(HWND handle, UINT message, WPARAM wpa
 }
 
 //////////////////////////////////////////
-InputSystem& VulkanApplicationDelegate::GetInputSystem()
+InputSystem& DREApplicationDelegate::GetInputSystem()
 {
     return m_InputSystem;
 }
 
-WORLD::Scene& VulkanApplicationDelegate::GetMainScene()
+WORLD::Scene& DREApplicationDelegate::GetMainScene()
 {
     return m_MainScene;
 }
 
-void VulkanApplicationDelegate::start()
+void DREApplicationDelegate::start()
 {
     if (m_ImGuiEnabled)
         InitImGui();
@@ -115,7 +109,7 @@ void VulkanApplicationDelegate::start()
     m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 0.81f, 2.82f, 2.41f });
     m_MainScene.GetMainCamera().SetCameraEuler(glm::vec3{ -24.32f, 13.83f, 0.0f });
 
-    m_MainScene.GetMainSunLight().SetEulerOrientation(glm::vec3{ m_SunElevation, 45.0f + 180.0f, 0.0f });
+    m_MainScene.GetMainSunLight().SetEulerOrientation(glm::vec3{ 70.0f, 45.0f + 180.0f, 0.0f });
 
     m_GraphicsManager.Initialize();
 
@@ -181,11 +175,13 @@ void VulkanApplicationDelegate::start()
 constexpr float C_SUN_ROTATOR_MUL = 1.0f / 100000.0f;
 
 //////////////////////////////////////////
-void VulkanApplicationDelegate::update()
+void DREApplicationDelegate::update()
 {
     ////////////////////////////////////////////////////
-    // Frame time measurement
-    m_DeltaMicroseconds = m_FrameStopwatch.CurrentMicroseconds();
+    // Frame time
+    DRE::g_AppContext.m_DeltaTimeUS = m_FrameStopwatch.CurrentMicroseconds();
+    DRE::g_AppContext.m_TimeSinceStartUS = m_GlobalStopwatch.CurrentMicroseconds();
+    DRE::g_AppContext.m_SystemTimeUS = DRE::Stopwatch::GlobalTimeMicroseconds();
     m_FrameStopwatch.Reset();
     ////////////////////////////////////////////////////
 
@@ -209,41 +205,36 @@ void VulkanApplicationDelegate::update()
         }
     }
 
-    glm::vec3 const sun_orient = m_MainScene.GetMainSunLight().GetEulerOrientation();
-    m_MainScene.GetMainSunLight().SetEulerOrientation(glm::vec3{ -m_SunElevation, sun_orient.y, sun_orient.z });
-    if (m_RotateSun)
-        m_MainScene.GetMainSunLight().Rotate(glm::vec3{ 0.0f, C_SUN_ROTATOR_MUL * m_DeltaMicroseconds, 0.0f });
-
-    if (m_RotateCamera)
-        m_MainScene.GetMainCamera().Rotate(glm::vec3{ 0.0f, C_SUN_ROTATOR_MUL * m_DeltaMicroseconds * 15.0f, 0.0f});
-
-    if (m_PauseTime != m_GlobalStopwatch.IsPaused())
+    if (DRE::g_AppContext.m_PauseTime != m_GlobalStopwatch.IsPaused())
     {
-        if (m_PauseTime)
+        if (DRE::g_AppContext.m_PauseTime)
+        {
             m_GlobalStopwatch.Pause();
+        }
         else
+        {
             m_GlobalStopwatch.Unpause();
+        }
     }
 
-    float const globalTimeSeconds = static_cast<float>(m_GlobalStopwatch.CurrentMilliseconds()) * 0.001f + m_TimeOffset;
-    m_GraphicsManager.RenderFrame(m_EngineFrame, m_DeltaMicroseconds, globalTimeSeconds);
+    m_GraphicsManager.RenderFrame(DRE::g_AppContext.m_EngineFrame, DRE::g_AppContext.m_DeltaTimeUS, m_GlobalStopwatch.CurrentSeconds());
 
-    m_EngineFrame++;
+    DRE::g_AppContext.m_EngineFrame++;
 }
 
 //////////////////////////////////////////
-void VulkanApplicationDelegate::shutdown()
+void DREApplicationDelegate::shutdown()
 {
 }
 
 //////////////////////////////////////////
-void VulkanApplicationDelegate::InitImGui()
+void DREApplicationDelegate::InitImGui()
 {
     m_ImGuiHelper = std::make_unique<ImGuiHelper>(&m_MainWindow, &m_InputSystem);
 }
 
 //////////////////////////////////////////
-void VulkanApplicationDelegate::ImGuiUser()
+void DREApplicationDelegate::ImGuiUser()
 {
     if (m_ImGuiEnabled) {
         IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context. Refer to examples app!");
@@ -259,9 +250,9 @@ void VulkanApplicationDelegate::ImGuiUser()
         static bool frameDataOpened = false;
         if (ImGui::Begin("Stats", nullptr, frameDataWindowFlags))
         {
-            ImGui::Text("DT: %f ms", static_cast<double>(m_DeltaMicroseconds) / 1000);
-            ImGui::Text("FPS: %f", 1.0 / (static_cast<double>(m_DeltaMicroseconds) / 1000000));
-            ImGui::Text("Global T(s): %f", static_cast<float>(m_GlobalStopwatch.CurrentMilliseconds()) * 0.001f);
+            ImGui::Text("DT: %f ms", static_cast<double>(DRE::g_AppContext.m_DeltaTimeUS) / 1000);
+            ImGui::Text("FPS: %f", 1.0 / (static_cast<double>(DRE::g_AppContext.m_DeltaTimeUS) / 1000000));
+            ImGui::Text("Global T(s): %f", m_GlobalStopwatch.CurrentSeconds());
         }
         ImGui::End();
 
@@ -281,7 +272,7 @@ void VulkanApplicationDelegate::ImGuiUser()
                 camera.SetEulerOrientation(glm::vec3{ 0.0f, 0.0f, 0.0f });
             }
 
-            float const cameraMod = (static_cast<float>(m_DeltaMicroseconds) / 10000);
+            float const cameraMod = (static_cast<float>(DRE::g_AppContext.m_DeltaTimeUS) / 10000);
             float const moveMul = 0.1f;
             float const rotMul = 1.0f;
 
@@ -323,12 +314,7 @@ void VulkanApplicationDelegate::ImGuiUser()
             ImGui::Text("Camera pos: %.2f, %.2f, %.2f", camera.GetPosition()[0], camera.GetPosition()[1], camera.GetPosition()[2]);
             ImGui::Text("Camera rot: %.2f, %.2f, %.2f", camera.GetEulerOrientation()[0], camera.GetEulerOrientation()[1], camera.GetEulerOrientation()[2]);
 
-            ImGui::Checkbox("Rotate sun", &m_RotateSun);
-            ImGui::SliderFloat("Sun Elevation", &m_SunElevation, 0.0f, 90.0f);
-            //ImGui::SliderAngle("Sun Elevation", &m_SunElevation, 0.0f, 90.0f);
 
-
-            ImGui::Checkbox("Rotate cam", &m_RotateCamera);
             if (ImGui::BeginCombo("Water settings", nullptr, ImGuiComboFlags_None))
             {
                 /*
@@ -364,12 +350,11 @@ void VulkanApplicationDelegate::ImGuiUser()
             ImGui::SliderFloat("TAA Alpha", &m_GraphicsManager.GetGraphicsSettings().m_AlphaTAA, 0.0f, 1.0f);
             ImGui::SliderFloat("TAA Jitter Scale", &m_GraphicsManager.GetGraphicsSettings().m_JitterScale, 0.0f, 2.0f);
             ImGui::SliderFloat("TAA Variance Gamma", &m_GraphicsManager.GetGraphicsSettings().m_VarianceGammaTAA, 0.0f, 5.0f);
-            ImGui::Checkbox("Pause time", &m_PauseTime);
+            ImGui::Checkbox("Pause time", &DRE::g_AppContext.m_PauseTime);
             if(ImGui::Button("Reset global time"))
             {
                 m_GlobalStopwatch.Reset();
             }
-            ImGui::SliderFloat("Time offset", &m_TimeOffset, -10.0f, 10.0);
             ImGui::SliderFloat("Generic Scalar", &m_GraphicsManager.GetGraphicsSettings().m_GenericScalar, -2.0f, 2.0f);
 
         }

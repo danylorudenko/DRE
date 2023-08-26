@@ -19,24 +19,25 @@
 #include <foundation\system\DynamicLibrary.hpp>
 #include <foundation\input\InputSystem.hpp>
 
+#include <engine\ApplicationContext.hpp>
 #include <engine\scene\Scene.hpp>
 #include <engine\data\MaterialLibrary.hpp>
 #include <engine\data\GeometryLibrary.hpp>
 
 #include <engine\io\IOManager.hpp>
 
-class VulkanApplicationDelegate
+class DREApplicationDelegate
     : public Application::ApplicationDelegate
     , public NonMovable
 {
 public:
-    VulkanApplicationDelegate(HINSTANCE instance, char const* title, std::uint32_t windowWidth, std::uint32_t windowHeight, std::uint32_t buffering, bool vkDebug, bool imguiEnabled);
+    DREApplicationDelegate(HINSTANCE instance, char const* title, std::uint32_t windowWidth, std::uint32_t windowHeight, std::uint32_t buffering, bool vkDebug, bool imguiEnabled);
     
     virtual void start() override;
     virtual void update() override;
     virtual void shutdown() override;
 
-    virtual ~VulkanApplicationDelegate();
+    virtual ~DREApplicationDelegate();
 
     static LRESULT CALLBACK WinProc(HWND handle, UINT message, WPARAM wparam, LPARAM lparam);
 
@@ -48,7 +49,6 @@ private:
     void InitImGui();
     void ImGuiUser();
 
-private:
     Window                              m_MainWindow;
     InputSystem                         m_InputSystem;
     Data::MaterialLibrary               m_MaterialLibrary;
@@ -66,14 +66,6 @@ private:
 
     DRE::Stopwatch  m_FrameStopwatch;
     DRE::Stopwatch  m_GlobalStopwatch;
-    std::uint64_t m_DeltaMicroseconds;
-    std::uint64_t m_EngineFrame;
-
 
     WORLD::Scene                        m_MainScene;
-    bool                                m_RotateSun;
-    float                               m_SunElevation;
-    bool                                m_RotateCamera;
-    bool                                m_PauseTime;
-    float                               m_TimeOffset;
 };

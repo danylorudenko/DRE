@@ -10,8 +10,8 @@ int main()
 
     bool imguiEnabled = true;
 
-    VulkanApplicationDelegate* appDelegate = (VulkanApplicationDelegate*)DRE::g_PersistentDataAllocator.Alloc(sizeof(VulkanApplicationDelegate), alignof(VulkanApplicationDelegate));
-    new (appDelegate) VulkanApplicationDelegate{ instance, "DRE", 1600u, 900u, 2u, DEBUG_OR_RELEASE(true, false), imguiEnabled };
+    DREApplicationDelegate* appDelegate = (DREApplicationDelegate*)DRE::g_PersistentDataAllocator.Alloc(sizeof(DREApplicationDelegate), alignof(DREApplicationDelegate));
+    new (appDelegate) DREApplicationDelegate{ instance, "DRE", 1600u, 900u, 2u, DEBUG_OR_RELEASE(true, false), imguiEnabled };
 
     Application* application = (Application*)DRE::g_PersistentDataAllocator.Alloc(sizeof(Application), alignof(Application));
     new (application) Application{ appDelegate };
@@ -19,7 +19,7 @@ int main()
     application->run();
 
     application->~Application();;
-    appDelegate->~VulkanApplicationDelegate();
+    appDelegate->~DREApplicationDelegate();
 
     DRE::TerminateGlobalMemory();
 

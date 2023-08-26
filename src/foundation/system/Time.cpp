@@ -25,11 +25,9 @@ void Stopwatch::Reset(TimePoint point)
     m_Paused = false;
 }
 
-std::uint64_t Stopwatch::CurrentSeconds() const
+float Stopwatch::CurrentSeconds() const
 {
-    auto now = m_Paused ? m_PausePoint : std::chrono::high_resolution_clock::now();
-    auto period = (now - m_Start) - m_PausedPeriod;
-    return std::chrono::duration_cast<std::chrono::seconds>(period).count();
+    return CurrentMilliseconds() * 0.001f;
     
 }
 
@@ -61,6 +59,20 @@ void Stopwatch::Unpause()
     m_PausedPeriod += std::chrono::high_resolution_clock::now() - m_PausePoint;
 }
 
+std::uint64_t Stopwatch::GlobalTimeMicroseconds()
+{
+    return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+}
+
+std::uint64_t Stopwatch::GlobalTimeMillseconds()
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+}
+
+float Stopwatch::GlobalTimeSeconds()
+{
+    return GlobalTimeMillseconds() * 0.001f;
+}
 
 DRE_END_NAMESPACE
 

@@ -11,9 +11,14 @@ public:
     using TimePoint = std::chrono::time_point<std::chrono::high_resolution_clock>;
     using TimePeriod = TimePoint::duration;
 
+    static std::uint64_t GlobalTimeMicroseconds();
+    static std::uint64_t GlobalTimeMillseconds();
+    static float         GlobalTimeSeconds();
+
+public:
     Stopwatch();
 
-    std::uint64_t CurrentSeconds() const;
+    float         CurrentSeconds() const;
     std::uint64_t CurrentMilliseconds() const;
     std::uint64_t CurrentMicroseconds() const;
 
