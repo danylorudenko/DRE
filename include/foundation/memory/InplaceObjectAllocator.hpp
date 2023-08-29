@@ -56,6 +56,8 @@ public:
 
     void Free(T* obj)
     {
+        DRE_ASSERT(m_ElementsInUseDebug > 0, "All objects already free. Double freeing some of them");
+
         obj->~T();
 
         AlignedStorage<T>* node = reinterpret_cast<AlignedStorage<T>*>(obj);

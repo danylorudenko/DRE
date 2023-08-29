@@ -26,6 +26,7 @@ class Entity : public ISceneNodeUser
 {
 public:
     Entity(GFX::RenderableObject* renderable = nullptr);
+    ~Entity();
 
     inline GFX::RenderableObject*   GetRenderableObject() { return m_RenderableObject; }
 

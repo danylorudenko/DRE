@@ -18,7 +18,7 @@ TextureBank::TextureBank(VKW::Context* loadingContext, VKW::ResourcesController*
 
 TextureBank::~TextureBank()
 {
-
+    m_DiscTextures.Clear();
 }
 
 ReadOnlyTexture* TextureBank::FindTexture(DRE::String128 const& name)

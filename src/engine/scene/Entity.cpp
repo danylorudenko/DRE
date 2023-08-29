@@ -1,6 +1,7 @@
 #include <engine\scene\Entity.hpp>
 
 #include <gfx\renderer\RenderableObject.hpp>
+#include <gfx\GraphicsManager.hpp>
 
 namespace WORLD
 {
@@ -40,6 +41,10 @@ void Entity::SetMatrix(glm::mat4 m)
 {
     m_SceneNode->SetMatrix(m);
     m_RenderableObject->Transform(m_SceneNode->GetGlobalMatrix());
+}
+
+Entity::~Entity()
+{
 }
 
 }

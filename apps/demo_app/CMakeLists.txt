@@ -2,14 +2,14 @@ set(DEMO_HEADER_LIST
 	"${DRE_SOURCE_DIR}/apps/demo_app/Application.hpp"
 	"${DRE_SOURCE_DIR}/apps/demo_app/AppUtils.hpp"
 	"${DRE_SOURCE_DIR}/apps/demo_app/ImGuiHelper.hpp"
-	"${DRE_SOURCE_DIR}/apps/demo_app/VulkanApplicationDelegate.hpp")
+	"${DRE_SOURCE_DIR}/apps/demo_app/DREApplicationDelegate.hpp")
 	
 set(DEMO_SOURCE_LIST
 	"${DRE_SOURCE_DIR}/apps/demo_app/Application.cpp"
 	"${DRE_SOURCE_DIR}/apps/demo_app/AppUtils.cpp"
 	"${DRE_SOURCE_DIR}/apps/demo_app/ImGuiHelper.cpp"
 	"${DRE_SOURCE_DIR}/apps/demo_app/main.cpp"
-	"${DRE_SOURCE_DIR}/apps/demo_app/VulkanApplicationDelegate.cpp")
+	"${DRE_SOURCE_DIR}/apps/demo_app/DREApplicationDelegate.cpp")
 	
 add_executable(demo_app ${DEMO_HEADER_LIST} ${DEMO_SOURCE_LIST} "${DRE_SOURCE_DIR}/NatvisFile.natvis")
 
@@ -25,6 +25,7 @@ target_link_libraries(demo_app PRIVATE
 	vk_wrapper
 	gfx
 	engine
+	editor
 	imgui)
 	
 set_property(

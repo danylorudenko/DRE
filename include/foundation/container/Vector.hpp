@@ -245,6 +245,18 @@ public:
         return Size();
     }
 
+    template<typename TPredicate>
+    U32 FindIf(TPredicate const& predicate)
+    {
+        for (U32 i = 0; i < m_Size; i++)
+        {
+            if (predicate(operator[](i)))
+                return i;
+        }
+
+        return Size();
+    }
+
 private:
     static constexpr U32 C_SVO_CAPACITY = 12;
 

@@ -1,4 +1,4 @@
-#include "VulkanApplicationDelegate.hpp"
+#include "DREApplicationDelegate.hpp"
 
 #include "AppUtils.hpp"
 
@@ -40,6 +40,7 @@ DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* t
     , m_GraphicsManager{ instance, &m_MainWindow, &m_IOManager, vkDebug }
     , m_ImGuiEnabled{ imguiEnabled }
     , m_MainScene{ &DRE::g_MainAllocator }
+    , m_RootEditor{ &m_MainScene }
     , m_WaterGeometry{ sizeof(Data::DREVertex), 4 }
     , m_WaterMaterial{ "water_mat" }
     , m_BeachMaterial{ "beach_mat" }
@@ -236,7 +237,9 @@ void DREApplicationDelegate::InitImGui()
 //////////////////////////////////////////
 void DREApplicationDelegate::ImGuiUser()
 {
-    if (m_ImGuiEnabled) {
+    m_RootEditor.Render();
+
+    if (/*m_ImGuiEnabled*/false) {
         IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context. Refer to examples app!");
 
         ImGui::SetNextWindowContentSize(ImVec2{ 150.0f, 0.0f});

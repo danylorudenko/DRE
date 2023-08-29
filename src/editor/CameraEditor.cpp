@@ -1,5 +1,6 @@
 #include <editor\CameraEditor.hpp>
 
+#include <editor\RootEditor.hpp>
 #include <foundation\Common.hpp>
 #include <engine\scene\Camera.hpp>
 #include <engine\ApplicationContext.hpp>
@@ -9,12 +10,14 @@
 namespace EDITOR
 {
 
-CameraEditor::CameraEditor(EditorFlags flags, WORLD::Camera* camera)
-    : BaseEditor{ flags }
+CameraEditor::CameraEditor(BaseEditor* rootEditor, EditorFlags flags, WORLD::Camera* camera)
+    : BaseEditor{ rootEditor, flags }
+    , m_Camera{ camera }
 {}
 
 CameraEditor::CameraEditor(CameraEditor&& rhs)
     : BaseEditor{ DRE_MOVE(rhs) }
+    , m_Camera{ nullptr }
 {
     operator=(DRE_MOVE(rhs));
 }
@@ -30,7 +33,8 @@ CameraEditor& CameraEditor::operator=(CameraEditor&& rhs)
 
 void CameraEditor::Render()
 {
-    if (ImGui::Begin("Camera Controls", nullptr, ImGuiWindowFlags_NoResize))
+    bool isOpen = true;
+    if (ImGui::Begin("Camera Controls", &isOpen, ImGuiWindowFlags_NoResize))
     {
         WORLD::Camera& camera = *m_Camera;
         glm::vec3 const& cameraEuler = camera.GetEulerOrientation();
@@ -87,6 +91,16 @@ void CameraEditor::Render()
     }
 
     ImGui::End();
+
+    if (!isOpen)
+    {
+        Close();
+    }
+}
+
+void CameraEditor::Close()
+{
+    reinterpret_cast<RootEditor*>(m_RootEditor)->CloseEditor(this);
 }
 
 }

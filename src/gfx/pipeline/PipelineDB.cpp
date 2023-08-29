@@ -22,6 +22,10 @@ PipelineDB::PipelineDB(VKW::Device* device, IO::IOManager* ioManager)
 
 PipelineDB::~PipelineDB()
 {
+    m_Pipelines.Clear();
+    m_PipelineLayouts.Clear();
+    m_SetLayouts.Clear();
+    m_ShaderLayouts.Clear();
 }
 
 void PipelineDB::CreateDefaultPipelines()

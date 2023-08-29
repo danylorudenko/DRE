@@ -26,6 +26,8 @@
 
 #include <engine\io\IOManager.hpp>
 
+#include <editor\RootEditor.hpp>
+
 class DREApplicationDelegate
     : public Application::ApplicationDelegate
     , public NonMovable
@@ -68,4 +70,6 @@ private:
     DRE::Stopwatch  m_GlobalStopwatch;
 
     WORLD::Scene                        m_MainScene;
+
+    EDITOR::RootEditor                  m_RootEditor;
 };

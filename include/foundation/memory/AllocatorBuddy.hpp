@@ -73,6 +73,14 @@ public:
         return result;
     }
 
+    template<typename T, typename... TArgs>
+    inline T* Alloc(TArgs&&... args)
+    {
+        void* memory = Alloc(sizeof(T), alignof(T));
+        new (memory) T{ std::forward<TArgs>(args)... };
+        return reinterpret_cast<T*>(memory);
+    };
+
     inline void Free(void* memory)
     {
         U8 const depth = MetaGetChunkDepth(memory);
@@ -82,6 +90,13 @@ public:
 
         MetaPutFreeChunkOnDepth(depth, memory);
         RecursiveMergeInternal(depth, memory);
+    }
+
+    template<typename T>
+    inline void FreeObject(T* obj)
+    {
+        obj->~T();
+        Free(obj);
     }
 
 private:
