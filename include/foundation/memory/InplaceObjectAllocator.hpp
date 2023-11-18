@@ -73,7 +73,9 @@ public:
 
     ~InplaceObjectAllocator()
     {
-        DRE_DEBUG_ONLY(DRE_ASSERT(m_ElementsInUseDebug == 0, "ObjectPool was deleted before all objects returned to pool."));
+        // It's not always mandatory, some are just POD (Plain Old Data and OK not to be released manually.
+        // Uncomment to debug
+        //DRE_DEBUG_ONLY(DRE_ASSERT(m_ElementsInUseDebug == 0, "ObjectPool was deleted before all objects returned to pool."));
     }
 
 private:
