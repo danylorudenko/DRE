@@ -15,13 +15,13 @@ InputSystem::InputSystem()
     , prevKeyboardState_{}
     , keyboardState_{}
 {
-    DRE::DreMemZero(&pendingMouseState_, sizeof(pendingMouseState_));
-    DRE::DreMemZero(&mouseState_, sizeof(mouseState_));
-    DRE::DreMemZero(&prevMouseState_, sizeof(prevMouseState_));
+    DRE::MemZero(&pendingMouseState_, sizeof(pendingMouseState_));
+    DRE::MemZero(&mouseState_, sizeof(mouseState_));
+    DRE::MemZero(&prevMouseState_, sizeof(prevMouseState_));
 
-    DRE::DreMemZero(&pendingKeyboardState_, sizeof(pendingKeyboardState_));
-    DRE::DreMemZero(&prevKeyboardState_, sizeof(prevKeyboardState_));
-    DRE::DreMemZero(&keyboardState_, sizeof(keyboardState_));
+    DRE::MemZero(&pendingKeyboardState_, sizeof(pendingKeyboardState_));
+    DRE::MemZero(&prevKeyboardState_, sizeof(prevKeyboardState_));
+    DRE::MemZero(&keyboardState_, sizeof(keyboardState_));
 }
 
 InputSystem::InputSystem(HWND windowHandle)
@@ -32,13 +32,13 @@ InputSystem::InputSystem(HWND windowHandle)
     , prevKeyboardState_{}
     , keyboardState_{}
 {
-    DRE::DreMemZero(&pendingMouseState_, sizeof(pendingMouseState_));
-    DRE::DreMemZero(&mouseState_, sizeof(mouseState_));
-    DRE::DreMemZero(&prevMouseState_, sizeof(prevMouseState_));
+    DRE::MemZero(&pendingMouseState_, sizeof(pendingMouseState_));
+    DRE::MemZero(&mouseState_, sizeof(mouseState_));
+    DRE::MemZero(&prevMouseState_, sizeof(prevMouseState_));
 
-    DRE::DreMemZero(&pendingKeyboardState_, sizeof(pendingKeyboardState_));
-    DRE::DreMemZero(&prevKeyboardState_, sizeof(prevKeyboardState_));
-    DRE::DreMemZero(&keyboardState_, sizeof(keyboardState_));
+    DRE::MemZero(&pendingKeyboardState_, sizeof(pendingKeyboardState_));
+    DRE::MemZero(&prevKeyboardState_, sizeof(prevKeyboardState_));
+    DRE::MemZero(&keyboardState_, sizeof(keyboardState_));
 
     UINT inputDeviceCount = 0;
     {

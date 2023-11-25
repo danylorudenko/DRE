@@ -175,6 +175,9 @@ public:
 
     void Clear()
     {
+        if (m_Size == 0)
+            return;
+
         TKey defaultKey{};
         for (U32 i = 0; i < BUCKET_COUNT; i++)
         {

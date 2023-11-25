@@ -199,7 +199,7 @@ public:
 
     inline void Reset()
     {
-        DreMemZero(m_Memory, m_Size);
+        MemZero(m_Memory, m_Size);
         m_ChunksStart = ChunksStart();
 
         MetaPutFreeChunkOnDepth(0, m_ChunksStart);

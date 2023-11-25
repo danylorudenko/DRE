@@ -5,14 +5,19 @@
 
 DRE_BEGIN_NAMESPACE
 
-inline void DreMemZero(void* mem, U64 size)
+inline void MemZero(void* mem, U64 size)
 {
     ::ZeroMemory(mem, size);
 }
 
-inline void DreMemSet(void* mem, U64 size, U32 val)
+inline void MemSet(void* mem, U64 size, U32 val)
 {
     ::FillMemory(mem, size, val);
+}
+
+inline void MemCpy(void* dst, void* src, U64 size)
+{
+    ::CopyMemory(dst, src, size);
 }
 
 inline void WriteMemorySequence(void*& memory, void const* data, std::uint32_t size)

@@ -56,7 +56,10 @@ public:
         return *this;
     }
 
-    virtual ~HashTable() {}
+    virtual ~HashTable() 
+    {
+        BaseT::Clear();
+    }
 
     BucketT* NewCollisionBucketBehavior()
     {

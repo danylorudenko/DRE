@@ -5,6 +5,7 @@ set(FOUNDATION_HEADER_LIST
 	"${DRE_SOURCE_DIR}/include/foundation/class_features/NonMovable.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/container/HashTableBase.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/container/HashTable.hpp"
+	"${DRE_SOURCE_DIR}/include/foundation/container/InplaceBitfield.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/container/InplaceHashTable.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/container/InplaceVector.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/container/ObjectPool.hpp"
