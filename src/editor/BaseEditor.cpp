@@ -1,6 +1,7 @@
 #include <editor\BaseEditor.hpp>
 
 #include <foundation\Common.hpp>
+#include <editor\RootEditor.hpp>
 
 namespace EDITOR
 {
@@ -28,6 +29,11 @@ BaseEditor& BaseEditor::operator=(BaseEditor&& rhs)
     DRE_SWAP_MEMBER(m_Flags);
 
     return *this;
+}
+
+void BaseEditor::Close()
+{
+    reinterpret_cast<RootEditor*>(m_RootEditor)->CloseEditor(this);
 }
 
 }

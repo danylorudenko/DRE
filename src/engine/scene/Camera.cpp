@@ -6,8 +6,8 @@
 namespace WORLD
 {
 
-Camera::Camera(SceneNode* node)
-    : ISceneNodeUser{ node }
+Camera::Camera()
+    : ISceneNodeUser{ nullptr, ISceneNodeUser::Type::Camera }
     , m_CameraEuler{ 0.0f, 0.0f, 0.0f }
     , m_FOV{ 60.0f }
 {

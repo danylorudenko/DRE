@@ -10,7 +10,7 @@ namespace WORLD
 class Camera : public ISceneNodeUser
 {
 public:
-    Camera(SceneNode* node = nullptr);
+    Camera();
 
     inline glm::vec2        GetRange() const { return glm::vec2{ 0.1f, 1000.0f }; }
     inline float            GetFOV() const { return m_FOV; }

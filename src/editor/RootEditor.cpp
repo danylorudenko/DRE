@@ -4,6 +4,7 @@
 #include <engine\scene\Camera.hpp>
 #include <engine\scene\Scene.hpp>
 #include <editor\CameraEditor.hpp>
+#include <editor\SceneGraphEditor.hpp>
 
 #include <imgui.h>
 
@@ -73,6 +74,15 @@ void RootEditor::Render()
                 {
                     CameraEditor* cameraEditor = DRE::g_MainAllocator.Alloc<CameraEditor>(this, EDITOR_FLAGS_STATIC, &m_MainScene->GetMainCamera());
                     m_Editors.EmplaceBack(cameraEditor);
+                }
+            }
+
+            if (ImGui::MenuItem("Scene Graph Editor"))
+            {
+                if (GetEditorByType(BaseEditor::Type::SceneGraph) == nullptr)
+                {
+                    SceneGraphEditor* sceneEditor = DRE::g_MainAllocator.Alloc<SceneGraphEditor>(this, EDITOR_FLAGS_NONE, m_MainScene);
+                    m_Editors.EmplaceBack(sceneEditor);
                 }
             }
 

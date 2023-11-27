@@ -7,7 +7,7 @@ namespace WORLD
 {
 
 Entity::Entity(GFX::RenderableObject* renderable)
-    : ISceneNodeUser{ nullptr }
+    : ISceneNodeUser{ nullptr, ISceneNodeUser::Type::Entity }
     , m_RenderableObject{ renderable }
     , m_Material{ nullptr }
     , m_Geometry{ nullptr }

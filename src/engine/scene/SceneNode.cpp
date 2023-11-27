@@ -10,6 +10,7 @@ namespace WORLD
 
 SceneNode::SceneNode()
     : m_Parent{ nullptr }
+    , m_NodeUser{ nullptr }
     , m_Position{ 0.0f, 0.0f, 0.0f }
     , m_Orientation{ glm::identity<glm::quat>() }
     , m_Forward{ 0.0f, 0.0f, -1.0f }
@@ -19,8 +20,9 @@ SceneNode::SceneNode()
     , m_Children{ &DRE::g_MainAllocator }
 {}
 
-SceneNode::SceneNode(SceneNode* parent)
+SceneNode::SceneNode(SceneNode* parent, ISceneNodeUser* user)
     : m_Parent{ parent }
+    , m_NodeUser{ user }
     , m_Position{ 0.0f, 0.0f, 0.0f }
     , m_Orientation{ glm::identity<glm::quat>() }
     , m_Forward{ 0.0f, 0.0f, -1.0f }
@@ -30,7 +32,7 @@ SceneNode::SceneNode(SceneNode* parent)
     , m_Children{ &DRE::g_MainAllocator }
 {}
 
-void SceneNode::AddChild(SceneNode* child)
+DRE::U32 SceneNode::AddChild(SceneNode* child)
 {
 #ifdef DRE_DEBUG
     const DRE::U32 id = m_Children.Find(child);
@@ -38,6 +40,8 @@ void SceneNode::AddChild(SceneNode* child)
 #endif // DRE_DEBUG
 
     m_Children.EmplaceBack(child);
+
+    return m_Children.Size() - 1;
 }
 
 void SceneNode::RemoveChild(SceneNode* child)
@@ -45,6 +49,11 @@ void SceneNode::RemoveChild(SceneNode* child)
     const DRE::U32 i = m_Children.Find(child);
     DRE_ASSERT(i != m_Children.Size(), "Removing invalid child from SceneNode");
     m_Children.RemoveIndex(i);
+}
+
+SceneNode* SceneNode::GetChild(DRE::U32 i)
+{
+    return m_Children[i];
 }
 
 glm::vec3 SceneNode::GetGlobalPosition() const

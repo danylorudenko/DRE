@@ -61,7 +61,8 @@ set(IMGUI_SOURCE_LIST
 	"extern/imgui/imgui.cpp" 
 	"extern/imgui/imgui_draw.cpp"
 	"extern/imgui/imgui_tables.cpp"
-	"extern/imgui/imgui_widgets.cpp")
+	"extern/imgui/imgui_widgets.cpp"
+	"extern/imgui/imgui_demo.cpp")
 	
 set(IMGUI_HEADER_LIST
 	"extern/imgui/imgui.h"

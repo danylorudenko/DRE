@@ -30,6 +30,8 @@ class RenderableObject;
 namespace WORLD
 {
 
+class ISceneNodeUser;
+
 class Scene
 {
 public:
@@ -39,6 +41,7 @@ public:
     Scene(DRE::DefaultAllocator* allocator);
     ~Scene();
 
+    SceneNode*                      GetRootNode() { return m_RootNode; }
 
     inline Camera&                  GetMainCamera() { return m_MainCamera; }
     inline Camera const &           GetMainCamera() const { return m_MainCamera; }
@@ -51,7 +54,8 @@ public:
 
 
     Entity*                         CreateOpaqueEntity(VKW::Context& context, Data::Geometry* geometry, Data::Material* material, SceneNode* parent = nullptr);
-    inline SceneNode*               CreateSceneNode(SceneNode* parent = nullptr) { NodeID const id = m_NodeCounter++; return &m_Nodes.Emplace(id, parent); }
+    inline SceneNode*               CreateSceneNode(ISceneNodeUser* user, SceneNode* parent = nullptr);
+    inline SceneNode*               CreateEmptySceneNode(SceneNode* parent = nullptr) { NodeID const id = m_NodeCounter++; return &m_Nodes.Emplace(id, parent, nullptr); }
 
 
 private:

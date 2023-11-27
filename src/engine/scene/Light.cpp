@@ -6,8 +6,8 @@
 namespace WORLD
 {
 
-DirectionalLight::DirectionalLight(SceneNode* node)
-    : ISceneNodeUser{ node }
+DirectionalLight::DirectionalLight()
+    : ISceneNodeUser{ nullptr, ISceneNodeUser::Type::DirectionalLight }
     , m_Radiance{ 1.0f, 1.0f, 1.0f }
 {}
 

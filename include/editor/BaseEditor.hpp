@@ -20,7 +20,9 @@ public:
     enum class Type
     {
         Root,
-        Camera
+        Camera,
+        SceneGraph,
+        MAX
     };
 
     BaseEditor(BaseEditor* rootEditor, EditorFlags flags = EDITOR_FLAGS_NONE);
@@ -43,7 +45,7 @@ public:
     virtual Type GetType() const = 0;
 
     virtual void Render() = 0;
-    virtual void Close() = 0;
+    virtual void Close();
 
 
 protected:

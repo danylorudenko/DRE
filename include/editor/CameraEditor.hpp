@@ -24,7 +24,6 @@ public:
     virtual BaseEditor::Type GetType() const override { return BaseEditor::Type::Camera; }
 
     virtual void Render() override;
-    virtual void Close() override;
 
 private:
     WORLD::Camera* m_Camera;

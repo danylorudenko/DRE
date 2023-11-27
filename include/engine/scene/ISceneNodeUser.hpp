@@ -12,13 +12,25 @@ namespace WORLD
 class ISceneNodeUser
 {
 public:
-    ISceneNodeUser(SceneNode* node)
+    enum class Type
+    {
+        Entity,
+        Camera,
+        DirectionalLight,
+        MAX
+    };
+
+
+    ISceneNodeUser(SceneNode* node, Type type)
         : m_SceneNode{ node }
+        , m_UserType{ type }
     {
     }
 
     inline SceneNode*       GetSceneNode() const { return m_SceneNode; }
-    inline void             SetSceneNode(SceneNode* node) { m_SceneNode = node; }
+    inline void             SetSceneNode(SceneNode* node) { DRE_ASSERT(m_SceneNode == nullptr, "Can't set SceneNode if it was already set."); m_SceneNode = node; }
+
+    inline Type             GetType() const { return m_UserType; }
 
     inline glm::vec3 const& GetPosition() const { return m_SceneNode->GetPosition(); }
     inline glm::quat const& GetOrientation() const { return m_SceneNode->GetOrientation(); }
@@ -51,7 +63,7 @@ public:
 
 protected:
     SceneNode*  m_SceneNode;
-
+    Type        m_UserType;
 };
 
 }

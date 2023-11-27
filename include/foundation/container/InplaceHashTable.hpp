@@ -2,7 +2,6 @@
 
 #include <foundation\container\HashTableBase.hpp>
 #include <foundation\memory\InplaceObjectAllocator.hpp>
-#include <foundation\container\InplaceBitfield.hpp>
 
 DRE_BEGIN_NAMESPACE
 
@@ -47,7 +46,6 @@ public:
 protected:
     BucketT                                                 m_BucketStorage[BUCKET_COUNT];
     InplaceObjectAllocator<BucketT, COLLISION_POOL_SIZE>    m_CollisionPoolAllocator;
-    //InplaceBitfield<COLLISION_POOL_SIZE>                    m_CollisionPoolMask; // used to track allocated objects and free them afterwards
 };
 
 template<typename TKey, typename TValue, U32 BUCKET_COUNT = 256>

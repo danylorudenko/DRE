@@ -17,19 +17,15 @@ Scene::Scene(DRE::DefaultAllocator* allocator)
     , m_NodeCounter{ 0u }
     , m_RootNode{ nullptr }
 {
-    m_RootNode = CreateSceneNode();
+    m_RootNode = CreateEmptySceneNode();
 
-    SceneNode* cameraNode = CreateSceneNode(m_RootNode);
-    m_MainCamera.SetSceneNode(cameraNode);
-
-    SceneNode* sunNode = CreateSceneNode(m_RootNode);
-    m_MainSunLight.SetSceneNode(sunNode);
+    SceneNode* cameraNode = CreateSceneNode(&m_MainCamera, m_RootNode);
+    SceneNode* sunNode = CreateSceneNode(&m_MainSunLight, m_RootNode);
 }
 
 Entity* Scene::CreateOpaqueEntity(VKW::Context& context, Data::Geometry* geometry, Data::Material* material, SceneNode* parent)
 {
     GFX::RenderableObject* renderable = GFX::g_GraphicsManager->CreateRenderableObject(context, geometry, material);
-    SceneNode* node = CreateSceneNode(parent == nullptr ? m_RootNode : parent);
 
     GFX::RenderView& mainView = GFX::g_GraphicsManager->GetMainRenderView();
     GFX::RenderView& shadowView = GFX::g_GraphicsManager->GetSunShadowRenderView();
@@ -40,9 +36,21 @@ Entity* Scene::CreateOpaqueEntity(VKW::Context& context, Data::Geometry* geometr
     Entity* entity = CreateEntity(renderable);
     entity->SetMaterial(material);
     entity->SetGeometry(geometry);
-    entity->SetSceneNode(node);
+
+    SceneNode* node = CreateSceneNode(entity, parent == nullptr ? m_RootNode : parent);
 
     return entity;
+}
+
+SceneNode* Scene::CreateSceneNode(ISceneNodeUser* user, SceneNode* parent)
+{
+    NodeID const id = m_NodeCounter++; 
+    SceneNode* sceneNode = &m_Nodes.Emplace(id, parent, user);
+    user->SetSceneNode(sceneNode);
+
+    parent->AddChild(sceneNode);
+
+    return sceneNode;
 }
 
 Scene::~Scene()

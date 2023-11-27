@@ -8,6 +8,8 @@
 #include <foundation\Container\InplaceVector.hpp>
 #include <foundation\Container\Vector.hpp>
 
+#include <foundation\string\InplaceString.hpp>
+
 namespace Data
 {
 class Material;
@@ -22,14 +24,22 @@ class Context;
 namespace WORLD
 {
 
+class ISceneNodeUser;
+
 class SceneNode
 {
 public:
     SceneNode();
-    SceneNode(SceneNode* parent);
+    SceneNode(SceneNode* parent, ISceneNodeUser* user);
 
-    void AddChild(SceneNode* child);
-    void RemoveChild(SceneNode* child);
+    DRE::U32                AddChild(SceneNode* child);
+    void                    RemoveChild(SceneNode* child);
+
+    SceneNode*              GetChild(DRE::U32 i);
+    DRE::U32                GetChildrenCount() const { return m_Children.Size(); };
+
+    void                    SetName(char const* name) { m_Name = name; }
+    char const*             GetName() const { return m_Name.GetData(); }
 
     inline glm::vec3 const& GetPosition() const { return m_Position; }
     inline glm::quat const& GetOrientation() const { return m_Orientation; }
@@ -64,20 +74,26 @@ public:
     inline SceneNode* GetParent() const { return m_Parent; }
     void SetParent(SceneNode* parent);
 
+    inline ISceneNodeUser* GetNodeUser() const { return m_NodeUser; }
+
 private:
     void CalculateDirectionVectors();
 
 private:
-    SceneNode*  m_Parent;
+    SceneNode*      m_Parent;
 
-    glm::vec3   m_Position;
+    ISceneNodeUser* m_NodeUser;
 
-    glm::quat   m_Orientation;
-    glm::vec3   m_Forward;
-    glm::vec3   m_Right;
-    glm::vec3   m_Up;
+    glm::vec3       m_Position;
 
-    float       m_Scale;
+    glm::quat       m_Orientation;
+    glm::vec3       m_Forward;
+    glm::vec3       m_Right;
+    glm::vec3       m_Up;
+
+    float           m_Scale;
+
+    DRE::String64   m_Name;
 
     DRE::Vector<SceneNode*, DRE::DefaultAllocator> m_Children;
 };

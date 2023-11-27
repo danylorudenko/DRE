@@ -10,7 +10,7 @@ namespace WORLD
 class DirectionalLight : public ISceneNodeUser
 {
 public:
-    DirectionalLight(SceneNode* node = nullptr);
+    DirectionalLight();
 
     inline glm::vec3 const& GetDirection() { return m_SceneNode->GetForward(); }
 

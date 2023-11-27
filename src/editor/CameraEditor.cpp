@@ -98,9 +98,4 @@ void CameraEditor::Render()
     }
 }
 
-void CameraEditor::Close()
-{
-    reinterpret_cast<RootEditor*>(m_RootEditor)->CloseEditor(this);
-}
-
 }
