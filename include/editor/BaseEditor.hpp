@@ -22,6 +22,7 @@ public:
         Root,
         Camera,
         SceneGraph,
+        LightProperties,
         MAX
     };
 

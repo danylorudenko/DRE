@@ -4,6 +4,7 @@
 #include <foundation\string\InplaceString.hpp>
 
 #include <editor\RootEditor.hpp>
+#include <editor\LightPropertiesEditor.hpp>
 #include <engine\scene\Scene.hpp>
 #include <engine\scene\ISceneNodeUser.hpp>
 #include <engine\ApplicationContext.hpp>
@@ -82,14 +83,18 @@ DRE::String64 SceneGraphEditor::GetUniqueLabel(WORLD::SceneNode* node, SceneGrap
 
 void SceneGraphEditor::RenderSceneNodeRecursive(WORLD::SceneNode* node, SceneGraphEditor::RenderingContext& context)
 {
-    //context.m_CurrentPadding += RenderingContext::C_PADDING;
-
     DRE::U32 const childCount = node->GetChildrenCount();
     DRE::String64 label = GetUniqueLabel(node, context);
 
     ImGuiTreeNodeFlags const flags = childCount > 0 ? ImGuiTreeNodeFlags_None : ImGuiTreeNodeFlags_Leaf;
     if (ImGui::TreeNodeEx(label.GetData(), flags))
     {
+        if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+        {
+            DRE::g_AppContext.m_FocusedObject = node->GetNodeUser();
+            AttemptOpenProperties(node);
+        }
+
         for (DRE::U32 i = 0; i < childCount; ++i)
         {
             RenderSceneNodeRecursive(node->GetChild(i), context);
@@ -97,8 +102,22 @@ void SceneGraphEditor::RenderSceneNodeRecursive(WORLD::SceneNode* node, SceneGra
 
         ImGui::TreePop();
     }
+}
 
-    //context.m_CurrentPadding -= RenderingContext::C_PADDING;
+void SceneGraphEditor::AttemptOpenProperties(WORLD::SceneNode* node)
+{
+    switch (node->GetNodeUser()->GetType())
+    {
+    case WORLD::ISceneNodeUser::Type::DirectionalLight:
+    {
+        auto* lightEditor = (LightPropertiesEditor*)reinterpret_cast<RootEditor*>(m_RootEditor)->GetEditorByType(BaseEditor::Type::LightProperties);
+        if (lightEditor != nullptr)
+        {
+            lightEditor->SetLight(node->GetNodeUser());
+        }
+        break;
+    }
+    }
 }
 
 }

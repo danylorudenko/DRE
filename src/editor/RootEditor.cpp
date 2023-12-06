@@ -4,6 +4,7 @@
 #include <engine\scene\Camera.hpp>
 #include <engine\scene\Scene.hpp>
 #include <editor\CameraEditor.hpp>
+#include <editor\LightPropertiesEditor.hpp>
 #include <editor\SceneGraphEditor.hpp>
 
 #include <imgui.h>
@@ -83,6 +84,15 @@ void RootEditor::Render()
                 {
                     SceneGraphEditor* sceneEditor = DRE::g_MainAllocator.Alloc<SceneGraphEditor>(this, EDITOR_FLAGS_NONE, m_MainScene);
                     m_Editors.EmplaceBack(sceneEditor);
+                }
+            }
+
+            if (ImGui::MenuItem("Light Editor"))
+            {
+                if (GetEditorByType(BaseEditor::Type::LightProperties) == nullptr)
+                {
+                    LightPropertiesEditor* lightEditor = DRE::g_MainAllocator.Alloc<LightPropertiesEditor>(this, EDITOR_FLAGS_NONE);
+                    m_Editors.EmplaceBack(lightEditor);
                 }
             }
 

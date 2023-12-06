@@ -32,7 +32,6 @@ public:
     virtual void Render() override;
     virtual void Close() override;
 
-private:
     BaseEditor* GetEditorByType(BaseEditor::Type type);
 
 private:

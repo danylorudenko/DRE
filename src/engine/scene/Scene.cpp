@@ -20,7 +20,10 @@ Scene::Scene(DRE::DefaultAllocator* allocator)
     m_RootNode = CreateEmptySceneNode();
 
     SceneNode* cameraNode = CreateSceneNode(&m_MainCamera, m_RootNode);
-    SceneNode* sunNode = CreateSceneNode(&m_MainSunLight, m_RootNode);
+    cameraNode->SetName("camera");
+
+    SceneNode* sunNode = CreateSceneNode(&m_MainSunLight, cameraNode);
+    sunNode->SetName("sun");
 }
 
 Entity* Scene::CreateOpaqueEntity(VKW::Context& context, Data::Geometry* geometry, Data::Material* material, SceneNode* parent)

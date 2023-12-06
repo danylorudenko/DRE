@@ -149,6 +149,7 @@ void DREApplicationDelegate::start()
     waterTransform = glm::scale(waterTransform, glm::vec3{ 0.1f });
     WORLD::Entity* waterEntity = m_MainScene.CreateOpaqueEntity(m_GraphicsManager.GetMainContext(), &m_WaterGeometry, &m_WaterMaterial);
     waterEntity->SetMatrix(waterTransform);
+    waterEntity->GetSceneNode()->SetName("water");
 
     ////////////
     m_BeachMaterial.GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE);
@@ -164,6 +165,7 @@ void DREApplicationDelegate::start()
     beachTransform[3][2] -= 6.0f;
     WORLD::Entity* beachEntity = m_MainScene.CreateOpaqueEntity(m_GraphicsManager.GetMainContext(), &m_WaterGeometry, &m_BeachMaterial); // reuse water geometry
     beachEntity->SetMatrix(beachTransform);
+    beachEntity->GetSceneNode()->SetName("beach_plane");
 
     Data::Texture2D blueNoise256 = m_IOManager.ReadTexture2D("textures\\blue_noise_rgba.png", Data::TEXTURE_VARIATION_RGBA);
     m_GraphicsManager.GetTextureBank().LoadTexture2DSync("blue_noise_256", 256, 256, VKW::FORMAT_R8G8B8A8_UNORM, blueNoise256.GetBuffer());

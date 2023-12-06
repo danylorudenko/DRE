@@ -42,6 +42,7 @@ private:
     static DRE::String64 GetUniqueLabel(WORLD::SceneNode* node, SceneGraphEditor::RenderingContext& context);
 
     void RenderSceneNodeRecursive(WORLD::SceneNode* node, RenderingContext& context);
+    void AttemptOpenProperties(WORLD::SceneNode* node);
 
 private:
     WORLD::Scene* m_Scene;

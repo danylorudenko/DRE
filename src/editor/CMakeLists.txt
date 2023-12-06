@@ -2,6 +2,7 @@ set(EDITOR_HEADER_LIST
 	"${DRE_SOURCE_DIR}/include/editor/BaseEditor.hpp"
 	"${DRE_SOURCE_DIR}/include/editor/CameraEditor.hpp"
 	"${DRE_SOURCE_DIR}/include/editor/OceanEditor.hpp"
+	"${DRE_SOURCE_DIR}/include/editor/LightPropertiesEditor.hpp"
 	"${DRE_SOURCE_DIR}/include/editor/RootEditor.hpp"
 	"${DRE_SOURCE_DIR}/include/editor/SceneGraphEditor.hpp")
 
@@ -9,6 +10,7 @@ set(EDITOR_SOURCE_LIST
 	"${DRE_SOURCE_DIR}/src/editor/BaseEditor.cpp"
 	"${DRE_SOURCE_DIR}/src/editor/CameraEditor.cpp"
 	"${DRE_SOURCE_DIR}/src/editor/OceanEditor.cpp"
+	"${DRE_SOURCE_DIR}/src/editor/LightPropertiesEditor.cpp"
 	"${DRE_SOURCE_DIR}/src/editor/RootEditor.cpp"
 	"${DRE_SOURCE_DIR}/src/editor/SceneGraphEditor.cpp")
 	
