@@ -2,6 +2,8 @@
 
 #include <vulkan\vulkan.h>
 
+#include <vk_wrapper\Constant.hpp>
+
 #include <foundation\class_features\NonCopyable.hpp>
 
 #include <vk_wrapper\ImportTable.hpp>
@@ -57,7 +59,9 @@ public:
         std::vector<VkQueueFamilyProperties> queueFamilyProperties;
         std::vector<VkExtensionProperties> extensionProperties;
         std::vector<std::uint32_t> presentationFamilies;
+#ifndef DRE_COMPILE_FOR_RENDERDOC
         VkPhysicalDeviceExtendedDynamicState3FeaturesEXT extendedDynamicState3FeaturesEXT;
+#endif
         VkPhysicalDeviceFeatures2 features2;
         VkPhysicalDeviceVulkan12Features vulkan12Features;
         VkPhysicalDeviceVulkan13Features vulkan13Features;

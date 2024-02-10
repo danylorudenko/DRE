@@ -97,7 +97,7 @@ Pipeline::Descriptor::Descriptor()
     depthStencilState_.flags = VK_FLAGS_NONE;
     depthStencilState_.depthTestEnable = VK_FALSE;
     depthStencilState_.depthWriteEnable = VK_FALSE;
-    depthStencilState_.depthCompareOp = VK_COMPARE_OP_LESS;
+    depthStencilState_.depthCompareOp = VK_COMPARE_OP_ALWAYS;
     depthStencilState_.depthBoundsTestEnable = VK_FALSE;
     depthStencilState_.stencilTestEnable = VK_FALSE;
     depthStencilState_.front = {};

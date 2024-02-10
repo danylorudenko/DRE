@@ -26,5 +26,5 @@ void main()
 	vec2 scale = vec2(2.0 / imGuiData.pos_screenSize.z, 2.0 / imGuiData.pos_screenSize.w);
 	vec2 translate = vec2(-1.0 - imGuiData.pos_screenSize.x * scale.x, -1.0 - imGuiData.pos_screenSize.y * scale.y);
 	
-	gl_Position = vec4(in_pos.x * scale.x + translate.x, in_pos.y * scale.y + translate.y, 0.0, 1.0);
+	gl_Position = vec4(in_pos.x * scale.x + translate.x, in_pos.y * scale.y + translate.y, 0.5, 1.0);
 }

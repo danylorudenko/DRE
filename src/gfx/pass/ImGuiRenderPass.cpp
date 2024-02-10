@@ -73,6 +73,7 @@ void ImGuiRenderPass::Initialize(RenderGraph& graph)
 
     pipelineDescriptor.SetVertexShader(vertexModule);
     pipelineDescriptor.SetFragmentShader(fragmentModule);
+    pipelineDescriptor.SetCullMode(VK_CULL_MODE_NONE);
 
     pipelineDescriptor.AddColorOutput(VKW::FORMAT_B8G8R8A8_UNORM, VKW::BLEND_TYPE_ALPHA_OVER);
 
@@ -143,18 +144,30 @@ void ImGuiRenderPass::Render(RenderGraph& graph, VKW::Context& context)
         std::memcpy(indexPtr, indexBuffer.Data, indexBuffer.size_in_bytes());
         indexPtr += indexBuffer.Size;
 
-        std::uint32_t indiciesRendered = 0;
-
         context.CmdBindVertexBuffer(vertexMemory.m_Buffer, vertexBindingOffset);
         context.CmdBindIndexBuffer(indexMemory.m_Buffer, indexBindingOffset, sizeof(ImDrawIdx) * 8);
 
+//#define DRE_IMGUI_ATOMIC_DRAWS
+#if !defined(DRE_IMGUI_ATOMIC_DRAWS)
         for (int j = 0; j < drawList->CmdBuffer.size(); j++)
         {
             ImDrawCmd const& cmd = drawList->CmdBuffer[j];
-
-            context.CmdDrawIndexed(cmd.ElemCount, 1, indiciesRendered);
-            indiciesRendered += cmd.ElemCount;
+            context.CmdDrawIndexed(cmd.ElemCount, 1, cmd.IdxOffset, cmd.VtxOffset);
         }
+#else
+        for (int j = 0; j < drawList->CmdBuffer.size(); j++)
+        {
+            ImDrawCmd const& cmd = drawList->CmdBuffer[j];
+            unsigned int const drawCount = cmd.ElemCount / 3;
+            unsigned int drawIdxOffset = cmd.IdxOffset;
+
+            for (int k = 0; k < drawCount; k++)
+            {
+                context.CmdDrawIndexed(3, 1, drawIdxOffset, cmd.VtxOffset);
+                drawIdxOffset += 3;
+            }
+        }
+#endif
 
         vertexBindingOffset += vertexBuffer.size_in_bytes();
         indexBindingOffset += indexBuffer.size_in_bytes();
