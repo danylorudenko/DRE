@@ -28,10 +28,10 @@ ReadOnlyTexture* TextureBank::FindTexture(DRE::String128 const& name)
 
 void TextureBank::LoadDefaultTextures()
 {
-    float defaultColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    float defaultNormal[3] = { 0.0f, 1.0f, 0.0f };
-    float zero = 0.0f;
-    float one = 1.0f;
+    DRE::U8 defaultColor[4] = { 0x00, 0x00, 0x00, 0x00 };
+    DRE::U8 defaultNormal[4] = { 0x00, 0x00, 0xFF, 0x00 };
+    DRE::U8 zero = 0x00;
+    DRE::U8 one = 0xFF;
     DRE::ByteBuffer defaultColorBuffer{ defaultColor, sizeof(defaultColor) };
     DRE::ByteBuffer defaultNormalBuffer{ defaultNormal, sizeof(defaultNormal) };
     DRE::ByteBuffer zeroBuffer{ &zero, sizeof(zero) };
@@ -65,7 +65,7 @@ ReadOnlyTexture* TextureBank::LoadTexture2DSync(DRE::String128 const& name, std:
 
     // 1. staging buffer region and target texture
     VKW::ImageResource* imageResource = m_ResourcesController->CreateImage(width, height, format, VKW::ImageUsage::TEXTURE);
-    UploadArena::Allocation stagingRegion = transientArena.AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), static_cast<std::uint32_t>(textureData.Size()), 4);
+    UploadArena::Allocation stagingRegion = transientArena.AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), static_cast<std::uint32_t>(textureData.Size()), 16);
     std::memcpy(stagingRegion.m_MappedRange, textureData.Data(), textureData.Size());
     stagingRegion.FlushCaches();
 

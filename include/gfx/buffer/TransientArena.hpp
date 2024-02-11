@@ -135,7 +135,7 @@ typename TransientArena<USAGE>::Allocation TransientArena<USAGE>::AllocateTransi
 
     DRE_ASSERT(DRE::IsPowOf2(alignment), "Alignment for TransientArena is not power of 2");
 
-    std::uint32_t padding = static_cast<std::uint32_t>(DRE::PtrDifference(DRE::PtrAlign((std::uint8_t*)allocationContext.m_CurrentBufferPtr, alignment), allocationContext.m_CurrentBufferPtr));
+    std::uint32_t const padding = static_cast<std::uint32_t>(DRE::PtrDifference(DRE::PtrAlign((std::uint8_t*)allocationContext.m_CurrentBufferPtr, alignment), allocationContext.m_CurrentBufferPtr));
     std::uint32_t const allocationSize = size + padding;
     DRE_ASSERT(allocationSize <= ComputeFreeMemory(allocationContext), "Out of transient staging memory");
 

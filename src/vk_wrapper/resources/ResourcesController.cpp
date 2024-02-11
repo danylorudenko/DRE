@@ -6,6 +6,7 @@
 #include <vk_wrapper\LogicalDevice.hpp>
 #include <vk_wrapper\Helper.hpp>
 #include <vk_wrapper\Tools.hpp>
+#include <vk_wrapper\Constant.hpp>
 
 namespace VKW
 {
@@ -91,7 +92,10 @@ BufferResource* ResourcesController::CreateBuffer(std::uint32_t size, BufferUsag
         break;
     case BufferUsage::UPLOAD_BUFFER:
         regionDesc.memoryClass_ = MemoryClass::CpuStaging;
-        vkBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+        vkBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+#if defined(DRE_GET_BUFFER_ADDRESS)
+        vkBufferCreateInfo.usage |= VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+#endif
         break;
     case BufferUsage::READBACK_BUFFER:
         regionDesc.memoryClass_ = MemoryClass::CpuReadback;
@@ -122,6 +126,7 @@ BufferResource* ResourcesController::CreateBuffer(std::uint32_t size, BufferUsag
     VK_ASSERT(table_->vkBindBufferMemory(device_->Handle(), vkBuffer, memoryRegion.page_->deviceMemory_, memoryRegion.offset_));
 
     std::uint64_t gpuAddress = 0;
+#if defined(DRE_GET_BUFFER_ADDRESS)
     if (usage == BufferUsage::UPLOAD_BUFFER)
     {
         VkBufferDeviceAddressInfo addressInfo;
@@ -130,7 +135,7 @@ BufferResource* ResourcesController::CreateBuffer(std::uint32_t size, BufferUsag
         addressInfo.buffer = vkBuffer;
         gpuAddress = table_->vkGetBufferDeviceAddress(device_->Handle(), &addressInfo);
     }
-    
+#endif
 
     BufferResource* resource = new BufferResource{ vkBuffer, size, memoryRegion, std::uint64_t(gpuAddress) };
     buffers_.emplace(resource);
