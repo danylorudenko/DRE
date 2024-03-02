@@ -103,9 +103,9 @@ public:
     DRE::InplaceVector<DRE::String64, 12>   GetPendingShaders();
 
 private:
-    void ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene);
-    void ParseAssimpMaterials(aiScene const* scene, char const* path, char const* defaultShader, Data::TextureChannelVariations metalnessRoughnessOverride);
-    void ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, aiNode const* node, WORLD::Scene& targetScene, WORLD::SceneNode* parentNode);
+    void ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene, char const* sceneName);
+    void ParseAssimpMaterials(aiScene const* scene, char const* sceneName, char const* path, char const* defaultShader, Data::TextureChannelVariations metalnessRoughnessOverride);
+    void ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, char const* sceneName, aiNode const* node, WORLD::Scene& targetScene, WORLD::SceneNode* parentNode);
 
     void ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiMat, DRE::String256 const& assetFolderPath, Data::Material* material, Data::Material::TextureProperty::Slot slot, Data::TextureChannelVariations channels);
 

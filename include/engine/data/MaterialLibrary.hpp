@@ -17,12 +17,29 @@ class MaterialLibrary
     : public NonCopyable
 {
 public:
+    struct Hash
+    {
+        explicit Hash(std::uint32_t id, char const* sceneName);
+        explicit Hash(std::uint32_t hash) : m_Hash{ hash } {}
+        explicit Hash() : m_Hash{ 0 } {}
+        explicit operator std::uint32_t() const { return m_Hash; }
+
+        bool operator==(Hash const& rhs) { return m_Hash == rhs.m_Hash; }
+        bool operator!=(Hash const& rhs) { return m_Hash != rhs.m_Hash; }
+
+    private:
+        std::uint32_t m_Hash;
+    };
+
+
     MaterialLibrary(DRE::DefaultAllocator* allocator);
 
     void InitDefaultMaterials();
 
-    Material* CreateMaterial(std::uint32_t id, char const* name);
-    Material* GetMaterial(std::uint32_t id);
+    Material* CreateMaterial(Hash hash, char const* name);
+    Material* CreateMaterial(std::uint32_t id, char const* sceneName, char const* name);
+    Material* GetMaterial(Hash hash);
+    Material* GetMaterial(std::uint32_t id, char const* sceneName);
 
     //void debug_output()
     //{
@@ -30,7 +47,7 @@ public:
     //}
 
 private:
-    DRE::HashTable<std::uint32_t, Material, DRE::DefaultAllocator> m_MaterialsMap;
+    DRE::HashTable<Hash, Material, DRE::DefaultAllocator> m_MaterialsMap;
 };
 
 }

@@ -26,6 +26,12 @@ inline void WriteMemorySequence(void*& memory, void const* data, std::uint32_t s
     memory = DRE::PtrAdd(memory, size);
 }
 
+template<typename T>
+inline void WriteMemorySequence(void*& memory, T const& data)
+{
+    WriteMemorySequence(memory, &data, sizeof(data));
+}
+
 inline std::uint32_t BitReverse(std::uint32_t x)
 {
     x = (((x & 0xaaaaaaaa) >> 1) | ((x & 0x55555555) << 1));

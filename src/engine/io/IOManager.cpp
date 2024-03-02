@@ -289,7 +289,7 @@ void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiM
     }
 }
 
-void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, aiNode const* node, WORLD::Scene& targetScene, WORLD::SceneNode* parentNode)
+void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, char const* sceneName, aiNode const* node, WORLD::Scene& targetScene, WORLD::SceneNode* parentNode)
 {
     aiMatrix4x4 const t = node->mTransformation;
     glm::mat4 const transform {
@@ -306,14 +306,15 @@ void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* a
     {
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 
-        Data::Material* material = m_MaterialLibrary->GetMaterial(mesh->mMaterialIndex);
-        Data::Geometry* geometry = m_GeometryLibrary->GetGeometry(node->mMeshes[i]);
+        Data::Material* material = m_MaterialLibrary->GetMaterial(mesh->mMaterialIndex, sceneName);
+        Data::Geometry* geometry = m_GeometryLibrary->GetGeometry(node->mMeshes[i], sceneName); // this is the main problem:
+        // assimp references (and we too) meshes by integers which are not globally unique.
         WORLD::Entity* entity = targetScene.CreateOpaqueEntity(gfxContext, geometry, material, aggregatorNode);
     }
 
     for (std::uint32_t i = 0; i < node->mNumChildren; i++)
     {
-        ParseAssimpNodeRecursive(gfxContext, assetPath, scene, node->mChildren[i], targetScene, aggregatorNode);
+        ParseAssimpNodeRecursive(gfxContext, assetPath, scene, sceneName, node->mChildren[i], targetScene, aggregatorNode);
     }
 }
 
@@ -322,22 +323,23 @@ void IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene, char
     Assimp::Importer importer = Assimp::Importer();
 
     aiScene const* scene = importer.ReadFile(path, aiProcessPreset_TargetRealtime_Fast | aiProcess_FlipUVs);
+    char const* sceneName = aiScene::GetShortFilename(path);
 
     DRE_ASSERT(scene != nullptr, "Failed to load a model file.");
     if (scene == nullptr)
         return;
 
-    ParseAssimpMeshes(GFX::g_GraphicsManager->GetMainContext(), scene);
-    ParseAssimpMaterials(scene, path, defaultShader, metalnessRoughnessOverride);
+    ParseAssimpMeshes(GFX::g_GraphicsManager->GetMainContext(), scene, sceneName);
+    ParseAssimpMaterials(scene, sceneName, path, defaultShader, metalnessRoughnessOverride);
 
     WORLD::SceneNode* parentNode = targetScene.CreateEmptySceneNode();
     parentNode->SetMatrix(parentTransform);
 
-    ParseAssimpNodeRecursive(GFX::g_GraphicsManager->GetMainContext(), path, scene, scene->mRootNode, targetScene, parentNode);
+    ParseAssimpNodeRecursive(GFX::g_GraphicsManager->GetMainContext(), path, scene, sceneName, scene->mRootNode, targetScene, parentNode);
     GFX::g_GraphicsManager->GetMainContext().FlushAll();
 }
 
-void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* path, char const* defaultShader, Data::TextureChannelVariations metalnessRoughnessOverride)
+void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName, char const* path, char const* defaultShader, Data::TextureChannelVariations metalnessRoughnessOverride)
 {
     // get folder with texture files
     DRE::String256 textureFilePath = path;
@@ -352,7 +354,7 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* path, cha
     for (std::uint32_t i = 0, size = scene->mNumMaterials; i < size; i++)
     {
         aiMaterial* aiMat = scene->mMaterials[i];
-        Data::Material* material = m_MaterialLibrary->CreateMaterial(i, aiMat->GetName().C_Str());
+        Data::Material* material = m_MaterialLibrary->CreateMaterial(i, sceneName, aiMat->GetName().C_Str());
 
         DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_DIFFUSE) <= 1, "We don't support multiple textures of the same type per material (DIFFUSE).");
         DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_NORMALS) <= 1, "We don't support multiple textures of the same type per material (NORMALS)");
@@ -381,7 +383,7 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* path, cha
     }
 }
 
-void IOManager::ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene)
+void IOManager::ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene, char const* sceneName)
 {
     for (std::uint32_t i = 0, size = scene->mNumMeshes; i < size; i++)
     {
@@ -421,7 +423,7 @@ void IOManager::ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene
             geometry.GetIndex<std::uint32_t>(j*3 + 2) = mesh->mFaces[j].mIndices[2];
         }
 
-        m_GeometryLibrary->AddGeometry(i, DRE_MOVE(geometry));
+        m_GeometryLibrary->AddGeometry(i, sceneName, DRE_MOVE(geometry));
     }
 }
 
