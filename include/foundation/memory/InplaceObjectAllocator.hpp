@@ -82,6 +82,8 @@ private:
 
     DRE_DEBUG_ONLY(U32 m_ElementsInUseDebug;)
 
+    static_assert(sizeof(m_Storage[0]) == sizeof(T));
+
 };
 
 DRE_END_NAMESPACE

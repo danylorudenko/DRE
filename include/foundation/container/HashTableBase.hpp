@@ -194,12 +194,13 @@ public:
             U32 nextBucketID = bucket.m_NextID;
             while (nextBucketID != DRE_U32_MAX)
             {
-                Bucket& nextBucket = m_CollisionPool[bucket.m_NextID];
+                Bucket& nextBucket = m_CollisionPool[nextBucketID];
                 nextBucket.m_Key.key = defaultKey;
                 nextBucket.m_Key.isEmpty = true;
                 nextBucket.m_Value.Destroy();
                 static_cast<Derived&>(*this).ReleaseCollisionBucketBehavior(&nextBucket);
                 nextBucketID = nextBucket.m_NextID;
+                nextBucket.m_NextID = DRE_U32_MAX;
             }
 
             bucket.m_NextID = DRE_U32_MAX;
