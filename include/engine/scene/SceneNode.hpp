@@ -16,9 +16,9 @@ class Material;
 class Geometry;
 }
 
-namespace VKW
+namespace GFX
 {
-class Context;
+class RenderableObject;
 }
 
 namespace WORLD

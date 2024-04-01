@@ -46,7 +46,7 @@ void WaterCausticDelegate(RenderableObject& obj, VKW::Context& context, VKW::Des
     write.AddUniform(uniformRegion.m_Buffer, uniformRegion.m_OffsetInBuffer, uniformRegion.m_Size, 0);
     descriptorManager.WriteDescriptorSet(set, write);
     
-    glm::mat4 const model = obj.GetModelM();
+    glm::mat4 const model = obj.GetSceneNode()->GetGlobalMatrix();
     VKW::TextureDescriptorIndex const& normalIndex = obj.GetNormalTexture()->GetShaderReadDescriptor();
 
     UniformProxy proxy{ &context, uniformRegion };

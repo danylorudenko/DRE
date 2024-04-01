@@ -38,6 +38,11 @@ class MaterialLibrary;
 class GeometryLibrary;
 }
 
+namespace WORLD
+{
+class SceneNode;
+}
+
 struct aiScene;
 struct aiNode;
 struct aiMesh;
@@ -89,7 +94,8 @@ public:
     ShaderData* GetShaderData(char const* name) { return m_ShaderData.Find(name).value; }
 
     Data::Texture2D ReadTexture2D(char const* path, Data::TextureChannelVariations channels);
-    void            ParseModelFile(char const* path, WORLD::Scene& targetScene, char const* defaultShader, glm::mat4 parentTransform = glm::identity<glm::mat4>(), Data::TextureChannelVariations metalnessRoughnessOverride = Data::TEXTURE_VARIATION_INVALID);
+
+    WORLD::SceneNode* ParseModelFile(char const* path, WORLD::Scene & targetScene, char const* defaultShader, glm::mat4 parentTransform = glm::identity<glm::mat4>(), Data::TextureChannelVariations metalnessRoughnessOverride = Data::TEXTURE_VARIATION_INVALID);
 
 
     static std::uint64_t    ReadFileToBuffer(char const* path, DRE::ByteBuffer* buffer);

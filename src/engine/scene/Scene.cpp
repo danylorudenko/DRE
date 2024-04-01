@@ -28,19 +28,20 @@ Scene::Scene(DRE::DefaultAllocator* allocator)
 
 Entity* Scene::CreateOpaqueEntity(VKW::Context& context, Data::Geometry* geometry, Data::Material* material, SceneNode* parent)
 {
-    GFX::RenderableObject* renderable = GFX::g_GraphicsManager->CreateRenderableObject(context, geometry, material);
+    Entity* entity = CreateEntity();
+    entity->SetMaterial(material);
+    entity->SetGeometry(geometry);
+
+    SceneNode* node = CreateSceneNode(entity, parent == nullptr ? m_RootNode : parent);
+
+    GFX::RenderableObject* renderable = GFX::g_GraphicsManager->CreateRenderableObject(node, context, geometry, material);
+    entity->SetRenderableObject(renderable);
 
     GFX::RenderView& mainView = GFX::g_GraphicsManager->GetMainRenderView();
     GFX::RenderView& shadowView = GFX::g_GraphicsManager->GetSunShadowRenderView();
 
     mainView.AddObject(renderable);
     shadowView.AddObject(renderable);
-
-    Entity* entity = CreateEntity(renderable);
-    entity->SetMaterial(material);
-    entity->SetGeometry(geometry);
-
-    SceneNode* node = CreateSceneNode(entity, parent == nullptr ? m_RootNode : parent);
 
     return entity;
 }

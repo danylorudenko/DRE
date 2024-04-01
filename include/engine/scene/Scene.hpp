@@ -59,7 +59,7 @@ public:
 
 
 private:
-    inline Entity*                  CreateEntity(GFX::RenderableObject* renderable = nullptr) { EntityID const id = m_EntityCounter++; return &m_SceneEntities.Emplace(id, renderable); }
+    inline Entity*                  CreateEntity() { EntityID const id = m_EntityCounter++; return &m_SceneEntities.Emplace(id); }
 
 private:
     Camera              m_MainCamera;

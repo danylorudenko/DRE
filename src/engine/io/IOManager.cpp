@@ -307,8 +307,8 @@ void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* a
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 
         Data::Material* material = m_MaterialLibrary->GetMaterial(mesh->mMaterialIndex, sceneName);
-        Data::Geometry* geometry = m_GeometryLibrary->GetGeometry(node->mMeshes[i], sceneName); // this is the main problem:
-        // assimp references (and we too) meshes by integers which are not globally unique.
+        Data::Geometry* geometry = m_GeometryLibrary->GetGeometry(node->mMeshes[i], sceneName);
+
         WORLD::Entity* entity = targetScene.CreateOpaqueEntity(gfxContext, geometry, material, aggregatorNode);
     }
 
@@ -318,7 +318,7 @@ void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* a
     }
 }
 
-void IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene, char const* defaultShader, glm::mat4 parentTransform, Data::TextureChannelVariations metalnessRoughnessOverride)
+WORLD::SceneNode* IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene, char const* defaultShader, glm::mat4 parentTransform, Data::TextureChannelVariations metalnessRoughnessOverride)
 {
     Assimp::Importer importer = Assimp::Importer();
 
@@ -327,16 +327,19 @@ void IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene, char
 
     DRE_ASSERT(scene != nullptr, "Failed to load a model file.");
     if (scene == nullptr)
-        return;
+        return nullptr;
 
     ParseAssimpMeshes(GFX::g_GraphicsManager->GetMainContext(), scene, sceneName);
     ParseAssimpMaterials(scene, sceneName, path, defaultShader, metalnessRoughnessOverride);
 
     WORLD::SceneNode* parentNode = targetScene.CreateEmptySceneNode();
     parentNode->SetMatrix(parentTransform);
+    parentNode->SetName(sceneName);
 
     ParseAssimpNodeRecursive(GFX::g_GraphicsManager->GetMainContext(), path, scene, sceneName, scene->mRootNode, targetScene, parentNode);
     GFX::g_GraphicsManager->GetMainContext().FlushAll();
+
+    return parentNode;
 }
 
 void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName, char const* path, char const* defaultShader, Data::TextureChannelVariations metalnessRoughnessOverride)

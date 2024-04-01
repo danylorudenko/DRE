@@ -48,6 +48,7 @@ class Geometry;
 namespace WORLD
 {
 class Scene;
+class SceneNode;
 }
 
 namespace GFX
@@ -115,7 +116,6 @@ public:
 
     inline RenderView&                  GetMainRenderView() { return m_MainView; }
     inline RenderView&                  GetSunShadowRenderView() { return m_SunShadowView; }
-    inline auto&                        GetRenderablePool() { return m_RenderableObjectPool; }
 
     inline GraphicsSettings&            GetGraphicsSettings() { return m_Settings; }
     inline GraphicsSettings const&      GetGraphicsSettings() const { return m_Settings; }
@@ -130,7 +130,7 @@ public:
     void                                RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS, float globalTimeS);
     void                                WaitIdle();
 
-    RenderableObject*                   CreateRenderableObject(VKW::Context& context, Data::Geometry* geometry, Data::Material* material);
+    RenderableObject*                   CreateRenderableObject(WORLD::SceneNode* sceneNode, VKW::Context& context, Data::Geometry* geometry, Data::Material* material);
     void                                FreeRenderableObject(RenderableObject* obj);
 
 private:

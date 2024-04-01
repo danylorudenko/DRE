@@ -63,8 +63,9 @@ void ForwardObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::De
     descriptorManager.WriteDescriptorSet(obj.GetDescriptorSet(g_GraphicsManager->GetCurrentFrameID()), writeDesc);
 
     UniformProxy uniformProxy{ &context, uniformAllocation };
-    uniformProxy.WriteMember140(obj.GetModelM());
-    uniformProxy.WriteMember140(obj.GetModelM()); // prev world matrix is same, geometry is static
+    glm::mat4 worldMatrix = obj.GetSceneNode()->GetGlobalMatrix();
+    uniformProxy.WriteMember140(worldMatrix);
+    uniformProxy.WriteMember140(worldMatrix); // prev world matrix is same, geometry is static
 
     std::uint32_t textureIDs[4] = {
        obj.GetDiffuseTexture()->GetShaderReadDescriptor().id_,

@@ -6,12 +6,11 @@ namespace GFX
 {
 
 RenderableObject::RenderableObject(
-    LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount,
+    WORLD::SceneNode* sceneNode, LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount,
     VKW::BufferResource* indexBuffer, std::uint32_t indexCount,
     TexturesVector&& textures, DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets)
-    : m_Layer{ layers }
-    , m_ModelM{ glm::identity<glm::mat4>() }
-    , m_PrevModelM{ glm::identity<glm::mat4>() }
+    : m_SceneNode{ sceneNode }
+    , m_Layer{ layers }
     , m_Pipeline{ pipeline }
     , m_VertexBuffer{ vertexBuffer }
     , m_IndexBuffer{ indexBuffer }
@@ -24,12 +23,11 @@ RenderableObject::RenderableObject(
 }
 
 RenderableObject::RenderableObject(
-    LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount,
+    WORLD::SceneNode* sceneNode, LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount,
     VKW::BufferResource* indexBuffer, std::uint32_t indexCount,
     DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets)
-    : m_Layer{ layers } 
-    , m_ModelM{ glm::identity<glm::mat4>() }
-    , m_PrevModelM{ glm::identity<glm::mat4>() }
+    : m_SceneNode{ sceneNode }
+    , m_Layer{ layers }
     , m_Pipeline{ pipeline }
     , m_VertexBuffer{ vertexBuffer }
     , m_IndexBuffer{ indexBuffer }
@@ -41,10 +39,10 @@ RenderableObject::RenderableObject(
 {
 }
 
-RenderableObject::RenderableObject(LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount)
-    : m_Layer{ layers } 
-    , m_ModelM{ glm::identity<glm::mat4>() }
-    , m_PrevModelM{ glm::identity<glm::mat4>() }
+RenderableObject::RenderableObject(WORLD::SceneNode* sceneNode, LayerBits layers, VKW::Pipeline* pipeline,
+    VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount)
+    : m_SceneNode{ sceneNode }
+    , m_Layer{ layers }
     , m_Pipeline{ pipeline }
     , m_VertexBuffer{ vertexBuffer }
     , m_IndexBuffer{ indexBuffer }
@@ -54,12 +52,6 @@ RenderableObject::RenderableObject(LayerBits layers, VKW::Pipeline* pipeline, VK
     , m_DescriptorSetsShadow{}
     , m_Textures{}
 {
-}
-
-void RenderableObject::Transform(glm::mat4 model)
-{
-    m_PrevModelM = m_ModelM;
-    m_ModelM = model;
 }
 
 }

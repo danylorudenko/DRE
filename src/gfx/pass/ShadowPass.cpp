@@ -41,9 +41,10 @@ void ShadowObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::Des
 
     UniformProxy uniformProxy{ &context, uniformAllocation };
 
-    glm::mat4 const mvp = view.GetViewProjectionM() * obj.GetModelM();
+    glm::mat4 const world = obj.GetSceneNode()->GetGlobalMatrix();
+    glm::mat4 const mvp = view.GetViewProjectionM() * world;
     uniformProxy.WriteMember140(mvp);
-    uniformProxy.WriteMember140(obj.GetModelM());
+    uniformProxy.WriteMember140(world);
 }
 
 

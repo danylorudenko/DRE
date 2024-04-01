@@ -286,7 +286,7 @@ void EmplaceRenderableObjectTexture(Data::Material* material, Data::Material::Te
     }
 }
 
-RenderableObject* GraphicsManager::CreateRenderableObject(VKW::Context& context, Data::Geometry* geometry, Data::Material* material)
+RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* sceneNode, VKW::Context& context, Data::Geometry* geometry, Data::Material* material)
 {
     DRE::String64 name = material->GetRenderingProperties().GetShader();
     VKW::Pipeline* pipeline = m_PipelineDB.GetPipeline(name.GetData());
@@ -344,14 +344,14 @@ RenderableObject* GraphicsManager::CreateRenderableObject(VKW::Context& context,
         shadowDescriptors.EmplaceBack(descriptorManager->AllocateStandaloneSet(*shadowLayout->GetMember(shadowLayoutMemberId)));
     }
 
-    return m_RenderableObjectPool.Alloc(layers, pipeline, geometryGPU->vertexBuffer, geometry->GetVertexCount(),
+    return m_RenderableObjectPool.Alloc(sceneNode, layers, pipeline, geometryGPU->vertexBuffer, geometry->GetVertexCount(),
         geometryGPU->indexBuffer, geometry->GetIndexCount(),
         DRE_MOVE(textures), DRE_MOVE(descriptors), DRE_MOVE(shadowDescriptors));
 }
 
 void GraphicsManager::FreeRenderableObject(RenderableObject* obj)
 {
-    GetRenderablePool().Free(obj);
+    m_RenderableObjectPool.Free(obj);
 }
 
 void GraphicsManager::WaitIdle()

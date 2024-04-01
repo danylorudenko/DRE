@@ -18,6 +18,10 @@ class Pipeline;
 struct BufferResource;
 }
 
+namespace WORLD
+{
+class SceneNode;
+}
 
 namespace GFX
 {
@@ -39,22 +43,21 @@ public:
     using TexturesVector      = DRE::InplaceVector<ReadOnlyTexture*, Data::Material::TextureProperty::Slot::MAX>;
 
     RenderableObject(
-        LayerBits layers, VKW::Pipeline* pipeline,
+        WORLD::SceneNode* sceneNode, LayerBits layers, VKW::Pipeline* pipeline,
         VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount,
         TexturesVector&& textures, DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets);
 
     RenderableObject(
-        LayerBits layers, VKW::Pipeline* pipeline,
+        WORLD::SceneNode* sceneNode, LayerBits layers, VKW::Pipeline* pipeline,
         VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount,
         DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets);
 
     RenderableObject(
-        LayerBits layers, VKW::Pipeline* pipeline,
+        WORLD::SceneNode* sceneNode, LayerBits layers, VKW::Pipeline* pipeline,
         VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount);
 
+    inline WORLD::SceneNode*            GetSceneNode() const { return m_SceneNode; }
     inline LayerBits                    GetLayer() const { return m_Layer; }
-    inline glm::mat4x4 const&           GetModelM() const { return m_ModelM; }
-    inline glm::mat4x4 const&           GetPrevModelM() const { return m_PrevModelM; }
     inline VKW::Pipeline*               GetPipeline() const{ return m_Pipeline; }
     inline VKW::BufferResource*         GetVertexBuffer() const{ return m_VertexBuffer; }
     inline VKW::BufferResource*         GetIndexBuffer() const { return m_IndexBuffer; }
@@ -67,12 +70,9 @@ public:
     inline ReadOnlyTexture*             GetMetalnessTexture() const { return m_Textures[2]; }
     inline ReadOnlyTexture*             GetRoughnessTexture() const { return m_Textures[3]; }
 
-    void                                Transform(glm::mat4 model);
-
 private:
+    WORLD::SceneNode*       m_SceneNode;
     LayerBits               m_Layer;
-    glm::mat4x4             m_ModelM;
-    glm::mat4x4             m_PrevModelM;
     VKW::Pipeline*          m_Pipeline;
     VKW::BufferResource*    m_VertexBuffer;
     VKW::BufferResource*    m_IndexBuffer;
