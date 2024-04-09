@@ -28,10 +28,9 @@ public:
         return *this;
     }
 
-    std::uint16_t Allocate(std::uint16_t count)
+    std::uint16_t Allocate()
     {
         DRE_ASSERT(firstFree_ != INVALID_ELEMENT, "FreeListElementAllocator has no free entries.");
-        DRE_ASSERT(count == 1, "FreeListElementAllocator is not capable of allocating other that 1 element.");
 
         std::uint16_t result = firstFree_;
         firstFree_ = storage_[firstFree_];

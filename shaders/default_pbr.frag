@@ -7,8 +7,8 @@
 #define ENABLE_PCF_POISSON
 
 #include "shaders_common.h"
-#include "shaders_defines.h"
 #include "lighting_model.h"
+//#include "lights.h"
 #include "shadows.h"
 
 layout(location = 0) in vec3 in_wpos;

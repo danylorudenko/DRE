@@ -34,10 +34,11 @@ public:
         return PtrAlign(result_start, alignment);
     }
 
-    template<typename T>
-    inline T* Alloc()
+    template<typename T, typename... TArgs>
+    inline T* Alloc(TArgs&&... args)
     {
-        return reinterpret_cast<T*>(Alloc(sizeof(T), alignof(T)));
+        T* ptr = reinterpret_cast<T*>(Alloc(sizeof(T), alignof(T)));
+        return new (ptr) T{ args... };
     }
 
     inline U64 MemorySize() const

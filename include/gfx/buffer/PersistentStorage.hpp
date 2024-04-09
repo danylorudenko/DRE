@@ -3,8 +3,6 @@
 #include <foundation\class_features\NonMovable.hpp>
 #include <foundation\class_features\NonCopyable.hpp>
 
-#include <foundation\memory\ElementAllocator.hpp>
-
 #include <gfx\buffer\StorageBuffer.hpp>
 #include <gfx\buffer\TransientArena.hpp>
 
@@ -22,44 +20,55 @@ class PersistentStorage
 public:
     class Allocation
     {
+        friend class PersistentStorage;
+
     public:
-        Allocation(PersistentStorage* parent, std::uint16_t element);
-        ~Allocation();
+        ~Allocation() = default;
 
         template<typename T>
-        void Update(VKW::Context& context, VKW::ResourceAccess nextAccess, UploadArena& arena, T& data)
+        void Update(VKW::Context& context, T& data)
         {
-            Update(context, nextAccess, arena, &data, sizeof(data));
+            Update(context, &data, sizeof(data));
         }
 
-        void Update(VKW::Context& context, UploadArena& arena, void* data, std::uint32_t size);
+        void Update(VKW::Context& context, void* data, std::uint32_t size);
         void Update(VKW::Context& context, UploadArena::Allocation const& src);
         void Update(VKW::Context& context, VKW::BufferResource* src, std::uint32_t srcOffset, std::uint32_t srcSize);
+        void Update(VKW::Context& context, std::uint32_t dstOffset, VKW::BufferResource* src, std::uint32_t srcOffset, std::uint32_t srcSize);
 
-        static constexpr std::uint32_t GetSize() { return C_SIZE; }
+        std::uint32_t GetSize() const;
+        std::uint64_t GetGPUAddress() const;
 
     private:
-        PersistentStorage*     m_Allocator;
-        std::uint16_t          m_Element;
+        Allocation(StorageBuffer* buffer, UploadArena* uploadArena, std::uint32_t size, std::uint32_t offset);
 
-        static constexpr std::uint32_t C_SIZE = 512;
+    private:
+        StorageBuffer*          m_Buffer;
+        UploadArena*            m_UploadArena;
+        std::uint32_t           m_Size;
+        std::uint32_t           m_Offset;
     };
 
 public:
-    PersistentStorage(VKW::Device* divice);
-    ~PersistentStorage();
+    PersistentStorage(VKW::Device* device, UploadArena* uploadArena, VKW::Device* divice, std::uint32_t size);
 
-    Allocation  AllocateRegion();
-    void        FreeRegion(Allocation& region);
+    ~PersistentStorage() = default;
 
-    inline StorageBuffer&  GetStorage() { return m_Buffer; }
+    StorageBuffer* GetStorage() { return &m_Buffer; }
 
+    Allocation AllocateRegion(std::uint32_t size, std::uint32_t alignment = 16u);
+
+    template<typename T>
+    Allocation AllocateRegion()
+    {
+        return AllocateRegion(sizeof(T), DRE::Min(alignof(T), 16));
+    }
 
 private:
-    VKW::Device*    m_Device;
-
-    StorageBuffer                           m_Buffer;
-    DRE::FreeListElementAllocator<128>      m_Allocator;
+    UploadArena*                                m_UploadArena;
+    StorageBuffer                               m_Buffer;
+    std::uint32_t                               m_FreeOffset;
+    std::uint32_t                               m_Size;
 };
 
 }

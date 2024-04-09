@@ -79,22 +79,3 @@ add_subdirectory(src)
 
 #==============
 add_subdirectory(apps/demo_app)
-
-#current main demo app requires shaders at build location
-set(DEMO_SHADERS_SOURCES
-	"${DRE_SOURCE_DIR}/shaders/blur_horizontal.comp"
-	"${DRE_SOURCE_DIR}/shaders/blur_vertical.comp"
-	"${DRE_SOURCE_DIR}/shaders/blur_mix.comp"
-	"${DRE_SOURCE_DIR}/shaders/blur_single_pass.comp"
-	"${DRE_SOURCE_DIR}/shaders/blur_single_pass_heavy.comp"
-	"${DRE_SOURCE_DIR}/shaders/default_lit.vert"
-	"${DRE_SOURCE_DIR}/shaders/default_lit.frag"
-	"${DRE_SOURCE_DIR}/shaders/cook_torrance.vert"
-	"${DRE_SOURCE_DIR}/shaders/cook_torrance.frag"
-	"${DRE_SOURCE_DIR}/shaders/global_uniform.h"
-	"${DRE_SOURCE_DIR}/shaders/imgui.vert"
-	"${DRE_SOURCE_DIR}/shaders/imgui.frag"
-	"${DRE_SOURCE_DIR}/shaders/shaders_common.h"
-	"${DRE_SOURCE_DIR}/shaders/test-triangle-nodata.vert"
-	"${DRE_SOURCE_DIR}/shaders/test-triangle-nodata.frag"
-)

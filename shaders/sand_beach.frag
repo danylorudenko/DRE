@@ -7,7 +7,6 @@
 #define ENABLE_PCF_POISSON
 
 #include "shaders_common.h"
-#include "shaders_defines.h"
 #include "lighting_model.h"
 #include "shadows.h"
 

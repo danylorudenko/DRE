@@ -3,7 +3,7 @@
 #include <cstdint>
 
 #define DRE_COMPILE_FOR_RENDERDOC
-//#define DRE_GET_BUFFER_ADDRESS
+#define DRE_GET_BUFFER_ADDRESS
 
 namespace VKW
 {

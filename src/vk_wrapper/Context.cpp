@@ -164,7 +164,7 @@ void Context::CmdBindComputeDescriptorSets(
 void Context::CmdBindGlobalDescriptorSets(VKW::DescriptorManager& descriptorManager, std::uint8_t frameID)
 {
     VkDescriptorSet globalSets[3];
-    globalSets[0] = descriptorManager.GetGlobalSampler_StorageSet().GetHandle();
+    globalSets[0] = descriptorManager.GetGlobalSampler().GetHandle();
     globalSets[1] = descriptorManager.GetGlobalTexturesSet().GetHandle();
     globalSets[2] = descriptorManager.GetGlobalUniformSet(frameID).GetHandle();
 

@@ -23,9 +23,10 @@
 namespace GFX
 {
 
-static constexpr std::uint32_t C_DEFAULT_STAGING_ARENA_SIZE     = 1024 * 1024 * 128;
-static constexpr std::uint32_t C_DEFAULT_UNIFORM_ARENA_SIZE     = DRE_U16_MAX * 2 - 1;
-static constexpr std::uint32_t C_DEFAULT_READBACK_ARENA_SIZE    = DRE_U16_MAX * 2 - 1;
+static constexpr std::uint32_t C_STAGING_ARENA_SIZE         = 1024 * 1024 * 128;
+static constexpr std::uint32_t C_UNIFORM_ARENA_SIZE         = DRE_U16_MAX * 2 - 1;
+static constexpr std::uint32_t C_READBACK_ARENA_SIZE        = DRE_U16_MAX * 2 - 1;
+static constexpr std::uint32_t C_PERSISTENT_STORAGE_SIZE    = 1024 * 1024;
 
 GraphicsManager* g_GraphicsManager = nullptr;
 
@@ -35,12 +36,12 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOMana
     , m_Device{ hInstance, window->NativeHandle(), debug}
     , m_MainContext{ m_Device.GetFuncTable(), m_Device.GetMainQueue(), &DRE::g_FrameScratchAllocator }
     , m_GraphicsFrame{ 0 }
-    , m_UploadArena{ &m_Device, C_DEFAULT_STAGING_ARENA_SIZE }
-    , m_UniformArena{ &m_Device, C_DEFAULT_UNIFORM_ARENA_SIZE }
-    , m_ReadbackArena{ &m_Device, C_DEFAULT_READBACK_ARENA_SIZE }
+    , m_UploadArena{ &m_Device, C_STAGING_ARENA_SIZE }
+    , m_UniformArena{ &m_Device, C_UNIFORM_ARENA_SIZE }
+    , m_ReadbackArena{ &m_Device, C_READBACK_ARENA_SIZE }
     , m_TextureBank{ &m_MainContext, m_Device.GetResourcesController(), m_Device.GetDescriptorManager() }
     , m_PipelineDB{ &m_Device, ioManager }
-    , m_PersistentStorage{ &m_Device }
+    , m_PersistentStorage{ &m_Device, &m_UploadArena, &m_Device, C_PERSISTENT_STORAGE_SIZE }
     , m_RenderGraph{ this }
     , m_DependencyManager{}
     , m_MainView{ &DRE::g_MainAllocator }
@@ -56,7 +57,7 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOMana
     {
         m_GlobalUniforms[i] = m_Device.GetResourcesController()->CreateBuffer(sizeof(GlobalUniforms), VKW::BufferUsage::UNIFORM);
     }
-    m_Device.GetDescriptorManager()->AllocateDefaultDescriptors(VKW::CONSTANTS::FRAMES_BUFFERING, m_GlobalUniforms, m_PersistentStorage.GetStorage().GetResource());
+    m_Device.GetDescriptorManager()->AllocateDefaultDescriptors(VKW::CONSTANTS::FRAMES_BUFFERING, m_GlobalUniforms, m_PersistentStorage.GetStorage()->GetResource());
 }
 
 void GraphicsManager::Initialize()

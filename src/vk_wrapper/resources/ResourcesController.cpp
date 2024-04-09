@@ -137,7 +137,7 @@ BufferResource* ResourcesController::CreateBuffer(std::uint32_t size, BufferUsag
     }
 #endif
 
-    BufferResource* resource = new BufferResource{ vkBuffer, size, memoryRegion, std::uint64_t(gpuAddress) };
+    BufferResource* resource = new BufferResource{ vkBuffer, size, memoryRegion, gpuAddress };
     buffers_.emplace(resource);
 
     return resource;

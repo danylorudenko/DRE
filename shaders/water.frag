@@ -4,7 +4,6 @@
 #extension GL_GOOGLE_include_directive : enable
 
 #include "shaders_common.h"
-#include "shaders_defines.h"
 #include "poisson.h"
 #include "lighting_model.h"
 

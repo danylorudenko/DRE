@@ -139,7 +139,7 @@ public:
         std::mutex& m = m_IOManager->GetShaderIncluderMutex();
         m.lock();
         shaderc_include_result* result = DRE::g_FrameScratchAllocator.Alloc<shaderc_include_result>();
-        DREIncludeData* data = new (DRE::g_FrameScratchAllocator.Alloc<DREIncludeData>()) DREIncludeData{};
+        DREIncludeData* data = DRE::g_FrameScratchAllocator.Alloc<DREIncludeData>();
         m.unlock();
 
         data->contentName = "shaders\\";

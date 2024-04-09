@@ -97,7 +97,7 @@ DescriptorManager& DescriptorManager::operator=(DescriptorManager&& rhs)
     DRE_SWAP_MEMBER(globalSetLayouts_);
     DRE_SWAP_MEMBER(globalSetPool_);
 
-    DRE_SWAP_MEMBER(globalSampler_StorageSet_);
+    DRE_SWAP_MEMBER(globalSampler_);
     DRE_SWAP_MEMBER(globalUniformSets_);
 
     DRE_SWAP_MEMBER(globalTexturesPool_);
@@ -124,10 +124,9 @@ DescriptorManager::~DescriptorManager()
 
 void DescriptorManager::CreateGlobalDescriptorLayouts()
 {
-    DescriptorSetLayout::Descriptor globalSampler_StorageSetLayoutDesc{ /*DESCRIPTOR_STAGE_ALL*/ };
-    globalSampler_StorageSetLayoutDesc.Add(DESCRIPTOR_TYPE_SAMPLER, 0, DESCRIPTOR_STAGE_ALL, std::uint32_t(SAMPLER_TYPE_MAX));
-    globalSampler_StorageSetLayoutDesc.Add(DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, DESCRIPTOR_STAGE_ALL);
-    globalSetLayouts_[0] = DescriptorSetLayout{ table_, device_, globalSampler_StorageSetLayoutDesc };
+    DescriptorSetLayout::Descriptor globalSamplerLayoutDesc{ /*DESCRIPTOR_STAGE_ALL*/ };
+    globalSamplerLayoutDesc.Add(DESCRIPTOR_TYPE_SAMPLER, 0, DESCRIPTOR_STAGE_ALL, std::uint32_t(SAMPLER_TYPE_MAX));
+    globalSetLayouts_[0] = DescriptorSetLayout{ table_, device_, globalSamplerLayoutDesc };
 
     DescriptorSetLayout::Descriptor globalTexturesLayoutDesc{ /*DESCRIPTOR_STAGE_ALL */};
     globalTexturesLayoutDesc.AddVariableCount(DESCRIPTOR_TYPE_TEXTURE, 0, DESCRIPTOR_STAGE_ALL, CONSTANTS::TEXTURE_DESCRIPTOR_HEAP_SIZE);
@@ -157,7 +156,7 @@ void DescriptorManager::AllocateDefaultDescriptors(std::uint8_t globalBuffersCou
     allocateInfo.descriptorSetCount = 1;
     allocateInfo.pSetLayouts = layouts;
     layouts[0] = globalSetLayouts_[0].GetHandle();
-    VK_ASSERT(table_->vkAllocateDescriptorSets(device_->Handle(), &allocateInfo, &globalSampler_StorageSet_));
+    VK_ASSERT(table_->vkAllocateDescriptorSets(device_->Handle(), &allocateInfo, &globalSampler_));
 
 
     std::uint32_t countsData = VKW::CONSTANTS::TEXTURE_DESCRIPTOR_HEAP_SIZE;
@@ -264,7 +263,6 @@ void DescriptorManager::AllocateDefaultDescriptors(std::uint8_t globalBuffersCou
 
 
     DRE::InplaceVector<VkDescriptorBufferInfo, VKW::CONSTANTS::FRAMES_BUFFERING> uniformBuffersinfo;
-    VkDescriptorBufferInfo persistentStorageInfo;
     VkDescriptorImageInfo samplerInfo[(int)SAMPLER_TYPE_MAX];
     
 
@@ -280,11 +278,6 @@ void DescriptorManager::AllocateDefaultDescriptors(std::uint8_t globalBuffersCou
     {
         samplerInfo[i].sampler = defaultSamplers_[i];
     }
-
-    persistentStorageInfo.buffer = persistentStorageBuffer->handle_;
-    persistentStorageInfo.offset = 0;
-    persistentStorageInfo.range = persistentStorageBuffer->size_;
-
 
     std::uint16_t constexpr writeCount = VKW::CONSTANTS::FRAMES_BUFFERING * 2 + 1;
     DRE::InplaceVector<VkWriteDescriptorSet, writeCount> writeInfos;
@@ -307,7 +300,7 @@ void DescriptorManager::AllocateDefaultDescriptors(std::uint8_t globalBuffersCou
     VkWriteDescriptorSet& samplerWrite = writeInfos.EmplaceBack();
     samplerWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     samplerWrite.pNext = nullptr;
-    samplerWrite.dstSet = globalSampler_StorageSet_;
+    samplerWrite.dstSet = globalSampler_;
     samplerWrite.dstBinding = 0;
     samplerWrite.dstArrayElement = 0;
     samplerWrite.descriptorCount = (int)SAMPLER_TYPE_MAX;
@@ -315,18 +308,6 @@ void DescriptorManager::AllocateDefaultDescriptors(std::uint8_t globalBuffersCou
     samplerWrite.pImageInfo = samplerInfo;
     samplerWrite.pBufferInfo = nullptr;
     samplerWrite.pTexelBufferView = nullptr;
-
-    VkWriteDescriptorSet& storageWrite = writeInfos.EmplaceBack();
-    storageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    storageWrite.pNext = nullptr;
-    storageWrite.dstSet = globalSampler_StorageSet_;
-    storageWrite.dstBinding = 1;
-    storageWrite.dstArrayElement = 0;
-    storageWrite.descriptorCount = 1;
-    storageWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    storageWrite.pImageInfo = nullptr;
-    storageWrite.pBufferInfo = &persistentStorageInfo;
-    storageWrite.pTexelBufferView = nullptr;
 
     table_->vkUpdateDescriptorSets(device_->Handle(), writeInfos.Size(), writeInfos.Data(), 0, nullptr);
 }
@@ -338,7 +319,7 @@ VkSampler DescriptorManager::GetDefaultSampler(SamplerType type) const
 
 TextureDescriptorIndex DescriptorManager::AllocateTextureDescriptor(ImageResourceView const* view)
 {
-    std::uint16_t id = dynamicTextureHeap_.Allocate(1);
+    std::uint16_t id = dynamicTextureHeap_.Allocate();
 
     if (view != nullptr)
     {

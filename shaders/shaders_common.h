@@ -1,13 +1,10 @@
 // mandatory shader include for all shaders in DRE
+#ifndef __SHADERS_COMMON_H__
+#define __SHADERS_COMMON_H__
+
+#include "shaders_defines.h"
 
 layout(set = 0, binding = 0) uniform sampler    g_GlobalSamplers[];
-layout(set = 0, binding = 1) buffer             PersistentStorage
-{
-    float data;
-} g_PersistentStorage;
-
-#define GetPersistentData(i) g_PersistentStorage.data[i]
-
 layout(set = 1, binding = 0) uniform texture2D  g_GlobalTextures[];
 #include "global_uniform.h" // layout(set = 2, binding = 0)
 
@@ -30,3 +27,16 @@ vec3 Linear2sRGB(vec3 x)
 {
 	return pow(x, vec3(2.2, 2.2, 2.2));
 }
+
+// Global Texture sampling
+vec4 SampleGlobalTextureLinear(uint id, vec2 uv)
+{
+    return SampleTexture(GetGlobalTexture(id), GetSamplerLinear(), uv);
+}
+
+vec4 SampleGlobalTextureAnisotropic(uint id, vec2 uv)
+{
+    return SampleTexture(GetGlobalTexture(id), GetSamplerAnisotropic(), uv);
+}
+
+#endif // __SHADERS_COMMON_H__

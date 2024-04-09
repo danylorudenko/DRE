@@ -4,7 +4,6 @@
 #extension GL_GOOGLE_include_directive : enable
 
 #include "shaders_common.h"
-#include "shaders_defines.h"
 
 layout(set = 3, binding = 0, rg32f) uniform image2D fftIntermediate;
 layout(set = 3, binding = 1, r32f) uniform image2D heightMap;
