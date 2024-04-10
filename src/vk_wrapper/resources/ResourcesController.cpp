@@ -104,6 +104,9 @@ BufferResource* ResourcesController::CreateBuffer(std::uint32_t size, BufferUsag
     case BufferUsage::STORAGE:
         regionDesc.memoryClass_ = MemoryClass::DeviceFast;
         vkBufferCreateInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+#if defined(DRE_GET_BUFFER_ADDRESS)
+        vkBufferCreateInfo.usage |= VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+#endif
         break;
     default:
         assert(false);
@@ -127,7 +130,7 @@ BufferResource* ResourcesController::CreateBuffer(std::uint32_t size, BufferUsag
 
     std::uint64_t gpuAddress = 0;
 #if defined(DRE_GET_BUFFER_ADDRESS)
-    if (usage == BufferUsage::UPLOAD_BUFFER)
+    if (usage == BufferUsage::UPLOAD_BUFFER || usage == BufferUsage::STORAGE)
     {
         VkBufferDeviceAddressInfo addressInfo;
         addressInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;

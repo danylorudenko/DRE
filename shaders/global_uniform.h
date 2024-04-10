@@ -1,11 +1,5 @@
-#ifdef __cplusplus
-#include <glm\vec4.hpp>
-#include <glm\mat4x4.hpp>
-
-#define vec4 glm::vec4
-#define mat4 glm::mat4
-#endif
-
+#include "shaders_defines.h"
+#include "lights.h"
 
 #ifdef __cplusplus
 struct GlobalUniforms
@@ -37,6 +31,8 @@ layout(set = 2, binding = 0, std140) readonly uniform GlobalUniforms
 	
     vec4 main_LightDir;
     vec4 main_LightRadiance;
+
+    S_LIGHT_GPURef LightBuffer;
     // end
 #ifdef __cplusplus
 };

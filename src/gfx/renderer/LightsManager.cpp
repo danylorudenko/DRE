@@ -31,6 +31,13 @@ std::uint64_t LightsManager::GetBufferAddress() const
     return m_PersistentAllocation.GetGPUAddress();
 }
 
+LightsManager::Light::Light(PersistentStorage::Allocation allocation, std::uint16_t id)
+    : m_Allocation{ allocation }
+    , m_id{ id }
+{
+
+}
+
 void LightsManager::Light::Update(VKW::Context& context, glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux)
 {
     S_LIGHT SLight;

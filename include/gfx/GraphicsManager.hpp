@@ -19,6 +19,7 @@
 #include <gfx\pipeline\PipelineDB.hpp>
 #include <gfx\renderer\RenderableObject.hpp>
 #include <gfx\view\RenderView.hpp>
+#include <gfx\renderer\LightsManager.hpp>
 
 #include <engine\data\Geometry.hpp>
 #include <engine\data\Material.hpp>
@@ -111,6 +112,7 @@ public:
     inline TextureBank&                 GetTextureBank() { return m_TextureBank; }
     inline PipelineDB&                  GetPipelineDB() { return m_PipelineDB; }
     inline PersistentStorage&           GetPersistentStorage() { return m_PersistentStorage; }
+    inline LightsManager&               GetLightsManager() { return m_LightsManager; }
     inline DependencyManager&           GetDependencyManager() { return m_DependencyManager; }
     inline RenderGraph&                 GetMainRenderGraph() { return m_RenderGraph; }
 
@@ -169,6 +171,8 @@ private:
 
     VKW::BufferResource*        m_GlobalUniforms[VKW::CONSTANTS::FRAMES_BUFFERING];
     PersistentStorage           m_PersistentStorage;
+
+    LightsManager               m_LightsManager;
 
     RenderGraph                 m_RenderGraph;
     DependencyManager           m_DependencyManager;

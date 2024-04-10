@@ -217,7 +217,7 @@ MemoryPage* MemoryController::AllocPage(MemoryClass memoryClass, std::uint64_t s
     VkMemoryAllocateFlagsInfo flagsInfo;
     flagsInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
     flagsInfo.pNext = nullptr;
-    flagsInfo.flags = memoryClass == MemoryClass::CpuStaging ? VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT : VK_FLAGS_NONE;
+    flagsInfo.flags =  VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
     flagsInfo.deviceMask = 0;
 
     VkMemoryAllocateInfo info;

@@ -212,7 +212,13 @@ DRE::ByteBuffer IOManager::CompileGLSL(char const* path)
 
     if (compile.GetCompilationStatus() != shaderc_compilation_status_success) 
     {
+#ifdef DEBUG_SHADER_COMPILATION
+        std::lock_guard<std::mutex> lock{ m_DebugShaderCompilationMutex };
+        std::cout << "FAILED COMPILING SHADER " << filePath << std::endl << "SOURCE: " << std::endl;
+        std::cout << preprocess.begin();
+#endif
         std::cout << compile.GetErrorMessage();
+
         return DRE::ByteBuffer{};
     }
 

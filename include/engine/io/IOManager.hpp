@@ -20,6 +20,8 @@
 #include <atomic>
 #include <mutex>
 
+#define DEBUG_SHADER_COMPILATION
+
 namespace WORLD
 {
 class Scene;
@@ -132,6 +134,9 @@ private:
     std::thread m_ShaderObserverThread;
     std::atomic_bool m_PendingChangesFlag;
 
+#ifdef DEBUG_SHADER_COMPILATION
+    std::mutex  m_DebugShaderCompilationMutex;
+#endif
 
 };
 

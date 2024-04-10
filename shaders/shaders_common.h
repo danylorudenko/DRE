@@ -2,6 +2,9 @@
 #ifndef __SHADERS_COMMON_H__
 #define __SHADERS_COMMON_H__
 
+#extension GL_EXT_nonuniform_qualifier : enable
+#extension GL_EXT_buffer_reference2    : enable
+
 #include "shaders_defines.h"
 
 layout(set = 0, binding = 0) uniform sampler    g_GlobalSamplers[];

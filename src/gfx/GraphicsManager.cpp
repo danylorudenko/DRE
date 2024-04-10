@@ -42,6 +42,7 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOMana
     , m_TextureBank{ &m_MainContext, m_Device.GetResourcesController(), m_Device.GetDescriptorManager() }
     , m_PipelineDB{ &m_Device, ioManager }
     , m_PersistentStorage{ &m_Device, &m_UploadArena, &m_Device, C_PERSISTENT_STORAGE_SIZE }
+    , m_LightsManager{ &m_PersistentStorage }
     , m_RenderGraph{ this }
     , m_DependencyManager{}
     , m_MainView{ &DRE::g_MainAllocator }
@@ -156,6 +157,8 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
 
     globalUniform.main_LightDir         = glm::vec4{ scene.GetMainSunLight().GetForward(), 0.0f };
     globalUniform.main_LightRadiance    = glm::vec4{ scene.GetMainSunLight().GetRadiance(), 1.0f };
+
+    globalUniform.LightBuffer           = m_LightsManager.GetBufferAddress();
 
     std::memcpy(dst, &globalUniform, sizeof(globalUniform));
 
