@@ -38,7 +38,7 @@ void LightPropertiesEditor::SetLight(WORLD::ISceneNodeUser* user)
 {
     switch (user->GetType())
     {
-    case WORLD::ISceneNodeUser::Type::DirectionalLight:
+    case WORLD::ISceneNodeUser::Type::Light:
         m_EditedLight = user;
         break;
     default:
@@ -55,7 +55,7 @@ void LightPropertiesEditor::Render()
         {
             switch (m_EditedLight->GetType())
             {
-            case WORLD::ISceneNodeUser::Type::DirectionalLight:
+            case WORLD::ISceneNodeUser::Type::Light:
             {
                 RenderDirectionalLightProperties();
                 break;
@@ -84,7 +84,7 @@ void LightPropertiesEditor::RenderDirectionalLightProperties()
     ImGui::Text("Name: %s", m_EditedLight->GetSceneNode()->GetName());
     ImGui::Text("Type: Directional Light");
 
-    WORLD::DirectionalLight* light = reinterpret_cast<WORLD::DirectionalLight*>(m_EditedLight);
+    WORLD::Light* light = reinterpret_cast<WORLD::Light*>(m_EditedLight);
 
     glm::vec3 radiance = light->GetRadiance();
     ImGui::DragFloat3("Radiance: ", glm::value_ptr(radiance), 1.0f, 0.0f, 100.0f, "%.3f");

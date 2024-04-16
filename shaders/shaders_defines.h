@@ -29,31 +29,30 @@ using mat4 = glm::mat4;
 #define TexelFetchLvl(textureObj, pos, lvl) texelFetch(sampler2D(textureObj, GetSamplerNearest(), pos, lvl)
 #define TexelFetch(textureObj, pos) texelFetch(sampler2D(textureObj, GetSamplerNearest()), pos, 0)
 
+// Type_GPURef CPP
 #ifdef __cplusplus
-
-struct GPUPointer
-{
-    std::uint64_t pointer;
-    std::uint64_t ___pad;
-
-    GPUPointer(std::uint64_t ptr = 0)
-        : pointer{ ptr }
-        , ___pad{ 0 }
-    {}
-
-    GPUPointer& operator=(std::uint64_t ptr)
+    struct GPUPointer
     {
-        pointer = ptr;
-        return *this;
-    }
+        std::uint64_t pointer;
+        std::uint64_t ___pad;
 
-    operator std::uint64_t&() { return pointer; }
-};
+        GPUPointer(std::uint64_t ptr = 0)
+            : pointer{ ptr }
+            , ___pad{ 0 }
+        {}
 
-#define DeclareStorageBuffer(Type) using Type ## _GPURef = GPUPointer; \
-struct Type
-#else
-#define DeclareStorageBuffer(Type) layout(buffer_reference, std430, buffer_reference_align = 16) buffer Type ## _GPURef
-#endif
+        GPUPointer& operator=(std::uint64_t ptr)
+        {
+            pointer = ptr;
+            return *this;
+        }
+
+        operator std::uint64_t&() { return pointer; }
+    };
+    #define DeclareStorageBuffer(Type) using Type ## _GPURef = GPUPointer; struct Type
+
+#else // Type_GPURef GLSL
+    #define DeclareStorageBuffer(Type) layout(buffer_reference, std430, buffer_reference_align = 16) buffer Type ## _GPURef
+#endif // __cplusplus
 
 #endif // __SHADER_DEFINES_H__

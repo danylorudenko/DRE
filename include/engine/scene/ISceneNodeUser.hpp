@@ -16,7 +16,7 @@ public:
     {
         Entity,
         Camera,
-        DirectionalLight,
+        Light,
         MAX
     };
 

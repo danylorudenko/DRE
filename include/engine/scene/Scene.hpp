@@ -37,6 +37,7 @@ class Scene
 public:
     using EntityID = std::uint32_t;
     using NodeID = std::uint32_t;
+    using LightID = std::uint32_t;
 
     Scene(DRE::DefaultAllocator* allocator);
     ~Scene();
@@ -46,8 +47,8 @@ public:
     inline Camera&                  GetMainCamera() { return m_MainCamera; }
     inline Camera const &           GetMainCamera() const { return m_MainCamera; }
 
-    inline DirectionalLight&        GetMainSunLight() { return m_MainSunLight; }
-    inline DirectionalLight const&  GetMainSunLight() const { return m_MainSunLight; }
+    inline Light&                   GetMainSunLight() { return m_MainSunLight; }
+    inline Light const&             GetMainSunLight() const { return m_MainSunLight; }
 
     inline Entity*                  GetEntity(EntityID id) { return m_SceneEntities.Find(id).value; }
     inline SceneNode*               GetNode(NodeID id) { return m_Nodes.Find(id).value; }
@@ -63,10 +64,13 @@ private:
 
 private:
     Camera              m_MainCamera;
-    DirectionalLight    m_MainSunLight;
+    Light               m_MainSunLight;
 
     EntityID                                    m_EntityCounter;
     DRE::InplaceHashTable<EntityID, Entity>     m_SceneEntities;
+
+    LightID                                     m_LightsCounter;
+    DRE::InplaceHashTable<LightID, Light>       m_SceneLights;
 
     NodeID                                      m_NodeCounter;
     DRE::InplaceHashTable<NodeID, SceneNode>    m_Nodes;

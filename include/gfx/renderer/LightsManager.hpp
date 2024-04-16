@@ -37,7 +37,7 @@ public:
         friend class LightsManager;
 
     public:
-        void Update(VKW::Context& context, glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux);
+        void Update(VKW::Context& context, glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, std::uint32_t type);
 
     private:
         Light(PersistentStorage::Allocation allocation, std::uint16_t id);

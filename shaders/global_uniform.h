@@ -67,5 +67,8 @@ mat4	GetPrevCameraiViewProjM() { return g_GlobalUniforms.main_PreviViewProjM; }
 
 vec3    GetMainLightDir() { return g_GlobalUniforms.main_LightDir.xyz; }
 vec3    GetMainLightRadiance() { return g_GlobalUniforms.main_LightRadiance.xyz; }
+
+S_LIGHT_GPURef GetLight(int i) { return g_GlobalUniforms.LightBuffer[i]; }
+
 #endif
 

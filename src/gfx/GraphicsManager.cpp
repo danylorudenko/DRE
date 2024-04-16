@@ -124,7 +124,7 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     m_MainView.UpdateProjection(camera.GetFOV(), camera.GetRange()[0], camera.GetRange()[1]);
     m_MainView.UpdateJitter(taaJitter.x, taaJitter.y);
 
-    WORLD::DirectionalLight const& sunLight = scene.GetMainSunLight();
+    WORLD::Light const& sunLight = scene.GetMainSunLight();
     m_SunShadowView.UpdatePlacement(sunLight.GetPosition(), sunLight.GetForward(), sunLight.GetUp());
     m_SunShadowView.UpdateViewport(glm::uvec2{ 0, 0 }, glm::uvec2{ C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT });
     m_SunShadowView.UpdateProjection(
@@ -156,7 +156,7 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     globalUniform.main_PreviViewProjM   = m_MainView.GetPrevInvViewProjectionM();
 
     globalUniform.main_LightDir         = glm::vec4{ scene.GetMainSunLight().GetForward(), 0.0f };
-    globalUniform.main_LightRadiance    = glm::vec4{ scene.GetMainSunLight().GetRadiance(), 1.0f };
+    globalUniform.main_LightRadiance    = glm::vec4{ scene.GetMainSunLight().GetSpectrum(), 1.0f };
 
     globalUniform.LightBuffer           = m_LightsManager.GetBufferAddress();
 

@@ -38,11 +38,11 @@ LightsManager::Light::Light(PersistentStorage::Allocation allocation, std::uint1
 
 }
 
-void LightsManager::Light::Update(VKW::Context& context, glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux)
+void LightsManager::Light::Update(VKW::Context& context, glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, std::uint32_t type)
 {
     S_LIGHT SLight;
     SLight.world_pos = glm::vec4(position, 1.0f);
-    SLight.direction = glm::vec4(orientation, 0.0f);
+    SLight.direction = glm::vec4(orientation, *reinterpret_cast<float*>(&type));
     SLight.radiant_flux_spectrum = glm::vec4(color, 0.0f) * flux;
 
     m_Allocation.Update(context, SLight);

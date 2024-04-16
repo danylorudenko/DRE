@@ -70,7 +70,7 @@ DRE::String64 SceneGraphEditor::GetUniqueLabel(WORLD::SceneNode* node, SceneGrap
     case WORLD::ISceneNodeUser::Type::Camera:
         typeStr = "Camera";
         break;
-    case WORLD::ISceneNodeUser::Type::DirectionalLight:
+    case WORLD::ISceneNodeUser::Type::Light:
         typeStr = "Directional Light";
     }
 
@@ -108,7 +108,7 @@ void SceneGraphEditor::AttemptOpenProperties(WORLD::SceneNode* node)
 {
     switch (node->GetNodeUser()->GetType())
     {
-    case WORLD::ISceneNodeUser::Type::DirectionalLight:
+    case WORLD::ISceneNodeUser::Type::Light:
     {
         auto* lightEditor = (LightPropertiesEditor*)reinterpret_cast<RootEditor*>(m_RootEditor)->GetEditorByType(BaseEditor::Type::LightProperties);
         if (lightEditor != nullptr)
