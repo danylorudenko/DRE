@@ -5,6 +5,7 @@
 
 #include <editor\RootEditor.hpp>
 #include <editor\LightPropertiesEditor.hpp>
+#include <editor\TransformEditor.hpp>
 #include <engine\scene\Scene.hpp>
 #include <engine\scene\ISceneNodeUser.hpp>
 #include <engine\ApplicationContext.hpp>
@@ -106,11 +107,19 @@ void SceneGraphEditor::RenderSceneNodeRecursive(WORLD::SceneNode* node, SceneGra
 
 void SceneGraphEditor::AttemptOpenProperties(WORLD::SceneNode* node)
 {
+    RootEditor* rootEditor = reinterpret_cast<RootEditor*>(m_RootEditor);
+
+    auto* transformEditor = reinterpret_cast<TransformEditor*>(rootEditor->GetEditorByType(BaseEditor::Type::Transform));
+    if (transformEditor != nullptr)
+    {
+        transformEditor->SetNode(node->GetNodeUser());
+    }
+
     switch (node->GetNodeUser()->GetType())
     {
     case WORLD::ISceneNodeUser::Type::Light:
     {
-        auto* lightEditor = (LightPropertiesEditor*)reinterpret_cast<RootEditor*>(m_RootEditor)->GetEditorByType(BaseEditor::Type::LightProperties);
+        auto* lightEditor = reinterpret_cast<LightPropertiesEditor*>(rootEditor->GetEditorByType(BaseEditor::Type::LightProperties));
         if (lightEditor != nullptr)
         {
             lightEditor->SetLight(node->GetNodeUser());

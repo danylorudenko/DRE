@@ -19,5 +19,5 @@ layout(set = 3, binding = 0) uniform ImGuiData
 void main()
 {
 	float textureValue = SampleGlobalTextureLinear(imGuiData.textureID, in_uv).x;
-	finalColor = vec4(in_color.rgb * textureValue, textureValue);
+	finalColor = vec4(in_color.rgba * textureValue);
 }

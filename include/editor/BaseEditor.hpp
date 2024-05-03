@@ -28,6 +28,7 @@ public:
         Camera,
         SceneGraph,
         LightProperties,
+        Transform,
         MAX
     };
 

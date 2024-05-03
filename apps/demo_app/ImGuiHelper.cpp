@@ -34,7 +34,8 @@ ImGuiHelper::ImGuiHelper(Window* window, InputSystem* input)
 
     io.ConfigFlags = ImGuiConfigFlags_None;
     //io.FontGlobalScale = 2.5f;
-    io.IniFilename = nullptr;
+    //io.IniFilename = nullptr;
+    ImGui::GetStyle().WindowRounding = 5.0f;
 
     io.KeyMap[ImGuiKey_Tab] = (std::int32_t)Keys::Tab;
     io.KeyMap[ImGuiKey_LeftArrow] = (std::int32_t)Keys::Left;
@@ -94,6 +95,7 @@ void ImGuiHelper::BeginFrame()
     io.MouseDown[0] = m_InputSystem->GetLeftMouseButtonPressed();
     io.MouseDown[1] = m_InputSystem->GetRightMouseButtonPressed();
     io.MouseDown[2] = m_InputSystem->GetMiddleMouseButtonPressed();
+    io.MouseWheel = m_InputSystem->GetMouseState().mouseWheelDelta_ / 5.0f;
 
     io.KeyCtrl = m_InputSystem->GetKeyboardButtonDown(Keys::Ctrl);
     io.KeyShift = m_InputSystem->GetKeyboardButtonDown(Keys::Shift);

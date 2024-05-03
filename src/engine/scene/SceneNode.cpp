@@ -79,6 +79,7 @@ float SceneNode::GetGlobalScale() const
 void SceneNode::SetParent(SceneNode* parent)
 {
     m_Parent = parent;
+    CalculateDirectionVectors();
 }
 
 glm::vec3 SceneNode::GetEulerOrientation() const

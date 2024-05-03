@@ -219,6 +219,8 @@ std::uint32_t InputSystem::GetCharFromKeys(Keys key)
 
 void InputSystem::Update()
 {
+    pendingMouseState_.mouseWheelDelta_ = static_cast<float>(pendingMouseState_.mouseWheelPos_ - mouseState_.mouseWheelPos_);
+
     prevMouseState_ = mouseState_;
     mouseState_ = pendingMouseState_;
 
@@ -252,6 +254,10 @@ void InputSystem::ProcessSystemInput(HWND handle, WPARAM wparam, LPARAM lparam)
     RAWINPUTHEADER& header = rawInput->header;
     if (header.dwType == RIM_TYPEMOUSE) {
         RAWMOUSE& mouse = rawInput->data.mouse;
+
+        pendingMouseState_.xDelta_ = static_cast<float>(mouse.lLastX);
+        pendingMouseState_.yDelta_ = static_cast<float>(mouse.lLastY);
+
         if(mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN)
             pendingMouseState_.mouseButtonStates_ |= 1 << static_cast<std::uint32_t>(MouseState::MouseButtonOffsets::Left);
 
@@ -271,10 +277,7 @@ void InputSystem::ProcessSystemInput(HWND handle, WPARAM wparam, LPARAM lparam)
             pendingMouseState_.mouseButtonStates_ &= ~(1 << static_cast<std::uint32_t>(MouseState::MouseButtonOffsets::Middle));
 
         if (mouse.usButtonFlags & RI_MOUSE_WHEEL)
-            pendingMouseState_.mouseWheelDelta_ = static_cast<float>(mouse.usButtonData);
-
-        pendingMouseState_.xDelta_ = static_cast<float>(mouse.lLastX);
-        pendingMouseState_.yDelta_ = static_cast<float>(mouse.lLastY);
+            pendingMouseState_.mouseWheelPos_ += static_cast<short>(mouse.usButtonData) / WHEEL_DELTA;
     }
     else if (header.dwType == RIM_TYPEKEYBOARD) {
         RAWKEYBOARD& keyboard = rawInput->data.keyboard;

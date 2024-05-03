@@ -6,6 +6,7 @@
 #include <editor\CameraEditor.hpp>
 #include <editor\LightPropertiesEditor.hpp>
 #include <editor\SceneGraphEditor.hpp>
+#include <editor\TransformEditor.hpp>
 
 #include <imgui.h>
 
@@ -93,6 +94,15 @@ void RootEditor::Render()
                 {
                     LightPropertiesEditor* lightEditor = DRE::g_MainAllocator.Alloc<LightPropertiesEditor>(this, EDITOR_FLAGS_NONE);
                     m_Editors.EmplaceBack(lightEditor);
+                }
+            }
+
+            if (ImGui::MenuItem("Transform Editor"))
+            {
+                if (GetEditorByType(BaseEditor::Type::Transform) == nullptr)
+                {
+                    TransformEditor* transformEditor = DRE::g_MainAllocator.Alloc<TransformEditor>(this, EDITOR_FLAGS_NONE);
+                    m_Editors.EmplaceBack(transformEditor);
                 }
             }
 

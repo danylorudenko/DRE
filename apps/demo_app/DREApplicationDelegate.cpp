@@ -114,6 +114,7 @@ void DREApplicationDelegate::start()
     m_MainScene.SetMainSunLight(sunLight);
 
     sunLight->SetEulerOrientation(glm::vec3{ 70.0f, 45.0f + 180.0f, 0.0f });
+    sunLight->ScheduleUpdateGPUData();
 
     m_GraphicsManager.Initialize();
 
@@ -245,7 +246,8 @@ void DREApplicationDelegate::InitImGui()
 //////////////////////////////////////////
 void DREApplicationDelegate::ImGuiUser()
 {
-    m_RootEditor.Render();
+    ImGui::ShowDemoWindow();
+    //m_RootEditor.Render();
 
     if (/*m_ImGuiEnabled*/false) {
         IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context. Refer to examples app!");
