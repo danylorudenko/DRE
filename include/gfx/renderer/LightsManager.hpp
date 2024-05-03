@@ -11,6 +11,8 @@
 
 #include <gfx\buffer\PersistentStorage.hpp>
 
+#include <lights.h>
+
 #include <glm\vec3.hpp>
 
 namespace VKW
@@ -37,13 +39,13 @@ public:
         friend class LightsManager;
 
     public:
-        void Update(VKW::Context& context, glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, std::uint32_t type);
+        void ScheduleUpdate(glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, std::uint32_t type);
 
     private:
-        Light(PersistentStorage::Allocation allocation, std::uint16_t id);
+        Light(LightsManager* manager, std::uint16_t id);
 
-        PersistentStorage::Allocation m_Allocation;
-        std::uint16_t m_id;
+        LightsManager*  m_LightsManager;
+        std::uint16_t   m_id;
     };
 
 public:
@@ -52,12 +54,25 @@ public:
     Light AllocateLight();
     void FreeLight(Light& light);
 
+    void ScheduleLightUpdate(std::uint16_t id, glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, std::uint32_t type);
+    void UpdateGPULights(VKW::Context& context);
+
+    std::uint32_t GetLightsCount() const;
+
     std::uint64_t GetBufferAddress() const;
 
 
 private:
     PersistentStorage::Allocation m_PersistentAllocation;
     DRE::FreeListElementAllocator<MAX_LIGHTS> m_ElementAllocator;
+    std::uint32_t m_LightsCount;
+
+    struct LightUpdateEntry
+    {
+        std::uint16_t id;
+        S_LIGHT payload;
+    };
+    DRE::InplaceVector<LightUpdateEntry, 8> m_LightUpdateQueue;
 };
 
 }

@@ -1,6 +1,6 @@
 // mandatory shader include for all shaders in DRE
-#ifndef __SHADERS_COMMON_H__
-#define __SHADERS_COMMON_H__
+#ifndef _SHADERS_COMMON_H_
+#define _SHADERS_COMMON_H_
 
 #extension GL_EXT_nonuniform_qualifier : enable
 #extension GL_EXT_buffer_reference2    : enable
@@ -42,4 +42,4 @@ vec4 SampleGlobalTextureAnisotropic(uint id, vec2 uv)
     return SampleTexture(GetGlobalTexture(id), GetSamplerAnisotropic(), uv);
 }
 
-#endif // __SHADERS_COMMON_H__
+#endif // _SHADERS_COMMON_H_

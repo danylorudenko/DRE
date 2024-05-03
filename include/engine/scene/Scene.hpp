@@ -47,24 +47,25 @@ public:
     inline Camera&                  GetMainCamera() { return m_MainCamera; }
     inline Camera const &           GetMainCamera() const { return m_MainCamera; }
 
-    inline Light&                   GetMainSunLight() { return m_MainSunLight; }
-    inline Light const&             GetMainSunLight() const { return m_MainSunLight; }
-
     inline Entity*                  GetEntity(EntityID id) { return m_SceneEntities.Find(id).value; }
     inline SceneNode*               GetNode(NodeID id) { return m_Nodes.Find(id).value; }
+
+    inline Light*                   GetMainSunLight() { return m_MainLight; }
+    inline void                     SetMainSunLight(Light* light) { m_MainLight = light; }
 
 
     Entity*                         CreateOpaqueEntity(VKW::Context& context, Data::Geometry* geometry, Data::Material* material, SceneNode* parent = nullptr);
     inline SceneNode*               CreateSceneNode(ISceneNodeUser* user, SceneNode* parent = nullptr);
     inline SceneNode*               CreateEmptySceneNode(SceneNode* parent = nullptr) { NodeID const id = m_NodeCounter++; return &m_Nodes.Emplace(id, parent, nullptr); }
 
+    Light*                          CreateDirectionalLight(VKW::Context& context, SceneNode* parent = nullptr);
 
 private:
     inline Entity*                  CreateEntity() { EntityID const id = m_EntityCounter++; return &m_SceneEntities.Emplace(id); }
 
 private:
     Camera              m_MainCamera;
-    Light               m_MainSunLight;
+    Light*              m_MainLight;
 
     EntityID                                    m_EntityCounter;
     DRE::InplaceHashTable<EntityID, Entity>     m_SceneEntities;

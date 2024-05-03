@@ -21,9 +21,6 @@ Scene::Scene(DRE::DefaultAllocator* allocator)
 
     SceneNode* cameraNode = CreateSceneNode(&m_MainCamera, m_RootNode);
     cameraNode->SetName("camera");
-
-    SceneNode* sunNode = CreateSceneNode(&m_MainSunLight, cameraNode);
-    sunNode->SetName("sun");
 }
 
 Entity* Scene::CreateOpaqueEntity(VKW::Context& context, Data::Geometry* geometry, Data::Material* material, SceneNode* parent)
@@ -52,9 +49,24 @@ SceneNode* Scene::CreateSceneNode(ISceneNodeUser* user, SceneNode* parent)
     SceneNode* sceneNode = &m_Nodes.Emplace(id, parent, user);
     user->SetSceneNode(sceneNode);
 
-    parent->AddChild(sceneNode);
+    if (parent != nullptr)
+        parent->AddChild(sceneNode);
+    else
+        m_RootNode->AddChild(sceneNode);
 
     return sceneNode;
+}
+
+Light* Scene::CreateDirectionalLight(VKW::Context& context, SceneNode* parent)
+{
+    LightID const id = m_LightsCounter++;
+    Light* light = &m_SceneLights.Emplace(id, &GFX::g_GraphicsManager->GetLightsManager(), static_cast<std::uint32_t>(DRE_LIGHT_TYPE_DIRECTIONAL));
+
+    SceneNode* node = CreateSceneNode(light, parent);
+    node->SetName("Directional Light");
+    light->ScheduleUpdateGPUData();
+
+    return light;
 }
 
 Scene::~Scene()

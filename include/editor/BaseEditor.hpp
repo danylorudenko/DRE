@@ -4,6 +4,11 @@
 
 #include <glm\vec2.hpp>
 
+namespace VKW
+{
+class Context;
+}
+
 namespace EDITOR
 {
 

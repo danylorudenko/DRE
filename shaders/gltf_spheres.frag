@@ -6,7 +6,7 @@
 #define ENABLE_PCF_POISSON
 
 #include "shaders_common.h"
-#include "lighting_model.h"
+#include "lighting.h"
 #include "shadows.h"
 
 layout(location = 0) in vec3 in_wpos;
@@ -44,35 +44,29 @@ void main()
     vec3 diffuse    = SampleGlobalTextureAnisotropic(DiffuseTextureID, in_uv).rgb;
     vec3 normal     = SampleGlobalTextureAnisotropic(NormalTextureID, in_uv).rgb;
     vec2 metalness_roughness = SampleGlobalTextureAnisotropic(MetalnessTextureID, in_uv).bg;
-	float metalness = metalness_roughness.x;
-	float roughness = metalness_roughness.y;
-	
-    vec3 n = normalize(in_TBN[2]);
-    vec3 v = normalize(GetCameraPos() - in_wpos);
-    vec3 L = -GetMainLightDir();
-    vec3 h = normalize(v + L);
-    
-    float NdotL = max(0.0, dot(n, L));
-    float NdotH = max(0.0, dot(n, h));
-    float NdotV = max(0.0, dot(n, v));
-	
-    vec3 brdf = CookTorranceBRDF(NdotH, NdotV, NdotL, diffuse, roughness, metalness);
+    float metalness = metalness_roughness.x;
+    float roughness = metalness_roughness.y;
 
-    vec3 ambient = vec3(0.15, 0.15, 0.15) * diffuse;
+    S_SURFACE surface;
+    surface.wpos = in_wpos;
+    surface.normal = normalize(in_TBN[2]);
+    surface.diffuseSpectrum = diffuse;
+    surface.roughness = roughness;
+    surface.metalness = metalness;
 
-    vec3 res = brdf + ambient;    
-	
-    finalColor = vec4(res, 1.0);
-	
-	vec4 prev_ndc = GetPrevCameraViewProjM() * in_prev_wpos;
-	prev_ndc /= prev_ndc.w;
-	
-	vec2 pixel_pos_uv = gl_FragCoord.xy / GetViewportSize();
-	vec2 pixel_pos_ndc = pixel_pos_uv * 2.0 - 1.0;
-	
-	vec2 vel = (pixel_pos_ndc - prev_ndc.xy);
-	vec2 vel_uv = vel * 0.5;
-	
-	velocity = vec2(vel_uv);
-	
+    S_LIGHTING_RESULT lighting = CalculateLighting(surface);
+
+    finalColor = vec4(lighting.finalRadiance, 1.0);
+
+    vec4 prev_ndc = GetPrevCameraViewProjM() * in_prev_wpos;
+    prev_ndc /= prev_ndc.w;
+
+    vec2 pixel_pos_uv = gl_FragCoord.xy / GetViewportSize();
+    vec2 pixel_pos_ndc = pixel_pos_uv * 2.0 - 1.0;
+
+    vec2 vel = (pixel_pos_ndc - prev_ndc.xy);
+    vec2 vel_uv = vel * 0.5;
+
+    velocity = vec2(vel_uv);
+
 }

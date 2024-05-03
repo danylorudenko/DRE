@@ -1,3 +1,6 @@
+#ifndef _GLOBAL_UNIFORM_H_
+#define _GLOBAL_UNIFORM_H_
+
 #include "shaders_defines.h"
 #include "lights.h"
 
@@ -11,15 +14,15 @@ layout(set = 2, binding = 0, std140) readonly uniform GlobalUniforms
     vec4 viewportSize_deltaMS_timeS;
     vec4 main_CameraPos_GenericScalar;
     vec4 main_CameraDir;
-	vec4 main_Jitter;
-	
+    vec4 main_Jitter;
+
     mat4 main_ViewM;
     mat4 main_iViewM;
     mat4 main_ProjM;
     mat4 main_iProjM;
     mat4 main_ViewProjM;
     mat4 main_iViewProjM;
-	
+
     mat4 main_PrevViewM;
     mat4 main_PreviViewM;
     mat4 main_PrevProjM;
@@ -28,10 +31,11 @@ layout(set = 2, binding = 0, std140) readonly uniform GlobalUniforms
     mat4 main_PreviProjJittM;
     mat4 main_PrevViewProjM;
     mat4 main_PreviViewProjM;
-	
+
     vec4 main_LightDir;
     vec4 main_LightRadiance;
 
+    uvec4 lightsCount;
     S_LIGHT_GPURef LightBuffer;
     // end
 #ifdef __cplusplus
@@ -68,7 +72,9 @@ mat4	GetPrevCameraiViewProjM() { return g_GlobalUniforms.main_PreviViewProjM; }
 vec3    GetMainLightDir() { return g_GlobalUniforms.main_LightDir.xyz; }
 vec3    GetMainLightRadiance() { return g_GlobalUniforms.main_LightRadiance.xyz; }
 
-S_LIGHT_GPURef GetLight(int i) { return g_GlobalUniforms.LightBuffer[i]; }
+uint    GetLightsCount() { return g_GlobalUniforms.lightsCount.x; }
+S_LIGHT_GPURef GetLight(uint i) { return g_GlobalUniforms.LightBuffer[i]; }
 
 #endif
 
+#endif // _GLOBAL_UNIFORM_H_

@@ -25,15 +25,9 @@ public:
     public:
         ~Allocation() = default;
 
-        template<typename T>
-        void Update(VKW::Context& context, T& data)
-        {
-            Update(context, &data, sizeof(data));
-        }
-
         void Update(VKW::Context& context, void* data, std::uint32_t size);
-        void Update(VKW::Context& context, UploadArena::Allocation const& src);
-        void Update(VKW::Context& context, VKW::BufferResource* src, std::uint32_t srcOffset, std::uint32_t srcSize);
+        void Update(VKW::Context& context, std::uint32_t dstOffset, void* data, std::uint32_t size);
+        void Update(VKW::Context& context, std::uint32_t dstOffset, UploadArena::Allocation const& src);
         void Update(VKW::Context& context, std::uint32_t dstOffset, VKW::BufferResource* src, std::uint32_t srcOffset, std::uint32_t srcSize);
 
         std::uint32_t GetSize() const;

@@ -86,9 +86,33 @@ void LightPropertiesEditor::RenderDirectionalLightProperties()
 
     WORLD::Light* light = reinterpret_cast<WORLD::Light*>(m_EditedLight);
 
-    glm::vec3 radiance = light->GetRadiance();
-    ImGui::DragFloat3("Radiance: ", glm::value_ptr(radiance), 1.0f, 0.0f, 100.0f, "%.3f");
-    light->SetRadiance(radiance);
+    bool needsUpdate = false;
+
+    glm::vec3 spectrum = light->GetSpectrum();
+    if (ImGui::DragFloat3("spectrum: ", glm::value_ptr(spectrum), 1.0f, 0.0f, 100.0f))
+    {
+        light->SetSpectrum(spectrum);
+        needsUpdate = true;
+    }
+
+    float flux = light->GetFlux();
+    if (ImGui::DragFloat("flux: ", &flux, 1.0f, 0.0f, 100.0f))
+    {
+        light->SetFlux(flux);
+        needsUpdate = true;
+    }
+
+    glm::vec3 orientation = light->GetEulerOrientation();
+    if (ImGui::DragFloat3("oreintation: ", glm::value_ptr(orientation), 1.0f, 0.0f, 360.0f))
+    {
+        light->SetEulerOrientation(orientation);
+        needsUpdate = true;
+    }
+
+    if (needsUpdate)
+    {
+        light->ScheduleUpdateGPUData();
+    }
 
 }
 

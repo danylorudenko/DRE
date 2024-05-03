@@ -1,10 +1,11 @@
-#ifndef __LIGHTS_H__
-#define __LIGHTS_H__
+#ifndef _LIGHTS_H_
+#define _LIGHTS_H_
 
 #include "shaders_defines.h"
 
-#define DRE_LIGHT_TYPE_DIRECTIONAL  0
-#define DRE_LIGHT_TYPE_POINT        1
+#define DRE_LIGHT_TYPE_NONE         0
+#define DRE_LIGHT_TYPE_DIRECTIONAL  1
+#define DRE_LIGHT_TYPE_POINT        2
 
 DeclareStorageBuffer(S_LIGHT)
 {
@@ -22,24 +23,24 @@ vec3 GetWorldPos(S_LIGHT_GPURef light)
 
 vec3 GetDirection(S_LIGHT_GPURef light)
 {
-    return light.direction.xyz;
+    return light.direction_type.xyz;
 }
 
-uint GetLightType(S_LIGHT_GPURef light)
+uint GetType(S_LIGHT_GPURef light)
 {
-    return floatBitsToUint(light.direction.w);
+    return floatBitsToUint(light.direction_type.w);
 }
 
-vec3 GetLightSpectrum(S_LIGHT_GPURef light)
+vec3 GetSpectrum(S_LIGHT_GPURef light)
 {
     return light.spectrum_flux.rgb;
 }
 
-float GetLightFlux(S_LIGHT_GPURef light)
+float GetFlux(S_LIGHT_GPURef light)
 {
     return light.spectrum_flux.w;
 }
 
 #endif // !__cplusplus
 
-#endif // __LIGHTS_H__
+#endif // _LIGHTS_H_

@@ -33,6 +33,7 @@ add_library(engine STATIC ${ENGINE_HEADER_LIST} ${ENGINE_SOURCE_LIST})
 
 target_include_directories(engine PUBLIC 
 	"${DRE_SOURCE_DIR}/include"
+	"${DRE_SOURCE_DIR}/shaders"
 	)
 
 target_compile_features(engine PUBLIC cxx_std_20)

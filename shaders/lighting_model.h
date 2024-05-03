@@ -1,3 +1,6 @@
+#ifndef _LIGHTING_MODEL_H_
+#define _LIGHTING_MODEL_H_
+
 float GGX_NDF(float NdotH, float a)
 {
     float a2 = a * a;
@@ -36,7 +39,7 @@ vec3 FresnelShlick(float NdotH, vec3 color, float metalness)
 
 vec3 CookTorranceBRDF(float NdotH, float NdotV, float NdotL, vec3 diffuse, float roughness, float metalness)
 {
-	float NDF = GGX_NDF(NdotH, roughness);
+    float NDF = GGX_NDF(NdotH, roughness);
     float G = SmithGGX(NdotV, NdotL, roughness);
     vec3 F = FresnelShlick(NdotH, diffuse, metalness);
 
@@ -52,3 +55,4 @@ vec3 CookTorranceBRDF(float NdotH, float NdotV, float NdotL, vec3 diffuse, float
 }
 
 
+#endif // _LIGHTING_MODEL_H_

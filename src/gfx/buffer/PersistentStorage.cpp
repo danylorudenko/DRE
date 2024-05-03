@@ -7,21 +7,21 @@ namespace GFX
 
 void PersistentStorage::Allocation::Update(VKW::Context& context, void* data, std::uint32_t size)
 {
+    Update(context, 0, data, size);
+}
+
+void PersistentStorage::Allocation::Update(VKW::Context& context, std::uint32_t dstOffset, void* data, std::uint32_t size)
+{
     UploadArena::Allocation allocation = m_UploadArena->AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), size, 8);
     std::memcpy(allocation.m_MappedRange, data, size);
     allocation.FlushCaches();
 
-    Update(context, allocation);
+    Update(context, dstOffset, allocation);
 }
 
-void PersistentStorage::Allocation::Update(VKW::Context& context, UploadArena::Allocation const& src)
+void PersistentStorage::Allocation::Update(VKW::Context& context, std::uint32_t dstOffset, UploadArena::Allocation const& src)
 {
-    Update(context, src.m_Buffer, src.m_OffsetInBuffer, src.m_Size);
-}
-
-void PersistentStorage::Allocation::Update(VKW::Context& context, VKW::BufferResource* src, std::uint32_t srcOffset, std::uint32_t srcSize)
-{
-    Update(context, 0, src, srcOffset, srcSize);
+    Update(context, dstOffset, src.m_Buffer, src.m_OffsetInBuffer, src.m_Size);
 }
 
 void PersistentStorage::Allocation::Update(VKW::Context& context, std::uint32_t dstOffset, VKW::BufferResource* src, std::uint32_t srcOffset, std::uint32_t srcSize)
@@ -42,7 +42,7 @@ void PersistentStorage::Allocation::Update(VKW::Context& context, std::uint32_t 
 
     context.CmdResourceDependency(buffer, storageOffset, GetSize(),
         VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER,
-        VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_TOP);
+        VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_ALL_GRAPHICS | VKW::STAGE_COMPUTE);
 }
 
 std::uint32_t PersistentStorage::Allocation::GetSize() const

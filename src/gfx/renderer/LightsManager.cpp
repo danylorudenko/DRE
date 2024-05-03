@@ -11,18 +11,20 @@ namespace GFX
 
 LightsManager::LightsManager(PersistentStorage* storage)
     : m_PersistentAllocation{ storage->AllocateRegion(MAX_LIGHTS * sizeof(S_LIGHT)) }
+    , m_LightsCount{ 0 }
 {
 }
 
 LightsManager::Light LightsManager::AllocateLight()
 {
     std::uint16_t const id = m_ElementAllocator.Allocate();
-
-    return Light{ m_PersistentAllocation, id };
+    ++m_LightsCount;
+    return Light{ this, id };
 }
 
 void LightsManager::FreeLight(LightsManager::Light& light)
 {
+    --m_LightsCount;
     m_ElementAllocator.Free(light.m_id);
 }
 
@@ -31,22 +33,50 @@ std::uint64_t LightsManager::GetBufferAddress() const
     return m_PersistentAllocation.GetGPUAddress();
 }
 
-LightsManager::Light::Light(PersistentStorage::Allocation allocation, std::uint16_t id)
-    : m_Allocation{ allocation }
-    , m_id{ id }
+std::uint32_t LightsManager::GetLightsCount() const
 {
-
+    return m_LightsCount;
 }
 
-void LightsManager::Light::Update(VKW::Context& context, glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, std::uint32_t type)
+void LightsManager::ScheduleLightUpdate(std::uint16_t id, glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, std::uint32_t type)
 {
     S_LIGHT SLight;
     SLight.world_pos = glm::vec4(position, 1.0f);
-    SLight.direction = glm::vec4(orientation, *reinterpret_cast<float*>(&type));
-    SLight.radiant_flux_spectrum = glm::vec4(color, 0.0f) * flux;
+    SLight.direction_type = glm::vec4(orientation, *reinterpret_cast<float*>(&type));
+    SLight.spectrum_flux = glm::vec4(color, flux);
 
-    m_Allocation.Update(context, SLight);
+    m_LightUpdateQueue.EmplaceBack(id, SLight);
 }
+
+void LightsManager::UpdateGPULights(VKW::Context& context)
+{
+    std::uint64_t baseAddress = m_PersistentAllocation.GetGPUAddress();
+
+    for (std::uint32_t i = 0, count = m_LightUpdateQueue.Size(); i < count; i++)
+    {
+        LightUpdateEntry& entry = m_LightUpdateQueue[i];
+        m_PersistentAllocation.Update(context, sizeof(S_LIGHT) * entry.id, &entry.payload, sizeof(S_LIGHT));
+    }
+
+    m_LightUpdateQueue.Clear();
+}
+
+///////////////////////////////////////////
+///////////////////////////////////////////
+///////////////////////////////////////////
+
+LightsManager::Light::Light(LightsManager* manager, std::uint16_t id)
+    : m_LightsManager{ manager }
+    , m_id{ id }
+{
+}
+
+void LightsManager::Light::ScheduleUpdate(glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, std::uint32_t type)
+{
+    m_LightsManager->ScheduleLightUpdate(m_id, position, orientation, color, flux, type);
+}
+
+
 
 
 }

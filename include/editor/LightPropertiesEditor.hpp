@@ -1,7 +1,6 @@
 #pragma once
 
 #include <foundation\Common.hpp>
-#include <foundation\string\InplaceString.hpp>
 
 #include <editor\BaseEditor.hpp>
 

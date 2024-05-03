@@ -5,6 +5,11 @@
 #include <foundation\container\Vector.hpp>
 #include <foundation\memory\Memory.hpp>
 
+namespace VKW
+{
+class Context;
+}
+
 namespace WORLD
 {
 class Scene;

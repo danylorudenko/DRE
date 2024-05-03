@@ -1,7 +1,7 @@
 // description
 
-#ifndef __SHADER_DEFINES_H__
-#define __SHADER_DEFINES_H__
+#ifndef _SHADER_DEFINES_H_
+#define _SHADER_DEFINES_H_
 
 #ifdef __cplusplus
 
@@ -55,4 +55,4 @@ using mat4 = glm::mat4;
     #define DeclareStorageBuffer(Type) layout(buffer_reference, std430, buffer_reference_align = 16) buffer Type ## _GPURef
 #endif // __cplusplus
 
-#endif // __SHADER_DEFINES_H__
+#endif // _SHADER_DEFINES_H_
