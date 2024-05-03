@@ -54,9 +54,13 @@ DREApplicationDelegate::~DREApplicationDelegate()
 
 }
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 //////////////////////////////////////////
 LRESULT DREApplicationDelegate::WinProc(HWND handle, UINT message, WPARAM wparam, LPARAM lparam)
 {
+    if (ImGui_ImplWin32_WndProcHandler(handle, message, wparam, lparam))
+        return true;
+
     auto* appDelegate = reinterpret_cast<DREApplicationDelegate*>(::GetWindowLongPtr(handle, GWLP_USERDATA));
     
     switch (message)
@@ -94,9 +98,6 @@ WORLD::Scene& DREApplicationDelegate::GetMainScene()
 
 void DREApplicationDelegate::start()
 {
-    if (m_ImGuiEnabled)
-        InitImGui();
-
     if (C_COMPILE_GLSL_SOURCES_ON_START)
     {  
         m_IOManager.CompileGLSLSources();
@@ -180,6 +181,9 @@ void DREApplicationDelegate::start()
 
     ////////////
     m_GraphicsManager.GetMainContext().FlushAll();
+
+    if (m_ImGuiEnabled)
+        InitImGui();
 }
 
 constexpr float C_SUN_ROTATOR_MUL = 1.0f / 100000.0f;
@@ -240,7 +244,8 @@ void DREApplicationDelegate::shutdown()
 //////////////////////////////////////////
 void DREApplicationDelegate::InitImGui()
 {
-    m_ImGuiHelper = std::make_unique<ImGuiHelper>(&m_MainWindow, &m_InputSystem);
+    // Window* window, InputSystem* input, VKW::Instance& instance, VKW::Swapchain& swapchain, VKW::Device& device, VKW::Context& context
+    m_ImGuiHelper = std::make_unique<ImGuiHelper>(&m_MainWindow, &m_InputSystem, *m_GraphicsManager.GetInstance(), *m_GraphicsManager.GetSwapchain(), *m_GraphicsManager.GetMainDevice(), m_GraphicsManager.GetMainContext());
 }
 
 //////////////////////////////////////////

@@ -99,6 +99,7 @@ public:
 
     DescriptorSet               AllocateStandaloneSet(DescriptorSetLayout const& layout);
     void                        FreeStandaloneSet(DescriptorSet& set);
+    VkDescriptorPool            GetStandaloneDescriptorPool(); // needed for ImGui backend
 
     std::uint32_t               GetGlobalSetLayoutsCount() const { return 3u; }
     DescriptorSetLayout const*  GetGlobalSetLayouts() const { return globalSetLayouts_; }

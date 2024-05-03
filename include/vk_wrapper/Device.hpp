@@ -36,6 +36,7 @@ public:
     ~Device();
 
     VKW::ImportTable*               GetFuncTable() const { return table_.get(); }
+    VKW::Instance*                  GetInstance() const { return instance_.get(); }
     VKW::LogicalDevice*             GetLogicalDevice() const{ return device_.get(); }
     VKW::Swapchain*                 GetSwapchain() const { return swapchain_.get(); }
     VKW::Queue*                     GetMainQueue() const { return queueProvider_->GetMainQueue(); }

@@ -92,6 +92,7 @@ public:
     inline VKW::Device*                 GetMainDevice() { return &m_Device; }
 
     inline VKW::ImportTable*            GetVulkanTable() const { return m_Device.GetFuncTable(); }
+    inline VKW::Instance*               GetInstance() const { return m_Device.GetInstance(); }
     inline VKW::Swapchain*              GetSwapchain() const{ return m_Device.GetSwapchain(); }
     inline VKW::PresentationController* GetPresentationController() const { return m_Device.GetPresentationController(); }
 

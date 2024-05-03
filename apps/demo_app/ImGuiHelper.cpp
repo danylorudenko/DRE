@@ -1,21 +1,34 @@
+#define IMGUI_IMPL_VULKAN_HAS_DYNAMIC_RENDERING
+#define IMGUI_IMPL_VULKAN_NO_PROTOTYPES
+#define VK_NO_PROTOTYPES
+
 #include <demo_app\ImGuiHelper.hpp>
 
 #include <foundation\input\InputSystem.hpp>
 #include <foundation\system\Window.hpp>
-#include <foundation\memory\ByteBuffer.hpp>
-#include <foundation\memory\Pointer.hpp>
 #include <foundation\Common.hpp>
 
 #include <engine\io\IOManager.hpp>
 
-#include <glm\vec2.hpp>
-#include <glm\gtc\type_ptr.hpp>
-
 #include <Windows.h>
 
+#include <vk_wrapper\Instance.hpp>
+#include <vk_wrapper\Device.hpp>
 #include <vk_wrapper\Context.hpp>
 
-//#include <gfx\GraphicsManager.hpp>
+#include <backends\imgui_impl_vulkan.h>
+#include <backends\imgui_impl_win32.h>
+#include <backends\imgui_impl_vulkan.cpp>
+#include <backends\imgui_impl_win32.cpp>
+
+#include <gfx\GraphicsManager.hpp>
+
+ImGuiHelper* g_ImGuiHelper = nullptr;
+
+void RenderDREImGui()
+{
+    g_ImGuiHelper->DrawFrame(GFX::g_GraphicsManager->GetMainContext());
+}
 
 ImGuiHelper::ImGuiHelper()
     : m_TargetWindow{ nullptr }
@@ -23,41 +36,107 @@ ImGuiHelper::ImGuiHelper()
 {
 }
 
-ImGuiHelper::ImGuiHelper(Window* window, InputSystem* input)
+VKW::Surface* ImGuiHelper::CreateCustomSurface(void* hwnd)
+{
+    VKW::SurfaceDesc desc;
+    desc.table_ = GFX::g_GraphicsManager->GetVulkanTable();
+    desc.instance_ = GFX::g_GraphicsManager->GetInstance();
+    desc.device_ = GFX::g_GraphicsManager->GetMainDevice()->GetLogicalDevice();
+
+    desc.hInstance_ = GetModuleHandle(nullptr);
+    desc.hwnd_ = (HWND)hwnd;
+
+    return &m_ImGuiSurfaces.EmplaceBack(desc);
+}
+
+void ImGuiHelper::DestroyCustomSurface()
+{
+
+}
+
+static int Platform_CreateVkSurface(ImGuiViewport* vp, ImU64 vk_inst, const void* vk_allocators, ImU64* out_vk_surface)
+{
+    ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData(); 
+    ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)vp->PlatformUserData;
+    IM_UNUSED(bd);
+
+    VKW::Surface* surface = g_ImGuiHelper->CreateCustomSurface(vd->Hwnd);
+    *reinterpret_cast<VkSurfaceKHR*>(out_vk_surface) = surface->Handle();
+    return (int)0;
+}
+
+ImGuiHelper::ImGuiHelper(Window* window, InputSystem* input, VKW::Instance& instance, VKW::Swapchain& swapchain, VKW::Device& device, VKW::Context& context)
     : m_TargetWindow{ window }
     , m_InputSystem{ input }
 {
+    g_ImGuiHelper = this;
+
+    IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    io.DisplaySize.x = static_cast<float>(window->Width());
-    io.DisplaySize.y = static_cast<float>(window->Height());
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
+    io.DisplaySize = ImVec2(swapchain.GetWidth(), swapchain.GetHeight());
 
-    io.ConfigFlags = ImGuiConfigFlags_None;
-    //io.FontGlobalScale = 2.5f;
-    //io.IniFilename = nullptr;
-    ImGui::GetStyle().WindowRounding = 5.0f;
+    ImGuiPlatformIO& platformIO = ImGui::GetPlatformIO();
+    platformIO.Platform_CreateVkSurface = Platform_CreateVkSurface;
 
-    io.KeyMap[ImGuiKey_Tab] = (std::int32_t)Keys::Tab;
-    io.KeyMap[ImGuiKey_LeftArrow] = (std::int32_t)Keys::Left;
-    io.KeyMap[ImGuiKey_RightArrow] = (std::int32_t)Keys::Right;
-    io.KeyMap[ImGuiKey_UpArrow] = (std::int32_t)Keys::Up;
-    io.KeyMap[ImGuiKey_DownArrow] = (std::int32_t)Keys::Down;
-    io.KeyMap[ImGuiKey_PageUp] = (std::int32_t)Keys::PageUp;
-    io.KeyMap[ImGuiKey_PageDown] = (std::int32_t)Keys::PageDown;
-    io.KeyMap[ImGuiKey_Home] = (std::int32_t)Keys::Home;
-    io.KeyMap[ImGuiKey_End] = (std::int32_t)Keys::End;
-    io.KeyMap[ImGuiKey_Insert] = (std::int32_t)Keys::Insert;
-    io.KeyMap[ImGuiKey_Delete] = (std::int32_t)Keys::Delete;
-    io.KeyMap[ImGuiKey_Backspace] = (std::int32_t)Keys::Backspace;
-    io.KeyMap[ImGuiKey_Space] = (std::int32_t)Keys::Space;
-    io.KeyMap[ImGuiKey_Enter] = (std::int32_t)Keys::Enter;
-    io.KeyMap[ImGuiKey_Escape] = (std::int32_t)Keys::Escape;
-    io.KeyMap[ImGuiKey_A] = (std::int32_t)Keys::A;         // for text edit CTRL+A: select all
-    io.KeyMap[ImGuiKey_C] = (std::int32_t)Keys::C;         // for text edit CTRL+C: copy
-    io.KeyMap[ImGuiKey_V] = (std::int32_t)Keys::V;         // for text edit CTRL+V: paste
-    io.KeyMap[ImGuiKey_X] = (std::int32_t)Keys::X;         // for text edit CTRL+X: cut
-    io.KeyMap[ImGuiKey_Y] = (std::int32_t)Keys::Y;         // for text edit CTRL+Y: redo
-    io.KeyMap[ImGuiKey_Z] = (std::int32_t)Keys::Z;
+
+    ImGui_ImplWin32_Init(window->NativeHandle());
+
+    struct LoadFuncsUserData
+    {
+        VKW::ImportTable* table;
+        VKW::Instance* instance;
+    } userData;
+
+    userData.table = device.GetFuncTable();
+    userData.instance = &instance;
+
+    ImGui_ImplVulkan_LoadFunctions([](const char* function_name, void* userData) 
+        {
+            auto* UD = (LoadFuncsUserData*)userData;
+            auto* func = UD->table->vkGetInstanceProcAddr(UD->instance->Handle(), function_name);
+            return func;
+        },
+        &userData
+    );
+
+
+    ImGui_ImplVulkan_InitInfo info;
+    DRE::MemZero(&info, sizeof(info));
+
+    info.Instance = instance.Handle();
+    info.PhysicalDevice = device.GetLogicalDevice()->PhysicalDeviceHandle();
+    info.Device = device.GetLogicalDevice()->Handle();
+    info.QueueFamily = context.GetParentQueue()->GetQueueFamily();
+    info.Queue = context.GetParentQueue()->GetHardwareQueue();
+    info.DescriptorPool = device.GetDescriptorManager()->GetStandaloneDescriptorPool();
+    info.RenderPass = VK_NULL_HANDLE; // ignored for dynamic rendering
+    info.MinImageCount = VKW::CONSTANTS::FRAMES_BUFFERING;
+    info.ImageCount = swapchain.GetImageCount();
+    info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+
+    info.PipelineCache = VK_NULL_HANDLE;
+    info.Subpass = 0;
+
+    info.UseDynamicRendering = true;
+    info.PipelineRenderingCreateInfo = *((VkPipelineRenderingCreateInfoKHR*)GFX::g_GraphicsManager->GetPipelineDB().GetPipeline("imgui")->GetDescriptor().CompileGraphicPipelineCreateInfo().pNext);
+    info.MinAllocationSize = 0;
+
+    ImGui_ImplVulkan_Init(&info);
+
+    ImGui_ImplVulkan_CreateFontsTexture();
+
+    /*
+    IMGUI_IMPL_API void         ImGui_ImplVulkan_Shutdown();
+    IMGUI_IMPL_API void         ImGui_ImplVulkan_NewFrame();
+    IMGUI_IMPL_API void         ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCommandBuffer command_buffer, VkPipeline pipeline = VK_NULL_HANDLE);
+    IMGUI_IMPL_API bool         ImGui_ImplVulkan_CreateFontsTexture();
+    IMGUI_IMPL_API void         ImGui_ImplVulkan_DestroyFontsTexture();
+    */
 }
 
 ImGuiHelper::ImGuiHelper(ImGuiHelper&& rhs)
@@ -76,51 +155,34 @@ ImGuiHelper& ImGuiHelper::operator=(ImGuiHelper&& rhs)
 
 ImGuiHelper::~ImGuiHelper()
 {
-    // hmmmmmmmm
+    ImGui_ImplVulkan_DestroyFontsTexture();
+    ImGui_ImplVulkan_Shutdown();
+    ImGui_ImplWin32_Shutdown();
 }
 
 void ImGuiHelper::BeginFrame()
 {
-    ImGuiIO& io = ImGui::GetIO();
-    io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
-
-    HWND activeWindow = ::GetForegroundWindow();
-    if (activeWindow == m_TargetWindow->NativeHandle()) {
-        POINT pos;
-        if (::GetCursorPos(&pos) && ::ScreenToClient(activeWindow, &pos)) {
-            io.MousePos = ImVec2((float)pos.x, (float)pos.y);
-        }
-    }
-
-    io.MouseDown[0] = m_InputSystem->GetLeftMouseButtonPressed();
-    io.MouseDown[1] = m_InputSystem->GetRightMouseButtonPressed();
-    io.MouseDown[2] = m_InputSystem->GetMiddleMouseButtonPressed();
-    io.MouseWheel = m_InputSystem->GetMouseState().mouseWheelDelta_ / 5.0f;
-
-    io.KeyCtrl = m_InputSystem->GetKeyboardButtonDown(Keys::Ctrl);
-    io.KeyShift = m_InputSystem->GetKeyboardButtonDown(Keys::Shift);
-    io.KeyAlt = m_InputSystem->GetKeyboardButtonDown(Keys::Alt);
-    io.KeySuper = m_InputSystem->GetKeyboardButtonDown(Keys::WinLeft) || m_InputSystem->GetKeyboardButtonDown(Keys::WinRight);
-
-    std::int32_t keyBegin = (std::int32_t)Keys::BEGIN;
-    std::int32_t keyEnd = (std::int32_t)Keys::END;
-    for (std::int32_t key = keyBegin; key < keyEnd; ++key) {
-        io.KeysDown[key] = m_InputSystem->GetKeyboardButtonDown((Keys)key);
-
-        if (m_InputSystem->GetKeyboardButtonJustReleased((Keys)key)) {
-            char result = (char)InputSystem::GetCharFromKeys((Keys)key);
-            m_InputSystem->GetKeyboardButtonJustReleased((Keys)key);
-            if(result)
-                io.AddInputCharacter(result);
-        }
-    }
-
     ImGui::NewFrame();
+
+    ImGui_ImplWin32_NewFrame();
+    ImGui_ImplVulkan_NewFrame();
+}
+
+void ImGuiHelper::DrawFrame(VKW::Context& context)
+{
+    ImGui::Render();
+    ImDrawData* data = ImGui::GetDrawData();
+    VKW::Pipeline* pipeline = GFX::g_GraphicsManager->GetPipelineDB().GetPipeline("imgui");
+
+    ImGui_ImplVulkan_RenderDrawData(data, *context.GetCurrentCommandList());
+
+    //ImGui::RenderPlatformWindowsDefault();
 }
 
 void ImGuiHelper::EndFrame()
 {
     ImGui::EndFrame();
+    ImGui::UpdatePlatformWindows();
 }
 
 

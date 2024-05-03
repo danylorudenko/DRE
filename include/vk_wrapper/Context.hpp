@@ -65,6 +65,7 @@ public:
 
 public:
     inline VKW::Queue* GetParentQueue() const { return m_ParentQueue; }
+    inline VKW::CommandList* GetCurrentCommandList() { return m_CurrentCommandList; }
 
     void ResetDependenciesVectors(DRE::AllocatorLinear* allocator);
     
