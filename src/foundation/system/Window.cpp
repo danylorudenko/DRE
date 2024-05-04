@@ -61,6 +61,7 @@ WindowClass::operator bool() const
 //////////////////////////////////////////
 Window::Window()
     : windowClass_{}
+    , instance_{ NULL }
     , handle_{ NULL }
     , title_{}
     , width_{ 0 }
@@ -71,6 +72,7 @@ Window::Window()
 
 Window::Window(HINSTANCE instance, char const* title, std::uint32_t width, std::uint32_t height, char const* className, WindowClass::WinProcHandler procHandler, void* userData)
     : windowClass_{ instance, className, procHandler }
+    , instance_{ instance }
     , handle_{ NULL }
     , title_{ title }
     , width_{ width }
@@ -133,6 +135,11 @@ Window::~Window()
 Window::NativeWindowHandle Window::NativeHandle() const
 {
     return handle_;
+}
+
+HINSTANCE Window::Instance() const
+{
+    return instance_;
 }
 
 std::uint32_t Window::Width() const

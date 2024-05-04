@@ -51,12 +51,14 @@ public:
 
     ~Window();
 
+    HINSTANCE Instance() const;
     NativeWindowHandle NativeHandle() const;
 
     std::uint32_t Width() const;
     std::uint32_t Height() const;
 
 private:
+    HINSTANCE instance_;
     WindowClass windowClass_;
     NativeWindowHandle handle_;
 

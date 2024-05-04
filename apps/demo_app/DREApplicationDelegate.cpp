@@ -51,7 +51,7 @@ DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* t
 //////////////////////////////////////////
 DREApplicationDelegate::~DREApplicationDelegate()
 {
-
+    m_GraphicsManager.WaitIdle();
 }
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);

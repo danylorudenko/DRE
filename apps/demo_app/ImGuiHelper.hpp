@@ -47,5 +47,3 @@ private:
     
     DRE::InplaceVector<VKW::Surface, 8> m_ImGuiSurfaces;
 };
-
-extern ImGuiHelper* g_ImGuiHelper;

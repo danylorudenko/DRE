@@ -23,7 +23,7 @@
 
 #include <gfx\GraphicsManager.hpp>
 
-ImGuiHelper* g_ImGuiHelper = nullptr;
+static ImGuiHelper* g_ImGuiHelper = nullptr;
 
 void RenderDREImGui()
 {
@@ -90,15 +90,30 @@ ImGuiHelper::ImGuiHelper(Window* window, InputSystem* input, VKW::Instance& inst
     {
         VKW::ImportTable* table;
         VKW::Instance* instance;
+        VKW::Device* device;
     } userData;
 
     userData.table = device.GetFuncTable();
     userData.instance = &instance;
+    userData.device = &device;
 
     ImGui_ImplVulkan_LoadFunctions([](const char* function_name, void* userData) 
         {
             auto* UD = (LoadFuncsUserData*)userData;
-            auto* func = UD->table->vkGetInstanceProcAddr(UD->instance->Handle(), function_name);
+
+            if (std::strcmp(function_name, "vkCmdBeginRenderingKHR") == 0)
+                function_name = "vkCmdBeginRendering";
+
+            if (std::strcmp(function_name, "vkCmdEndRenderingKHR") == 0)
+                function_name = "vkCmdEndRendering";
+
+            auto* func = UD->table->vkGetDeviceProcAddr(UD->device->GetLogicalDevice()->Handle(), function_name);
+
+            if(func == nullptr)
+                func = UD->table->vkGetInstanceProcAddr(UD->instance->Handle(), function_name);
+
+            DRE_ASSERT(func != nullptr, "ImGui failed to obtain necessary function pointers!");
+
             return func;
         },
         &userData
@@ -123,20 +138,21 @@ ImGuiHelper::ImGuiHelper(Window* window, InputSystem* input, VKW::Instance& inst
     info.Subpass = 0;
 
     info.UseDynamicRendering = true;
-    info.PipelineRenderingCreateInfo = *((VkPipelineRenderingCreateInfoKHR*)GFX::g_GraphicsManager->GetPipelineDB().GetPipeline("imgui")->GetDescriptor().CompileGraphicPipelineCreateInfo().pNext);
     info.MinAllocationSize = 0;
 
+    VkFormat colorFormat = VKW::Format2VK(VKW::FORMAT_B8G8R8A8_UNORM);
+    VkPipelineRenderingCreateInfoKHR renderingInfo;
+    renderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+    renderingInfo.pNext = nullptr;
+    renderingInfo.viewMask = 0;
+    renderingInfo.colorAttachmentCount = 1;
+    renderingInfo.pColorAttachmentFormats = &colorFormat;
+    renderingInfo.depthAttachmentFormat = VK_FORMAT_UNDEFINED;
+    renderingInfo.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
+    info.PipelineRenderingCreateInfo = renderingInfo;
+
     ImGui_ImplVulkan_Init(&info);
-
     ImGui_ImplVulkan_CreateFontsTexture();
-
-    /*
-    IMGUI_IMPL_API void         ImGui_ImplVulkan_Shutdown();
-    IMGUI_IMPL_API void         ImGui_ImplVulkan_NewFrame();
-    IMGUI_IMPL_API void         ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCommandBuffer command_buffer, VkPipeline pipeline = VK_NULL_HANDLE);
-    IMGUI_IMPL_API bool         ImGui_ImplVulkan_CreateFontsTexture();
-    IMGUI_IMPL_API void         ImGui_ImplVulkan_DestroyFontsTexture();
-    */
 }
 
 ImGuiHelper::ImGuiHelper(ImGuiHelper&& rhs)
@@ -170,13 +186,7 @@ void ImGuiHelper::BeginFrame()
 
 void ImGuiHelper::DrawFrame(VKW::Context& context)
 {
-    ImGui::Render();
-    ImDrawData* data = ImGui::GetDrawData();
-    VKW::Pipeline* pipeline = GFX::g_GraphicsManager->GetPipelineDB().GetPipeline("imgui");
-
-    ImGui_ImplVulkan_RenderDrawData(data, *context.GetCurrentCommandList());
-
-    //ImGui::RenderPlatformWindowsDefault();
+    
 }
 
 void ImGuiHelper::EndFrame()
