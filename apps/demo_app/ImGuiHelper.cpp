@@ -25,33 +25,10 @@
 
 static ImGuiHelper* g_ImGuiHelper = nullptr;
 
-void RenderDREImGui()
-{
-    g_ImGuiHelper->DrawFrame(GFX::g_GraphicsManager->GetMainContext());
-}
-
 ImGuiHelper::ImGuiHelper()
     : m_TargetWindow{ nullptr }
     , m_InputSystem{ nullptr }
 {
-}
-
-VKW::Surface* ImGuiHelper::CreateCustomSurface(void* hwnd)
-{
-    VKW::SurfaceDesc desc;
-    desc.table_ = GFX::g_GraphicsManager->GetVulkanTable();
-    desc.instance_ = GFX::g_GraphicsManager->GetInstance();
-    desc.device_ = GFX::g_GraphicsManager->GetMainDevice()->GetLogicalDevice();
-
-    desc.hInstance_ = GetModuleHandle(nullptr);
-    desc.hwnd_ = (HWND)hwnd;
-
-    return &m_ImGuiSurfaces.EmplaceBack(desc);
-}
-
-void ImGuiHelper::DestroyCustomSurface()
-{
-
 }
 
 static int Platform_CreateVkSurface(ImGuiViewport* vp, ImU64 vk_inst, const void* vk_allocators, ImU64* out_vk_surface)
@@ -60,9 +37,19 @@ static int Platform_CreateVkSurface(ImGuiViewport* vp, ImU64 vk_inst, const void
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)vp->PlatformUserData;
     IM_UNUSED(bd);
 
-    VKW::Surface* surface = g_ImGuiHelper->CreateCustomSurface(vd->Hwnd);
-    *reinterpret_cast<VkSurfaceKHR*>(out_vk_surface) = surface->Handle();
-    return (int)0;
+    VkWin32SurfaceCreateInfoKHR sInfo;
+    sInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+    sInfo.pNext = nullptr;
+    sInfo.flags = VK_FLAGS_NONE;
+    sInfo.hinstance = g_ImGuiHelper->GetTargetWindow()->Instance();
+    sInfo.hwnd = (HWND)vd->Hwnd;
+
+    VkSurfaceKHR surface = VK_NULL_HANDLE;
+
+    int err = GFX::g_GraphicsManager->GetVulkanTable()->vkCreateWin32SurfaceKHR(GFX::g_GraphicsManager->GetInstance()->Handle(), &sInfo, nullptr, &surface);
+
+    *reinterpret_cast<VkSurfaceKHR*>(out_vk_surface) = surface;
+    return err;
 }
 
 ImGuiHelper::ImGuiHelper(Window* window, InputSystem* input, VKW::Instance& instance, VKW::Swapchain& swapchain, VKW::Device& device, VKW::Context& context)
@@ -184,15 +171,15 @@ void ImGuiHelper::BeginFrame()
     ImGui_ImplVulkan_NewFrame();
 }
 
-void ImGuiHelper::DrawFrame(VKW::Context& context)
-{
-    
-}
-
 void ImGuiHelper::EndFrame()
 {
     ImGui::EndFrame();
     ImGui::UpdatePlatformWindows();
+}
+
+Window* ImGuiHelper::GetTargetWindow()
+{
+    return m_TargetWindow;
 }
 
 

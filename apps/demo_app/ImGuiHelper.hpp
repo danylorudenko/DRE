@@ -35,15 +35,11 @@ public:
     ~ImGuiHelper();
 
     void BeginFrame();
-    void DrawFrame(VKW::Context& context);
     void EndFrame();
 
-    VKW::Surface* CreateCustomSurface(void* hwnd);
-    void DestroyCustomSurface();
+    Window* GetTargetWindow();
 
 private:
     Window*         m_TargetWindow;
     InputSystem*    m_InputSystem;
-    
-    DRE::InplaceVector<VKW::Surface, 8> m_ImGuiSurfaces;
 };

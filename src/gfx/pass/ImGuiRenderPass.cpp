@@ -16,8 +16,6 @@
 
 #include <gfx\GraphicsManager.hpp>
 
-extern void RenderDREImGui();
-
 namespace GFX
 {
 
