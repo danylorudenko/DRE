@@ -3,9 +3,9 @@
 
 #include "shaders_defines.h"
 
-#define DRE_LIGHT_TYPE_NONE         0
-#define DRE_LIGHT_TYPE_DIRECTIONAL  1
-#define DRE_LIGHT_TYPE_POINT        2
+#define DRE_LIGHT_TYPE_DIRECTIONAL  0
+#define DRE_LIGHT_TYPE_POINT        1
+#define DRE_LIGHT_TYPE_MAX          2
 
 DeclareStorageBuffer(S_LIGHT)
 {

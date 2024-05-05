@@ -305,7 +305,7 @@ void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* a
             t.d1, t.d2, t.d3, t.d4
     };
 
-    WORLD::SceneNode* aggregatorNode = targetScene.CreateEmptySceneNode(parentNode);
+    WORLD::SceneNode* aggregatorNode = targetScene.CreateSceneNode(nullptr, parentNode);
     aggregatorNode->SetMatrix(transform);
 
     for (std::uint32_t i = 0, count = node->mNumMeshes; i < count; i++)
@@ -338,7 +338,7 @@ WORLD::SceneNode* IOManager::ParseModelFile(char const* path, WORLD::Scene& targ
     ParseAssimpMeshes(GFX::g_GraphicsManager->GetMainContext(), scene, sceneName);
     ParseAssimpMaterials(scene, sceneName, path, defaultShader, metalnessRoughnessOverride);
 
-    WORLD::SceneNode* parentNode = targetScene.CreateEmptySceneNode();
+    WORLD::SceneNode* parentNode = targetScene.CreateSceneNode(nullptr, nullptr);
     parentNode->SetMatrix(parentTransform);
     parentNode->SetName(sceneName);
 

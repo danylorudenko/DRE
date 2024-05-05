@@ -33,10 +33,14 @@ public:
     inline glm::vec3 const& GetSpectrum() const { return m_Spectrum; }
     inline void SetSpectrum(glm::vec3 const& s) { m_Spectrum = s; }
 
+    // DRE_LIGHT_TYPE_
+    inline std::uint32_t GetLightType() const { return m_Type; }
+    inline void SetLightType(std::uint32_t type/*DRE_LIGHT_TYPE_*/) { m_Type = type; }
+
     void    ScheduleUpdateGPUData();
 
 private:
-    std::uint32_t               m_Type = DRE_LIGHT_TYPE_NONE; // DRE_LIGHT_TYPE_
+    std::uint32_t               m_Type = DRE_LIGHT_TYPE_MAX; // DRE_LIGHT_TYPE_
     glm::vec3                   m_Spectrum;
     float                       m_Flux;
     float                       m_Radius;

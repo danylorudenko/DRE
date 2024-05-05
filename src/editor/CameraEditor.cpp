@@ -34,7 +34,7 @@ CameraEditor& CameraEditor::operator=(CameraEditor&& rhs)
 void CameraEditor::Render()
 {
     bool isOpen = true;
-    if (ImGui::Begin("Camera Controls", &isOpen, ImGuiWindowFlags_NoResize))
+    if (ImGui::Begin("Camera Controls", &isOpen))
     {
         WORLD::Camera& camera = *m_Camera;
         glm::vec3 const& cameraEuler = camera.GetEulerOrientation();

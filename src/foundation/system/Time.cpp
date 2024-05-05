@@ -27,8 +27,7 @@ void Stopwatch::Reset(TimePoint point)
 
 float Stopwatch::CurrentSeconds() const
 {
-    return CurrentMilliseconds() * 0.001f;
-    
+    return static_cast<float>(static_cast<double>(CurrentMilliseconds()) * 0.001);
 }
 
 std::uint64_t Stopwatch::CurrentMilliseconds() const

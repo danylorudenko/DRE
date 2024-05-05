@@ -108,13 +108,13 @@ void DREApplicationDelegate::start()
     //m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 7.28f, 5.57f, -1.07f });
     //m_MainScene.GetMainCamera().SetEulerOrientation(glm::vec3{ -17.26f, 107.37f, 0.0f });
 
-    m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 0.81f, 2.82f, 2.41f });
-    m_MainScene.GetMainCamera().SetCameraEuler(glm::vec3{ -24.32f, 13.83f, 0.0f });
+    m_MainScene.GetMainCamera().SetPosition(glm::vec3{ -0.23f, 10.41f, 14.70f });
+    m_MainScene.GetMainCamera().SetCameraEuler(glm::vec3{ -13.32f, -43.83f, 0.0f });
 
     WORLD::Light* sunLight = m_MainScene.CreateDirectionalLight(m_GraphicsManager.GetMainContext());
     m_MainScene.SetMainSunLight(sunLight);
 
-    sunLight->SetEulerOrientation(glm::vec3{ 70.0f, 45.0f + 180.0f, 0.0f });
+    sunLight->SetEulerOrientation(glm::vec3{ -70.0f, 110.0f, 0.0f });
     sunLight->ScheduleUpdateGPUData();
 
     m_GraphicsManager.Initialize();
@@ -186,8 +186,6 @@ void DREApplicationDelegate::start()
         InitImGui();
 }
 
-constexpr float C_SUN_ROTATOR_MUL = 1.0f / 100000.0f;
-
 //////////////////////////////////////////
 void DREApplicationDelegate::update()
 {
@@ -251,8 +249,8 @@ void DREApplicationDelegate::InitImGui()
 //////////////////////////////////////////
 void DREApplicationDelegate::ImGuiUser()
 {
-    ImGui::ShowDemoWindow();
-    //m_RootEditor.Render();
+    m_RootEditor.Render();
+    //ImGui::ShowDemoWindow();
 
     if (/*m_ImGuiEnabled*/false) {
         IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context. Refer to examples app!");
@@ -279,60 +277,6 @@ void DREApplicationDelegate::ImGuiUser()
 
         if (ImGui::Begin("Camera Controls", nullptr, ImGuiWindowFlags_NoResize))
         {
-            WORLD::Camera& camera = m_MainScene.GetMainCamera();
-            glm::vec3 const& cameraEuler = camera.GetEulerOrientation();
-            glm::vec3 const& cameraForward = camera.GetForward();
-            glm::vec3 const& cameraRight = camera.GetRight();
-
-            if (ImGui::Button("Reset", ImVec2(50.0, 20.0f)))
-            {
-                camera.SetPosition(glm::vec3{ 0.0f, 0.0f, 0.0f });
-                camera.SetEulerOrientation(glm::vec3{ 0.0f, 0.0f, 0.0f });
-            }
-
-            float const cameraMod = (static_cast<float>(DRE::g_AppContext.m_DeltaTimeUS) / 10000);
-            float const moveMul = 0.1f;
-            float const rotMul = 1.0f;
-
-            ImGui::PushButtonRepeat(true);
-
-            if (ImGui::ArrowButton("fwd", ImGuiDir_Up))
-                camera.Move(cameraForward * moveMul * cameraMod);
-            ImGui::SameLine();
-            if (ImGui::ArrowButton("left", ImGuiDir_Left))
-                camera.Move(-cameraRight * moveMul * cameraMod);
-            ImGui::SameLine(0.0f, 20.0f);
-            if (ImGui::ArrowButton("upr", ImGuiDir_Up))
-                camera.RotateCamera(glm::vec3{ rotMul * cameraMod, 0.0f, 0.0f });
-            ImGui::SameLine();
-            if (ImGui::ArrowButton("leftr", ImGuiDir_Left))
-                camera.RotateCamera(glm::vec3{ 0.0f, rotMul * cameraMod, 0.0f });
-            ImGui::SameLine();
-            if(ImGui::Button("UP"))
-                camera.Move(glm::vec3{ 0.0f, moveMul * cameraMod, 0.0f });
-
-            // new line
-            if (ImGui::ArrowButton("back", ImGuiDir_Down))
-                camera.Move(-cameraForward * moveMul * cameraMod);
-            ImGui::SameLine();
-            if (ImGui::ArrowButton("right", ImGuiDir_Right))
-                camera.Move(cameraRight * moveMul * cameraMod);
-            ImGui::SameLine(0.0f, 20.0f);
-            if (ImGui::ArrowButton("downr", ImGuiDir_Down))
-                camera.RotateCamera(glm::vec3{ -rotMul * cameraMod, 0.0f, 0.0f });
-            ImGui::SameLine();
-            if (ImGui::ArrowButton("rightr", ImGuiDir_Right))
-                camera.RotateCamera(glm::vec3{ 0.0f, -rotMul * cameraMod, 0.0f });
-            ImGui::SameLine();
-            if (ImGui::Button("DOWN"))
-                camera.Move(glm::vec3{ 0.0f, -moveMul * cameraMod, 0.0f });
-
-            ImGui::PopButtonRepeat();
-
-            ImGui::Text("Camera pos: %.2f, %.2f, %.2f", camera.GetPosition()[0], camera.GetPosition()[1], camera.GetPosition()[2]);
-            ImGui::Text("Camera rot: %.2f, %.2f, %.2f", camera.GetEulerOrientation()[0], camera.GetEulerOrientation()[1], camera.GetEulerOrientation()[2]);
-
-
             if (ImGui::BeginCombo("Water settings", nullptr, ImGuiComboFlags_None))
             {
                 /*

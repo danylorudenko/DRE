@@ -33,16 +33,15 @@ private:
 
     struct RenderingContext
     {
-        //static constexpr DRE::U32 C_PADDING = 10u;
-        //DRE::U32 m_CurrentPadding = 0u;
-
         DRE::U32 m_CurrentID = 0u;
     };
 
     static DRE::String64 GetUniqueLabel(WORLD::SceneNode* node, SceneGraphEditor::RenderingContext& context);
 
     void RenderSceneNodeRecursive(WORLD::SceneNode* node, RenderingContext& context);
-    void AttemptOpenProperties(WORLD::SceneNode* node);
+
+    bool RenderNodeProperties();
+    bool RenderLightProperties(bool wasTransformUpdated);
 
 private:
     WORLD::Scene* m_Scene;

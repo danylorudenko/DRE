@@ -4,9 +4,8 @@
 #include <engine\scene\Camera.hpp>
 #include <engine\scene\Scene.hpp>
 #include <editor\CameraEditor.hpp>
-#include <editor\LightPropertiesEditor.hpp>
 #include <editor\SceneGraphEditor.hpp>
-#include <editor\TransformEditor.hpp>
+#include <editor\StatsEditor.hpp>
 
 #include <imgui.h>
 
@@ -60,14 +59,19 @@ BaseEditor* RootEditor::GetEditorByType(BaseEditor::Type type)
 
 void RootEditor::Render()
 {
-    ImGuiWindowFlags flags =
-        ImGuiWindowFlags_Modal |
-        ImGuiWindowFlags_NoMove |
-        ImGuiWindowFlags_NoResize |
-        ImGuiWindowFlags_NoDecoration;
+    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 
     if (ImGui::BeginMainMenuBar())
     {
+        if (ImGui::MenuItem("DisplayStats"))
+        {
+            if (GetEditorByType(BaseEditor::Type::Stats) == nullptr)
+            {
+                StatsEditor* statsEditor = DRE::g_MainAllocator.Alloc<StatsEditor>(this, EDITOR_FLAGS_NONE);
+                m_Editors.EmplaceBack(statsEditor);
+            }
+        }
+        
         if (ImGui::BeginMenu("General Editors"))
         {
             if (ImGui::MenuItem("Camera Editor"))
@@ -85,24 +89,6 @@ void RootEditor::Render()
                 {
                     SceneGraphEditor* sceneEditor = DRE::g_MainAllocator.Alloc<SceneGraphEditor>(this, EDITOR_FLAGS_NONE, m_MainScene);
                     m_Editors.EmplaceBack(sceneEditor);
-                }
-            }
-
-            if (ImGui::MenuItem("Light Editor"))
-            {
-                if (GetEditorByType(BaseEditor::Type::LightProperties) == nullptr)
-                {
-                    LightPropertiesEditor* lightEditor = DRE::g_MainAllocator.Alloc<LightPropertiesEditor>(this, EDITOR_FLAGS_NONE);
-                    m_Editors.EmplaceBack(lightEditor);
-                }
-            }
-
-            if (ImGui::MenuItem("Transform Editor"))
-            {
-                if (GetEditorByType(BaseEditor::Type::Transform) == nullptr)
-                {
-                    TransformEditor* transformEditor = DRE::g_MainAllocator.Alloc<TransformEditor>(this, EDITOR_FLAGS_NONE);
-                    m_Editors.EmplaceBack(transformEditor);
                 }
             }
 

@@ -17,7 +17,7 @@ Scene::Scene(DRE::DefaultAllocator* allocator)
     , m_NodeCounter{ 0u }
     , m_RootNode{ nullptr }
 {
-    m_RootNode = CreateEmptySceneNode();
+    m_RootNode = CreateRootSceneNode();
 
     SceneNode* cameraNode = CreateSceneNode(&m_MainCamera, m_RootNode);
     cameraNode->SetName("camera");
@@ -47,7 +47,9 @@ SceneNode* Scene::CreateSceneNode(ISceneNodeUser* user, SceneNode* parent)
 {
     NodeID const id = m_NodeCounter++; 
     SceneNode* sceneNode = &m_Nodes.Emplace(id, parent, user);
-    user->SetSceneNode(sceneNode);
+
+    if (user != nullptr)
+        user->SetSceneNode(sceneNode);
 
     if (parent != nullptr)
         parent->AddChild(sceneNode);
