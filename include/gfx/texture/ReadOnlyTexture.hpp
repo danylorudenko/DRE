@@ -26,11 +26,11 @@ public:
     virtual ~ReadOnlyTexture();
 
     inline VKW::ImageResourceView* GetShaderReadView() { return m_ShaderReadView; }
-    inline VKW::TextureDescriptorIndex const& GetShaderReadDescriptor() const { return m_ShaderReadDescriptor; }
+    inline VKW::TextureDescriptorIndex const& GetShaderGlobalReadDescriptor() const { return m_ShaderGlobalDescriptor; }
 
 protected:
-    VKW::ImageResourceView* m_ShaderReadView;
-    VKW::TextureDescriptorIndex   m_ShaderReadDescriptor;
+    VKW::ImageResourceView*         m_ShaderReadView;
+    VKW::TextureDescriptorIndex     m_ShaderGlobalDescriptor;
 };
 
 }

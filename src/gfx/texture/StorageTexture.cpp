@@ -15,11 +15,11 @@ StorageTexture::StorageTexture()
     , m_ShaderView{ nullptr }
 {}
 
-StorageTexture::StorageTexture(VKW::Device* device, VKW::ImageResource* image, VKW::ImageResourceView* view)
+StorageTexture::StorageTexture(VKW::Device* device, VKW::ImageResource* image, VKW::ImageResourceView* view, VKW::TextureDescriptorIndex globalDescriptorHandle)
     : TextureBase{ device, image }
     , m_ShaderView{ view }
+    , m_ShaderGlobalDescriptor{ globalDescriptorHandle }
 {
-
     m_Width = m_ShaderView->GetImageWidth();
     m_Height = m_ShaderView->GetImageHeight();
     m_MipsCount = 1;
@@ -38,6 +38,7 @@ StorageTexture& StorageTexture::operator=(StorageTexture&& rhs)
     TextureBase::operator=(DRE_MOVE(rhs));
 
     DRE_SWAP_MEMBER(m_ShaderView);
+    DRE_SWAP_MEMBER(m_ShaderGlobalDescriptor);
 
     return *this;
 }
@@ -46,7 +47,12 @@ StorageTexture::~StorageTexture()
 {
     if (m_ParentDevice != nullptr)
     {
+
+        m_ParentDevice->GetDescriptorManager()->FreeTextureDescriptor(m_ShaderGlobalDescriptor);
         m_ParentDevice->GetResourcesController()->FreeImageView(m_ShaderView);
+
+        DRE_DEBUG_ONLY(m_ShaderGlobalDescriptor = VKW::TextureDescriptorIndex{});
+        DRE_DEBUG_ONLY(m_ShaderView = nullptr);
     }
 }
 

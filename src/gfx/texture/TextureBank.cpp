@@ -18,12 +18,12 @@ TextureBank::TextureBank(VKW::Context* loadingContext, VKW::ResourcesController*
 
 TextureBank::~TextureBank()
 {
-    m_DiscTextures.Clear();
+    m_Textures.Clear();
 }
 
 ReadOnlyTexture* TextureBank::FindTexture(DRE::String128 const& name)
 {
-    return m_DiscTextures.Find(name).value;
+    return m_Textures.Find(name).value;
 }
 
 void TextureBank::LoadDefaultTextures()
@@ -91,7 +91,7 @@ ReadOnlyTexture* TextureBank::LoadTexture2DSync(DRE::String128 const& name, std:
     VKW::ImageResourceView* imageView = m_ResourcesController->ViewImageAs(imageResource);
     VKW::TextureDescriptorIndex descriptorHandle = m_DescriptorAllocator->AllocateTextureDescriptor(imageView);
 
-    return &(m_DiscTextures[name] = ReadOnlyTexture{ g_GraphicsManager->GetMainDevice(), imageResource, imageView, descriptorHandle});
+    return &(m_Textures[name] = ReadOnlyTexture{ g_GraphicsManager->GetMainDevice(), imageResource, imageView, descriptorHandle });
 }
 
 void TextureBank::GenFFTIndexTexture(std::uint32_t n)

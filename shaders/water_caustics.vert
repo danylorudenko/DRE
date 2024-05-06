@@ -92,7 +92,7 @@ void main()
 	vec4 env_map_sample = SampleTexture(envMap, GetSamplerLinear(), uv);
 	
 	vec3 world_norm = vec3(instanceUniform.model_mat * vec4(norm, 0.0));
-	vec3 refracted_light = refract(GetMainLightDir(), world_norm, REF_INDEX);
+	vec3 refracted_light = refract(GetSunLightDir(), world_norm, REF_INDEX);
 	vec2 uv_refract_dir = ((passUniform.light_ViewProjM * vec4(refracted_light, 0.0)).xy) / GetViewportSize();
 	vec3 ray_pos = env_map_sample.xyz;
 	vec2 sample_uv = uv;

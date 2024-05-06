@@ -139,7 +139,7 @@ bool SceneGraphEditor::RenderLightProperties(bool wasTransformUpdated)
 
 
     // go and see "shaders\lights.h" for proper order
-    const char* items[] = { "Directional", "Point" };
+    const char* items[] = { "Sun", "Directional", "Point" };
     static_assert(IM_ARRAYSIZE(items) == DRE_LIGHT_TYPE_MAX, "Mismatch in the editor Light type array and engine DEFINES");
     ImGui::Text("Type:");
     if (ImGui::Combo("##type", &currentType, items, IM_ARRAYSIZE(items)))
@@ -186,7 +186,7 @@ DRE::String64 SceneGraphEditor::GetUniqueLabel(WORLD::SceneNode* node, SceneGrap
             typeStr = "Camera";
             break;
         case WORLD::ISceneNodeUser::Type::Light:
-            typeStr = "Directional Light";
+            typeStr = "Light";
         }
     }
 

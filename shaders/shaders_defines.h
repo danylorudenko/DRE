@@ -16,19 +16,6 @@ using mat4 = glm::mat4;
 
 #define PI 3.14159
 
-// Global textures
-#define GetGlobalTexture(id) g_GlobalTextures[nonuniformEXT(id)]
-
-// Default samplers
-#define GetSamplerNearest() g_GlobalSamplers[0]
-#define GetSamplerLinear() g_GlobalSamplers[1]
-#define GetSamplerLinearClamp() g_GlobalSamplers[2]
-#define GetSamplerAnisotropic() g_GlobalSamplers[3]
-
-#define SampleTexture(textureObj, samplerObj, uv_coords) texture(sampler2D(textureObj, samplerObj), uv_coords)
-#define TexelFetchLvl(textureObj, pos, lvl) texelFetch(sampler2D(textureObj, GetSamplerNearest(), pos, lvl)
-#define TexelFetch(textureObj, pos) texelFetch(sampler2D(textureObj, GetSamplerNearest()), pos, 0)
-
 // Type_GPURef CPP
 #ifdef __cplusplus
     struct GPUPointer

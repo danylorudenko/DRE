@@ -6,8 +6,7 @@
 #define ENABLE_PCF_POISSON
 
 #include "shaders_common.h"
-#include "lighting_model.h"
-#include "shadows.h"
+#include "lighting.h"
 
 layout(location = 0) in vec3 in_wpos;
 layout(location = 1) in vec2 in_uv;
@@ -50,26 +49,19 @@ void main()
 
     vec3 n = normalize(in_TBN * (normal * 2.0 - 1.0));
     vec3 v = normalize(GetCameraPos() - in_wpos);
-    vec3 L = -GetMainLightDir();
-    vec3 h = normalize(v + L);
-    
-    float NdotL = max(0.0, dot(n, L));
-    float NdotH = max(0.0, dot(n, h));
-    float NdotV = max(0.0, dot(n, v));
-	
-    vec3 brdf = CookTorranceBRDF(NdotH, NdotV, NdotL, diffuse, roughness, metalness);
 
-    vec3 ambient = vec3(0.15, 0.15, 0.15) * diffuse;
-	
-	vec2 light_uv = CalculateShadowUV(in_wpos, passUniform.shadow_VP);
-	//float caustics = SampleTexture(causticMap, GetSamplerLinear(), light_uv).r;
+    S_SURFACE surface;
+    surface.wpos = in_wpos;
+    surface.normal = n;
+    surface.diffuseSpectrum = diffuse;
+    surface.roughness = roughness;
+    surface.metalness = metalness;
 
-    float shadow = CalculateShadow(in_wpos, passUniform.shadow_VP, passUniform.shadow_size.xy, shadowMap);
+    S_LIGHTING_RESULT lighting = CalculateLighting(surface);
 
-	//shadow = 1;
-    vec3 res = /*caustics.rrr *shadow + */shadow * brdf + ambient;    
+    finalColor = vec4(lighting.finalRadiance, 1.0);
 	
-    finalColor = vec4(res, 1.0);
+    //finalColor = vec4(res, 1.0);
     //finalColor = vec4(in_TBN[2], 1.0);
     //finalColor = vec4(normal.rrr * 0.5 + 0.5, 1.0);
 	

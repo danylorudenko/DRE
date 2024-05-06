@@ -32,8 +32,12 @@ layout(set = 2, binding = 0, std140) readonly uniform GlobalUniforms
     mat4 main_PrevViewProjM;
     mat4 main_PreviViewProjM;
 
-    vec4 main_LightDir;
-    vec4 main_LightRadiance;
+    vec4 main_SunLightDir;
+
+    mat4 main_ShadowVP;
+    vec4 main_ShadowSize;
+
+    uvec4 TEX_ID_shadow;
 
     uvec4 lightsCount;
     S_LIGHT_GPURef LightBuffer;
@@ -66,14 +70,20 @@ mat4    GetPrevCameraViewM() { return g_GlobalUniforms.main_PrevViewM; }
 mat4    GetPrevCameraiViewM() { return g_GlobalUniforms.main_PreviViewM; }
 mat4    GetPrevCameraProjM() { return g_GlobalUniforms.main_PrevProjM; }
 mat4    GetPrevCameraiProjM() { return g_GlobalUniforms.main_PreviProjM; }
-mat4	GetPrevCameraViewProjM() { return g_GlobalUniforms.main_PrevViewProjM; }
-mat4	GetPrevCameraiViewProjM() { return g_GlobalUniforms.main_PreviViewProjM; }
+mat4    GetPrevCameraViewProjM() { return g_GlobalUniforms.main_PrevViewProjM; }
+mat4    GetPrevCameraiViewProjM() { return g_GlobalUniforms.main_PreviViewProjM; }
 
-vec3    GetMainLightDir() { return g_GlobalUniforms.main_LightDir.xyz; }
-vec3    GetMainLightRadiance() { return g_GlobalUniforms.main_LightRadiance.xyz; }
+vec3    GetSunLightDir() { return g_GlobalUniforms.main_SunLightDir.xyz; }
+
+mat4    GetSunShadowVP() { return g_GlobalUniforms.main_ShadowVP; }
+vec2    GetSunShadowSize() { return g_GlobalUniforms.main_ShadowSize.xy; }
+
+uint    GetShadowMapID() { return g_GlobalUniforms.TEX_ID_shadow.x; }
 
 uint    GetLightsCount() { return g_GlobalUniforms.lightsCount.x; }
 S_LIGHT_GPURef GetLight(uint i) { return g_GlobalUniforms.LightBuffer[i]; }
+
+
 
 #endif
 

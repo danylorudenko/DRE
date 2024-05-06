@@ -92,8 +92,9 @@ void GraphResourcesManager::PrepareResources()
 
         VkImageSubresourceRange range = VKW::HELPER::DefaultImageSubresourceRange(imageAspect);
         VKW::ImageResourceView* view = m_Device->GetResourcesController()->ViewImageAs(image, &range);
+        VKW::TextureDescriptorIndex globalDescriptor = m_Device->GetDescriptorManager()->AllocateTextureDescriptor(view);
 
-        m_StorageTextures[*pair.key] = GraphTexture{ StorageTexture{ m_Device, image, view }, info };
+        m_StorageTextures[*pair.key] = GraphTexture{ StorageTexture{ m_Device, image, view, globalDescriptor }, info };
     });
  
 

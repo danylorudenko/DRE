@@ -23,7 +23,7 @@ void FillWaterUniform(UniformProxy& uniform, ReadOnlyTexture const& noiseTexture
     WIND_DIR[0] = s.m_WindDirectionX;
     WIND_DIR = glm::normalize(WIND_DIR);
 
-    VKW::TextureDescriptorIndex id = noiseTexture.GetShaderReadDescriptor();
+    VKW::TextureDescriptorIndex id = noiseTexture.GetShaderGlobalReadDescriptor();
     float noiseTexID = *reinterpret_cast<float*>(&id.id_);
 
     glm::vec4 _0{ C_WATER_DIM, WIND_DIR[0], WIND_DIR[1], noiseTexID };

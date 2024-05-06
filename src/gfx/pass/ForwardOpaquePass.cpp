@@ -68,10 +68,10 @@ void ForwardObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::De
     uniformProxy.WriteMember140(worldMatrix); // prev world matrix is same, geometry is static
 
     std::uint32_t textureIDs[4] = {
-       obj.GetDiffuseTexture()->GetShaderReadDescriptor().id_,
-       obj.GetNormalTexture()->GetShaderReadDescriptor().id_,
-       obj.GetMetalnessTexture()->GetShaderReadDescriptor().id_,
-       obj.GetRoughnessTexture()->GetShaderReadDescriptor().id_
+       obj.GetDiffuseTexture()->GetShaderGlobalReadDescriptor().id_,
+       obj.GetNormalTexture()->GetShaderGlobalReadDescriptor().id_,
+       obj.GetMetalnessTexture()->GetShaderGlobalReadDescriptor().id_,
+       obj.GetRoughnessTexture()->GetShaderGlobalReadDescriptor().id_
     };
 
     uniformProxy.WriteMember140(textureIDs, sizeof(textureIDs));

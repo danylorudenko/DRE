@@ -21,7 +21,7 @@ class StorageTexture
 {
 public:
     StorageTexture();
-    StorageTexture(VKW::Device* device, VKW::ImageResource* image, VKW::ImageResourceView* view);
+    StorageTexture(VKW::Device* device, VKW::ImageResource* image, VKW::ImageResourceView* view, VKW::TextureDescriptorIndex globalDescriptorHandle);
 
     StorageTexture(StorageTexture&& rhs);
     StorageTexture& operator=(StorageTexture&& rhs);
@@ -31,7 +31,8 @@ public:
     inline VKW::ImageResourceView* GetShaderView() const { return m_ShaderView; }
 
 private:
-    VKW::ImageResourceView* m_ShaderView;
+    VKW::ImageResourceView*         m_ShaderView;
+    VKW::TextureDescriptorIndex     m_ShaderGlobalDescriptor;
 };
 
 }

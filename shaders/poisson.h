@@ -1,3 +1,6 @@
+#ifndef _POISSON_H_
+#define _POISSON_H_
+
 const vec2 poisson32[32] =
 {
     vec2(-0.397889, 0.542226),
@@ -54,4 +57,4 @@ const vec2 poisson16[16] =
     vec2(0.723339, 0.196795)
 };
 
-
+#endif // _POISSON_H_

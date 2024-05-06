@@ -155,8 +155,10 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     globalUniform.main_PrevViewProjM    = m_MainView.GetPrevViewProjectionM();
     globalUniform.main_PreviViewProjM   = m_MainView.GetPrevInvViewProjectionM();
 
-    globalUniform.main_LightDir         = glm::vec4{ scene.GetMainSunLight()->GetForward(), 0.0f };
-    globalUniform.main_LightRadiance    = glm::vec4{ scene.GetMainSunLight()->GetSpectrum(), 1.0f };
+    globalUniform.main_ShadowVP         = m_SunShadowView.GetViewProjectionM();
+    globalUniform.main_ShadowSize       = glm::vec4{ C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, 0.0f, 0.0f };
+
+    globalUniform.main_SunLightDir      = glm::vec4{ sunLight.GetForward(), 0.0f };
 
     globalUniform.lightsCount           = glm::uvec4{ m_LightsManager.GetLightsCount(), 0u, 0u, 0u };
     globalUniform.LightBuffer           = m_LightsManager.GetBufferAddress();

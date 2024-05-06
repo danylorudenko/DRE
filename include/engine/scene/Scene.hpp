@@ -57,11 +57,13 @@ public:
     Entity*                         CreateOpaqueEntity(VKW::Context& context, Data::Geometry* geometry, Data::Material* material, SceneNode* parent = nullptr);
     inline SceneNode*               CreateSceneNode(ISceneNodeUser* user, SceneNode* parent);
 
+    Light*                          CreateSunLight(VKW::Context& context, SceneNode* parent = nullptr);
     Light*                          CreateDirectionalLight(VKW::Context& context, SceneNode* parent = nullptr);
 
 private:
     inline SceneNode*               CreateRootSceneNode(SceneNode* parent = nullptr) { NodeID const id = m_NodeCounter++; return &m_Nodes.Emplace(id, parent, nullptr); }
     inline Entity*                  CreateEntity() { EntityID const id = m_EntityCounter++; return &m_SceneEntities.Emplace(id); }
+    Light*                          CreateDirectionalLightInternal(VKW::Context& context, SceneNode* parent, std::uint32_t type);
 
 private:
     Camera              m_MainCamera;

@@ -143,7 +143,7 @@ void main()
 	normalMap = (normalMap * 2 - 1);
 	vec3 n = normalize(in_TBN * normalMap);
 	
-	vec3 l = -GetMainLightDir();
+	vec3 l = -GetSunLightDir();
 	vec3 v = normalize(GetCameraPos() - in_wpos);
 	vec3 h = normalize(l + v);
 	

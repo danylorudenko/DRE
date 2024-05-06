@@ -40,7 +40,7 @@ private:
     VKW::DescriptorManager*   m_DescriptorAllocator;
     VKW::Context*             m_LoadingContext;
 
-    DRE::InplaceHashTable<DRE::String128, ReadOnlyTexture> m_DiscTextures;
+    DRE::InplaceHashTable<DRE::String128, ReadOnlyTexture> m_Textures;
 };
 
 }

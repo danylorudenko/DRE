@@ -71,7 +71,7 @@ void WaterObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::Desc
     //writeDesc.AddUniform(uniformAllocation.m_Buffer, uniformAllocation.m_OffsetInBuffer, uniformAllocation.m_Size, 0);
     //descriptorManager.WriteDescriptorSet(obj.GetDescriptorSet(g_GraphicsManager->GetCurrentFrameID()), writeDesc);
     //
-    //VKW::TextureDescriptorIndex const& normalIndex = obj.GetNormalTexture()->GetShaderReadDescriptor();
+    //VKW::TextureDescriptorIndex const& normalIndex = obj.GetNormalTexture()->GetShaderGlobalReadDescriptor();
     //
     //UniformProxy uniformProxy{ &context, uniformAllocation };
     //uniformProxy.WriteMember140(obj.GetModelM());
