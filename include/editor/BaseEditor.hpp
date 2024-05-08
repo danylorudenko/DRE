@@ -28,6 +28,7 @@ public:
         Camera,
         SceneGraph,
         Stats,
+        TextureInspector,
         MAX
     };
 

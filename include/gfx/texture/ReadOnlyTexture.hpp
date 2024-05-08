@@ -28,9 +28,15 @@ public:
     inline VKW::ImageResourceView* GetShaderReadView() { return m_ShaderReadView; }
     inline VKW::TextureDescriptorIndex const& GetShaderGlobalReadDescriptor() const { return m_ShaderGlobalDescriptor; }
 
+    VKW::DescriptorSet GetImGuiDescriptor() const;
+
 protected:
     VKW::ImageResourceView*         m_ShaderReadView;
     VKW::TextureDescriptorIndex     m_ShaderGlobalDescriptor;
+
+#ifdef DRE_IMGUI_CUSTOM_TEXTURE
+    VKW::DescriptorSet              m_ImGuiDescriptorSet;
+#endif
 };
 
 }

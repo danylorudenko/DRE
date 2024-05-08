@@ -51,7 +51,6 @@ DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* t
 //////////////////////////////////////////
 DREApplicationDelegate::~DREApplicationDelegate()
 {
-    m_GraphicsManager.WaitIdle();
 }
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -117,7 +116,12 @@ void DREApplicationDelegate::start()
     sunLight->SetEulerOrientation(glm::vec3{ -70.0f, 110.0f, 0.0f });
     sunLight->ScheduleUpdateGPUData();
 
-    m_GraphicsManager.Initialize();
+
+    if (m_ImGuiEnabled)
+        InitImGui();
+
+
+    m_GraphicsManager.LoadDefaultData();
 
 
 
@@ -181,9 +185,6 @@ void DREApplicationDelegate::start()
 
     ////////////
     m_GraphicsManager.GetMainContext().FlushAll();
-
-    if (m_ImGuiEnabled)
-        InitImGui();
 }
 
 //////////////////////////////////////////
@@ -237,6 +238,8 @@ void DREApplicationDelegate::update()
 //////////////////////////////////////////
 void DREApplicationDelegate::shutdown()
 {
+    m_GraphicsManager.WaitIdle();
+    DestroyImGui();
 }
 
 //////////////////////////////////////////
@@ -244,6 +247,11 @@ void DREApplicationDelegate::InitImGui()
 {
     // Window* window, InputSystem* input, VKW::Instance& instance, VKW::Swapchain& swapchain, VKW::Device& device, VKW::Context& context
     m_ImGuiHelper = std::make_unique<ImGuiHelper>(&m_MainWindow, &m_InputSystem, *m_GraphicsManager.GetInstance(), *m_GraphicsManager.GetSwapchain(), *m_GraphicsManager.GetMainDevice(), m_GraphicsManager.GetMainContext());
+}
+
+void DREApplicationDelegate::DestroyImGui()
+{
+    m_ImGuiHelper.reset();
 }
 
 //////////////////////////////////////////

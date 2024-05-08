@@ -6,6 +6,9 @@
 #include <editor\CameraEditor.hpp>
 #include <editor\SceneGraphEditor.hpp>
 #include <editor\StatsEditor.hpp>
+#include <editor\TextureInspector.hpp>
+
+#include <gfx\GraphicsManager.hpp>
 
 #include <imgui.h>
 
@@ -63,7 +66,7 @@ void RootEditor::Render()
 
     if (ImGui::BeginMainMenuBar())
     {
-        if (ImGui::MenuItem("DisplayStats"))
+        if (ImGui::MenuItem("Statistics"))
         {
             if (GetEditorByType(BaseEditor::Type::Stats) == nullptr)
             {
@@ -71,7 +74,16 @@ void RootEditor::Render()
                 m_Editors.EmplaceBack(statsEditor);
             }
         }
-        
+
+        if (ImGui::MenuItem("Texture Inspector"))
+        {
+            if (GetEditorByType(BaseEditor::Type::TextureInspector) == nullptr)
+            {
+                TextureInspector* statsEditor = DRE::g_MainAllocator.Alloc<TextureInspector>(this, EDITOR_FLAGS_NONE, &GFX::g_GraphicsManager->GetTextureBank());
+                m_Editors.EmplaceBack(statsEditor);
+            }
+        }
+
         if (ImGui::BeginMenu("General Editors"))
         {
             if (ImGui::MenuItem("Camera Editor"))

@@ -41,6 +41,9 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOMana
     , m_ReadbackArena{ &m_Device, C_READBACK_ARENA_SIZE }
     , m_TextureBank{ &m_MainContext, m_Device.GetResourcesController(), m_Device.GetDescriptorManager() }
     , m_PipelineDB{ &m_Device, ioManager }
+#ifdef DRE_IMGUI_CUSTOM_TEXTURE
+    , m_ImGuiSyncQueue{ &DRE::g_MainAllocator }
+#endif
     , m_PersistentStorage{ &m_Device, &m_UploadArena, &m_Device, C_PERSISTENT_STORAGE_SIZE }
     , m_LightsManager{ &m_PersistentStorage }
     , m_RenderGraph{ this }
@@ -61,7 +64,7 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOMana
     m_Device.GetDescriptorManager()->AllocateDefaultDescriptors(VKW::CONSTANTS::FRAMES_BUFFERING, m_GlobalUniforms, m_PersistentStorage.GetStorage()->GetResource());
 }
 
-void GraphicsManager::Initialize()
+void GraphicsManager::LoadDefaultData()
 {
     m_PipelineDB.CreateDefaultPipelines();
     m_TextureBank.LoadDefaultTextures();

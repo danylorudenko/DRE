@@ -80,8 +80,8 @@ ReadOnlyTexture* TextureBank::LoadTexture2DSync(DRE::String128 const& name, std:
     m_LoadingContext->CmdCopyBufferToImage(imageResource, stagingRegion.m_Buffer, stagingRegion.m_OffsetInBuffer);
 
     m_LoadingContext->CmdResourceDependency(imageResource,
-        VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER,
-        VKW::RESOURCE_ACCESS_NONE, VKW::STAGE_TOP);
+        VKW::RESOURCE_ACCESS_TRANSFER_DST,  VKW::STAGE_TRANSFER,
+        VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_ALL_GRAPHICS | VKW::STAGE_COMPUTE);
 
     VKW::QueueExecutionPoint syncPoint = m_LoadingContext->SyncPoint();
     m_LoadingContext->FlushAll();

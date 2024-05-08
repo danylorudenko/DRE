@@ -49,6 +49,7 @@ public:
 
 private:
     void InitImGui();
+    void DestroyImGui();
     void ImGuiUser();
 
     Window                              m_MainWindow;

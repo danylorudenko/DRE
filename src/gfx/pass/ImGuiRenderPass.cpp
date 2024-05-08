@@ -60,6 +60,15 @@ void ImGuiRenderPass::Render(RenderGraph& graph, VKW::Context& context)
     context.CmdSetViewport(1, 0, 0, renderWidth, renderHeight);
     context.CmdSetScissor(1, 0, 0, renderWidth, renderHeight);
 
+#ifdef DRE_IMGUI_CUSTOM_TEXTURE
+    auto& imGuiSyncQueue = g_GraphicsManager->GetImGuiSyncQueue();
+    for (std::uint32_t i = 0, size = imGuiSyncQueue.Size(); i < size; i++)
+    {
+        g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, imGuiSyncQueue[i]->GetResource(), VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT);
+    }
+    imGuiSyncQueue.Clear();
+#endif
+
     ImGui::Render();
     ImDrawData* data = ImGui::GetDrawData();
     ImGui_ImplVulkan_RenderDrawData(data, *context.GetCurrentCommandList());

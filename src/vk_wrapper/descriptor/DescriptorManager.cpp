@@ -15,12 +15,14 @@ DescriptorManager::DescriptorManager(ImportTable* table, LogicalDevice* device)
     , standalonePool_{ VK_NULL_HANDLE }
     , globalSetPool_{ VK_NULL_HANDLE }
     , globalTexturesPool_{ VK_NULL_HANDLE }
+#ifdef DRE_IMGUI_CUSTOM_TEXTURE
+    , perTextureDescriptors_{ VK_NULL_HANDLE }
+#endif
 {
     std::uint32_t constexpr STANDALONE_DESCRIPTOR_COUNT = 1024;
     std::uint32_t constexpr MAX_STANDALONE_SETS         = 1024;
-    std::uint32_t constexpr IMGUI_DESCRIPTOR_COUNT      = 24;
 
-    VkDescriptorPoolSize sizes[5];
+    VkDescriptorPoolSize sizes[4];
     sizes[0].type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
     sizes[0].descriptorCount    = STANDALONE_DESCRIPTOR_COUNT;
 
@@ -33,15 +35,12 @@ DescriptorManager::DescriptorManager(ImportTable* table, LogicalDevice* device)
     sizes[3].type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     sizes[3].descriptorCount    = STANDALONE_DESCRIPTOR_COUNT;
 
-    sizes[4].type               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    sizes[4].descriptorCount    = IMGUI_DESCRIPTOR_COUNT;
-
     VkDescriptorPoolCreateInfo standalonePoolInfo;
     standalonePoolInfo.sType          = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     standalonePoolInfo.pNext          = nullptr;
     standalonePoolInfo.flags          = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
     standalonePoolInfo.maxSets        = MAX_STANDALONE_SETS;
-    standalonePoolInfo.poolSizeCount  = 5;
+    standalonePoolInfo.poolSizeCount  = 4;
     standalonePoolInfo.pPoolSizes     = sizes;
 
     VK_ASSERT(table_->vkCreateDescriptorPool(device_->Handle(), &standalonePoolInfo, nullptr, &standalonePool_));
@@ -72,14 +71,37 @@ DescriptorManager::DescriptorManager(ImportTable* table, LogicalDevice* device)
     sizes[0].descriptorCount    = VKW::CONSTANTS::TEXTURE_DESCRIPTOR_HEAP_SIZE;
 
     VkDescriptorPoolCreateInfo globalTexturesPoolInfo;
-    globalTexturesPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    globalTexturesPoolInfo.pNext = nullptr;
-    globalTexturesPoolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
-    globalTexturesPoolInfo.maxSets = 1;
-    globalTexturesPoolInfo.poolSizeCount = 1;
-    globalTexturesPoolInfo.pPoolSizes = sizes;
+    globalTexturesPoolInfo.sType            = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    globalTexturesPoolInfo.pNext            = nullptr;
+    globalTexturesPoolInfo.flags            = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
+    globalTexturesPoolInfo.maxSets          = 1;
+    globalTexturesPoolInfo.poolSizeCount    = 1;
+    globalTexturesPoolInfo.pPoolSizes       = sizes;
 
     VK_ASSERT(table_->vkCreateDescriptorPool(device_->Handle(), &globalTexturesPoolInfo, nullptr, &globalTexturesPool_));
+
+
+#ifdef DRE_IMGUI_CUSTOM_TEXTURE
+    sizes[0].type               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    sizes[0].descriptorCount    = VKW::CONSTANTS::TEXTURE_DESCRIPTOR_HEAP_SIZE;
+#else
+    sizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    sizes[0].descriptorCount = 1;
+#endif
+
+    VkDescriptorPoolCreateInfo perTextureDescriptorPoolInfo;
+    perTextureDescriptorPoolInfo.sType          = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    perTextureDescriptorPoolInfo.pNext          = nullptr;
+    perTextureDescriptorPoolInfo.flags          = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+#ifdef DRE_IMGUI_CUSTOM_TEXTURE
+    perTextureDescriptorPoolInfo.maxSets        = VKW::CONSTANTS::TEXTURE_DESCRIPTOR_HEAP_SIZE;
+#else
+    perTextureDescriptorPoolInfo.maxSets        = 1;
+#endif
+    perTextureDescriptorPoolInfo.poolSizeCount  = 1;
+    perTextureDescriptorPoolInfo.pPoolSizes     = sizes;
+
+    VK_ASSERT(table_->vkCreateDescriptorPool(device_->Handle(), &perTextureDescriptorPoolInfo, nullptr, &perTextureDescriptors_));
 
     CreateGlobalDescriptorLayouts();
 }
@@ -107,6 +129,8 @@ DescriptorManager& DescriptorManager::operator=(DescriptorManager&& rhs)
     DRE_SWAP_MEMBER(globalTexturesPool_);
     DRE_SWAP_MEMBER(globalTexturesSet_);
 
+    DRE_SWAP_MEMBER(perTextureDescriptors_);
+
     DRE_SWAP_MEMBER(standalonePool_);
 
     return *this;
@@ -116,6 +140,7 @@ DescriptorManager::~DescriptorManager()
 {
     VkDevice device = device_->Handle();
 
+    table_->vkDestroyDescriptorPool(device, perTextureDescriptors_, nullptr);
     table_->vkDestroyDescriptorPool(device, standalonePool_, nullptr);
     table_->vkDestroyDescriptorPool(device, globalTexturesPool_, nullptr);
     table_->vkDestroyDescriptorPool(device, globalSetPool_, nullptr);
@@ -398,9 +423,9 @@ void DescriptorManager::FreeStandaloneSet(DescriptorSet& set)
     VK_ASSERT(table_->vkFreeDescriptorSets(device_->Handle(), standalonePool_, 1, &vkSet));
 }
 
-VkDescriptorPool DescriptorManager::GetStandaloneDescriptorPool()
+VkDescriptorPool DescriptorManager::GetPerTextureDescriptorPool()
 {
-    return standalonePool_;
+    return perTextureDescriptors_;
 }
 
 DescriptorManager::WriteDesc::WriteDesc()

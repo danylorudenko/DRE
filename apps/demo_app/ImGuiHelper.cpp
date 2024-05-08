@@ -117,7 +117,7 @@ ImGuiHelper::ImGuiHelper(Window* window, InputSystem* input, VKW::Instance& inst
     info.Device = device.GetLogicalDevice()->Handle();
     info.QueueFamily = context.GetParentQueue()->GetQueueFamily();
     info.Queue = context.GetParentQueue()->GetHardwareQueue();
-    info.DescriptorPool = device.GetDescriptorManager()->GetStandaloneDescriptorPool();
+    info.DescriptorPool = device.GetDescriptorManager()->GetPerTextureDescriptorPool();
     info.RenderPass = VK_NULL_HANDLE; // ignored for dynamic rendering
     info.MinImageCount = VKW::CONSTANTS::FRAMES_BUFFERING;
     info.ImageCount = swapchain.GetImageCount();

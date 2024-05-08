@@ -1,10 +1,5 @@
 #pragma once
 
-#include <cassert>
-#include <cstdint>
-#include <limits>
-#include <utility>
-
 #include <foundation\class_features\NonCopyable.hpp>
 #include <foundation\class_features\NonMovable.hpp>
 
@@ -99,7 +94,8 @@ public:
 
     DescriptorSet               AllocateStandaloneSet(DescriptorSetLayout const& layout);
     void                        FreeStandaloneSet(DescriptorSet& set);
-    VkDescriptorPool            GetStandaloneDescriptorPool(); // needed for ImGui backend
+
+    VkDescriptorPool            GetPerTextureDescriptorPool(); // needed for ImGui backend
 
     std::uint32_t               GetGlobalSetLayoutsCount() const { return 3u; }
     DescriptorSetLayout const*  GetGlobalSetLayouts() const { return globalSetLayouts_; }
@@ -123,7 +119,7 @@ private:
     LogicalDevice* device_;
 
 private:
-    
+
     DRE::FreeListElementAllocator<VKW::CONSTANTS::TEXTURE_DESCRIPTOR_HEAP_SIZE> dynamicTextureHeap_;
 
     VkSampler                   defaultSamplers_[(int)SAMPLER_TYPE_MAX];
@@ -133,6 +129,8 @@ private:
 
     VkDescriptorPool            globalSetPool_;
     VkDescriptorPool            globalTexturesPool_;
+
+    VkDescriptorPool            perTextureDescriptors_;
 
     VkDescriptorSet             globalSampler_;
     VkDescriptorSet             globalTexturesSet_;

@@ -7,6 +7,7 @@
 #include <foundation\container\ObjectPool.hpp>
 #include <foundation\container\InplaceHashTable.hpp>
 #include <foundation\container\HashTable.hpp>
+#include <foundation\container\Vector.hpp>
 
 #include <vk_wrapper\Device.hpp>
 
@@ -84,6 +85,8 @@ class GraphicsManager final
     , public NonMovable
 {
 public:
+    using ImGuiSyncQueue = DRE::Vector<TextureBase*, DRE::DefaultAllocator>;
+
     GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOManager* ioManager, bool debug = false);
     ~GraphicsManager();
 
@@ -117,6 +120,10 @@ public:
     inline DependencyManager&           GetDependencyManager() { return m_DependencyManager; }
     inline RenderGraph&                 GetMainRenderGraph() { return m_RenderGraph; }
 
+#ifdef DRE_IMGUI_CUSTOM_TEXTURE
+    inline ImGuiSyncQueue&              GetImGuiSyncQueue() { return m_ImGuiSyncQueue; }
+#endif
+
     inline RenderView&                  GetMainRenderView() { return m_MainView; }
     inline RenderView&                  GetSunShadowRenderView() { return m_SunShadowView; }
 
@@ -128,7 +135,7 @@ public:
 
 
 public:
-    void                                Initialize();
+    void                                LoadDefaultData();
     void                                ReloadShaders();
     void                                RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS, float globalTimeS);
     void                                WaitIdle();
@@ -144,7 +151,6 @@ private:
         VKW::BufferResource* vertexBuffer;
         VKW::BufferResource* indexBuffer;
     };
-    using GeometryGPUMap = DRE::InplaceHashTable<Data::Geometry*, GeometryGPU>;
     GeometryGPU* LoadGPUGeometry(VKW::Context& context, Data::Geometry* geometry);
 
     void            PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, std::uint64_t deltaTimeUS, float globalTimeS);
@@ -169,6 +175,10 @@ private:
     TextureBank                 m_TextureBank;
     PipelineDB                  m_PipelineDB;
 
+#ifdef DRE_IMGUI_CUSTOM_TEXTURE
+    ImGuiSyncQueue              m_ImGuiSyncQueue;
+#endif
+
 
     VKW::BufferResource*        m_GlobalUniforms[VKW::CONSTANTS::FRAMES_BUFFERING];
     PersistentStorage           m_PersistentStorage;
@@ -185,6 +195,7 @@ private:
     using RenderablePool        = DRE::InplaceObjectAllocator<RenderableObject, 2048>;
     RenderablePool              m_RenderableObjectPool;
 
+    using GeometryGPUMap        = DRE::InplaceHashTable<Data::Geometry*, GeometryGPU>;
     GeometryGPUMap              m_GeometryGPUMap;
 
     GraphicsSettings            m_Settings;
