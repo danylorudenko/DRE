@@ -35,6 +35,8 @@ public:
     template<typename TDelegate>
     void                ForEachTexture(TDelegate func) { m_Textures.ForEach(func); }
 
+    void                UnloadAllTextures   ();
+
 private:
     void                GenFFTIndexTexture  (std::uint32_t n);
 

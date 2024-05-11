@@ -94,6 +94,11 @@ ReadOnlyTexture* TextureBank::LoadTexture2DSync(DRE::String128 const& name, std:
     return &(m_Textures[name] = ReadOnlyTexture{ g_GraphicsManager->GetMainDevice(), imageResource, imageView, descriptorHandle });
 }
 
+void TextureBank::UnloadAllTextures()
+{
+    m_Textures.Clear();
+}
+
 void TextureBank::GenFFTIndexTexture(std::uint32_t n)
 {
     /*

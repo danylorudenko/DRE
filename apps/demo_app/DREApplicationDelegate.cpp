@@ -239,6 +239,7 @@ void DREApplicationDelegate::update()
 void DREApplicationDelegate::shutdown()
 {
     m_GraphicsManager.WaitIdle();
+    m_GraphicsManager.GetTextureBank().UnloadAllTextures();
     DestroyImGui();
 }
 
