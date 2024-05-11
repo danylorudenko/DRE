@@ -23,10 +23,10 @@ void ColorEncodingPass::RegisterResources(RenderGraph& graph)
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
     graph.RegisterTextureSlot(this, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE, 0);
-    graph.RegisterStandaloneTexture(TextureID::ColorHistoryBuffer0, VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_READ);
-    graph.RegisterStandaloneTexture(TextureID::ColorHistoryBuffer1, VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_READ);
+    graph.RegisterStandaloneTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer0), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_READ);
+    graph.RegisterStandaloneTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer1), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_READ);
 
-    graph.RegisterTexture(this, TextureID::DisplayEncodedImage, 
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DisplayEncodedImage),
         VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 1);
 
     graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 2);
@@ -35,12 +35,12 @@ void ColorEncodingPass::RegisterResources(RenderGraph& graph)
 void ColorEncodingPass::Render(RenderGraph& graph, VKW::Context& context)
 {
     StorageTexture* historyBuffers[2] = { 
-        graph.GetTexture(TextureID::ColorHistoryBuffer0),
-        graph.GetTexture(TextureID::ColorHistoryBuffer1)
+        graph.GetTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer0)),
+        graph.GetTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer1))
     };
 
     VKW::ImageResourceView* taaOutput = historyBuffers[g_GraphicsManager->GetCurrentFrameID()]->GetShaderView();
-    VKW::ImageResourceView* encodedImage = graph.GetTexture(TextureID::DisplayEncodedImage)->GetShaderView();
+    VKW::ImageResourceView* encodedImage = graph.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage))->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, taaOutput->parentResource_, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, encodedImage->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);

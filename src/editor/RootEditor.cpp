@@ -79,7 +79,7 @@ void RootEditor::Render()
         {
             if (GetEditorByType(BaseEditor::Type::TextureInspector) == nullptr)
             {
-                TextureInspector* statsEditor = DRE::g_MainAllocator.Alloc<TextureInspector>(this, EDITOR_FLAGS_NONE, &GFX::g_GraphicsManager->GetTextureBank());
+                TextureInspector* statsEditor = DRE::g_MainAllocator.Alloc<TextureInspector>(this, EDITOR_FLAGS_NONE, &GFX::g_GraphicsManager->GetTextureBank(), &GFX::g_GraphicsManager->GetMainRenderGraph().GetResourcesManager());
                 m_Editors.EmplaceBack(statsEditor);
             }
         }

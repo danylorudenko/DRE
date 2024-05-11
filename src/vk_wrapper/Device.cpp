@@ -22,7 +22,7 @@ Device::Device(HINSTANCE hInstance, HWND hwnd, bool debug)
 
     auto instanceExtensions = std::vector<std::string>{ "VK_KHR_surface", VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
     if (debug)
-        instanceExtensions.emplace_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+        instanceExtensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
     auto instanceLayers = std::vector<std::string>{};
     if (debug) {

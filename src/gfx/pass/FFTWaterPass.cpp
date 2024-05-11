@@ -43,7 +43,7 @@ PassID GFX::FFTButterflyGenPass::GetID() const
 void FFTButterflyGenPass::RegisterResources(RenderGraph& graph)
 {
     std::uint32_t stagesCount = std::uint32_t(glm::log2(float(C_WATER_DIM)));
-    graph.RegisterTexture(this, TextureID::FFTButterfly, VKW::FORMAT_R32G32B32A32_FLOAT, stagesCount, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 0);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::FFTButterfly), VKW::FORMAT_R32G32B32A32_FLOAT, stagesCount, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 0);
     graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 1);
 }
 
@@ -72,7 +72,7 @@ void FFTButterflyGenPass::Render(RenderGraph& graph, VKW::Context& context)
     VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("gen_butterfly");
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
 
-    VKW::ImageResourceView* texture = graph.GetTexture(TextureID::FFTButterfly)->GetShaderView();
+    VKW::ImageResourceView* texture = graph.GetTexture(RESOURCE_ID(TextureID::FFTButterfly))->GetShaderView();
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, texture->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
 
 
@@ -98,7 +98,7 @@ PassID GFX::FFTWaterH0GenPass::GetID() const
 
 void FFTWaterH0GenPass::RegisterResources(RenderGraph& graph)
 {
-    graph.RegisterTexture(this, TextureID::FFTH0, VKW::FORMAT_R32G32B32A32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 0);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::FFTH0), VKW::FORMAT_R32G32B32A32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 0);
     graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 1);
 }
 
@@ -114,7 +114,7 @@ void FFTWaterH0GenPass::Render(RenderGraph& graph, VKW::Context& context)
     VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("gen_h0");
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
     
-    VKW::ImageResourceView* texture = graph.GetTexture(TextureID::FFTH0)->GetShaderView();
+    VKW::ImageResourceView* texture = graph.GetTexture(RESOURCE_ID(TextureID::FFTH0))->GetShaderView();
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, texture->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
 
 
@@ -139,8 +139,8 @@ PassID GFX::FFTWaterHxtGenPass::GetID() const
 
 void FFTWaterHxtGenPass::RegisterResources(RenderGraph& graph)
 {
-    graph.RegisterTexture(this, TextureID::FFTHxt, VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 0);
-    graph.RegisterTexture(this, TextureID::FFTH0, VKW::FORMAT_R32G32B32A32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE, 1);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::FFTHxt), VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 0);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::FFTH0), VKW::FORMAT_R32G32B32A32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE, 1);
 
     graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 2);
 }
@@ -154,8 +154,8 @@ void FFTWaterHxtGenPass::Render(RenderGraph& graph, VKW::Context& context)
     UniformProxy uniform = graph.GetPassUniform(GetID(), context, WATER_UNIFORM_SIZE);
     FillWaterUniform(uniform, *g_GraphicsManager->GetTextureBank().FindTexture("blue_noise_256"));
 
-    VKW::ImageResourceView* fftHxt = graph.GetTexture(TextureID::FFTHxt)->GetShaderView();
-    VKW::ImageResourceView* fftH0 = graph.GetTexture(TextureID::FFTH0)->GetShaderView();
+    VKW::ImageResourceView* fftHxt = graph.GetTexture(RESOURCE_ID(TextureID::FFTHxt))->GetShaderView();
+    VKW::ImageResourceView* fftH0 = graph.GetTexture(RESOURCE_ID(TextureID::FFTH0))->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, fftHxt->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, fftH0->parentResource_, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE);
@@ -186,15 +186,15 @@ void FFTWaterFFTPass::RegisterResources(RenderGraph& graph)
 {
     std::uint32_t stagesCount = std::uint32_t(glm::log2(float(C_WATER_DIM)));
 
-    graph.RegisterTexture(this, TextureID::FFTButterfly, VKW::FORMAT_R32G32B32A32_FLOAT, stagesCount, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE, 0);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::FFTButterfly), VKW::FORMAT_R32G32B32A32_FLOAT, stagesCount, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE, 0);
 
     graph.RegisterTextureSlot(this, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE, 1);
     graph.RegisterTextureSlot(this, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 2);
 
     graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 3);
 
-    graph.RegisterStandaloneTexture(TextureID::FFTPingPong0, VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::ResourceAccess(VKW::RESOURCE_ACCESS_SHADER_RW));
-    graph.RegisterStandaloneTexture(TextureID::FFTPingPong1, VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_RW);
+    graph.RegisterStandaloneTexture(RESOURCE_ID(TextureID::FFTPingPong0), VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::ResourceAccess(VKW::RESOURCE_ACCESS_SHADER_RW));
+    graph.RegisterStandaloneTexture(RESOURCE_ID(TextureID::FFTPingPong1), VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_RW);
 }
 
 void FFTWaterFFTPass::Initialize(RenderGraph& graph)
@@ -213,11 +213,11 @@ static VKW::ImageResourceView* fftOutput = nullptr;
 
 void FFTWaterFFTPass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    VKW::ImageResourceView* fftHxt = graph.GetTexture(TextureID::FFTHxt)->GetShaderView();
-    VKW::ImageResourceView* fftButterfly = graph.GetTexture(TextureID::FFTButterfly)->GetShaderView();
+    VKW::ImageResourceView* fftHxt = graph.GetTexture(RESOURCE_ID(TextureID::FFTHxt))->GetShaderView();
+    VKW::ImageResourceView* fftButterfly = graph.GetTexture(RESOURCE_ID(TextureID::FFTButterfly))->GetShaderView();
 
-    VKW::ImageResourceView* pingPong0 = graph.GetTexture(TextureID::FFTPingPong0)->GetShaderView();
-    VKW::ImageResourceView* pingPong1 = graph.GetTexture(TextureID::FFTPingPong1)->GetShaderView();
+    VKW::ImageResourceView* pingPong0 = graph.GetTexture(RESOURCE_ID(TextureID::FFTPingPong0))->GetShaderView();
+    VKW::ImageResourceView* pingPong1 = graph.GetTexture(RESOURCE_ID(TextureID::FFTPingPong1))->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, pingPong0->parentResource_, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, fftHxt->parentResource_, VKW::RESOURCE_ACCESS_TRANSFER_SRC, VKW::STAGE_TRANSFER);
@@ -289,8 +289,8 @@ PassID GFX::FFTInvPermutationPass::GetID() const
 
 void FFTInvPermutationPass::RegisterResources(RenderGraph& graph)
 {
-    graph.RegisterTexture(this, TextureID::FFTPingPong0, VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 0);
-    graph.RegisterTexture(this, TextureID::WaterHeight, VKW::FORMAT_R32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE, 1);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::FFTPingPong0), VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 0);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::WaterHeight), VKW::FORMAT_R32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE, 1);
 
     graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 2);
 }
@@ -301,8 +301,8 @@ void FFTInvPermutationPass::Initialize(RenderGraph& graph)
 
 void FFTInvPermutationPass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    VKW::ImageResourceView* input = graph.GetTexture(TextureID::FFTPingPong0)->GetShaderView();
-    VKW::ImageResourceView* heightMap = graph.GetTexture(TextureID::WaterHeight)->GetShaderView();
+    VKW::ImageResourceView* input = graph.GetTexture(RESOURCE_ID(TextureID::FFTPingPong0))->GetShaderView();
+    VKW::ImageResourceView* heightMap = graph.GetTexture(RESOURCE_ID(TextureID::WaterHeight))->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, input->parentResource_, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, heightMap->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);

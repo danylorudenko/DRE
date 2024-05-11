@@ -114,7 +114,7 @@ public:
 
 public:
     Pipeline();
-    Pipeline(ImportTable* table, LogicalDevice* device, Descriptor& descriptor);
+    Pipeline(ImportTable* table, LogicalDevice* device, Descriptor& descriptor, char const* name);
 
     Pipeline(Pipeline&& rhs);
     Pipeline& operator=(Pipeline&& rhs);

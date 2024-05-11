@@ -25,37 +25,37 @@ void AntiAliasingPass::RegisterResources(RenderGraph& graph)
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
     graph.RegisterTexture(this, 
-        TextureID::Velocity, 
+        RESOURCE_ID(TextureID::Velocity),
         VKW::FORMAT_R16G16_FLOAT, renderWidth, renderHeight, 
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 1);
 
     graph.RegisterTexture(this,
-        TextureID::WaterColor, 
+        RESOURCE_ID(TextureID::WaterColor),
         g_GraphicsManager->GetMainColorFormat(), renderWidth, renderHeight,
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 2);
 
     VKW::ResourceAccess historyAccess = VKW::ResourceAccess(VKW::RESOURCE_ACCESS_SHADER_SAMPLE | std::uint64_t(VKW::RESOURCE_ACCESS_SHADER_WRITE));
-    graph.RegisterStandaloneTexture(TextureID::ColorHistoryBuffer0, VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, historyAccess);
-    graph.RegisterStandaloneTexture(TextureID::ColorHistoryBuffer1, VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, historyAccess);
+    graph.RegisterStandaloneTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer0), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, historyAccess);
+    graph.RegisterStandaloneTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer1), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, historyAccess);
 
     graph.RegisterTextureSlot(this, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 3);
     graph.RegisterTextureSlot(this, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 4);
 
     graph.RegisterTexture(this,
-        TextureID::MainDepth, g_GraphicsManager->GetMainDepthFormat(), renderWidth, renderHeight,
+        RESOURCE_ID(TextureID::MainDepth), g_GraphicsManager->GetMainDepthFormat(), renderWidth, renderHeight,
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 5);
 }
 
 
 void AntiAliasingPass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    StorageTexture* historyBuffers[2] = { graph.GetTexture(TextureID::ColorHistoryBuffer0), graph.GetTexture(TextureID::ColorHistoryBuffer1) };
+    StorageTexture* historyBuffers[2] = { graph.GetTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer0)), graph.GetTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer1)) };
 
-    VKW::ImageResourceView* colorInput = graph.GetTexture(TextureID::WaterColor)->GetShaderView();
-    VKW::ImageResourceView* velocity = graph.GetTexture(TextureID::Velocity)->GetShaderView();
+    VKW::ImageResourceView* colorInput = graph.GetTexture(RESOURCE_ID(TextureID::WaterColor))->GetShaderView();
+    VKW::ImageResourceView* velocity = graph.GetTexture(RESOURCE_ID(TextureID::Velocity))->GetShaderView();
     VKW::ImageResourceView* history = historyBuffers[g_GraphicsManager->GetPrevFrameID()]->GetShaderView();
     VKW::ImageResourceView* taaOutput = historyBuffers[g_GraphicsManager->GetCurrentFrameID()]->GetShaderView();
-    VKW::ImageResourceView* mainDepth = graph.GetTexture(TextureID::MainDepth)->GetShaderView();
+    VKW::ImageResourceView* mainDepth = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth))->GetShaderView();
 
     VKW::DescriptorSet passSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
     VKW::DescriptorManager::WriteDesc writeDesc;

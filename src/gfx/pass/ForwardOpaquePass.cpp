@@ -22,28 +22,28 @@ void ForwardOpaquePass::RegisterResources(RenderGraph& graph)
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
     graph.RegisterTexture(this,
-        TextureID::ShadowMap,
+        RESOURCE_ID(TextureID::ShadowMap),
         VKW::FORMAT_D16_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT, 0);
 
     graph.RegisterUniformBuffer(this, VKW::STAGE_FRAGMENT, 1);
 
     graph.RegisterTexture(this,
-        TextureID::CausticMap,
+        RESOURCE_ID(TextureID::CausticMap),
         VKW::FORMAT_R8_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT, 2);
 
 
     graph.RegisterRenderTarget(this,
-        TextureID::ForwardColor,
+        RESOURCE_ID(TextureID::ForwardColor),
         g_GraphicsManager->GetMainColorFormat(), renderWidth, renderHeight,
         0);
 
     graph.RegisterRenderTarget(this,
-        TextureID::Velocity,
+        RESOURCE_ID(TextureID::Velocity),
         VKW::FORMAT_R16G16_FLOAT, renderWidth, renderHeight,
         1);
 
     graph.RegisterDepthOnlyTarget(this,
-        TextureID::MainDepth,
+        RESOURCE_ID(TextureID::MainDepth),
         g_GraphicsManager->GetMainDepthFormat(), renderWidth, renderHeight);
 }
 
@@ -81,11 +81,11 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
 {
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
-    VKW::ImageResourceView* colorAttachment = graph.GetTexture(TextureID::ForwardColor)->GetShaderView();
-    VKW::ImageResourceView* velocityAttachment = graph.GetTexture(TextureID::Velocity)->GetShaderView();
-    VKW::ImageResourceView* depthAttachment = graph.GetTexture(TextureID::MainDepth)->GetShaderView();
-    VKW::ImageResourceView* shadowMap       = graph.GetTexture(TextureID::ShadowMap)->GetShaderView();
-    VKW::ImageResourceView* causticMap      = graph.GetTexture(TextureID::CausticMap)->GetShaderView();
+    VKW::ImageResourceView* colorAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ForwardColor))->GetShaderView();
+    VKW::ImageResourceView* velocityAttachment = graph.GetTexture(RESOURCE_ID(TextureID::Velocity))->GetShaderView();
+    VKW::ImageResourceView* depthAttachment = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth))->GetShaderView();
+    VKW::ImageResourceView* shadowMap       = graph.GetTexture(RESOURCE_ID(TextureID::ShadowMap))->GetShaderView();
+    VKW::ImageResourceView* causticMap      = graph.GetTexture(RESOURCE_ID(TextureID::CausticMap))->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, colorAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, velocityAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);

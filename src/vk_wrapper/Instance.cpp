@@ -15,15 +15,15 @@ namespace VKW
 Instance::Instance()
     : instance_{ VK_NULL_HANDLE }
     , table_{ nullptr }
-    , debugCallback_{ VK_NULL_HANDLE }
+    , debugMessenger_{ VK_NULL_HANDLE }
 {
-    
+
 }
 
 Instance::Instance(InstanceDesc const& desc)
     : instance_{ VK_NULL_HANDLE }
     , table_{ desc.table_ }
-    , debugCallback_{ VK_NULL_HANDLE }
+    , debugMessenger_{ VK_NULL_HANDLE }
 {
     std::uint32_t layerPropertiesCount = 0;
     std::vector<VkLayerProperties> instanceLayerProperties;
@@ -104,26 +104,36 @@ Instance::Instance(InstanceDesc const& desc)
 
     // Debug callbacks setup
     if (desc.debug_) {
-        VkDebugReportCallbackCreateInfoEXT debugCallbackCreateInfo;
-        debugCallbackCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-        debugCallbackCreateInfo.pNext = nullptr;
-        debugCallbackCreateInfo.pfnCallback = &Instance::DebugCallback;
-        debugCallbackCreateInfo.flags = 
-            /*VK_DEBUG_REPORT_INFORMATION_BIT_EXT |*/
-            VK_DEBUG_REPORT_WARNING_BIT_EXT |
-            VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
-            VK_DEBUG_REPORT_ERROR_BIT_EXT/* |
-            VK_DEBUG_REPORT_DEBUG_BIT_EXT*/;
-        debugCallbackCreateInfo.pUserData = nullptr;
+        VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
 
-        VK_ASSERT(table_->vkCreateDebugReportCallbackEXT(instance_, &debugCallbackCreateInfo, nullptr, &debugCallback_));
+        debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+        debugCreateInfo.pNext = nullptr;
+        debugCreateInfo.flags = VK_FLAGS_NONE;
+        debugCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
+        debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
+        debugCreateInfo.pfnUserCallback = &Instance::DebugCallback;
+
+
+        //VkDebugReportCallbackCreateInfoEXT debugCallbackCreateInfo;
+        //debugCallbackCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+        //debugCallbackCreateInfo.pNext = nullptr;
+        //debugCallbackCreateInfo.pfnCallback = &Instance::DebugCallback;
+        //debugCallbackCreateInfo.flags = 
+        //    /*VK_DEBUG_REPORT_INFORMATION_BIT_EXT |*/
+        //    VK_DEBUG_REPORT_WARNING_BIT_EXT |
+        //    VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
+        //    VK_DEBUG_REPORT_ERROR_BIT_EXT/* |
+        //    VK_DEBUG_REPORT_DEBUG_BIT_EXT*/;
+        //debugCallbackCreateInfo.pUserData = nullptr;
+
+        VK_ASSERT(table_->vkCreateDebugUtilsMessengerEXT(instance_, &debugCreateInfo, nullptr, &debugMessenger_));
     }
 }
 
 Instance::Instance(Instance&& rhs)
     : instance_{ VK_NULL_HANDLE }
     , table_{ nullptr }
-    , debugCallback_{ VK_NULL_HANDLE }
+    , debugMessenger_{ VK_NULL_HANDLE }
 {
     operator=(std::move(rhs));
 }
@@ -148,8 +158,8 @@ VkInstance Instance::Handle() const
 
 Instance::~Instance()
 {
-    if (debugCallback_)
-        table_->vkDestroyDebugReportCallbackEXT(instance_, debugCallback_, nullptr);
+    if (debugMessenger_)
+        table_->vkDestroyDebugUtilsMessengerEXT(instance_, debugMessenger_, nullptr);
 
     if (instance_)
         table_->vkDestroyInstance(instance_, nullptr);
@@ -158,28 +168,48 @@ Instance::~Instance()
 }
 
 VkBool32 Instance::DebugCallback(
-    VkDebugReportFlagsEXT flags,
-    VkDebugReportObjectTypeEXT type,
-    std::uint64_t object,
-    std::size_t location,
-    std::int32_t code,
-    char const* layerPrefix,
-    char const* msg,
-    void* userData)
+    VkDebugUtilsMessageSeverityFlagBitsEXT          messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT                 messageTypes,
+    const VkDebugUtilsMessengerCallbackDataEXT*     pCallbackData,
+    void* pUserData)
 {
-    std::string flagsString;
-    
-    if (flags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT)
-        flagsString += "INFORMATION|";
-    if (flags & VK_DEBUG_REPORT_WARNING_BIT_EXT)
-        flagsString += "WARNING|";
-    if (flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT)
-        flagsString += "PERFORMANCE_WARNING|";
-    if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
-        flagsString += "ERROR|";
-    if (flags & VK_DEBUG_REPORT_DEBUG_BIT_EXT)
-        flagsString += "DEBUG|";
-    
+    std::stringstream output;
+
+    if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
+        output << "VERBOSE|";
+
+    if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
+        output << "INFO|";
+
+    if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+        output << "WARNING|";
+
+    if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+        output << "ERROR|";
+
+    /////////////////////
+
+    std::string typeString;
+    if (messageTypes & VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT)
+        output << "VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT";
+    if (messageTypes & VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT)
+        output << "VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT";
+    if (messageTypes & VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT)
+        output << "VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT";
+    if (messageTypes & VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT)
+        output << "VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT";
+
+    output << std::endl << "OBJECT MAPPING" << std::endl;
+
+    for (std::uint32_t i = 0; i < pCallbackData->objectCount; i++)
+    {
+        output << "\thandle=" << pCallbackData->pObjects[i].objectHandle << " (";
+        char const* name = pCallbackData->pObjects[i].pObjectName;
+        output << (name == nullptr ? "" : name) << ")" << std::endl;
+    }
+
+    output << "MESSAGE: " << pCallbackData->pMessage << std::endl << std::endl;
+    /*
 
     char const* objTypeStr = nullptr;
     switch (type) {
@@ -299,10 +329,10 @@ VkBool32 Instance::DebugCallback(
         << std::endl << "Message: " << msg
         << std::endl << "Object type: " << objTypeStr << ", id: (" << object << ")" << std::endl << std::endl;
 
-    auto str = stringstream.str();
+    */
+    auto str = output.str();
     std::cerr << str;
     OutputDebugStringA(str.c_str());
-
     return VK_FALSE;
 }
 

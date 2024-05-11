@@ -1,6 +1,7 @@
 #include <vk_wrapper\pipeline\Pipeline.hpp>
 
 #include <foundation\Common.hpp>
+#include <foundation\string\InplaceString.hpp>
 
 #include <vk_wrapper\Tools.hpp>
 
@@ -366,7 +367,7 @@ Pipeline::Pipeline()
 {
 }
 
-Pipeline::Pipeline(ImportTable* table, LogicalDevice* device, Descriptor& descriptor)
+Pipeline::Pipeline(ImportTable* table, LogicalDevice* device, Descriptor& descriptor, char const* name)
     : table_{ table }
     , device_{ device }
     , handle_{ VK_NULL_HANDLE }
@@ -386,6 +387,20 @@ Pipeline::Pipeline(ImportTable* table, LogicalDevice* device, Descriptor& descri
     {
         DRE_ASSERT(false, "Attempt to create unsupported pipeline type.");
     }
+
+#ifdef DRE_DEBUG
+    DRE::String128 nameBuffer{ "PIPELINE|"};
+    nameBuffer.Append(name);
+
+    VkDebugUtilsObjectNameInfoEXT nameInfo;
+    nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+    nameInfo.pNext = nullptr;
+    nameInfo.objectType = VK_OBJECT_TYPE_PIPELINE;
+    nameInfo.objectHandle = (std::uint64_t)handle_;
+    nameInfo.pObjectName = nameBuffer.GetData();
+
+    VK_ASSERT(table_->vkSetDebugUtilsObjectNameEXT(device_->Handle(), &nameInfo));
+#endif
 
     layout_ = descriptor.GetLayout();
     descriptor_ = descriptor;

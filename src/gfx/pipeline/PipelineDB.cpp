@@ -283,7 +283,7 @@ void PipelineDB::ReloadPipeline(char const* name)
         desc.SetComputeShader(compModule);
     }
 
-    m_Pipelines[name] = VKW::Pipeline{ m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), desc };
+    m_Pipelines[name] = VKW::Pipeline{ m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), desc, name };
 }
 
 DRE::String64 const* PipelineDB::CreatePipelineLayoutFromShader(char const* shaderName,
@@ -406,7 +406,7 @@ VKW::DescriptorSetLayout* PipelineDB::CreateDescriptorSetLayout(const char* name
 
 VKW::Pipeline* PipelineDB::CreatePipeline(char const* name, VKW::Pipeline::Descriptor& descriptor)
 {
-    return &(m_Pipelines.Emplace(name, m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), descriptor));
+    return &(m_Pipelines.Emplace(name, m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), descriptor, name));
 }
 
 VKW::PipelineLayout const* PipelineDB::GetGlobalLayout() const

@@ -34,7 +34,7 @@ PassID ImGuiRenderPass::GetID() const
 /////////////////////////
 void ImGuiRenderPass::RegisterResources(RenderGraph& graph)
 {
-    graph.RegisterRenderTarget(this, TextureID::DisplayEncodedImage, VKW::FORMAT_B8G8R8A8_UNORM,
+    graph.RegisterRenderTarget(this, RESOURCE_ID(TextureID::DisplayEncodedImage), VKW::FORMAT_B8G8R8A8_UNORM,
         g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight,
         0);
 }
@@ -50,7 +50,7 @@ ImGuiRenderPass::~ImGuiRenderPass()
 /////////////////////////
 void ImGuiRenderPass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    VKW::ImageResourceView* imGuiRT = graph.GetTexture(TextureID::DisplayEncodedImage)->GetShaderView();
+    VKW::ImageResourceView* imGuiRT = graph.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage))->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, imGuiRT->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
 

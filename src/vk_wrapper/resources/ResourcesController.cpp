@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include <foundation\string\InplaceString.hpp>
+
 #include <vk_wrapper\memory\MemoryController.hpp>
 #include <vk_wrapper\LogicalDevice.hpp>
 #include <vk_wrapper\Helper.hpp>
@@ -61,7 +63,7 @@ ResourcesController::~ResourcesController()
     }
 }
 
-BufferResource* ResourcesController::CreateBuffer(std::uint32_t size, BufferUsage usage)
+BufferResource* ResourcesController::CreateBuffer(std::uint32_t size, BufferUsage usage, char const* name)
 {
     VkBufferCreateInfo vkBufferCreateInfo;
     vkBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -143,10 +145,24 @@ BufferResource* ResourcesController::CreateBuffer(std::uint32_t size, BufferUsag
     BufferResource* resource = new BufferResource{ vkBuffer, size, memoryRegion, gpuAddress };
     buffers_.emplace(resource);
 
+#ifdef DRE_DEBUG
+    DRE::String128 nameBuffer{ "BUFFER|" };
+    nameBuffer.Append(name);
+
+    VkDebugUtilsObjectNameInfoEXT nameInfo;
+    nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+    nameInfo.pNext = nullptr;
+    nameInfo.objectType = VK_OBJECT_TYPE_BUFFER;
+    nameInfo.objectHandle = (std::uint64_t)vkBuffer;
+    nameInfo.pObjectName = nameBuffer.GetData();
+
+    VK_ASSERT(table_->vkSetDebugUtilsObjectNameEXT(device_->Handle(), &nameInfo));
+#endif
+
     return resource;
 }
 
-ImageResource* ResourcesController::CreateImage(std::uint32_t width, std::uint32_t height, Format format, ImageUsage usage)
+ImageResource* ResourcesController::CreateImage(std::uint32_t width, std::uint32_t height, Format format, ImageUsage usage, char const* name)
 {
     VkImageCreateInfo info;
     info.sType                  = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -228,6 +244,20 @@ ImageResource* ResourcesController::CreateImage(std::uint32_t width, std::uint32
 
     ImageResource* imageResource = new ImageResource{ vkImage, format, width, height, memoryRegion, info };
     images_.emplace(imageResource);
+
+#ifdef DRE_DEBUG
+    DRE::String128 nameBuffer{ "IMAGE|" };
+    nameBuffer.Append(name);
+
+    VkDebugUtilsObjectNameInfoEXT nameInfo;
+    nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+    nameInfo.pNext = nullptr;
+    nameInfo.objectType = VK_OBJECT_TYPE_IMAGE;
+    nameInfo.objectHandle = (std::uint64_t)vkImage;
+    nameInfo.pObjectName = nameBuffer.GetData();
+
+    VK_ASSERT(table_->vkSetDebugUtilsObjectNameEXT(device_->Handle(), &nameInfo));
+#endif
 
     return imageResource;
 }

@@ -36,7 +36,7 @@ public:
         return std::strcmp(m_Data, static_cast<TChar const*>(rhs)) != 0;
     }
 
-    explicit operator TChar const* () const
+    /*explicit */operator TChar const* () const
     {
         return m_Data;
     }

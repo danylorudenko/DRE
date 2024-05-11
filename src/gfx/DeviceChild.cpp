@@ -7,7 +7,8 @@ namespace GFX
 
 DeviceChild::DeviceChild(VKW::Device* device)
     : m_ParentDevice(device)
-{}
+{
+}
 
 DeviceChild::DeviceChild(DeviceChild&& rhs)
     : m_ParentDevice{ nullptr }

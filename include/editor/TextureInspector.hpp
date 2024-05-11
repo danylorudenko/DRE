@@ -8,6 +8,7 @@
 namespace GFX
 {
 class TextureBank;
+class GraphResourcesManager;
 }
 
 namespace EDITOR
@@ -16,7 +17,7 @@ namespace EDITOR
 class TextureInspector : public BaseEditor
 {
 public:
-    TextureInspector(BaseEditor* rootEditor, EditorFlags flags, GFX::TextureBank* textureBank);
+    TextureInspector(BaseEditor* rootEditor, EditorFlags flags, GFX::TextureBank* textureBank, GFX::GraphResourcesManager* graphResources);
     TextureInspector(TextureInspector&& rhs);
 
     TextureInspector& operator=(TextureInspector&& rhs);
@@ -28,7 +29,8 @@ public:
     virtual void Render() override;
 
 private:
-    GFX::TextureBank* m_TextureBank;
+    GFX::TextureBank*           m_TextureBank;
+    GFX::GraphResourcesManager* m_GraphResources;
 };
 
 }

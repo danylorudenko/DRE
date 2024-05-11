@@ -18,16 +18,16 @@ GraphDescriptorManager::GraphDescriptorManager(VKW::Device* device, GraphResourc
 {
 }
 
-void GraphDescriptorManager::RegisterTexture(PassID pass, TextureID texture, VKW::ResourceAccess access, VKW::DescriptorStage stages, std::uint8_t binding)
+void GraphDescriptorManager::RegisterTexture(PassID pass, char const* id, VKW::ResourceAccess access, VKW::DescriptorStage stages, std::uint8_t binding)
 {
     SetInfo& setInfo = m_DescriptorsInfo[pass];
-    setInfo.descriptorInfos.EmplaceBack(texture, access, stages, 0u, 0u, std::uint8_t(1), binding);
+    setInfo.descriptorInfos.EmplaceBack(id, access, stages, 0u, 0u, std::uint8_t(1), binding);
 }
 
-void GraphDescriptorManager::RegisterBuffer(PassID pass, BufferID buffer, VKW::ResourceAccess access, VKW::DescriptorStage stages, std::uint8_t binding)
+void GraphDescriptorManager::RegisterBuffer(PassID pass, char const* id, VKW::ResourceAccess access, VKW::DescriptorStage stages, std::uint8_t binding)
 {
     SetInfo& setInfo = m_DescriptorsInfo[pass];
-    setInfo.descriptorInfos.EmplaceBack(buffer, access, stages, 0u, 0u, std::uint8_t(0), binding);
+    setInfo.descriptorInfos.EmplaceBack(id, access, stages, 0u, 0u, std::uint8_t(0), binding);
 }
 
 void GraphDescriptorManager::RegisterUniformBuffer(PassID pass, VKW::DescriptorStage stages, std::uint8_t binding)
@@ -76,20 +76,20 @@ void GraphDescriptorManager::InitDescriptors()
                 case VKW::RESOURCE_ACCESS_SHADER_RW:
                 case VKW::RESOURCE_ACCESS_SHADER_READ:
                     layoutDesc.Add(VKW::DESCRIPTOR_TYPE_STORAGE_IMAGE, info.m_Binding, info.m_Stages);
-                    if (info.mu_TextureID != TextureID::ID_None)
-                        writeDesc.AddStorageImage(m_ResourcesManager->GetTexture(info.mu_TextureID)->GetShaderView(), info.m_Binding);
+                    if (info.m_ResourceID != RESOURCE_ID(TextureID::ID_None))
+                        writeDesc.AddStorageImage(m_ResourcesManager->GetTexture(info.m_ResourceID)->GetShaderView(), info.m_Binding);
                     break;
                 case VKW::RESOURCE_ACCESS_SHADER_SAMPLE:
                     layoutDesc.Add(VKW::DESCRIPTOR_TYPE_TEXTURE, info.m_Binding, info.m_Stages);
-                    if (info.mu_TextureID != TextureID::ID_None)
-                        writeDesc.AddSampledImage(m_ResourcesManager->GetTexture(info.mu_TextureID)->GetShaderView(), info.m_Binding);
+                    if (info.m_ResourceID != RESOURCE_ID(TextureID::ID_None))
+                        writeDesc.AddSampledImage(m_ResourcesManager->GetTexture(info.m_ResourceID)->GetShaderView(), info.m_Binding);
                     break;
                 }
             }
             else
             {
                 layoutDesc.Add(VKW::DESCRIPTOR_TYPE_STORAGE_BUFFER, info.m_Binding, info.m_Stages);
-                writeDesc.AddStorageBuffer(m_ResourcesManager->GetBuffer(info.mu_BufferID)->GetResource(), info.m_Binding);
+                writeDesc.AddStorageBuffer(m_ResourcesManager->GetBuffer(info.m_ResourceID)->GetResource(), info.m_Binding);
             }
         }
 
@@ -126,6 +126,11 @@ void GraphDescriptorManager::InitDescriptors()
         std::sprintf(name, "pass_layout_%i", int(*pair.key));
         perPassDescriptors.m_PipelineLayout = m_PipelineDB->CreatePipelineLayout(name, pipelinelayoutDesc);
     });
+}
+
+void GraphDescriptorManager::DestroyDescriptors()
+{
+    m_PassDescriptors.Clear();
 }
 
 VKW::DescriptorSet GraphDescriptorManager::GetPassDescriptorSet(PassID pass, FrameID id)

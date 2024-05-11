@@ -22,27 +22,27 @@ void DebugPass::RegisterResources(RenderGraph& graph)
 {
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
-    graph.RegisterTexture(this, TextureID::DisplayEncodedImage, VKW::FORMAT_B8G8R8A8_UNORM,
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DisplayEncodedImage), VKW::FORMAT_B8G8R8A8_UNORM,
         renderWidth, renderHeight,
         VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE,
         0);
 
-    graph.RegisterTexture(this, TextureID::FFTH0, VKW::FORMAT_R32G32B32A32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 1);
-    graph.RegisterTexture(this, TextureID::FFTHxt, VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 2);
-    graph.RegisterTexture(this, TextureID::WaterHeight, VKW::FORMAT_R32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 3);
-    graph.RegisterTexture(this, TextureID::FFTPingPong0, VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 4);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::FFTH0), VKW::FORMAT_R32G32B32A32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 1);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::FFTHxt), VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 2);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::WaterHeight), VKW::FORMAT_R32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 3);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::FFTPingPong0), VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 4);
 
     //graph.RegisterPushConstant(this, 8, VKW::STAGE_COMPUTE);
 }
 
 void DebugPass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    VKW::ImageResourceView* output = graph.GetTexture(TextureID::DisplayEncodedImage)->GetShaderView();
+    VKW::ImageResourceView* output = graph.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage))->GetShaderView();
 
-    VKW::ImageResourceView* fftH0 = graph.GetTexture(TextureID::FFTH0)->GetShaderView();
-    VKW::ImageResourceView* fftHxt = graph.GetTexture(TextureID::FFTHxt)->GetShaderView();
-    VKW::ImageResourceView* height = graph.GetTexture(TextureID::WaterHeight)->GetShaderView();
-    VKW::ImageResourceView* pingPong = graph.GetTexture(TextureID::FFTPingPong0)->GetShaderView();
+    VKW::ImageResourceView* fftH0 = graph.GetTexture(RESOURCE_ID(TextureID::FFTH0))->GetShaderView();
+    VKW::ImageResourceView* fftHxt = graph.GetTexture(RESOURCE_ID(TextureID::FFTHxt))->GetShaderView();
+    VKW::ImageResourceView* height = graph.GetTexture(RESOURCE_ID(TextureID::WaterHeight))->GetShaderView();
+    VKW::ImageResourceView* pingPong = graph.GetTexture(RESOURCE_ID(TextureID::FFTPingPong0))->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, output->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, fftH0->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);

@@ -21,14 +21,14 @@ void CausticPass::Initialize(RenderGraph& graph)
 void CausticPass::RegisterResources(RenderGraph& graph)
 {
     graph.RegisterTexture(this,
-        TextureID::CausticEnvMap,
+        RESOURCE_ID(TextureID::CausticEnvMap),
         VKW::FORMAT_R16G16B16A16_FLOAT, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_VERTEX,
         1);
 
     graph.RegisterUniformBuffer(this, VKW::STAGE_VERTEX, 0);
 
     graph.RegisterRenderTarget(this,
-        TextureID::CausticMap,
+        RESOURCE_ID(TextureID::CausticMap),
         VKW::FORMAT_R8_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT,
         0);
 }
@@ -57,9 +57,9 @@ void WaterCausticDelegate(RenderableObject& obj, VKW::Context& context, VKW::Des
 
 void CausticPass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    VKW::ImageResourceView* causticAttachment = graph.GetTexture(TextureID::CausticMap)->GetShaderView();
-    VKW::ImageResourceView* shadowAttachment = graph.GetTexture(TextureID::ShadowMap)->GetShaderView();
-    VKW::ImageResourceView* envMapAttachment = graph.GetTexture(TextureID::CausticEnvMap)->GetShaderView();
+    VKW::ImageResourceView* causticAttachment = graph.GetTexture(RESOURCE_ID(TextureID::CausticMap))->GetShaderView();
+    VKW::ImageResourceView* shadowAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ShadowMap))->GetShaderView();
+    VKW::ImageResourceView* envMapAttachment = graph.GetTexture(RESOURCE_ID(TextureID::CausticEnvMap))->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, causticAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, shadowAttachment->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_ALL_GRAPHICS);

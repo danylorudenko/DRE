@@ -69,7 +69,7 @@ PersistentStorage::PersistentStorage(VKW::Device* device, UploadArena* uploadAre
     , m_Size{ size }
     , m_FreeOffset{ 0 }
 {
-    VKW::BufferResource* resource = device->GetResourcesController()->CreateBuffer(size, VKW::BufferUsage::STORAGE);
+    VKW::BufferResource* resource = device->GetResourcesController()->CreateBuffer(size, VKW::BufferUsage::STORAGE, "persistent_storage");
     m_Buffer = StorageBuffer{ device, resource };
 }
 

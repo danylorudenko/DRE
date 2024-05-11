@@ -20,12 +20,9 @@ GraphResourcesManager::GraphResourcesManager(VKW::Device* device)
 
 GraphResourcesManager::~GraphResourcesManager() = default;
 
-void GraphResourcesManager::RegisterTexture(TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access)
+void GraphResourcesManager::RegisterTexture(char const* id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access)
 {
     AccumulatedInfo& info = m_AccumulatedTextureInfo[id];
-
-    //if (id == TextureID::FFTHxt)
-    //    DebugBreak();
 
     DRE_DEBUG_ONLY(if (info.access != VKW::RESOURCE_ACCESS_UNDEFINED))
         DRE_ASSERT(info.size0 == width && info.size1 == height && info.depth == 1, "Different sized specified for same resource");
@@ -37,7 +34,7 @@ void GraphResourcesManager::RegisterTexture(TextureID id, VKW::Format format, st
     info.depth = 1;
 }
 
-void GraphResourcesManager::RegisterBuffer(BufferID id, std::uint32_t size, VKW::ResourceAccess access)
+void GraphResourcesManager::RegisterBuffer(char const* id, std::uint32_t size, VKW::ResourceAccess access)
 {
     AccumulatedInfo& info = m_AccumulatedBufferInfo[id];
 
@@ -51,7 +48,7 @@ void GraphResourcesManager::RegisterBuffer(BufferID id, std::uint32_t size, VKW:
     info.depth = 0;
 }
 
-void GraphResourcesManager::PrepareResources()
+void GraphResourcesManager::InitResources()
 {
     m_AccumulatedTextureInfo.ForEach([this](auto& pair)
     {
@@ -87,7 +84,7 @@ void GraphResourcesManager::PrepareResources()
         //if (*pair.key == TextureID::FFTHxt)
         //    DebugBreak();
 
-        VKW::ImageResource* image    = m_Device->GetResourcesController()->CreateImage(info.size0, info.size1, info.format, usage);
+        VKW::ImageResource* image    = m_Device->GetResourcesController()->CreateImage(info.size0, info.size1, info.format, usage, *pair.key);
 
 
         VkImageSubresourceRange range = VKW::HELPER::DefaultImageSubresourceRange(imageAspect);
@@ -111,19 +108,23 @@ void GraphResourcesManager::PrepareResources()
         DRE_ASSERT(info.access | VKW::RESOURCE_ACCESS_SHADER_RW, "If there's no shader access, why we need this buffer?");
 
         // create storage buffer
-        VKW::BufferResource* buffer = m_Device->GetResourcesController()->CreateBuffer(info.size0, VKW::BufferUsage::STORAGE);
+        VKW::BufferResource* buffer = m_Device->GetResourcesController()->CreateBuffer(info.size0, VKW::BufferUsage::STORAGE, *pair.key);
         m_StorageBuffers.Emplace(*pair.key, GraphBuffer{ StorageBuffer{ m_Device, buffer }, info });
-        
     });
-
 }
 
-StorageBuffer* GraphResourcesManager::GetBuffer(BufferID id)
+void GraphResourcesManager::DestroyResources()
+{
+    m_StorageBuffers.Clear();
+    m_StorageTextures.Clear();
+}
+
+StorageBuffer* GraphResourcesManager::GetBuffer(char const* id)
 {
     return &m_StorageBuffers.Find(id).value->buffer;
 }
 
-StorageTexture* GraphResourcesManager::GetTexture(TextureID id)
+StorageTexture* GraphResourcesManager::GetTexture(char const* id)
 {
     return &m_StorageTextures.Find(id).value->texture;
 }

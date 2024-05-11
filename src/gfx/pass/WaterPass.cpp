@@ -22,38 +22,38 @@ void WaterPass::RegisterResources(RenderGraph& graph)
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
     graph.RegisterTexture(this,
-        TextureID::ShadowMap,
+        RESOURCE_ID(TextureID::ShadowMap),
         VKW::FORMAT_D16_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT, 0);
 
     graph.RegisterTexture(this,
-        TextureID::ForwardColor,
+        RESOURCE_ID(TextureID::ForwardColor),
         g_GraphicsManager->GetMainColorFormat(), renderWidth, renderHeight,
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT, 1);
 
     graph.RegisterTexture(this,
-        TextureID::MainDepth,
+        RESOURCE_ID(TextureID::MainDepth),
         g_GraphicsManager->GetMainDepthFormat(), renderWidth, renderHeight,
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT, 2);
 
     graph.RegisterTexture(this,
-        TextureID::WaterHeight,
+        RESOURCE_ID(TextureID::WaterHeight),
         VKW::FORMAT_R32_FLOAT, C_WATER_DIM, C_WATER_DIM,
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_VERTEX, 3);
 
     graph.RegisterUniformBuffer(this, VKW::STAGE_FRAGMENT, 4);
 
     graph.RegisterRenderTarget(this,
-        TextureID::WaterColor,
+        RESOURCE_ID(TextureID::WaterColor),
         g_GraphicsManager->GetMainColorFormat(), renderWidth, renderHeight,
         0);
 
     graph.RegisterRenderTarget(this,
-        TextureID::Velocity,
+        RESOURCE_ID(TextureID::Velocity),
         VKW::FORMAT_R16G16_FLOAT, renderWidth, renderHeight,
         1);
 
     graph.RegisterDepthOnlyTarget(this,
-        TextureID::MainDepth,
+        RESOURCE_ID(TextureID::MainDepth),
         g_GraphicsManager->GetMainDepthFormat(), renderWidth, renderHeight);
 }
 
@@ -82,12 +82,12 @@ void WaterObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::Desc
 
 void WaterPass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    VKW::ImageResourceView* waterAttachment = graph.GetTexture(TextureID::WaterColor)->GetShaderView();
-    VKW::ImageResourceView* velocityAttachment = graph.GetTexture(TextureID::Velocity)->GetShaderView();
-    VKW::ImageResourceView* depthAttachment = graph.GetTexture(TextureID::MainDepth)->GetShaderView();
-    VKW::ImageResourceView* shadowMap       = graph.GetTexture(TextureID::ShadowMap)->GetShaderView();
-    VKW::ImageResourceView* heightMap       = graph.GetTexture(TextureID::WaterHeight)->GetShaderView();
-    VKW::ImageResourceView* color           = graph.GetTexture(TextureID::ForwardColor)->GetShaderView();
+    VKW::ImageResourceView* waterAttachment = graph.GetTexture(RESOURCE_ID(TextureID::WaterColor))->GetShaderView();
+    VKW::ImageResourceView* velocityAttachment = graph.GetTexture(RESOURCE_ID(TextureID::Velocity))->GetShaderView();
+    VKW::ImageResourceView* depthAttachment = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth))->GetShaderView();
+    VKW::ImageResourceView* shadowMap       = graph.GetTexture(RESOURCE_ID(TextureID::ShadowMap))->GetShaderView();
+    VKW::ImageResourceView* heightMap       = graph.GetTexture(RESOURCE_ID(TextureID::WaterHeight))->GetShaderView();
+    VKW::ImageResourceView* color           = graph.GetTexture(RESOURCE_ID(TextureID::ForwardColor))->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, waterAttachment->parentResource_, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, color->parentResource_, VKW::RESOURCE_ACCESS_TRANSFER_SRC, VKW::STAGE_TRANSFER);

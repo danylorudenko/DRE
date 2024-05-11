@@ -21,11 +21,11 @@ void ShadowPass::Initialize(RenderGraph& graph)
 void ShadowPass::RegisterResources(RenderGraph& graph)
 {
     graph.RegisterRenderTarget(this,
-        TextureID::CausticEnvMap,
+        RESOURCE_ID(TextureID::CausticEnvMap),
         VKW::FORMAT_R16G16B16A16_FLOAT, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, 0);
 
     graph.RegisterDepthOnlyTarget(this,
-        TextureID::ShadowMap,
+        RESOURCE_ID(TextureID::ShadowMap),
         VKW::FORMAT_D16_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_WIDTH);
 }
 
@@ -50,8 +50,8 @@ void ShadowObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::Des
 
 void ShadowPass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    VKW::ImageResourceView* wposAttachment = graph.GetTexture(TextureID::CausticEnvMap)->GetShaderView();
-    VKW::ImageResourceView* depthAttachment = graph.GetTexture(TextureID::ShadowMap)->GetShaderView();
+    VKW::ImageResourceView* wposAttachment = graph.GetTexture(RESOURCE_ID(TextureID::CausticEnvMap))->GetShaderView();
+    VKW::ImageResourceView* depthAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ShadowMap))->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, wposAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->parentResource_, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);

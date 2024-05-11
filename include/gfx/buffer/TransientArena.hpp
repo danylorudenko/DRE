@@ -55,9 +55,12 @@ public:
 
     void ResetAllocations               (FrameID contextID);
 
+
 private:
     std::uint32_t m_TransientBuffersSize;
     std::uint8_t  m_TransientBuffersCount;
+
+    char const* ArenaName               ();
 
     struct AllocationContext
     {
@@ -91,7 +94,9 @@ TransientArena<USAGE>::TransientArena(VKW::Device* device, std::uint32_t size)
     {
         AllocationContext& allocContext = m_AllocationContexts[i];
 
-        allocContext.m_Buffer = controller.CreateBuffer(size, USAGE);
+        char name[20];
+        std::sprintf(name, ArenaName(), i);
+        allocContext.m_Buffer = controller.CreateBuffer(size, USAGE, name);
         allocContext.m_MappedBufferBegin = DRE::PtrAdd(allocContext.m_Buffer->GetMemoryPage()->mappedMemoryPtr_, allocContext.m_Buffer->memory_.offset_);
         allocContext.m_CurrentBufferPtr = allocContext.m_MappedBufferBegin;
     }
@@ -195,7 +200,7 @@ inline void TransientArena<VKW::BufferUsage::READBACK_BUFFER>::FlushCaches(typen
 {
     AllocationContext& allocationContext = m_AllocationContexts[allocation.m_FrameID];
 
-    if(allocationContext.m_Buffer->GetMemoryPage()->propertyFlags_ & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+    if (allocationContext.m_Buffer->GetMemoryPage()->propertyFlags_ & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
         return;
 
     VkMappedMemoryRange range{};
@@ -251,6 +256,25 @@ template<VKW::BufferUsage USAGE>
 void TransientArena<USAGE>::Allocation::InvalidateRanges()
 {
     m_Arena->InvalidateRanges(*this);
+}
+
+
+template<>
+inline char const* TransientArena<VKW::BufferUsage::UNIFORM>::ArenaName()
+{
+    return "arena_uniform%u";
+}
+
+template<>
+inline char const* TransientArena<VKW::BufferUsage::READBACK_BUFFER>::ArenaName()
+{
+    return "arena_readback%u";
+}
+
+template<>
+inline char const* TransientArena<VKW::BufferUsage::UPLOAD_BUFFER>::ArenaName()
+{
+    return "arena_upload%u";
 }
 
 ////////////////////////////////////////////

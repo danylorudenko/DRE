@@ -1,6 +1,7 @@
 #pragma once
 
 #include <foundation\Container\InplaceHashTable.hpp>
+#include <foundation\string\InplaceString.hpp>
 
 #include <vk_wrapper\Format.hpp>
 #include <vk_wrapper\pipeline\Dependency.hpp>
@@ -22,20 +23,6 @@ class GraphResourcesManager
     , public NonMovable
 {
 public:
-    GraphResourcesManager(VKW::Device* device);
-
-    virtual ~GraphResourcesManager();
-
-    void RegisterTexture(TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access);
-    void RegisterBuffer(BufferID id, std::uint32_t size, VKW::ResourceAccess access);
-
-    void PrepareResources();
-
-    StorageBuffer*  GetBuffer    (BufferID id);
-    StorageTexture* GetTexture   (TextureID id);
-
-
-private:
     struct AccumulatedInfo
     {
         VKW::ResourceAccess access  = VKW::RESOURCE_ACCESS_UNDEFINED;
@@ -67,13 +54,35 @@ private:
         AccumulatedInfo info;
     };
 
+
+public:
+    GraphResourcesManager(VKW::Device* device);
+
+    virtual ~GraphResourcesManager();
+
+    void RegisterTexture(char const* id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access);
+    void RegisterBuffer(char const* id, std::uint32_t size, VKW::ResourceAccess access);
+
+    void InitResources();
+    void DestroyResources();
+
+    StorageBuffer*  GetBuffer    (char const* id);
+    StorageTexture* GetTexture   (char const* id);
+
+    template<typename TDelegate>
+    void ForEachTexture(TDelegate func)
+    {
+        m_StorageTextures.ForEach(func);
+    }
+
+private:
     VKW::Device*        m_Device;
 
-    DRE::InplaceHashTable<BufferID,  GraphBuffer>  m_StorageBuffers;
-    DRE::InplaceHashTable<TextureID, GraphTexture> m_StorageTextures;
+    DRE::InplaceHashTable<DRE::String32, GraphBuffer>  m_StorageBuffers;
+    DRE::InplaceHashTable<DRE::String32, GraphTexture> m_StorageTextures;
 
-    DRE::InplaceHashTable<BufferID,  AccumulatedInfo> m_AccumulatedBufferInfo;
-    DRE::InplaceHashTable<TextureID, AccumulatedInfo> m_AccumulatedTextureInfo;
+    DRE::InplaceHashTable<DRE::String32, AccumulatedInfo> m_AccumulatedBufferInfo;
+    DRE::InplaceHashTable<DRE::String32, AccumulatedInfo> m_AccumulatedTextureInfo;
 };
 
 }

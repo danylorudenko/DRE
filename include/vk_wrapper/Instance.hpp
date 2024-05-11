@@ -35,21 +35,17 @@ public:
     ~Instance();
 
     static VKAPI_ATTR VkBool32 DebugCallback(
-        VkDebugReportFlagsEXT flags,
-        VkDebugReportObjectTypeEXT type,
-        std::uint64_t object,
-        std::size_t location,
-        std::int32_t code,
-        char const* layerPrefix,
-        char const* msg,
-        void* userData
+        VkDebugUtilsMessageSeverityFlagBitsEXT       messageSeverity,
+        VkDebugUtilsMessageTypeFlagsEXT              messageTypes,
+        const VkDebugUtilsMessengerCallbackDataEXT*  pCallbackData,
+        void* pUserData
     );
 
 
 private:
     VKW::ImportTable* table_;
     VkInstance instance_;
-    VkDebugReportCallbackEXT debugCallback_;
+    VkDebugUtilsMessengerEXT debugMessenger_;
 };
 
 }

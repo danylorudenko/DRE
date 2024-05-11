@@ -30,9 +30,15 @@ public:
 
     inline VKW::ImageResourceView* GetShaderView() const { return m_ShaderView; }
 
+    VKW::DescriptorSet GetImGuiDescriptor() const;
+
 private:
     VKW::ImageResourceView*         m_ShaderView;
     VKW::TextureDescriptorIndex     m_ShaderGlobalDescriptor;
+
+#ifdef DRE_IMGUI_CUSTOM_TEXTURE
+    VKW::DescriptorSet              m_ImGuiDescriptorSet;
+#endif
 };
 
 }

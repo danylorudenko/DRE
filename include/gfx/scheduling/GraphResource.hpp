@@ -36,6 +36,7 @@ enum class BufferID
     ID_MAX
 };
 
+#define RESOURCE_ID(id) #id
 
 }
 

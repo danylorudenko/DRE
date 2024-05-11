@@ -25,38 +25,38 @@ RenderGraph::~RenderGraph()
     }
 }
 
-void RenderGraph::RegisterTexture(BasePass* pass, TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding)
+void RenderGraph::RegisterTexture(BasePass* pass, char const* id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding)
 {
     m_ResourcesManager.RegisterTexture(id, format, width, height, access);
     m_DescriptorManager.RegisterTexture(pass->GetID(), id, access, VKW::StageToDescriptorStage(stage), binding);
 }
 
-void RenderGraph::RegisterStandaloneTexture(TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access)
+void RenderGraph::RegisterStandaloneTexture(char const* id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access)
 {
     m_ResourcesManager.RegisterTexture(id, format, width, height, access);
 }
 
 void RenderGraph::RegisterTextureSlot(BasePass* pass, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding)
 {
-    m_DescriptorManager.RegisterTexture(pass->GetID(), TextureID::ID_None, access, VKW::StageToDescriptorStage(stage), binding);
+    m_DescriptorManager.RegisterTexture(pass->GetID(), RESOURCE_ID(TextureID::ID_None), access, VKW::StageToDescriptorStage(stage), binding);
 }
 
-void RenderGraph::RegisterRenderTarget(BasePass* pass, TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height, std::uint32_t)
+void RenderGraph::RegisterRenderTarget(BasePass* pass, char const* id, VKW::Format format, std::uint32_t width, std::uint32_t height, std::uint32_t)
 {
     m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT);
 }
 
-void RenderGraph::RegisterDepthStencilTarget(BasePass* pass, TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height)
+void RenderGraph::RegisterDepthStencilTarget(BasePass* pass, char const* id, VKW::Format format, std::uint32_t width, std::uint32_t height)
 {
     m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT);
 }
 
-void RenderGraph::RegisterDepthOnlyTarget(BasePass* pass, TextureID id, VKW::Format format, std::uint32_t width, std::uint32_t height)
+void RenderGraph::RegisterDepthOnlyTarget(BasePass* pass, char const* id, VKW::Format format, std::uint32_t width, std::uint32_t height)
 {
     m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT);
 }
 
-void RenderGraph::RegisterStorageBuffer(BasePass* pass, BufferID id, std::uint32_t size, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding)
+void RenderGraph::RegisterStorageBuffer(BasePass* pass, char const* id, std::uint32_t size, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding)
 {
     m_ResourcesManager.RegisterBuffer(id, size, access);
     m_DescriptorManager.RegisterBuffer(pass->GetID(), id, access, VKW::StageToDescriptorStage(stage), binding);
@@ -72,12 +72,12 @@ void RenderGraph::RegisterPushConstant(BasePass* pass, std::uint32_t size, VKW::
     m_DescriptorManager.RegisterPushConstant(pass->GetID(), size, VKW::StageToDescriptorStage(stage));
 }
 
-StorageTexture* RenderGraph::GetTexture(TextureID id)
+StorageTexture* RenderGraph::GetTexture(char const* id)
 {
     return m_ResourcesManager.GetTexture(id);
 }
 
-StorageBuffer* RenderGraph::GetBuffer(BufferID id)
+StorageBuffer* RenderGraph::GetBuffer(char const* id)
 {
     return m_ResourcesManager.GetBuffer(id);
 }
@@ -106,13 +106,19 @@ void RenderGraph::ParseGraph()
 
 void RenderGraph::InitGraphResources()
 {
-    m_ResourcesManager.PrepareResources();
+    m_ResourcesManager.InitResources();
     m_DescriptorManager.InitDescriptors();
 
     for (std::uint32_t i = 0, size = m_Passes.Size(); i < size; i++)
     {
         m_Passes[i]->Initialize(*this);
     }
+}
+
+void RenderGraph::UnloadGraphResources()
+{
+    m_DescriptorManager.DestroyDescriptors();
+    m_ResourcesManager.DestroyResources();
 }
 
 VKW::DescriptorSet RenderGraph::GetPassDescriptorSet(PassID pass, FrameID frameID)
@@ -132,7 +138,12 @@ StorageTexture& RenderGraph::Render(VKW::Context& context)
         m_Passes[i]->Render(*this, context);
     }
 
-    return *m_ResourcesManager.GetTexture(TextureID::DisplayEncodedImage);
+    return *m_ResourcesManager.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage));
+}
+
+GraphResourcesManager& RenderGraph::GetResourcesManager()
+{
+    return m_ResourcesManager;
 }
 
 }

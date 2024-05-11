@@ -46,10 +46,10 @@ public:
     ResourcesController(ResourcesController&& rhs);
     ResourcesController& operator=(ResourcesController&& rhs);
 
-    BufferResource* CreateBuffer(std::uint32_t size, BufferUsage usage);
+    BufferResource* CreateBuffer(std::uint32_t size, BufferUsage usage, char const* name);
     void FreeBuffer(BufferResource* handle);
 
-    ImageResource* CreateImage(std::uint32_t width, std::uint32_t height, Format format, ImageUsage usage);
+    ImageResource* CreateImage(std::uint32_t width, std::uint32_t height, Format format, ImageUsage usage, char const* name);
     void FreeImage(ImageResource* handle);
 
     ImageResourceView* ViewImageAs(
