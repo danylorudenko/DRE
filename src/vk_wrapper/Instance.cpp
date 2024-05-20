@@ -1,5 +1,7 @@
 #include <vk_wrapper\Instance.hpp>
 
+#include <foundation\Common.hpp>
+
 #include <utility>
 #include <algorithm>
 #include <string>
@@ -175,6 +177,8 @@ VkBool32 Instance::DebugCallback(
 {
     std::stringstream output;
 
+	output << "[";
+
     if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
         output << "VERBOSE|";
 
@@ -199,7 +203,7 @@ VkBool32 Instance::DebugCallback(
     if (messageTypes & VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT)
         output << "VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT";
 
-    output << std::endl << "OBJECT MAPPING" << std::endl;
+    output << ']' << std::endl << "[OBJECT MAPPING]:" << std::endl;
 
     for (std::uint32_t i = 0; i < pCallbackData->objectCount; i++)
     {
@@ -330,9 +334,15 @@ VkBool32 Instance::DebugCallback(
         << std::endl << "Object type: " << objTypeStr << ", id: (" << object << ")" << std::endl << std::endl;
 
     */
+
     auto str = output.str();
     std::cerr << str;
     OutputDebugStringA(str.c_str());
+
+#ifdef DRE_DEBUG
+    DebugBreak();
+#endif
+
     return VK_FALSE;
 }
 

@@ -142,7 +142,7 @@ BufferResource* ResourcesController::CreateBuffer(std::uint32_t size, BufferUsag
     }
 #endif
 
-    BufferResource* resource = new BufferResource{ vkBuffer, size, memoryRegion, gpuAddress };
+    BufferResource* resource = new BufferResource{ vkBuffer, size, memoryRegion, gpuAddress, name };
     buffers_.emplace(resource);
 
 #ifdef DRE_DEBUG
@@ -242,7 +242,7 @@ ImageResource* ResourcesController::CreateImage(std::uint32_t width, std::uint32
     MemoryRegion memoryRegion = memoryController_->AllocateMemoryRegion(memoryDesc);
     VK_ASSERT(table_->vkBindImageMemory(device_->Handle(), vkImage, memoryRegion.page_->deviceMemory_, memoryRegion.offset_));
 
-    ImageResource* imageResource = new ImageResource{ vkImage, format, width, height, memoryRegion, info };
+    ImageResource* imageResource = new ImageResource{ vkImage, format, width, height, memoryRegion, info, name };
     images_.emplace(imageResource);
 
 #ifdef DRE_DEBUG

@@ -65,6 +65,7 @@ void ImGuiRenderPass::Render(RenderGraph& graph, VKW::Context& context)
     for (std::uint32_t i = 0, size = imGuiSyncQueue.Size(); i < size; i++)
     {
         g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, imGuiSyncQueue[i]->GetResource(), VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT);
+		std::cerr << "ImGuiRenderPass barrier: " << imGuiSyncQueue[i]->GetResource()->name_ << std::endl;
     }
     imGuiSyncQueue.Clear();
 #endif

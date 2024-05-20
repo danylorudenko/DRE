@@ -2,7 +2,7 @@
 
 #include <vulkan\vulkan.h>
 
-#include <limits>
+#include <foundation\string\InplaceString.hpp>
 
 #include <vk_wrapper\Format.hpp>
 #include <vk_wrapper\memory\MemoryPage.hpp>
@@ -13,12 +13,16 @@ namespace VKW
 
 struct BufferResource
 {
-    BufferResource(VkBuffer handle, std::uint32_t size, MemoryRegion const& memory, std::uint64_t gpuAddress);
+    BufferResource(VkBuffer handle, std::uint32_t size, MemoryRegion const& memory, std::uint64_t gpuAddress, char const* name);
 
     VkBuffer        handle_     = VK_NULL_HANDLE;
     std::uint32_t   size_       = 0;
     MemoryRegion    memory_;
     std::uint64_t   gpuAddress_ = 0;
+
+#ifdef DRE_DEBUG
+    DRE::String128  name_;
+#endif
 
     MemoryPage* GetMemoryPage() const;
 };
@@ -34,7 +38,7 @@ struct SubbufferResource
 
 struct ImageResource
 {
-    ImageResource(VkImage handle, Format format, std::uint32_t width, std::uint32_t height, MemoryRegion const& memory, VkImageCreateInfo const& createInfo);
+    ImageResource(VkImage handle, Format format, std::uint32_t width, std::uint32_t height, MemoryRegion const& memory, VkImageCreateInfo const& createInfo, char const* name);
 
     VkImage             handle_ = VK_NULL_HANDLE;
     Format              format_ = FORMAT_UNDEFINED;
@@ -42,6 +46,10 @@ struct ImageResource
     std::uint32_t       height_ = 0;
     MemoryRegion        memory_;
     VkImageCreateInfo   createInfo_;
+
+#ifdef DRE_DEBUG
+    DRE::String128      name_;
+#endif
 
     MemoryPage* GetMemoryPage() const;
 };

@@ -77,7 +77,7 @@ PresentationController::PresentationController(ImportTable* table, LogicalDevice
     swapchainReleaseSemaphoresPool_.Init(swapchainImagesCount + 2, table_, device_, semaphoreInfo);
 
     for (std::uint8_t i = 0; i < swapchainImagesCount; ++i) {
-        swapchainResources_.EmplaceBack(VKW::ImageResource{ swapchain->GetImage(i).image_, swapchain->GetFormat(), swapchain->GetWidth(), swapchain->GetHeight(), VKW::MemoryRegion{}, swapchain->GetImageCreateInfo() });
+        swapchainResources_.EmplaceBack(VKW::ImageResource{ swapchain->GetImage(i).image_, swapchain->GetFormat(), swapchain->GetWidth(), swapchain->GetHeight(), VKW::MemoryRegion{}, swapchain->GetImageCreateInfo(), "SWAPCHAIN" });
         swapchainResourceViews_.EmplaceBack(VKW::ImageResourceView{ swapchain->GetImage(i).imageView_, swapchain->GetImage(i).imageViewCreateInfo_, &swapchainResources_.Last() });
     }
 }
