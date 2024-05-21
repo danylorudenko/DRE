@@ -54,21 +54,23 @@ void ImGuiRenderPass::Render(RenderGraph& graph, VKW::Context& context)
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, imGuiRT->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
 
+#ifdef DRE_IMGUI_CUSTOM_TEXTURE
+	auto& imGuiSyncQueue = g_GraphicsManager->GetImGuiSyncQueue();
+
+	for (std::uint32_t i = 0, size = imGuiSyncQueue.Size(); i < size; i++)
+	{
+		g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, imGuiSyncQueue[i]->GetResource(), VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT);
+	}
+
+	context.WriteResourceDependencies();
+	imGuiSyncQueue.Clear();
+#endif
+
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
     context.CmdBeginRendering(1, &imGuiRT, nullptr, nullptr);
     context.CmdSetViewport(1, 0, 0, renderWidth, renderHeight);
     context.CmdSetScissor(1, 0, 0, renderWidth, renderHeight);
-
-#ifdef DRE_IMGUI_CUSTOM_TEXTURE
-    auto& imGuiSyncQueue = g_GraphicsManager->GetImGuiSyncQueue();
-    for (std::uint32_t i = 0, size = imGuiSyncQueue.Size(); i < size; i++)
-    {
-        g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, imGuiSyncQueue[i]->GetResource(), VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT);
-		std::cerr << "ImGuiRenderPass barrier: " << imGuiSyncQueue[i]->GetResource()->name_ << std::endl;
-    }
-    imGuiSyncQueue.Clear();
-#endif
 
     ImGui::Render();
     ImDrawData* data = ImGui::GetDrawData();
