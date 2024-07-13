@@ -102,7 +102,7 @@ bool SceneGraphEditor::RenderNodeProperties()
     ImGui::Text("Position:");
     if (ImGui::DragFloat3("##pos", glm::value_ptr(pos), 1.0f))
     {
-        DRE::g_AppContext.m_FocusedObject->SetPosition(rot);
+        DRE::g_AppContext.m_FocusedObject->SetPosition(pos);
         wasUpdated = true;
     }
 
