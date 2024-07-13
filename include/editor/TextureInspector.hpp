@@ -6,17 +6,11 @@
 
 #include <editor\BaseEditor.hpp>
 
-namespace VKW
-{
-
-struct ImageResourceView;
-
-}
-
 namespace GFX
 {
 class TextureBank;
 class GraphResourcesManager;
+class Texture;
 }
 
 namespace EDITOR
@@ -40,7 +34,7 @@ private:
     GFX::TextureBank*           m_TextureBank;
     GFX::GraphResourcesManager* m_GraphResources;
 
-    DRE::InplaceVector<VKW::ImageResourceView*, 12> m_DisplayedTextures;
+    DRE::InplaceVector<GFX::Texture*, 12> m_DisplayedTextures;
 };
 
 }

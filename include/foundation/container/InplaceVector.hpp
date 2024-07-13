@@ -209,7 +209,7 @@ public:
         DRE_ASSERT(m_Size + 1 <= STORAGE_SIZE, "InplaceVector: out of storage!");
 
         U32 const res = Find(value);
-        if (res < Size())
+        if (res == Size())
         {
             return *(new (Data() + m_Size++) T{ value });
         }
@@ -220,13 +220,22 @@ public:
 
     }
 
-    inline void Remove(T* element)
+    inline void RemovePtr(T* element)
     {
         DRE_ASSERT(PtrDifference(element, m_Storage) >= 0, "InplaceVector::Remove out of bounds!");
         DRE_ASSERT(PtrDifference(Data() + m_Size, element) > 0, "InplaceVector::Remove out of bounds!");
 
         U32 const index = (U32)(PtrDifference(element, m_Storage) / sizeof(T));
         RemoveIndex(index);
+    }
+
+    inline void RemoveValue(T const& value)
+    {
+        U32 const i = Find(value);
+        if (i < Size())
+        {
+            RemoveIndex(i);
+        }
     }
 
     inline void RemoveIndex(U32 index)
