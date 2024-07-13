@@ -12,7 +12,7 @@
 #include <gfx\buffer\StorageBuffer.hpp>
 #include <gfx\buffer\TransientArena.hpp>
 #include <gfx\buffer\UniformProxy.hpp>
-#include <gfx\texture\StorageTexture.hpp>
+#include <gfx\texture\Texture.hpp>
 
 namespace GFX
 {
@@ -50,7 +50,7 @@ public:
 
     struct GraphTexture
     {
-        StorageTexture  texture;
+        Texture         texture;
         AccumulatedInfo info;
     };
 
@@ -67,7 +67,7 @@ public:
     void DestroyResources();
 
     StorageBuffer*  GetBuffer    (char const* id);
-    StorageTexture* GetTexture   (char const* id);
+    Texture*        GetTexture   (char const* id);
 
     template<typename TDelegate>
     void ForEachTexture(TDelegate func)

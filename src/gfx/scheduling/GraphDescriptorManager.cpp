@@ -4,7 +4,7 @@
 #include <vk_wrapper\pipeline\Dependency.hpp>
 
 #include <gfx\buffer\StorageBuffer.hpp>
-#include <gfx\texture\StorageTexture.hpp>
+#include <gfx\texture\Texture.hpp>
 #include <gfx\scheduling\GraphResourcesManager.hpp>
 #include <gfx\pipeline\PipelineDB.hpp>
 

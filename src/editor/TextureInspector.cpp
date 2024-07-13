@@ -45,9 +45,33 @@ void TextureInspector::Render()
     bool isOpen = true;
     if (ImGui::Begin("Texture Inspector", &isOpen, ImGuiWindowFlags_None))
     {
+        int i = 0;
         if (ImGui::BeginChild("nodes_tree", ImVec2(150, 0), ImGuiChildFlags_Border | ImGuiChildFlags_ResizeX))
         {
-            
+            if (ImGui::BeginChild("graph_textures"))
+            {
+                m_GraphResources->ForEachTexture([this](auto& texture)
+                {
+                    char const* name = texture.value->texture.GetShaderView()->parentResource_->name_.GetData();
+                    if (ImGui::Button(name))
+                    {
+                        m_DisplayedTextures.EmplaceBack(texture.value->texture.GetShaderView());
+                    }
+                });
+            }
+            ImGui::EndChild();
+
+            if (ImGui::BeginChild("bank_textures"))
+            {
+                m_TextureBank->ForEachTexture([](auto& texture)
+                    {
+                        auto handle = texture.value->GetImGuiDescriptor().GetHandle();
+                        ImGui::Image(handle, ImVec2(100,100));
+                
+                        GFX::g_GraphicsManager->GetImGuiSyncQueue().EmplaceBack(texture.value);
+                    });
+            }
+            ImGui::EndChild();
         };
         ImGui::EndChild();
 

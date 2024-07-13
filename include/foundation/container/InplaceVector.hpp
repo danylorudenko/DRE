@@ -204,6 +204,22 @@ public:
         return *(new (Data() + m_Size++) T{ std::forward<TArgs>(args)... });
     }
 
+    inline T& EmplaceBackUnique(T const& value)
+    {
+        DRE_ASSERT(m_Size + 1 <= STORAGE_SIZE, "InplaceVector: out of storage!");
+
+        U32 const res = Find(value);
+        if (res < Size())
+        {
+            return *(new (Data() + m_Size++) T{ value });
+        }
+        else
+        {
+            return operator[](res);
+        }
+
+    }
+
     inline void Remove(T* element)
     {
         DRE_ASSERT(PtrDifference(element, m_Storage) >= 0, "InplaceVector::Remove out of bounds!");

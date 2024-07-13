@@ -26,7 +26,7 @@ class SceneNode;
 namespace GFX
 {
 
-class ReadOnlyTexture;
+class Texture;
 
 class RenderableObject
     : public NonCopyable
@@ -40,7 +40,7 @@ public:
     };
 
     using DescriptorSetVector = DRE::InplaceVector<VKW::DescriptorSet, VKW::CONSTANTS::FRAMES_BUFFERING>;
-    using TexturesVector      = DRE::InplaceVector<ReadOnlyTexture*, Data::Material::TextureProperty::Slot::MAX>;
+    using TexturesVector      = DRE::InplaceVector<Texture*, Data::Material::TextureProperty::Slot::MAX>;
 
     RenderableObject(
         WORLD::SceneNode* sceneNode, LayerBits layers, VKW::Pipeline* pipeline,
@@ -65,10 +65,10 @@ public:
     inline std::uint32_t                GetIndexCount() const { return m_IndexCount; }
     inline VKW::DescriptorSet const&    GetDescriptorSet(FrameID frameID) const { return m_DescriptorSets[frameID]; }
     inline VKW::DescriptorSet const&    GetShadowDescriptorSet(FrameID frameID) const { return m_DescriptorSetsShadow[frameID]; }
-    inline ReadOnlyTexture*             GetDiffuseTexture() const { return m_Textures[0]; }
-    inline ReadOnlyTexture*             GetNormalTexture() const { return m_Textures[1]; }
-    inline ReadOnlyTexture*             GetMetalnessTexture() const { return m_Textures[2]; }
-    inline ReadOnlyTexture*             GetRoughnessTexture() const { return m_Textures[3]; }
+    inline Texture*                     GetDiffuseTexture() const { return m_Textures[0]; }
+    inline Texture*                     GetNormalTexture() const { return m_Textures[1]; }
+    inline Texture*                     GetMetalnessTexture() const { return m_Textures[2]; }
+    inline Texture*                     GetRoughnessTexture() const { return m_Textures[3]; }
 
 private:
     WORLD::SceneNode*       m_SceneNode;

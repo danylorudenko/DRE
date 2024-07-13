@@ -29,10 +29,8 @@ set(GFX_HEADER_LIST
 	"${DRE_SOURCE_DIR}/include/gfx/scheduling/GraphResource.hpp"
 	"${DRE_SOURCE_DIR}/include/gfx/scheduling/GraphResourcesManager.hpp"
 	"${DRE_SOURCE_DIR}/include/gfx/scheduling/RenderGraph.hpp"
-	"${DRE_SOURCE_DIR}/include/gfx/texture/ReadOnlyTexture.hpp"
-	"${DRE_SOURCE_DIR}/include/gfx/texture/StorageTexture.hpp"
 	"${DRE_SOURCE_DIR}/include/gfx/texture/TextureBank.hpp"
-	"${DRE_SOURCE_DIR}/include/gfx/texture/TextureBase.hpp"
+	"${DRE_SOURCE_DIR}/include/gfx/texture/Texture.hpp"
 	"${DRE_SOURCE_DIR}/include/gfx/view/RenderView.hpp")
 	
 set(GFX_SOURCE_LIST
@@ -62,10 +60,8 @@ set(GFX_SOURCE_LIST
 	"${DRE_SOURCE_DIR}/src/gfx/scheduling/GraphDescriptorManager.cpp"
 	"${DRE_SOURCE_DIR}/src/gfx/scheduling/GraphResourcesManager.cpp"
 	"${DRE_SOURCE_DIR}/src/gfx/scheduling/RenderGraph.cpp"
-	"${DRE_SOURCE_DIR}/src/gfx/texture/ReadOnlyTexture.cpp"
-	"${DRE_SOURCE_DIR}/src/gfx/texture/StorageTexture.cpp"
 	"${DRE_SOURCE_DIR}/src/gfx/texture/TextureBank.cpp"
-	"${DRE_SOURCE_DIR}/src/gfx/texture/TextureBase.cpp"
+	"${DRE_SOURCE_DIR}/src/gfx/texture/Texture.cpp"
 	"${DRE_SOURCE_DIR}/src/gfx/view/RenderView.cpp")
 	
 add_library(gfx STATIC ${GFX_HEADER_LIST} ${GFX_SOURCE_LIST})

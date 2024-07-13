@@ -16,14 +16,14 @@ static glm::vec2 WIND_DIR = glm::vec2{ 1.0f, 1.0f };
 
 static std::uint32_t constexpr WATER_UNIFORM_SIZE = sizeof(glm::vec4) * 3;
 
-void FillWaterUniform(UniformProxy& uniform, ReadOnlyTexture const& noiseTexture)
+void FillWaterUniform(UniformProxy& uniform, Texture const& noiseTexture)
 {
     GraphicsSettings const& s = g_GraphicsManager->GetGraphicsSettings();
 
     WIND_DIR[0] = s.m_WindDirectionX;
     WIND_DIR = glm::normalize(WIND_DIR);
 
-    VKW::TextureDescriptorIndex id = noiseTexture.GetShaderGlobalReadDescriptor();
+    VKW::TextureDescriptorIndex id = noiseTexture.GetShaderGlobalDescriptor();
     float noiseTexID = *reinterpret_cast<float*>(&id.id_);
 
     glm::vec4 _0{ C_WATER_DIM, WIND_DIR[0], WIND_DIR[1], noiseTexID };

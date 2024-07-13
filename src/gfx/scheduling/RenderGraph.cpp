@@ -72,7 +72,7 @@ void RenderGraph::RegisterPushConstant(BasePass* pass, std::uint32_t size, VKW::
     m_DescriptorManager.RegisterPushConstant(pass->GetID(), size, VKW::StageToDescriptorStage(stage));
 }
 
-StorageTexture* RenderGraph::GetTexture(char const* id)
+Texture* RenderGraph::GetTexture(char const* id)
 {
     return m_ResourcesManager.GetTexture(id);
 }
@@ -131,7 +131,7 @@ VKW::PipelineLayout* RenderGraph::GetPassPipelineLayout(PassID pass)
     return m_DescriptorManager.GetPassPipelineLayout(pass);
 }
 
-StorageTexture& RenderGraph::Render(VKW::Context& context)
+Texture& RenderGraph::Render(VKW::Context& context)
 {
     for (std::uint32_t i = 0, size = m_Passes.Size(); i < size; i++)
     {

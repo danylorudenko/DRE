@@ -49,7 +49,7 @@ void AntiAliasingPass::RegisterResources(RenderGraph& graph)
 
 void AntiAliasingPass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    StorageTexture* historyBuffers[2] = { graph.GetTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer0)), graph.GetTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer1)) };
+    Texture* historyBuffers[2] = { graph.GetTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer0)), graph.GetTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer1)) };
 
     VKW::ImageResourceView* colorInput = graph.GetTexture(RESOURCE_ID(TextureID::WaterColor))->GetShaderView();
     VKW::ImageResourceView* velocity = graph.GetTexture(RESOURCE_ID(TextureID::Velocity))->GetShaderView();

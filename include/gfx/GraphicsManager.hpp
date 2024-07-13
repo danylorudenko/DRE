@@ -85,7 +85,7 @@ class GraphicsManager final
     , public NonMovable
 {
 public:
-    using ImGuiSyncQueue = DRE::Vector<TextureBase*, DRE::DefaultAllocator>;
+    using ImGuiSyncQueue = DRE::Vector<Texture*, DRE::DefaultAllocator>;
 
     GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOManager* ioManager, bool debug = false);
     ~GraphicsManager();
@@ -154,7 +154,7 @@ private:
     GeometryGPU* LoadGPUGeometry(VKW::Context& context, Data::Geometry* geometry);
 
     void            PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, std::uint64_t deltaTimeUS, float globalTimeS);
-    VKW::QueueExecutionPoint TransferToSwapchainAndPresent(StorageTexture& src);
+    VKW::QueueExecutionPoint TransferToSwapchainAndPresent(Texture& src);
 
 
 private:

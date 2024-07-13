@@ -34,7 +34,7 @@ void ColorEncodingPass::RegisterResources(RenderGraph& graph)
 
 void ColorEncodingPass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    StorageTexture* historyBuffers[2] = { 
+    Texture* historyBuffers[2] = { 
         graph.GetTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer0)),
         graph.GetTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer1))
     };

@@ -5,12 +5,10 @@ namespace VKW
 
 BufferResource::BufferResource(VkBuffer handle, std::uint32_t size, MemoryRegion const& memory, std::uint64_t gpuAddress, char const* name)
     : handle_{ handle }
-	, size_{ size }
-	, memory_{ memory }
-	, gpuAddress_{ gpuAddress }
-#ifdef DRE_DEBUG
-	, name_{ name }
-#endif
+    , size_{ size }
+    , memory_{ memory }
+    , gpuAddress_{ gpuAddress }
+    , name_{ name }
 {
 
 }
@@ -27,9 +25,7 @@ ImageResource::ImageResource(VkImage handle, Format format, std::uint32_t width,
     , height_{ height }
     , memory_{ memory }
     , createInfo_{ createInfo }
-#ifdef DRE_DEBUG
-	, name_{ name }
-#endif
+    , name_{ name }
 {
 
 }

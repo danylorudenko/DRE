@@ -3,27 +3,30 @@
 #include <cstdint>
 #include <vulkan\vulkan.h>
 
+#include <vk_wrapper\Constant.hpp>
 #include <vk_wrapper\Format.hpp>
+#include <vk_wrapper\descriptor\Descriptor.hpp>
 
 #include <gfx\DeviceChild.hpp>
 
 namespace VKW
 {
 struct ImageResource;
+struct ImageResourceView;
 }
 
 namespace GFX
 {
 
-class TextureBase
+class Texture
     : public DeviceChild
 {
 public:
-    explicit TextureBase();
-    explicit TextureBase(VKW::Device* device, VKW::ImageResource* image);
+    Texture();
+    Texture(VKW::Device* device, VKW::ImageResource* image, VKW::ImageResourceView* view, VKW::TextureDescriptorIndex descriptorHandle);
 
-    TextureBase(TextureBase&& rhs);
-    TextureBase& operator=(TextureBase&& rhs);
+    Texture(Texture&& rhs);
+    Texture& operator=(Texture&& rhs);
 
     inline std::uint32_t    GetWidth() const { return m_Width; }
     inline std::uint32_t    GetHeight() const { return m_Height; }
@@ -34,7 +37,12 @@ public:
     inline VKW::ImageResource*       GetResource() { return m_Image; }
     inline VKW::ImageResource const* GetResource() const { return m_Image; }
 
-    virtual ~TextureBase();
+    inline VKW::ImageResourceView*              GetShaderView() const { return m_ShaderView; }
+    inline VKW::TextureDescriptorIndex const&   GetShaderGlobalDescriptor() const { return m_ShaderGlobalDescriptor; }
+
+    VKW::DescriptorSet GetImGuiDescriptor() const;
+
+    virtual ~Texture();
 
 protected:
     VKW::ImageResource* m_Image;
@@ -43,6 +51,13 @@ protected:
     std::uint16_t       m_MipsCount;
     std::uint16_t       m_ArrayLayersCount;
     VKW::Format         m_Format;
+
+    VKW::ImageResourceView*         m_ShaderView;
+    VKW::TextureDescriptorIndex     m_ShaderGlobalDescriptor;
+
+#ifdef DRE_IMGUI_CUSTOM_TEXTURE
+    VKW::DescriptorSet  m_ImGuiDescriptorSet;
+#endif
 
 };
 

@@ -5,7 +5,7 @@
 namespace GFX
 {
 
-class ReadOnlyTexture;
+class Texture;
 
 class ImGuiRenderPass
     : public BasePass
@@ -25,7 +25,7 @@ public:
     virtual void Render             (RenderGraph& graph, VKW::Context& context) override;
 
 private:
-    ReadOnlyTexture*    m_ImGuiAtlas;
+    Texture*            m_ImGuiAtlas;
     VKW::Pipeline*      m_GraphicsPipeline;
 };
 

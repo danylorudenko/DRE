@@ -207,7 +207,7 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
     context.CmdBindGlobalDescriptorSets(*GetMainDevice()->GetDescriptorManager(), GetCurrentFrameID());
 
     // main graph
-    StorageTexture& finalRT = m_RenderGraph.Render(context);
+    Texture& finalRT = m_RenderGraph.Render(context);
 
     // presentation
     m_DependencyManager.ResourceBarrier(context, finalRT.GetResource(), VKW::RESOURCE_ACCESS_TRANSFER_SRC, VKW::STAGE_TRANSFER);
@@ -218,7 +218,7 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
     m_FrameProcessingCompletePoint[GetCurrentFrameID()] = srcTransferComplete;
 }
 
-VKW::QueueExecutionPoint GraphicsManager::TransferToSwapchainAndPresent(StorageTexture& src)
+VKW::QueueExecutionPoint GraphicsManager::TransferToSwapchainAndPresent(Texture& src)
 {
     VKW::PresentationController* presentController = GetPresentationController();
     VKW::PresentationContext presentationContext = presentController->AcquireNewPresentContext();
@@ -291,7 +291,7 @@ void EmplaceRenderableObjectTexture(Data::Material* material, Data::Material::Te
     }
     else
     {
-        ReadOnlyTexture* gfxTexture = textureBank.FindTexture(texture.GetName());
+        Texture* gfxTexture = textureBank.FindTexture(texture.GetName());
 
         result.EmplaceBack(gfxTexture == nullptr 
             ? textureBank.LoadTexture2DSync(texture.GetName(), texture.GetSizeX(), texture.GetSizeY(), texture.GetFormat(), texture.GetBuffer()) 

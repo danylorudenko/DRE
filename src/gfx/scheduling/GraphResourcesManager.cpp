@@ -91,7 +91,7 @@ void GraphResourcesManager::InitResources()
         VKW::ImageResourceView* view = m_Device->GetResourcesController()->ViewImageAs(image, &range);
         VKW::TextureDescriptorIndex globalDescriptor = m_Device->GetDescriptorManager()->AllocateTextureDescriptor(view);
 
-        m_StorageTextures[*pair.key] = GraphTexture{ StorageTexture{ m_Device, image, view, globalDescriptor }, info };
+        m_StorageTextures[*pair.key] = GraphTexture{ Texture{ m_Device, image, view, globalDescriptor }, info };
     });
  
 
@@ -124,7 +124,7 @@ StorageBuffer* GraphResourcesManager::GetBuffer(char const* id)
     return &m_StorageBuffers.Find(id).value->buffer;
 }
 
-StorageTexture* GraphResourcesManager::GetTexture(char const* id)
+Texture* GraphResourcesManager::GetTexture(char const* id)
 {
     return &m_StorageTextures.Find(id).value->texture;
 }

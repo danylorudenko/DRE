@@ -2,8 +2,16 @@
 
 #include <foundation\Common.hpp>
 #include <foundation\string\InplaceString.hpp>
+#include <foundation\container\InplaceVector.hpp>
 
 #include <editor\BaseEditor.hpp>
+
+namespace VKW
+{
+
+struct ImageResourceView;
+
+}
 
 namespace GFX
 {
@@ -31,6 +39,8 @@ public:
 private:
     GFX::TextureBank*           m_TextureBank;
     GFX::GraphResourcesManager* m_GraphResources;
+
+    DRE::InplaceVector<VKW::ImageResourceView*, 12> m_DisplayedTextures;
 };
 
 }

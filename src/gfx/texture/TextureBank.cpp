@@ -21,7 +21,7 @@ TextureBank::~TextureBank()
     m_Textures.Clear();
 }
 
-ReadOnlyTexture* TextureBank::FindTexture(DRE::String128 const& name)
+Texture* TextureBank::FindTexture(DRE::String128 const& name)
 {
     return m_Textures.Find(name).value;
 }
@@ -59,7 +59,7 @@ struct Complex
     }
 };
 
-ReadOnlyTexture* TextureBank::LoadTexture2DSync(DRE::String128 const& name, std::uint32_t width, std::uint32_t height, VKW::Format format, DRE::ByteBuffer const& textureData)
+Texture* TextureBank::LoadTexture2DSync(DRE::String128 const& name, std::uint32_t width, std::uint32_t height, VKW::Format format, DRE::ByteBuffer const& textureData)
 {
     UploadArena& transientArena = g_GraphicsManager->GetUploadArena();
 
@@ -91,7 +91,7 @@ ReadOnlyTexture* TextureBank::LoadTexture2DSync(DRE::String128 const& name, std:
     VKW::ImageResourceView* imageView = m_ResourcesController->ViewImageAs(imageResource);
     VKW::TextureDescriptorIndex descriptorHandle = m_DescriptorAllocator->AllocateTextureDescriptor(imageView);
 
-    return &(m_Textures[name] = ReadOnlyTexture{ g_GraphicsManager->GetMainDevice(), imageResource, imageView, descriptorHandle });
+    return &(m_Textures[name] = Texture{ g_GraphicsManager->GetMainDevice(), imageResource, imageView, descriptorHandle });
 }
 
 void TextureBank::UnloadAllTextures()

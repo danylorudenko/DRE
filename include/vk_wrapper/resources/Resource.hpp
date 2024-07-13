@@ -20,9 +20,7 @@ struct BufferResource
     MemoryRegion    memory_;
     std::uint64_t   gpuAddress_ = 0;
 
-#ifdef DRE_DEBUG
     DRE::String128  name_;
-#endif
 
     MemoryPage* GetMemoryPage() const;
 };
@@ -47,9 +45,7 @@ struct ImageResource
     MemoryRegion        memory_;
     VkImageCreateInfo   createInfo_;
 
-#ifdef DRE_DEBUG
     DRE::String128      name_;
-#endif
 
     MemoryPage* GetMemoryPage() const;
 };

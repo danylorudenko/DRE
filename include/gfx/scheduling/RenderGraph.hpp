@@ -17,7 +17,7 @@ namespace GFX
 
 class BasePass;
 class GraphicsManager;
-class StorageTexture;
+class Texture;
 
 class RenderGraph
     : public NonMovable
@@ -51,7 +51,7 @@ public:
     VKW::DescriptorSet              GetPassDescriptorSet(PassID pass, FrameID frameID);
     VKW::PipelineLayout*            GetPassPipelineLayout(PassID pass);
 
-    StorageTexture*                 GetTexture(char const* id);
+    Texture*                        GetTexture(char const* id);
     StorageBuffer*                  GetBuffer(char const* id);
     UniformProxy                    GetPassUniform(PassID pass, VKW::Context& context, std::uint32_t size);
 
@@ -63,7 +63,7 @@ public:
     void UnloadGraphResources();
 
     // last access to texture should be VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT
-    StorageTexture& Render(VKW::Context& context);
+    Texture& Render(VKW::Context& context);
 
 
 private:
