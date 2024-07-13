@@ -72,7 +72,8 @@ VKW::QueueExecutionPoint Context::SyncPoint(std::uint8_t waitCount, VKW::QueueEx
     DRE_ASSERT(m_CurrentCommandList != nullptr, "Failed to submit CommandLists, current CmdList is nullptr.");
 
     WriteResourceDependencies();
-    VKW::QueueExecutionPoint point =  m_ParentQueue->ScheduleExecute(m_CurrentCommandList, waitCount, waits);
+    VKW::QueueExecutionPoint point = m_ParentQueue->ScheduleExecute(m_CurrentCommandList, waitCount, waits);
+    m_ParentQueue->ExecutePending();
     m_CurrentCommandList = m_ParentQueue->GetFreeCommandList();
 
     return point;

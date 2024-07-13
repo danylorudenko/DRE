@@ -234,8 +234,6 @@ VKW::QueueExecutionPoint GraphicsManager::TransferToSwapchainAndPresent(Texture&
         VKW::RESOURCE_ACCESS_CLEAR,   VKW::STAGE_TRANSFER,
         VKW::RESOURCE_ACCESS_PRESENT, VKW::STAGE_PRESENT);
 
-    GetMainContext().WriteResourceDependencies();
-
     VKW::QueueExecutionPoint transferCompletePoint = GetMainContext().SyncPoint();
 
     GetMainContext().FlushWaitSwapchain(presentationContext);
