@@ -37,6 +37,8 @@ void DebugPass::RegisterResources(RenderGraph& graph)
 
 void DebugPass::Render(RenderGraph& graph, VKW::Context& context)
 {
+    DRE_GPU_SCOPE(DebugPass);
+
     VKW::ImageResourceView* output = graph.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage))->GetShaderView();
 
     VKW::ImageResourceView* fftH0 = graph.GetTexture(RESOURCE_ID(TextureID::FFTH0))->GetShaderView();

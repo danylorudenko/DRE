@@ -199,6 +199,9 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
     m_ReadbackArena.ResetAllocations(GetCurrentFrameID());
 
     VKW::Context& context = GetMainContext();
+
+    DRE_GPU_SCOPE(FRAME);
+
     context.ResetDependenciesVectors(&DRE::g_FrameScratchAllocator);
     PrepareGlobalData(context,  *WORLD::g_MainScene, deltaTimeUS, globalTimeS);
     m_LightsManager.UpdateGPULights(context);

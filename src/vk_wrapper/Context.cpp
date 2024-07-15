@@ -252,7 +252,33 @@ void Context::CmdResourceDependency(VKW::BufferResource const* resource,
         dstAccess, dstStage, queueFamily);
 }
 
-void Context::CmdClearAttachments(AttachmentMask attachments, float color[4])
+void Context::CmdClearAttachments(AttachmentMask attachments, std::uint32_t* value)
+{
+    VkClearValue clearValue{};
+    clearValue.color.uint32[0] = value[0];
+    clearValue.color.uint32[1] = value[1];
+    clearValue.color.uint32[2] = value[2];
+    clearValue.color.uint32[3] = value[3];
+
+    DRE::InplaceVector<VkClearAttachment, VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS> clears;
+    DRE::InplaceVector<VkClearRect, VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS> rects;
+    for (std::uint32_t i = 0; i < VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS; i++)
+    {
+        if (attachments & (ATTACHMENT_MASK_COLOR_0 << i))
+        {
+            VkClearAttachment& clear = clears.EmplaceBack();
+            clear.aspectMask        = VK_IMAGE_ASPECT_COLOR_BIT;
+            clear.colorAttachment   = i;
+            clear.clearValue        = clearValue;
+
+            rects.EmplaceBack(m_RenderingRect, 0u, 1u);
+        }
+    }
+
+    m_ImportTable->vkCmdClearAttachments(*m_CurrentCommandList, clears.Size(), clears.Data(), rects.Size(), rects.Data());
+}
+
+void Context::CmdClearAttachments(AttachmentMask attachments, float* color)
 {
     VkClearValue value{};
     value.color.float32[0] = color[0];
@@ -286,7 +312,7 @@ void Context::CmdClearAttachments(AttachmentMask attachments, float depth, std::
 
     DRE::InplaceVector<VkClearAttachment, 2> clears;
     DRE::InplaceVector<VkClearRect, 2> rects;
-    
+
     if (attachments & ATTACHMENT_MASK_DEPTH)
     {
         VkClearAttachment& clear = clears.EmplaceBack();
@@ -312,7 +338,7 @@ void Context::CmdBeginRendering(std::uint32_t attachmentCount, VKW::ImageResourc
     VKW::ImageResourceView const* depthAttachment, VKW::ImageResourceView const* stencilAttachment)
 {
     DRE_ASSERT(attachmentCount <= VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS, "Exceeded maximum color attachment count.");
-    
+
     std::uint32_t renderingWidth = 0;
     std::uint32_t renderingHeight = 0;
 
@@ -345,16 +371,16 @@ void Context::CmdBeginRendering(std::uint32_t attachmentCount, VKW::ImageResourc
     for (std::uint32_t i = 0; i < attachmentCount; i++)
     {
         VkRenderingAttachmentInfoKHR& attachmentInfo = colorInfos.EmplaceBack();
-        attachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
-        attachmentInfo.pNext = nullptr;
-        attachmentInfo.imageView = attachments[i]->handle_;
-        attachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        attachmentInfo.resolveMode = VK_RESOLVE_MODE_NONE;
-        attachmentInfo.resolveImageView = VK_NULL_HANDLE;
-        attachmentInfo.resolveImageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
-        attachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-        attachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachmentInfo.clearValue = {};
+        attachmentInfo.sType                = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+        attachmentInfo.pNext                = nullptr;
+        attachmentInfo.imageView            = attachments[i]->handle_;
+        attachmentInfo.imageLayout          = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        attachmentInfo.resolveMode          = VK_RESOLVE_MODE_NONE;
+        attachmentInfo.resolveImageView     = VK_NULL_HANDLE;
+        attachmentInfo.resolveImageLayout   = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
+        attachmentInfo.loadOp               = VK_ATTACHMENT_LOAD_OP_LOAD;
+        attachmentInfo.storeOp              = VK_ATTACHMENT_STORE_OP_STORE;
+        attachmentInfo.clearValue           = {};
     }
 
     VkRenderingAttachmentInfoKHR depthInfo;
@@ -524,6 +550,39 @@ void Context::CmdCopyBufferToBuffer(VKW::BufferResource const* dst, std::uint32_
 
     WriteResourceDependencies();
     m_ImportTable->vkCmdCopyBuffer2(*m_CurrentCommandList, &info);
+}
+
+void Context::CmdBeginDebugLabel(char const* label)
+{
+    VkDebugUtilsLabelEXT sLabel;
+    sLabel.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+    sLabel.pNext = nullptr;
+    sLabel.pLabelName = label;
+    sLabel.color[0] = 1.0f;
+    sLabel.color[1] = 1.0f;
+    sLabel.color[2] = 1.0f;
+    sLabel.color[3] = 1.0f;
+
+    m_ImportTable->vkCmdBeginDebugUtilsLabelEXT(*m_CurrentCommandList, &sLabel);
+}
+
+void Context::CmdEndDebugLabel()
+{
+    m_ImportTable->vkCmdEndDebugUtilsLabelEXT(*m_CurrentCommandList);
+}
+
+void Context::CmdInsertDebugLabel(char const* label)
+{
+    VkDebugUtilsLabelEXT sLabel;
+    sLabel.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+    sLabel.pNext = nullptr;
+    sLabel.pLabelName = label;
+    sLabel.color[0] = 1.0f;
+    sLabel.color[1] = 1.0f;
+    sLabel.color[2] = 1.0f;
+    sLabel.color[3] = 1.0f;
+
+    m_ImportTable->vkCmdInsertDebugUtilsLabelEXT(*m_CurrentCommandList, &sLabel);
 }
 
 void Context::WaitIdle()

@@ -42,6 +42,11 @@ void ForwardOpaquePass::RegisterResources(RenderGraph& graph)
         VKW::FORMAT_R16G16_FLOAT, renderWidth, renderHeight,
         1);
 
+    //graph.RegisterRenderTarget(this,
+    //    RESOURCE_ID(TextureID::ObjectIDBuffer),
+    //    VKW::FORMAT_R32_UINT, renderWidth, renderHeight,
+    //    2);
+
     graph.RegisterDepthOnlyTarget(this,
         RESOURCE_ID(TextureID::MainDepth),
         g_GraphicsManager->GetMainDepthFormat(), renderWidth, renderHeight);
@@ -79,16 +84,20 @@ void ForwardObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::De
 
 void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
 {
+    DRE_GPU_SCOPE(ForwardOpaque);
+
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
     VKW::ImageResourceView* colorAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ForwardColor))->GetShaderView();
     VKW::ImageResourceView* velocityAttachment = graph.GetTexture(RESOURCE_ID(TextureID::Velocity))->GetShaderView();
+    //VKW::ImageResourceView* objectIDAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ObjectIDBuffer))->GetShaderView();
     VKW::ImageResourceView* depthAttachment = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth))->GetShaderView();
     VKW::ImageResourceView* shadowMap       = graph.GetTexture(RESOURCE_ID(TextureID::ShadowMap))->GetShaderView();
     VKW::ImageResourceView* causticMap      = graph.GetTexture(RESOURCE_ID(TextureID::CausticMap))->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, colorAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, velocityAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    //g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, objectIDAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->parentResource_, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, shadowMap->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, causticMap->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT);
@@ -101,8 +110,10 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
     context.CmdBeginRendering(2, attachments, depthAttachment, nullptr);
     float clearColors[4] = { 0.9f, 0.9f, 0.9f, 0.0f };
     float clearVelocity[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    std::uint32_t clearID[4] = { 0, 0, 0, 0 };
     context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_0, clearColors);
     context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_1, clearVelocity);
+    //context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_2, clearID);
     context.CmdClearAttachments(VKW::ATTACHMENT_MASK_DEPTH, 0.0f, 0);
 
     context.CmdSetViewport(2, 0, 0, renderWidth, renderHeight);

@@ -57,6 +57,8 @@ void WaterCausticDelegate(RenderableObject& obj, VKW::Context& context, VKW::Des
 
 void CausticPass::Render(RenderGraph& graph, VKW::Context& context)
 {
+    DRE_GPU_SCOPE(Caustic);
+
     VKW::ImageResourceView* causticAttachment = graph.GetTexture(RESOURCE_ID(TextureID::CausticMap))->GetShaderView();
     VKW::ImageResourceView* shadowAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ShadowMap))->GetShaderView();
     VKW::ImageResourceView* envMapAttachment = graph.GetTexture(RESOURCE_ID(TextureID::CausticEnvMap))->GetShaderView();

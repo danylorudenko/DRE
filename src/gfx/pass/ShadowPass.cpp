@@ -50,6 +50,8 @@ void ShadowObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::Des
 
 void ShadowPass::Render(RenderGraph& graph, VKW::Context& context)
 {
+    DRE_GPU_SCOPE(Shadow);
+
     VKW::ImageResourceView* wposAttachment = graph.GetTexture(RESOURCE_ID(TextureID::CausticEnvMap))->GetShaderView();
     VKW::ImageResourceView* depthAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ShadowMap))->GetShaderView();
 

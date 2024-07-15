@@ -54,6 +54,8 @@ void FFTButterflyGenPass::Initialize(RenderGraph& graph)
 
 void FFTButterflyGenPass::Render(RenderGraph& graph, VKW::Context& context)
 {
+    DRE_GPU_SCOPE(FFTButterflyGen);
+
     DRE_ASSERT(C_WATER_DIM <= 256, "Can't do dimentions more that 256 (for now)");
 
     std::uint32_t* bit_reversed = (std::uint32_t*)DRE::g_FrameScratchAllocator.Alloc(C_WATER_DIM * sizeof(std::uint32_t), alignof(std::uint32_t));
@@ -108,6 +110,8 @@ void FFTWaterH0GenPass::Initialize(RenderGraph& graph)
 
 void FFTWaterH0GenPass::Render(RenderGraph& graph, VKW::Context& context)
 {
+    DRE_GPU_SCOPE(FFTWaterH0Gen);
+
     UniformProxy uniform = graph.GetPassUniform(GetID(), context, WATER_UNIFORM_SIZE);
     FillWaterUniform(uniform, *g_GraphicsManager->GetTextureBank().FindTexture("blue_noise_256"));
 
@@ -151,6 +155,8 @@ void FFTWaterHxtGenPass::Initialize(RenderGraph& graph)
 
 void FFTWaterHxtGenPass::Render(RenderGraph& graph, VKW::Context& context)
 {
+    DRE_GPU_SCOPE(FFTWaterHxtGen);
+
     UniformProxy uniform = graph.GetPassUniform(GetID(), context, WATER_UNIFORM_SIZE);
     FillWaterUniform(uniform, *g_GraphicsManager->GetTextureBank().FindTexture("blue_noise_256"));
 
@@ -213,6 +219,8 @@ static VKW::ImageResourceView* fftOutput = nullptr;
 
 void FFTWaterFFTPass::Render(RenderGraph& graph, VKW::Context& context)
 {
+    DRE_GPU_SCOPE(FFTWaterFFT);
+
     VKW::ImageResourceView* fftHxt = graph.GetTexture(RESOURCE_ID(TextureID::FFTHxt))->GetShaderView();
     VKW::ImageResourceView* fftButterfly = graph.GetTexture(RESOURCE_ID(TextureID::FFTButterfly))->GetShaderView();
 
@@ -301,6 +309,8 @@ void FFTInvPermutationPass::Initialize(RenderGraph& graph)
 
 void FFTInvPermutationPass::Render(RenderGraph& graph, VKW::Context& context)
 {
+    DRE_GPU_SCOPE(FFTInvPermutation);
+
     VKW::ImageResourceView* input = graph.GetTexture(RESOURCE_ID(TextureID::FFTPingPong0))->GetShaderView();
     VKW::ImageResourceView* heightMap = graph.GetTexture(RESOURCE_ID(TextureID::WaterHeight))->GetShaderView();
 

@@ -25,6 +25,7 @@ enum class TextureID
     DisplayEncodedImage,
     ColorHistoryBuffer0,
     ColorHistoryBuffer1,
+    ObjectIDBuffer,
     ID_MAX
 };
 

@@ -135,7 +135,8 @@ public:
 
 
     void CmdBeginRendering(std::uint32_t attachmentCount, VKW::ImageResourceView* const* attachments, VKW::ImageResourceView const* depthAttachment, VKW::ImageResourceView const* stencilAttachment);
-    void CmdClearAttachments(AttachmentMask attachments, float color[4]);
+    void CmdClearAttachments(AttachmentMask attachments, float* color);
+    void CmdClearAttachments(AttachmentMask attachments, std::uint32_t* value);
     void CmdClearAttachments(AttachmentMask attachments, float depth, std::uint32_t stencil);
     void CmdEndRendering();
 
@@ -149,6 +150,10 @@ public:
     void CmdCopyBufferToImage(VKW::ImageResource const* dst, VKW::BufferResource const* src, std::uint32_t bufferOffset);
     void CmdCopyBufferToBuffer(VKW::BufferResource const* dst, std::uint32_t dstOffset, VKW::BufferResource const* scr, std::uint32_t srcOffset, std::uint32_t size);
 
+    void CmdBeginDebugLabel(char const* label);
+    void CmdEndDebugLabel();
+    void CmdInsertDebugLabel(char const* label);
+
     void WaitIdle();
 
 private:
@@ -161,6 +166,29 @@ private:
     VKW::Dependency         m_PendingDependency;
 
 };
+
+
+///////////////////////////////
+class _GPU_DEBUG_SCOPE_
+{
+public:
+    _GPU_DEBUG_SCOPE_(Context& context, char const* name)
+        : m_Context{ &context }
+    {
+        m_Context->CmdBeginDebugLabel(name);
+    }
+
+    ~_GPU_DEBUG_SCOPE_()
+    {
+        m_Context->CmdEndDebugLabel();
+    }
+
+private:
+    Context* m_Context;
+};
+#define DRE_GPU_SCOPE(Name) VKW::_GPU_DEBUG_SCOPE_ _##Name##_GPU_SCOPE{ context, #Name }
+#define DRE_GPU_EVENT(Name) context.CmdInsertDebugLabel(#Name)
+
 
 }
 
