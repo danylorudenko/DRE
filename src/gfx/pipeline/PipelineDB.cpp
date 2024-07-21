@@ -8,6 +8,8 @@
 
 #include <engine\io\IOManager.hpp>
 
+#include <forward.h>
+
 namespace GFX
 {
 
@@ -119,8 +121,10 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardPipeline(char const* name)
     desc.SetLayout(GetLayout(layoutName->GetData()));
     desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
     desc.EnableDepthTest(g_GraphicsManager->GetMainDepthFormat());
-    desc.AddColorOutput(g_GraphicsManager->GetMainColorFormat());
-    desc.AddColorOutput(VKW::FORMAT_R16G16_FLOAT); // velocity vectors
+    desc.AddColorOutput(g_GraphicsManager->GetMainColorFormat()); // main color
+    desc.AddColorOutput(VKW::FORMAT_R16G16_FLOAT);                // velocity vectors
+    desc.AddColorOutput(VKW::FORMAT_R32_UINT);                    // object IDs
+    static_assert(FORWARD_PASS_OUTPUT_COUNT == 3, "Don't forget to modify PipelineDB and ForwardOpaquePass");
 
     AddDREVertexAttributes(desc);
 

@@ -9,6 +9,8 @@
 #include <engine\io\IOManager.hpp>
 #include <engine\scene\Scene.hpp>
 
+#include <forward.h>
+
 namespace GFX
 {
 
@@ -42,10 +44,10 @@ void ForwardOpaquePass::RegisterResources(RenderGraph& graph)
         VKW::FORMAT_R16G16_FLOAT, renderWidth, renderHeight,
         1);
 
-    //graph.RegisterRenderTarget(this,
-    //    RESOURCE_ID(TextureID::ObjectIDBuffer),
-    //    VKW::FORMAT_R32_UINT, renderWidth, renderHeight,
-    //    2);
+    graph.RegisterRenderTarget(this,
+        RESOURCE_ID(TextureID::ObjectIDBuffer),
+        VKW::FORMAT_R32_UINT, renderWidth, renderHeight,
+        2);
 
     graph.RegisterDepthOnlyTarget(this,
         RESOURCE_ID(TextureID::MainDepth),
@@ -90,34 +92,37 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
 
     VKW::ImageResourceView* colorAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ForwardColor))->GetShaderView();
     VKW::ImageResourceView* velocityAttachment = graph.GetTexture(RESOURCE_ID(TextureID::Velocity))->GetShaderView();
-    //VKW::ImageResourceView* objectIDAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ObjectIDBuffer))->GetShaderView();
+    VKW::ImageResourceView* objectIDAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ObjectIDBuffer))->GetShaderView();
     VKW::ImageResourceView* depthAttachment = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth))->GetShaderView();
     VKW::ImageResourceView* shadowMap       = graph.GetTexture(RESOURCE_ID(TextureID::ShadowMap))->GetShaderView();
     VKW::ImageResourceView* causticMap      = graph.GetTexture(RESOURCE_ID(TextureID::CausticMap))->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, colorAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, velocityAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    //g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, objectIDAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, objectIDAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->parentResource_, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, shadowMap->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, causticMap->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT);
 
-    VKW::ImageResourceView* attachments[2] = { colorAttachment, velocityAttachment };
+    std::uint32_t constexpr attachmentsCount = 3;
+    static_assert(FORWARD_PASS_OUTPUT_COUNT == attachmentsCount, "Don't forget to modify PipelineDB and ForwardOpaquePass");
+    VKW::ImageResourceView* attachments[attachmentsCount] = { colorAttachment, velocityAttachment, objectIDAttachment };
 
     DrawBatcher batcher{ &DRE::g_FrameScratchAllocator, g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), &g_GraphicsManager->GetUniformArena() };
     batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), RenderableObject::LAYER_OPAQUE_BIT, GFX::ForwardObjectDelegate);
 
-    context.CmdBeginRendering(2, attachments, depthAttachment, nullptr);
+
+    context.CmdBeginRendering(attachmentsCount, attachments, depthAttachment, nullptr);
     float clearColors[4] = { 0.9f, 0.9f, 0.9f, 0.0f };
     float clearVelocity[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     std::uint32_t clearID[4] = { 0, 0, 0, 0 };
     context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_0, clearColors);
     context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_1, clearVelocity);
-    //context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_2, clearID);
+    context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_2, clearID);
     context.CmdClearAttachments(VKW::ATTACHMENT_MASK_DEPTH, 0.0f, 0);
 
-    context.CmdSetViewport(2, 0, 0, renderWidth, renderHeight);
-    context.CmdSetScissor(2, 0, 0, renderWidth, renderHeight);
+    context.CmdSetViewport(attachmentsCount, 0, 0, renderWidth, renderHeight);
+    context.CmdSetScissor(attachmentsCount, 0, 0, renderWidth, renderHeight);
 #ifndef DRE_COMPILE_FOR_RENDERDOC
     context.CmdSetPolygonMode(VKW::POLYGON_FILL);
 #endif // DRE_COMPILE_FOR_RENDERDOC
@@ -129,8 +134,10 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
         std::uint32_t constexpr passUniformSize = sizeof(shadow_ViewProj) + sizeof(shadow_Size);
 
         UniformProxy passUniformProxy = graph.GetPassUniform(GetID(), context, passUniformSize);
-        passUniformProxy.WriteMember140(shadow_ViewProj);
-        passUniformProxy.WriteMember140(shadow_Size);
+        ForwardUniform passData;
+        passData.shadow_VP = shadow_ViewProj;
+        passData.shadow_size = shadow_Size;
+        passUniformProxy.WriteMember140(passData);
     }
 
     VKW::DescriptorSet passSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
@@ -144,10 +151,17 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
         (graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID()).IsValid() ? 1 : 0);
 
     auto& draws = batcher.GetDraws();
+
+    VKW::Pipeline* prevPipeline = nullptr;
     for (std::uint32_t i = 0, size = draws.Size(); i < size; i++)
     {
         AtomDraw const& atom = draws[i];
-        context.CmdBindGraphicsPipeline(atom.pipeline);
+        if (prevPipeline != atom.pipeline)
+        {
+            context.CmdBindGraphicsPipeline(atom.pipeline);
+            prevPipeline = atom.pipeline;
+        }
+
         context.CmdBindGraphicsDescriptorSets(atom.pipeline->GetLayout(), startSet, 1, &atom.descriptorSet);
         context.CmdBindVertexBuffer(atom.vertexBuffer, atom.vertexOffset);
         context.CmdBindIndexBuffer(atom.indexBuffer, atom.indexOffset);

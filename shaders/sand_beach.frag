@@ -7,21 +7,13 @@
 
 #include "shaders_common.h"
 #include "lighting.h"
+#include "forward.h"
 
 layout(location = 0) in vec3 in_wpos;
 layout(location = 1) in vec2 in_uv;
 layout(location = 2) in vec4 in_prev_wpos;
 layout(location = 3) in mat3 in_TBN;
 
-layout(location = 0) out vec4 finalColor;
-layout(location = 1) out vec2 velocity;
-
-layout(set = 3, binding = 0) uniform texture2D shadowMap;
-layout(set = 3, binding = 1, std140) uniform PassUniform
-{
-    mat4  shadow_VP;
-    vec4  shadow_size;
-} passUniform;
 layout(set = 3, binding = 2) uniform texture2D causticMap;
 
 layout(set = 4, binding = 0, std140) uniform InstanceUniform
@@ -30,8 +22,6 @@ layout(set = 4, binding = 0, std140) uniform InstanceUniform
     mat4  prev_model_mat;
     uvec4 textureIDs;
 } instanceUniform;
-
-
 
 #define DiffuseTextureID     instanceUniform.textureIDs[0]
 #define NormalTextureID      instanceUniform.textureIDs[1]

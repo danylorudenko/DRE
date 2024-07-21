@@ -44,9 +44,6 @@ layout(set = 2, binding = 0, std140) readonly uniform GlobalUniforms
     // end
 #ifdef __cplusplus
 };
-
-#undef vec4
-#undef mat4
 #else
 } g_GlobalUniforms;
 
@@ -83,8 +80,8 @@ uint    GetShadowMapID() { return g_GlobalUniforms.TEX_ID_shadow.x; }
 uint    GetLightsCount() { return g_GlobalUniforms.lightsCount.x; }
 S_LIGHT_GPURef GetLight(uint i) { return g_GlobalUniforms.LightBuffer[i]; }
 
+#endif // __cplusplus
 
 
-#endif
 
 #endif // _GLOBAL_UNIFORM_H_
