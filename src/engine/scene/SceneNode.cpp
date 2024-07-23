@@ -8,6 +8,8 @@
 namespace WORLD
 {
 
+DRE::U32 SceneNode::s_GlobalID = 0;
+
 SceneNode::SceneNode()
     : m_Parent{ nullptr }
     , m_NodeUser{ nullptr }
@@ -30,7 +32,13 @@ SceneNode::SceneNode(SceneNode* parent, ISceneNodeUser* user)
     , m_Up{ 0.0f, 1.0f, 0.0f }
     , m_Scale{ 1.0f }
     , m_Children{ &DRE::g_MainAllocator }
-{}
+{
+    // don't use last 8 bits, it's easeir to see in ImGui :P
+    // shaders/forward.h -> GlobalID2Color()
+    DRE_ASSERT(s_GlobalID < (DRE_U32_MAX >> 8), "SceneNode ID overflow.");
+
+    m_GlobalID = ++s_GlobalID;
+}
 
 DRE::U32 SceneNode::AddChild(SceneNode* child)
 {

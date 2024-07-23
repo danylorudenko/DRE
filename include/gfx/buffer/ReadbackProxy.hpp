@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vk_wrapper\Context.hpp>
 #include <vk_wrapper\queue\Queue.hpp>
 
@@ -43,6 +45,10 @@ class ReadbackScheduler
 {
 public:
     ReadbackScheduler(FrameID frameID, ReadbackArena* arena, std::uint32_t size);
+
+    VKW::BufferResource*    GetDstBuffer() const;
+    std::uint32_t           GetDstOffset() const;
+    std::uint32_t           GetDstSize() const;
 
     ReadbackFuture CreateReadbackFuture(VKW::QueueExecutionPoint const& executionPoint) const;
 

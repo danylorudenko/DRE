@@ -372,6 +372,7 @@ Pipeline::Pipeline(ImportTable* table, LogicalDevice* device, Descriptor& descri
     , device_{ device }
     , handle_{ VK_NULL_HANDLE }
     , layout_{ nullptr }
+    , name_{ name }
 {
     if (descriptor.GetPipelineType() == PIPELINE_TYPE_GRAPHIC)
     {

@@ -32,6 +32,8 @@ public:
     SceneNode();
     SceneNode(SceneNode* parent, ISceneNodeUser* user);
 
+    DRE::U32                GetGlobalID() const { return m_GlobalID; }
+
     DRE::U32                AddChild(SceneNode* child);
     void                    RemoveChild(SceneNode* child);
 
@@ -94,8 +96,11 @@ private:
     float           m_Scale;
 
     DRE::String64   m_Name;
+    DRE::U32        m_GlobalID;
 
     DRE::Vector<SceneNode*, DRE::DefaultAllocator> m_Children;
+
+    static DRE::U32 s_GlobalID;
 };
 
 }

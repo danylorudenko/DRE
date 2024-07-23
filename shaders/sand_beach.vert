@@ -3,6 +3,7 @@
 #extension GL_GOOGLE_include_directive : enable
 
 #include "shaders_common.h"
+#include "forward.h"
 
 layout(location = 0) in vec3 in_pos;
 layout(location = 1) in vec3 in_norm;
@@ -14,15 +15,6 @@ layout(location = 0) out vec3 out_wpos;
 layout(location = 1) out vec2 out_uv;
 layout(location = 2) out vec4 out_prev_wpos;
 layout(location = 3) out mat3 out_TBN;
-
-
-
-layout(set = 4, binding = 0, std140) uniform InstanceUniform
-{
-    mat4  model_mat;
-	mat4  prev_model_mat;
-    uvec4 textureIDs;
-} instanceUniform;
 
 void main()
 {

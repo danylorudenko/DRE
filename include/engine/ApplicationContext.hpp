@@ -1,6 +1,7 @@
 #pragma once
 
 #include <foundation\Common.hpp>
+#include <gfx\buffer\ReadbackProxy.hpp>
 
 namespace WORLD
 {
@@ -13,15 +14,17 @@ namespace DRE
 struct ApplicationContext
 {
     // Time
-    std::uint64_t   m_EngineFrame = 0;
-    std::uint64_t   m_TimeSinceStartUS = 0;
-    std::uint64_t   m_SystemTimeUS = 0;
-    std::uint64_t   m_DeltaTimeUS = 0;
+    DRE::U64    m_EngineFrame = 0;
+    DRE::U64    m_TimeSinceStartUS = 0;
+    DRE::U64    m_SystemTimeUS = 0;
+    DRE::U64    m_DeltaTimeUS = 0;
 
-    bool            m_PauseTime = false;
+    bool        m_PauseTime = false;
 
     // Editor
     WORLD::ISceneNodeUser* m_FocusedObject = nullptr;
+    GFX::ReadbackFuture m_LastObjectIDsFuture;
+
 };
 
 extern ApplicationContext g_AppContext;

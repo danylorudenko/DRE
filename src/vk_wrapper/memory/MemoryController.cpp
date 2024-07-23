@@ -192,18 +192,16 @@ MemoryPage* MemoryController::AllocPage(MemoryClass memoryClass, std::uint64_t s
             break;
         case MemoryClass::CpuUniform:
             requiredFlags       = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-            preferredFlags      = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-            nonPreferredFlags   = VK_MEMORY_PROPERTY_HOST_CACHED_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+            preferredFlags      = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
             break;
         case MemoryClass::CpuStaging:
             requiredFlags       = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-            preferredFlags      = VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
-            nonPreferredFlags   = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+            preferredFlags      = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
             break;
         case MemoryClass::CpuReadback:
             requiredFlags       = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-            preferredFlags      = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-            nonPreferredFlags   = VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+            preferredFlags      = VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+            nonPreferredFlags   = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
             break;
         default:
             assert(false && "MemoryClass not implemented.");

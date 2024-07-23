@@ -147,6 +147,7 @@ public:
     void CmdClearDepthStencilImage(VKW::ImageResource const* image, float depth, std::uint32_t stencil);
 
     void CmdCopyImageToImage(VKW::ImageResource const* dst, VKW::ImageResource const* src);
+    void CmdCopyImageToBuffer(VKW::BufferResource const* dst, VKW::ImageResource const* src, std::uint32_t bufferOffset);
     void CmdCopyBufferToImage(VKW::ImageResource const* dst, VKW::BufferResource const* src, std::uint32_t bufferOffset);
     void CmdCopyBufferToBuffer(VKW::BufferResource const* dst, std::uint32_t dstOffset, VKW::BufferResource const* scr, std::uint32_t srcOffset, std::uint32_t size);
 

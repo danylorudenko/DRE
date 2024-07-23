@@ -35,6 +35,7 @@ void Context::ResetDependenciesVectors(DRE::AllocatorLinear* allocator)
 void Context::FlushAll()
 {
     WriteResourceDependencies();
+    FlushOnlyPending();
     m_ParentQueue->Execute(m_CurrentCommandList);
     m_CurrentCommandList = m_ParentQueue->GetFreeCommandList();
 }
@@ -58,6 +59,7 @@ void Context::WriteResourceDependencies()
 void Context::FlushWaitSwapchain(PresentationContext& presentContext)
 {
     WriteResourceDependencies();
+    FlushOnlyPending();
     m_ParentQueue->ExecuteWaitSwapchain(m_CurrentCommandList, presentContext);
     m_CurrentCommandList = m_ParentQueue->GetFreeCommandList();
 }
@@ -529,6 +531,35 @@ void Context::CmdCopyBufferToImage(VKW::ImageResource const* dst, VKW::BufferRes
 
     WriteResourceDependencies();
     m_ImportTable->vkCmdCopyBufferToImage2(*m_CurrentCommandList, &copyInfo);
+}
+
+void Context::CmdCopyImageToBuffer(VKW::BufferResource const* dst, VKW::ImageResource const* src, std::uint32_t bufferOffset)
+{
+    VkBufferImageCopy2KHR copyDesc{};
+    copyDesc.sType = VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2_KHR;
+    copyDesc.pNext = nullptr;
+    copyDesc.bufferOffset = bufferOffset;
+    copyDesc.bufferRowLength = src->width_;
+    copyDesc.bufferImageHeight = src->height_;
+    copyDesc.imageSubresource = VKW::HELPER::DefaultImageSubresourceLayers();
+    copyDesc.imageOffset.x = 0;
+    copyDesc.imageOffset.y = 0;
+    copyDesc.imageOffset.z = 0;
+    copyDesc.imageExtent.width = src->width_;
+    copyDesc.imageExtent.height = src->height_;
+    copyDesc.imageExtent.depth = 1;
+
+    VkCopyImageToBufferInfo2KHR copyInfo;
+    copyInfo.sType = VK_STRUCTURE_TYPE_COPY_IMAGE_TO_BUFFER_INFO_2_KHR;
+    copyInfo.pNext = nullptr;
+    copyInfo.srcImage = src->handle_;
+    copyInfo.dstBuffer = dst->handle_;
+    copyInfo.srcImageLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    copyInfo.regionCount = 1;
+    copyInfo.pRegions = &copyDesc;
+
+    WriteResourceDependencies();
+    m_ImportTable->vkCmdCopyImageToBuffer2(*m_CurrentCommandList, &copyInfo);
 }
 
 void Context::CmdCopyBufferToBuffer(VKW::BufferResource const* dst, std::uint32_t dstOffset, VKW::BufferResource const* src, std::uint32_t srcOffset, std::uint32_t size)

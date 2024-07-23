@@ -48,6 +48,21 @@ ReadbackScheduler::ReadbackScheduler(FrameID frameID, ReadbackArena* arena, std:
 {
 }
 
+VKW::BufferResource* ReadbackScheduler::GetDstBuffer() const
+{
+    return m_ReadbackAllocation.m_Buffer;
+}
+
+std::uint32_t ReadbackScheduler::GetDstOffset() const
+{
+    return m_ReadbackAllocation.m_OffsetInBuffer;
+}
+
+std::uint32_t ReadbackScheduler::GetDstSize() const
+{
+    return m_ReadbackAllocation.m_Size;
+}
+
 ReadbackFuture ReadbackScheduler::CreateReadbackFuture(VKW::QueueExecutionPoint const& executionPoint) const
 {
     return ReadbackFuture{ executionPoint, m_ReadbackAllocation };

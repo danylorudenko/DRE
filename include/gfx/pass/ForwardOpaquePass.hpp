@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gfx\pass\BasePass.hpp>
+#include <gfx\buffer\ReadbackProxy.hpp>
 
 namespace GFX
 {

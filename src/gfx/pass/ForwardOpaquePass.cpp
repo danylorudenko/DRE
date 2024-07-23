@@ -9,7 +9,10 @@
 #include <engine\io\IOManager.hpp>
 #include <engine\scene\Scene.hpp>
 
+#include <engine\ApplicationContext.hpp>
+
 #include <forward.h>
+#include <forward_output.h>
 
 namespace GFX
 {
@@ -25,13 +28,13 @@ void ForwardOpaquePass::RegisterResources(RenderGraph& graph)
 
     graph.RegisterTexture(this,
         RESOURCE_ID(TextureID::ShadowMap),
-        VKW::FORMAT_D16_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT, 0);
+        VKW::FORMAT_D16_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_VERTEX | VKW::STAGE_FRAGMENT, 0);
 
     graph.RegisterUniformBuffer(this, VKW::STAGE_FRAGMENT, 1);
 
     graph.RegisterTexture(this,
         RESOURCE_ID(TextureID::CausticMap),
-        VKW::FORMAT_R8_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT, 2);
+        VKW::FORMAT_R8_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_VERTEX | VKW::STAGE_FRAGMENT, 2);
 
 
     graph.RegisterRenderTarget(this,
@@ -46,7 +49,7 @@ void ForwardOpaquePass::RegisterResources(RenderGraph& graph)
 
     graph.RegisterRenderTarget(this,
         RESOURCE_ID(TextureID::ObjectIDBuffer),
-        VKW::FORMAT_R32_UINT, renderWidth, renderHeight,
+        VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight,
         2);
 
     graph.RegisterDepthOnlyTarget(this,
@@ -60,9 +63,7 @@ void ForwardOpaquePass::Initialize(RenderGraph& graph)
 
 void ForwardObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view)
 {
-    std::uint32_t constexpr uniformSize =
-        sizeof(glm::mat4) * 2 +
-        sizeof(VKW::TextureDescriptorIndex::id_) * 4;
+    std::uint32_t constexpr uniformSize = sizeof(InstanceUniform);
 
     auto uniformAllocation = arena.AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), uniformSize, 256);
     VKW::DescriptorManager::WriteDesc writeDesc;
@@ -82,6 +83,7 @@ void ForwardObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::De
     };
 
     uniformProxy.WriteMember140(textureIDs, sizeof(textureIDs));
+    uniformProxy.WriteMember140(obj.GetSceneNode()->GetGlobalID());
 }
 
 void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
@@ -117,8 +119,7 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
     float clearVelocity[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     std::uint32_t clearID[4] = { 0, 0, 0, 0 };
     context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_0, clearColors);
-    context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_1, clearVelocity);
-    context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_2, clearID);
+    context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_1 | VKW::ATTACHMENT_MASK_COLOR_2, clearVelocity);
     context.CmdClearAttachments(VKW::ATTACHMENT_MASK_DEPTH, 0.0f, 0);
 
     context.CmdSetViewport(attachmentsCount, 0, 0, renderWidth, renderHeight);
@@ -168,9 +169,15 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
         context.CmdDrawIndexed(atom.indexCount);
     }
 
-    // 2. feed all RenderableObject's to DrawBatcher
-    // 3. DrawBatcher produces atomic draw commands
     context.CmdEndRendering();
+
+    ReadbackScheduler readback(g_GraphicsManager->GetCurrentFrameID(), &g_GraphicsManager->GetReadbackArena(), renderWidth * renderHeight * 4);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, objectIDAttachment->parentResource_, VKW::RESOURCE_ACCESS_TRANSFER_SRC, VKW::STAGE_TRANSFER);
+    context.CmdCopyImageToBuffer(readback.GetDstBuffer(), objectIDAttachment->parentResource_, readback.GetDstOffset());
+
+    // queue submit!!!
+    DRE::g_AppContext.m_LastObjectIDsFuture = readback.CreateReadbackFuture(context.SyncPoint());
+    context.CmdBindGlobalDescriptorSets(*g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), g_GraphicsManager->GetCurrentFrameID());
 }
 
 }

@@ -135,6 +135,7 @@ private:
     PipelineLayout const*   layout_;
 
     Descriptor              descriptor_;
+    DRE::String128          name_;
 };
 
 }
