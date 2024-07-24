@@ -15,6 +15,8 @@ public:
         std::uint32_t mouseButtonStates_ = 0;
         float xDelta_ = 0.0f;
         float yDelta_ = 0.0f;
+        std::int32_t mousePosX_ = 0;
+        std::int32_t mousePosY_ = 0;
         std::int32_t mouseWheelPos_ = 0;
         float mouseWheelDelta_ = 0.0f;
     };

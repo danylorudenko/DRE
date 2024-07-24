@@ -46,5 +46,11 @@ inline constexpr T Min(T lhs, T rhs)
     return lhs < rhs ? lhs : rhs;
 }
 
+template<typename T>
+inline constexpr T Clamp(T value, T min, T max)
+{
+    return Max(Min(value, max), min);
+}
+
 DRE_END_NAMESPACE
 

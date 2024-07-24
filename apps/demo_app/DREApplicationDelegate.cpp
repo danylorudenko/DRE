@@ -201,6 +201,8 @@ void DREApplicationDelegate::update()
     DRE::g_FrameScratchAllocator.Reset();
 
     m_InputSystem.Update();
+    DRE::g_AppContext.m_CursorX = m_InputSystem.GetMouseState().mousePosX_;
+    DRE::g_AppContext.m_CursorY = m_InputSystem.GetMouseState().mousePosY_;
 
     if (m_ImGuiEnabled)
     {

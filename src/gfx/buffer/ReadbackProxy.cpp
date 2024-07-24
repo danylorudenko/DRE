@@ -38,6 +38,12 @@ void ReadbackFuture::SyncRead(void* dst, std::uint32_t size)
     Read(dst, size);
 }
 
+void* ReadbackFuture::GetMappedPtr()
+{
+    m_ReadbackAllocation.InvalidateRanges();
+    return m_ReadbackAllocation.m_MappedRange;
+}
+
 
 //////////////////////////////////////
 //////////////////////////////////////

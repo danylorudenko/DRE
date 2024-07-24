@@ -291,4 +291,22 @@ void InputSystem::ProcessSystemInput(HWND handle, WPARAM wparam, LPARAM lparam)
         }
     }
 
+
+    POINT mouseScreenPos;
+    bool hasScreenPos = ::GetCursorPos(&mouseScreenPos) != 0;
+
+    if (hasScreenPos)
+    {
+        POINT mousePos = mouseScreenPos;
+        ::ScreenToClient(handle, &mousePos);
+
+        pendingMouseState_.mousePosX_ = mousePos.x;
+        pendingMouseState_.mousePosY_ = mousePos.y;
+    }
+    else
+    {
+        pendingMouseState_.mousePosX_ = mouseState_.mousePosX_;
+        pendingMouseState_.mousePosY_ = mouseState_.mousePosY_;
+    }
+
 }

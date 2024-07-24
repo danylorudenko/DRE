@@ -176,8 +176,37 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
     context.CmdCopyImageToBuffer(readback.GetDstBuffer(), objectIDAttachment->parentResource_, readback.GetDstOffset());
 
     // queue submit!!!
-    DRE::g_AppContext.m_LastObjectIDsFuture = readback.CreateReadbackFuture(context.SyncPoint());
+    ReadbackFuture tempFuture = readback.CreateReadbackFuture(context.SyncPoint());
+
+    if (static_cast<bool>(DRE::g_AppContext.m_LastObjectIDsFuture))
+    {
+        DRE::g_AppContext.m_LastObjectIDsFuture.Sync();
+        void* readbackData = DRE::g_AppContext.m_LastObjectIDsFuture.GetMappedPtr();
+
+
+        DRE::S32 x = DRE::Clamp(DRE::g_AppContext.m_CursorX, 0, DRE::S32(renderWidth - 1));
+        DRE::S32 y = DRE::Clamp(DRE::g_AppContext.m_CursorY, 0, DRE::S32(renderHeight - 1));
+        DRE::U32 const objectID = ObjectIDFromBuffer(readbackData, x, y);
+        std::cout << "cur:" << x << ',' << y << ". objectID: " << objectID << std::endl;
+    }
+
+    DRE::g_AppContext.m_LastObjectIDsFuture = tempFuture;
     context.CmdBindGlobalDescriptorSets(*g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), g_GraphicsManager->GetCurrentFrameID());
+}
+
+DRE::U32 ForwardOpaquePass::ObjectIDFromBuffer(void* ptr, DRE::U32 x, DRE::U32 y)
+{
+    DRE::U32 const xOffset = x * 4;
+    DRE::U32 const yOffset = y * 4 * g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth;
+
+    DRE::U32 const pixel = *(DRE::U32 const*)((DRE::U8 const*)ptr + (xOffset + yOffset));
+
+    DRE::U32 const r = (pixel & 0xFF000000) >> 24;
+    DRE::U32 const g = (pixel & 0x00FF0000) >> 8;
+    DRE::U32 const b = (pixel & 0x0000FF00) << 8;
+    //DRE::U32 const a = (pixel & 0x000000FF) << 24; // :P we don't use alpha
+
+    return (r | g | b);
 }
 
 }

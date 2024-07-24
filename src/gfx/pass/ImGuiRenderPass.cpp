@@ -79,6 +79,7 @@ void ImGuiRenderPass::Render(RenderGraph& graph, VKW::Context& context)
     ImGui_ImplVulkan_RenderDrawData(data, *context.GetCurrentCommandList());
 
     context.CmdEndRendering();
+    context.FlushAll();
 
     ImGui::RenderPlatformWindowsDefault();
 

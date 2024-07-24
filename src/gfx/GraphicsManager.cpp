@@ -23,7 +23,7 @@
 namespace GFX
 {
 
-static constexpr std::uint32_t C_STAGING_ARENA_SIZE         = 1024 * 1024 * 64;
+static constexpr std::uint32_t C_STAGING_ARENA_SIZE         = 1024 * 1024 * 128;
 static constexpr std::uint32_t C_UNIFORM_ARENA_SIZE         = DRE_U16_MAX * 2 - 1;
 static constexpr std::uint32_t C_READBACK_ARENA_SIZE        = 1024 * 1024 * 64;
 static constexpr std::uint32_t C_PERSISTENT_STORAGE_SIZE    = 1024 * 1024 * 16;

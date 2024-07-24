@@ -27,6 +27,10 @@ public:
     void Sync();
     void Read(void* dst, std::uint32_t size);
 
+    explicit operator bool() { return static_cast<bool>(m_ExecutionPoint); }
+
+    void* GetMappedPtr();
+
     ~ReadbackFuture();
 
 private:

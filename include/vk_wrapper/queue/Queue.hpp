@@ -25,6 +25,8 @@ public:
     inline Queue*        GetQueue() const { return parentQueue_; }
     inline VkSemaphore   GetTimelineSemaphore() const;
 
+    explicit operator bool() { return parentQueue_ != nullptr; }
+
     void Wait();
 
 private:
