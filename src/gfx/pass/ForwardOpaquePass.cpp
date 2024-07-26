@@ -83,6 +83,7 @@ void ForwardObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::De
     };
 
     uniformProxy.WriteMember140(textureIDs, sizeof(textureIDs));
+
     uniformProxy.WriteMember140(obj.GetSceneNode()->GetGlobalID());
 }
 
@@ -201,12 +202,11 @@ DRE::U32 ForwardOpaquePass::ObjectIDFromBuffer(void* ptr, DRE::U32 x, DRE::U32 y
 
     DRE::U32 const pixel = *(DRE::U32 const*)((DRE::U8 const*)ptr + (xOffset + yOffset));
 
-    DRE::U32 const r = (pixel & 0xFF000000) >> 24;
-    DRE::U32 const g = (pixel & 0x00FF0000) >> 8;
-    DRE::U32 const b = (pixel & 0x0000FF00) << 8;
-    //DRE::U32 const a = (pixel & 0x000000FF) << 24; // :P we don't use alpha
+    // layout: ARGB (from BGRA8)
+    DRE::U32 const a = (pixel & 0xFF000000) >> 24;
+    DRE::U32 const rgb = (pixel & 0x00FFFFFF) << 8;
 
-    return (r | g | b);
+    return (rgb | a);
 }
 
 }

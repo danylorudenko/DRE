@@ -45,5 +45,5 @@ void main()
     vec2 vel_uv = vel * 0.5;
 
     velocity = vec2(vel_uv);
-
+    id = GlobalID2Color();
 }

@@ -38,11 +38,10 @@ END_CONSTANT_BUFFER(InstanceUniform, instanceUniform, 4, 0)
 #ifndef __cplusplus
 vec4 GlobalID2Color()
 {
-    float r = (instanceUniform.globalID >> 0)  & 0x000000FF;
-    float g = (instanceUniform.globalID >> 8)  & 0x000000FF;
-    float b = (instanceUniform.globalID >> 16) & 0x000000FF;
-    //float a = (instanceUniform.globalID >> 24) & 0x000000FF;
-    float a = 255; // just for ease of imgui view
+    float r = (instanceUniform.globalID & 0xFF000000) >> 24;
+    float g = (instanceUniform.globalID & 0x00FF0000) >> 16;
+    float b = (instanceUniform.globalID & 0x0000FF00) >> 8;
+    float a = (instanceUniform.globalID & 0x000000FF) >> 0;
     return vec4(r,g,b,a) / 255.0;
 }
 #endif
