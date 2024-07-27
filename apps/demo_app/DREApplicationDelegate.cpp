@@ -199,10 +199,12 @@ void DREApplicationDelegate::update()
 
     DRE::g_FrameScratchAllocator.Reset();
 
+    // Input maintenance
     m_InputSystem.Update();
     DRE::g_AppContext.m_CursorX = m_InputSystem.GetMouseState().mousePosX_;
     DRE::g_AppContext.m_CursorY = m_InputSystem.GetMouseState().mousePosY_;
 
+    // ImGui
     if (m_ImGuiEnabled)
     {
         m_ImGuiHelper->BeginFrame();
@@ -210,6 +212,9 @@ void DREApplicationDelegate::update()
         m_ImGuiHelper->EndFrame();
     }
 
+    ProcessFocusedObject();
+
+    // Reload shaders
     if (m_InputSystem.GetKeyboardButtonJustReleased(Keys::R))
     {
         if (m_IOManager.NewShadersPending())
@@ -219,6 +224,7 @@ void DREApplicationDelegate::update()
         }
     }
 
+    // Global stopwatch
     if (DRE::g_AppContext.m_PauseTime != m_GlobalStopwatch.IsPaused())
     {
         if (DRE::g_AppContext.m_PauseTime)
@@ -231,6 +237,7 @@ void DREApplicationDelegate::update()
         }
     }
 
+    // Rendering
     m_GraphicsManager.RenderFrame(DRE::g_AppContext.m_EngineFrame, DRE::g_AppContext.m_DeltaTimeUS, m_GlobalStopwatch.CurrentSeconds());
 
     DRE::g_AppContext.m_EngineFrame++;
@@ -334,3 +341,17 @@ void DREApplicationDelegate::ImGuiUser()
         ImGui::End();
     }
 }
+
+void DREApplicationDelegate::ProcessFocusedObject()
+{
+    if (!ImGui::GetIO().WantCaptureMouse && m_InputSystem.GetLeftMouseButtonJustReleased())
+    {
+        WORLD::SceneNode* result = m_MainScene.GetRootNode()->FindChildByID(DRE::g_AppContext.m_PickedObjectID);
+        DRE_ASSERT(result != nullptr, "Can't find picked object.");
+        if (result != nullptr)
+        {
+            DRE::g_AppContext.m_FocusedObject = result->GetNodeUser();
+        }
+    }
+}
+

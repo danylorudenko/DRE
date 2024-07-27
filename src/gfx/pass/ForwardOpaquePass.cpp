@@ -179,19 +179,17 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
     // queue submit!!!
     ReadbackFuture tempFuture = readback.CreateReadbackFuture(context.SyncPoint());
 
-    if (static_cast<bool>(DRE::g_AppContext.m_LastObjectIDsFuture))
+    if (static_cast<bool>(m_LastObjectIDsFuture))
     {
-        DRE::g_AppContext.m_LastObjectIDsFuture.Sync();
-        void* readbackData = DRE::g_AppContext.m_LastObjectIDsFuture.GetMappedPtr();
-
+        m_LastObjectIDsFuture.Sync();
+        void* readbackData = m_LastObjectIDsFuture.GetMappedPtr();
 
         DRE::S32 x = DRE::Clamp(DRE::g_AppContext.m_CursorX, 0, DRE::S32(renderWidth - 1));
         DRE::S32 y = DRE::Clamp(DRE::g_AppContext.m_CursorY, 0, DRE::S32(renderHeight - 1));
-        DRE::U32 const objectID = ObjectIDFromBuffer(readbackData, x, y);
-        std::cout << "cur:" << x << ',' << y << ". objectID: " << objectID << std::endl;
+        DRE::g_AppContext.m_PickedObjectID = ObjectIDFromBuffer(readbackData, x, y);
     }
 
-    DRE::g_AppContext.m_LastObjectIDsFuture = tempFuture;
+    m_LastObjectIDsFuture = tempFuture;
     context.CmdBindGlobalDescriptorSets(*g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), g_GraphicsManager->GetCurrentFrameID());
 }
 

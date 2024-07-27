@@ -324,7 +324,7 @@ void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* a
     }
 }
 
-WORLD::SceneNode* IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene, char const* defaultShader, glm::mat4 parentTransform, Data::TextureChannelVariations metalnessRoughnessOverride)
+WORLD::SceneNode* IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene, char const* defaultShader, glm::mat4 baseTransform, Data::TextureChannelVariations metalnessRoughnessOverride)
 {
     Assimp::Importer importer = Assimp::Importer();
 
@@ -338,8 +338,8 @@ WORLD::SceneNode* IOManager::ParseModelFile(char const* path, WORLD::Scene& targ
     ParseAssimpMeshes(GFX::g_GraphicsManager->GetMainContext(), scene, sceneName);
     ParseAssimpMaterials(scene, sceneName, path, defaultShader, metalnessRoughnessOverride);
 
-    WORLD::SceneNode* parentNode = targetScene.CreateSceneNode(nullptr, nullptr);
-    parentNode->SetMatrix(parentTransform);
+    WORLD::SceneNode* parentNode = targetScene.CreateSceneNode(nullptr, targetScene.GetRootNode());
+    parentNode->SetMatrix(baseTransform);
     parentNode->SetName(sceneName);
 
     ParseAssimpNodeRecursive(GFX::g_GraphicsManager->GetMainContext(), path, scene, sceneName, scene->mRootNode, targetScene, parentNode);

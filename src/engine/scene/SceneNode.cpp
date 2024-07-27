@@ -59,6 +59,25 @@ void SceneNode::RemoveChild(SceneNode* child)
     m_Children.RemoveIndex(i);
 }
 
+SceneNode* SceneNode::FindChildByID(DRE::U32 globalID)
+{
+    for (std::uint32_t i = 0, size = m_Children.Size(); i < size; i++)
+    {
+        if (m_Children[i]->m_GlobalID == globalID)
+            return m_Children[i];
+    }
+
+    SceneNode* result = nullptr;
+    for (std::uint32_t i = 0, size = m_Children.Size(); i < size; i++)
+    {
+        result = m_Children[i]->FindChildByID(globalID);
+        if(result != nullptr)
+            return result;
+    }
+
+    return nullptr;
+}
+
 SceneNode* SceneNode::GetChild(DRE::U32 i)
 {
     return m_Children[i];

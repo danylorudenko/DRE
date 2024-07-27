@@ -51,6 +51,7 @@ private:
     void InitImGui();
     void DestroyImGui();
     void ImGuiUser();
+    void ProcessFocusedObject();
 
     Window                              m_MainWindow;
     InputSystem                         m_InputSystem;

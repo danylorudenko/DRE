@@ -37,6 +37,8 @@ public:
     DRE::U32                AddChild(SceneNode* child);
     void                    RemoveChild(SceneNode* child);
 
+    SceneNode*              FindChildByID(DRE::U32 globalID);
+
     SceneNode*              GetChild(DRE::U32 i);
     DRE::U32                GetChildrenCount() const { return m_Children.Size(); };
 

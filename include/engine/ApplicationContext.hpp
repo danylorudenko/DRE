@@ -1,7 +1,6 @@
 #pragma once
 
 #include <foundation\Common.hpp>
-#include <gfx\buffer\ReadbackProxy.hpp>
 
 namespace WORLD
 {
@@ -10,6 +9,13 @@ class ISceneNodeUser;
 
 namespace DRE
 {
+
+enum class ObjectFocusEvent
+{
+    None,
+    ImGui,
+    Picking
+};
 
 struct ApplicationContext
 {
@@ -21,10 +27,9 @@ struct ApplicationContext
 
     bool        m_PauseTime = false;
 
-    // Editor
-    WORLD::ISceneNodeUser* m_FocusedObject = nullptr;
-    GFX::ReadbackFuture m_LastObjectIDsFuture;
-    DRE::U32    m_PickedObjectID = 0;
+    // Focused Object
+    WORLD::ISceneNodeUser*  m_FocusedObject = nullptr;
+    DRE::U32                m_PickedObjectID = 0;
 
     DRE::S32    m_CursorX = 0;
     DRE::S32    m_CursorY = 0;

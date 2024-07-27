@@ -74,7 +74,7 @@ Light* Scene::CreateDirectionalLightInternal(VKW::Context& context, SceneNode* p
     LightID const id = m_LightsCounter++;
     Light* light = &m_SceneLights.Emplace(id, &GFX::g_GraphicsManager->GetLightsManager(), static_cast<std::uint32_t>(type));
 
-    SceneNode* node = CreateSceneNode(light, parent);
+    SceneNode* node = CreateSceneNode(light, parent == nullptr ? m_RootNode : parent);
     node->SetName("Directional Light");
     light->ScheduleUpdateGPUData();
 

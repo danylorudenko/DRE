@@ -97,7 +97,7 @@ public:
 
     Data::Texture2D ReadTexture2D(char const* path, Data::TextureChannelVariations channels);
 
-    WORLD::SceneNode* ParseModelFile(char const* path, WORLD::Scene & targetScene, char const* defaultShader, glm::mat4 parentTransform = glm::identity<glm::mat4>(), Data::TextureChannelVariations metalnessRoughnessOverride = Data::TEXTURE_VARIATION_INVALID);
+    WORLD::SceneNode* ParseModelFile(char const* path, WORLD::Scene& targetScene, char const* defaultShader, glm::mat4 baseTransform = glm::identity<glm::mat4>(), Data::TextureChannelVariations metalnessRoughnessOverride = Data::TEXTURE_VARIATION_INVALID);
 
 
     static std::uint64_t    ReadFileToBuffer(char const* path, DRE::ByteBuffer* buffer);

@@ -17,8 +17,10 @@ public:
     virtual void    Render              (RenderGraph& graph, VKW::Context& context) override;
 
 private:
-
     static DRE::U32 ObjectIDFromBuffer  (void* ptr, DRE::U32 x, DRE::U32 y);
+
+private:
+    GFX::ReadbackFuture m_LastObjectIDsFuture;
 };
 
 }
