@@ -115,7 +115,7 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
 {
     m_MainView.UpdatePreviosFrame();
     m_SunShadowView.UpdatePreviosFrame();
-    
+
     VKW::BufferResource* buffer = m_GlobalUniforms[GetCurrentFrameID()];
     void* dst = buffer->memory_.GetRegionMappedPtr();
 
@@ -162,6 +162,7 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
 
     globalUniform.main_ShadowVP         = m_SunShadowView.GetViewProjectionM();
     globalUniform.main_ShadowSize       = glm::vec4{ C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, 0.0f, 0.0f };
+    globalUniform.TEX_ID_shadow         = glm::uvec4{ m_RenderGraph.GetTexture(RESOURCE_ID(TextureID::ShadowMap))->GetShaderGlobalDescriptor().id_, 0, 0, 0 };
 
     globalUniform.main_SunLightDir      = glm::vec4{ sunLight.GetForward(), 0.0f };
 

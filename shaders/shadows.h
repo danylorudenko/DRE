@@ -36,7 +36,6 @@ float CalculateShadow(in vec3 wpos, in mat4 shadowViewProj, vec2 shadowMapDims, 
         {
             float val = texture(sampler2D(shadowMap, GetSamplerNearest()), (start + vec2(i, j)) / shadowMapDims).r;
             result += val - 0.01 > lightspaceCoord.z ? 0.0 : 1.0;
-            
         }
     }
 #endif

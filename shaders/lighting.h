@@ -25,10 +25,7 @@ S_LIGHTING_RESULT CalculateLighting(S_SURFACE surface)
     S_LIGHTING_RESULT Result;
     Result.finalRadiance = vec3(0.0, 0.0, 0.0);
 
-    //vec2 shadowUV = CalculateShadowUV(surface.wpos, GetSunShadowVP());
-
-    //float CalculateShadow(in vec3 wpos, in mat4 shadowViewProj, vec2 shadowMapDims, in texture2D shadowMap)
-    float shadow = CalculateShadow(surface.wpos, GetSunShadowVP(), GetSunShadowSize(), GetGlobalTexture(GetShadowMapID()));
+    vec2 shadowUV = CalculateShadowUV(surface.wpos, GetSunShadowVP());
 
     vec3 n = surface.normal;
     vec3 v = normalize(GetCameraPos() - surface.wpos);
