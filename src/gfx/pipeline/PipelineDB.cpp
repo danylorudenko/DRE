@@ -40,7 +40,7 @@ void PipelineDB::CreateDefaultPipelines()
         CreateGraphicsForwardPipeline("sand_beach");
         CreateGraphicsForwardWaterPipeline("water");
 
-        //CreateGraphicsForwardPipeline("forward_shadow");
+        CreateGraphicsGizmoPipeline("gizmo_3D");
 
         CreateComputePipeline("color_encode");
         CreateComputePipeline("temporal_AA");
@@ -204,7 +204,39 @@ DRE::String64 const* PipelineDB::CreateComputePipeline(char const* name)
 
     CreatePipeline(name, desc);
     return m_Pipelines.Find(name).key;
+}
 
+DRE::String64 const* PipelineDB::CreateGraphicsGizmoPipeline(char const* name)
+{
+    VKW::Pipeline::Descriptor pipeDesc;
+
+    DRE::String64 vertName{ name }; vertName.Append(".vert");
+    DRE::String64 fragName{ name }; fragName.Append(".frag");
+
+    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName.GetData(), fragName.GetData(), nullptr);
+
+    IO::IOManager::ShaderData const* vertData = m_IOManager->GetShaderData(vertName.GetData());
+    IO::IOManager::ShaderData const* fragData = m_IOManager->GetShaderData(fragName.GetData());
+
+    VKW::ShaderModule vertModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData->m_Binary, vertData->m_ModuleType, "main" };
+    VKW::ShaderModule fragModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragData->m_Binary, fragData->m_ModuleType, "main" };
+
+    VKW::Pipeline::Descriptor desc;
+
+    desc.SetPipelineType(VKW::PIPELINE_TYPE_GRAPHIC);
+    desc.SetVertexShader(vertModule);
+    desc.SetFragmentShader(fragModule);
+    desc.SetLayout(GetLayout(layoutName->GetData()));
+    desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
+    desc.AddColorOutput(g_GraphicsManager->GetMainColorFormat());
+
+    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT);
+    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT);
+    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT);
+
+    CreatePipeline(name, desc);
+
+    return nullptr;
 }
 
 void PipelineDB::ReloadPipeline(char const* name)

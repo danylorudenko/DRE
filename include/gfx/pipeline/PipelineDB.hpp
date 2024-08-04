@@ -45,19 +45,21 @@ public:
     VKW::Pipeline*              GetPipeline(char const* name);
     VKW::DescriptorSetLayout*   GetSetLayout(char const* name);
 
-private:
     // will find all passed modules and combine all their layouts into one with name "{name}_layout"
     DRE::String64 const*        CreatePipelineLayoutFromShader(char const* shaderName, 
         char const* vertexName, 
         char const* fragmentName, 
         char const* computeName);
 
+private:
     DRE::String64 const*    CreateGraphicsForwardPipeline(char const* name);
     DRE::String64 const*    CreateGraphicsForwardWaterPipeline(char const* name);
     DRE::String64 const*    CreateGraphicsForwardShadowPipeline(char const* name);
     DRE::String64 const*    CreateComputePipeline(char const* name);
     DRE::String64 const*    CreateCustomGraphicsPipeline(char const* name, VKW::Pipeline::Descriptor& descriptor);
     DRE::String64 const*    CreateCustomComputePipeline(char const* name, VKW::Pipeline::Descriptor& descriptor);
+
+    DRE::String64 const*    CreateGraphicsGizmoPipeline(char const* name);
 
     static void             AddDREVertexAttributes(VKW::Pipeline::Descriptor& descriptor);
 

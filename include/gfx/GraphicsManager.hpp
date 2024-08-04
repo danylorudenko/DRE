@@ -131,7 +131,9 @@ public:
     inline GraphicsSettings const&      GetGraphicsSettings() const { return m_Settings; }
 
     static constexpr VKW::Format        GetMainColorFormat() { return VKW::FORMAT_B8G8R8A8_UNORM; }
+    static constexpr VKW::Format        GetFinalImageFormat() { return VKW::FORMAT_B8G8R8A8_UNORM; }
     static constexpr VKW::Format        GetMainDepthFormat() { return VKW::FORMAT_D32_FLOAT; }
+    static constexpr VKW::Format        GetObjectIDBufferFormat() { return VKW::FORMAT_B8G8R8A8_UNORM; }
 
 
 public:
@@ -143,15 +145,15 @@ public:
     RenderableObject*                   CreateRenderableObject(WORLD::SceneNode* sceneNode, VKW::Context& context, Data::Geometry* geometry, Data::Material* material);
     void                                FreeRenderableObject(RenderableObject* obj);
 
-private:
-    void CreateAllPasses();
-
     struct GeometryGPU
     {
         VKW::BufferResource* vertexBuffer;
         VKW::BufferResource* indexBuffer;
     };
-    GeometryGPU* LoadGPUGeometry(VKW::Context& context, Data::Geometry* geometry);
+    GeometryGPU*                        LoadGPUGeometry(VKW::Context& context, Data::Geometry* geometry);
+
+private:
+    void                                CreateAllPasses();
 
     void            PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, std::uint64_t deltaTimeUS, float globalTimeS);
     VKW::QueueExecutionPoint TransferToSwapchainAndPresent(Texture& src);

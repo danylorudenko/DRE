@@ -26,6 +26,9 @@ void RenderView::UpdateViewport(glm::uvec2 offset, glm::uvec2 size)
 
 void RenderView::UpdatePlacement(glm::vec3 viewerPos, glm::vec3 viewDirection, glm::vec3 up)
 {
+    m_Current.pos = viewerPos;
+    m_Current.dir = viewDirection;
+
     m_Current.V = glm::lookAtRH(viewerPos, viewerPos + viewDirection, up);
     m_Current.iV = glm::transpose(m_Current.V);
 

@@ -136,9 +136,7 @@ void WaterPass::Render(RenderGraph& graph, VKW::Context& context)
     VKW::PipelineLayout* passLayout = graph.GetPassPipelineLayout(GetID());
     context.CmdBindGraphicsDescriptorSets(passLayout, passSetBinding, 1, &passSet);
 
-    std::uint32_t const startSet = 
-        g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount() +
-        (graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID()).IsValid() ? 1 : 0);
+    std::uint32_t const startSet = graph.GetUserSetBinding(GetID());
 
     auto& draws = batcher.GetDraws();
     for (std::uint32_t i = 0, size = draws.Size(); i < size; i++)

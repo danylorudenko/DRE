@@ -15,6 +15,7 @@
 #include <gfx\pass\ImGuiRenderPass.hpp>
 #include <gfx\pass\ShadowPass.hpp>
 #include <gfx\pass\DebugPass.hpp>
+#include <gfx\pass\EditorPass.hpp>
 
 #include <engine\io\IOManager.hpp>
 #include <engine\scene\Scene.hpp>
@@ -86,7 +87,8 @@ void GraphicsManager::CreateAllPasses()
     m_RenderGraph.AddPass<WaterPass>();
     m_RenderGraph.AddPass<AntiAliasingPass>();
     m_RenderGraph.AddPass<ColorEncodingPass>();
-    m_RenderGraph.AddPass<DebugPass>();
+    m_RenderGraph.AddPass<EditorPass>();
+    //m_RenderGraph.AddPass<DebugPass>();
     m_RenderGraph.AddPass<ImGuiRenderPass>();
     m_RenderGraph.ParseGraph();
     m_RenderGraph.InitGraphResources();
@@ -262,13 +264,16 @@ GraphicsManager::GeometryGPU* GraphicsManager::LoadGPUGeometry(VKW::Context& con
 
     void* memorySequence = meshMemory.m_MappedRange;
     WriteMemorySequence(memorySequence, geometry->GetVertexData(), vertexMemoryRequirements);
-    void* indexStart = memorySequence;
-    WriteMemorySequence(memorySequence, geometry->GetIndexData(), indexMemoryRequirements);
+
+    if (indexMemoryRequirements > 0)
+    {
+        void* indexStart = memorySequence;
+        WriteMemorySequence(memorySequence, geometry->GetIndexData(), indexMemoryRequirements);
+    }
 
     meshMemory.FlushCaches();
 
     VKW::BufferResource* vertexBuffer = GetMainDevice()->GetResourcesController()->CreateBuffer(vertexMemoryRequirements, VKW::BufferUsage::VERTEX_INDEX, "data_vtx");
-    VKW::BufferResource* indexBuffer = GetMainDevice()->GetResourcesController()->CreateBuffer(indexMemoryRequirements, VKW::BufferUsage::VERTEX_INDEX, "data_idx");
 
     context.CmdResourceDependency(meshMemory.m_Buffer, meshMemory.m_OffsetInBuffer, meshMemory.m_Size, VKW::RESOURCE_ACCESS_HOST_WRITE, VKW::STAGE_HOST, VKW::RESOURCE_ACCESS_TRANSFER_SRC, VKW::STAGE_TRANSFER);
 
@@ -277,9 +282,14 @@ GraphicsManager::GeometryGPU* GraphicsManager::LoadGPUGeometry(VKW::Context& con
     context.CmdCopyBufferToBuffer(vertexBuffer, 0, meshMemory.m_Buffer, meshMemory.m_OffsetInBuffer, vertexMemoryRequirements);
     context.CmdResourceDependency(vertexBuffer, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER, VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_INPUT_ASSEMBLER);
 
-    context.CmdResourceDependency(indexBuffer, VKW::RESOURCE_ACCESS_NONE, VKW::STAGE_TOP, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
-    context.CmdCopyBufferToBuffer(indexBuffer, 0, meshMemory.m_Buffer, meshMemory.m_OffsetInBuffer + vertexMemoryRequirements, indexMemoryRequirements);
-    context.CmdResourceDependency(indexBuffer, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER, VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_INPUT_ASSEMBLER);
+    VKW::BufferResource* indexBuffer = nullptr;
+    if (indexMemoryRequirements > 0)
+    {
+        indexBuffer = GetMainDevice()->GetResourcesController()->CreateBuffer(indexMemoryRequirements, VKW::BufferUsage::VERTEX_INDEX, "data_idx");
+        context.CmdResourceDependency(indexBuffer, VKW::RESOURCE_ACCESS_NONE, VKW::STAGE_TOP, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
+        context.CmdCopyBufferToBuffer(indexBuffer, 0, meshMemory.m_Buffer, meshMemory.m_OffsetInBuffer + vertexMemoryRequirements, indexMemoryRequirements);
+        context.CmdResourceDependency(indexBuffer, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER, VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_INPUT_ASSEMBLER);
+    }
 
     return &m_GeometryGPUMap.Emplace(geometry, vertexBuffer, indexBuffer);
 }

@@ -34,7 +34,7 @@ PassID ImGuiRenderPass::GetID() const
 /////////////////////////
 void ImGuiRenderPass::RegisterResources(RenderGraph& graph)
 {
-    graph.RegisterRenderTarget(this, RESOURCE_ID(TextureID::DisplayEncodedImage), VKW::FORMAT_B8G8R8A8_UNORM,
+    graph.RegisterRenderTarget(this, RESOURCE_ID(TextureID::DisplayEncodedImage), g_GraphicsManager->GetFinalImageFormat(),
         g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight,
         0);
 }

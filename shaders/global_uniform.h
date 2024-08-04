@@ -4,11 +4,7 @@
 #include "shaders_defines.h"
 #include "lights.h"
 
-#ifdef __cplusplus
-struct GlobalUniforms
-#else
-layout(set = 2, binding = 0, std140) readonly uniform GlobalUniforms
-#endif
+BEGIN_CONSTANT_BUFFER(GlobalUniforms, g_GlobalUniforms, 2, 0)
 {
     // uniform buffer layout
     vec4 viewportSize_deltaMS_timeS;
@@ -42,10 +38,11 @@ layout(set = 2, binding = 0, std140) readonly uniform GlobalUniforms
     uvec4 lightsCount;
     S_LIGHT_GPURef LightBuffer;
     // end
-#ifdef __cplusplus
-};
-#else
-} g_GlobalUniforms;
+}
+END_CONSTANT_BUFFER(GlobalUniforms, g_GlobalUniforms, 2, 0)
+
+
+#ifndef __cplusplus
 
 // Global uniform values
 vec2    GetViewportSize() { return g_GlobalUniforms.viewportSize_deltaMS_timeS.xy; }
@@ -80,7 +77,7 @@ uint    GetShadowMapID() { return g_GlobalUniforms.TEX_ID_shadow.x; }
 uint    GetLightsCount() { return g_GlobalUniforms.lightsCount.x; }
 S_LIGHT_GPURef GetLight(uint i) { return g_GlobalUniforms.LightBuffer[i]; }
 
-#endif // __cplusplus
+#endif // !__cplusplus
 
 
 

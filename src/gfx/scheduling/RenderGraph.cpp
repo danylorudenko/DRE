@@ -96,6 +96,17 @@ UniformProxy RenderGraph::GetPassUniform(PassID id, VKW::Context& context, std::
     return UniformProxy{ &context, allocation };
 }
 
+std::uint32_t RenderGraph::GetPassSetBinding()
+{
+    return g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();
+}
+
+std::uint32_t RenderGraph::GetUserSetBinding(PassID pass)
+{
+    return g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount() +
+        (GetPassDescriptorSet(pass, g_GraphicsManager->GetCurrentFrameID()).IsValid() ? 1 : 0);
+}
+
 void RenderGraph::ParseGraph()
 {
     for (std::uint32_t i = 0, size = m_Passes.Size(); i < size; i++)

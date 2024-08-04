@@ -94,9 +94,7 @@ void CausticPass::Render(RenderGraph& graph, VKW::Context& context)
 
     batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), RenderableObject::LAYER_WATER_BIT, GFX::WaterCausticDelegate);
 
-    std::uint32_t const startSet = 
-        g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount() +
-        (graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID()).IsValid() ? 1 : 0);
+    std::uint32_t const startSet = graph.GetUserSetBinding(GetID());
 
     VKW::Pipeline const* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("water_caustics");
     VKW::PipelineLayout const* layout = pipeline->GetLayout();

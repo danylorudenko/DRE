@@ -27,7 +27,7 @@ void ColorEncodingPass::RegisterResources(RenderGraph& graph)
     graph.RegisterStandaloneTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer1), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_READ);
 
     graph.RegisterTexture(this, RESOURCE_ID(TextureID::DisplayEncodedImage),
-        VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 1);
+        g_GraphicsManager->GetFinalImageFormat(), renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 1);
 
     graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 2);
 }
@@ -60,8 +60,7 @@ void ColorEncodingPass::Render(RenderGraph& graph, VKW::Context& context)
 
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
     VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("color_encode");
-    std::uint32_t const firstSet = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();
-    context.CmdBindComputeDescriptorSets(layout, firstSet, 1, &set);
+    context.CmdBindComputeDescriptorSets(layout, graph.GetPassSetBinding(), 1, &set);
     context.CmdBindComputePipeline(pipeline);
 
     glm::uvec2 rtSize{ g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight };

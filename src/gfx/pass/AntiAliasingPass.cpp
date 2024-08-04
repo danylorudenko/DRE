@@ -78,8 +78,7 @@ void AntiAliasingPass::Render(RenderGraph& graph, VKW::Context& context)
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, mainDepth->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
 
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
-    std::uint32_t const firstSet = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();
-    context.CmdBindComputeDescriptorSets(layout, firstSet, 1, &passSet);
+    context.CmdBindComputeDescriptorSets(layout, graph.GetPassSetBinding(), 1, &passSet);
 
     VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("temporal_AA");
     context.CmdBindComputePipeline(pipeline);

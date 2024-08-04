@@ -18,6 +18,7 @@ enum class PassID
     AntiAliasing,
     ImGuiRender,
     ColorEncoding,
+    Editor,
     Debug,
     MAX
 };

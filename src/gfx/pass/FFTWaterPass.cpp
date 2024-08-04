@@ -78,9 +78,8 @@ void FFTButterflyGenPass::Render(RenderGraph& graph, VKW::Context& context)
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, texture->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
 
 
-    std::uint32_t const firstSet = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();
     VKW::DescriptorSet set = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
-    context.CmdBindComputeDescriptorSets(layout, firstSet, 1, &set);
+    context.CmdBindComputeDescriptorSets(layout, graph.GetPassSetBinding(), 1, &set);
     
     std::uint32_t stagesCount = std::uint32_t(glm::log2(float(C_WATER_DIM)));
     std::uint32_t group_dims[2] = { 8, 8 };
@@ -122,9 +121,8 @@ void FFTWaterH0GenPass::Render(RenderGraph& graph, VKW::Context& context)
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, texture->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
 
 
-    std::uint32_t const firstSet = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();
     VKW::DescriptorSet set = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
-    context.CmdBindComputeDescriptorSets(layout, firstSet, 1, &set);
+    context.CmdBindComputeDescriptorSets(layout, graph.GetPassSetBinding(), 1, &set);
     
     std::uint32_t group_dims[2] = { 8, 8 };
     context.CmdBindComputePipeline(pipeline);
@@ -169,9 +167,8 @@ void FFTWaterHxtGenPass::Render(RenderGraph& graph, VKW::Context& context)
     VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("gen_hxt");
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
 
-    std::uint32_t const firstSet = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();
     VKW::DescriptorSet set = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
-    context.CmdBindComputeDescriptorSets(layout, firstSet, 1, &set);
+    context.CmdBindComputeDescriptorSets(layout, graph.GetPassSetBinding(), 1, &set);
 
     std::uint32_t group_dims[2] = { 8, 8 };
     context.CmdBindComputePipeline(pipeline);
@@ -241,8 +238,6 @@ void FFTWaterFFTPass::Render(RenderGraph& graph, VKW::Context& context)
     VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("fft_iter");
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
 
-    std::uint32_t const firstSet = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();
-
     auto& setVector = g_GraphicsManager->GetCurrentGraphicsFrame() % 2 == 0 ? m_StageSets0 : m_StageSets1;
 
     std::uint32_t stagesCount = std::uint32_t(glm::log2(float(C_WATER_DIM)));
@@ -272,7 +267,7 @@ void FFTWaterFFTPass::Render(RenderGraph& graph, VKW::Context& context)
             auto& set = setVector[i];
             manager->WriteDescriptorSet(set, writeDesc);
             
-            context.CmdBindComputeDescriptorSets(layout, firstSet, 1, &set);
+            context.CmdBindComputeDescriptorSets(layout, graph.GetPassSetBinding(), 1, &set);
             
             g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, input->parentResource_, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE);
             g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, output->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
@@ -323,10 +318,8 @@ void FFTInvPermutationPass::Render(RenderGraph& graph, VKW::Context& context)
     VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("fft_inv_perm");
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
 
-    std::uint32_t const firstSet = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();
     VKW::DescriptorSet set = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
-
-    context.CmdBindComputeDescriptorSets(layout, firstSet, 1, &set);
+    context.CmdBindComputeDescriptorSets(layout, graph.GetPassSetBinding(), 1, &set);
 
     std::uint32_t group_dims[2] = { 8, 8 };
     context.CmdBindComputePipeline(pipeline);

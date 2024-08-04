@@ -31,6 +31,9 @@ public:
     void UpdateJitter(float xJitter, float yJitter);
     void UpdatePreviosFrame();
 
+    inline glm::vec3 const&     GetPosition() const { return m_Current.pos; }
+    inline glm::vec3 const&     GetDirection() const { return m_Current.dir; }
+
     inline glm::uvec2 const&    GetOffset() const { return m_Current.offset; }
     inline glm::uvec2 const&    GetSize() const { return m_Current.size; }
 
@@ -42,6 +45,10 @@ public:
 
     inline glm::mat4 const&     GetViewProjectionM() const { return m_Current.VP; }
     inline glm::mat4 const&     GetInvViewProjectionM() const { return m_Current.iVP; }
+
+
+    inline glm::vec3 const&     GetPrevPosition() const { return m_Prev.pos; }
+    inline glm::vec3 const&     GetPrevDirection() const { return m_Prev.dir; }
 
     inline glm::uvec2 const&    GetPrevOffset() const { return m_Prev.offset; }
     inline glm::uvec2 const&    GetPrevSize() const { return m_Prev.size; }
@@ -64,6 +71,9 @@ public:
 private:
     struct ViewParams
     {
+        glm::vec3  pos        = glm::vec3{ 0.0f, 0.0f, 0.0f };
+        glm::vec3  dir        = glm::vec3{ 0.0f, 0.0f, 0.0f };
+        
         glm::uvec2 offset     = glm::uvec2{ 0, 0 };
         glm::uvec2 size       = glm::uvec2{ 0, 0 };
         glm::vec2  jitter     = glm::vec2{ 0.0f, 0.0f };

@@ -2,6 +2,8 @@
 #ifndef _SHADERS_COMMON_H_
 #define _SHADERS_COMMON_H_
 
+#ifndef __cplusplus
+
 #extension GL_EXT_nonuniform_qualifier : enable
 #extension GL_EXT_buffer_reference2    : enable
 
@@ -56,5 +58,7 @@ vec4 SampleGlobalTextureAnisotropic(uint id, vec2 uv)
 {
     return SampleTexture(GetGlobalTexture(id), GetSamplerAnisotropic(), uv);
 }
+
+#endif // !__cplusplus
 
 #endif // _SHADERS_COMMON_H_

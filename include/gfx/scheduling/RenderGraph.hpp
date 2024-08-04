@@ -51,6 +51,9 @@ public:
     VKW::DescriptorSet              GetPassDescriptorSet(PassID pass, FrameID frameID);
     VKW::PipelineLayout*            GetPassPipelineLayout(PassID pass);
 
+    std::uint32_t                   GetPassSetBinding();
+    std::uint32_t                   GetUserSetBinding(PassID pass);
+
     Texture*                        GetTexture(char const* id);
     StorageBuffer*                  GetBuffer(char const* id);
     UniformProxy                    GetPassUniform(PassID pass, VKW::Context& context, std::uint32_t size);

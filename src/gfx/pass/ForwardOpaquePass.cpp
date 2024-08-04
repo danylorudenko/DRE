@@ -49,7 +49,7 @@ void ForwardOpaquePass::RegisterResources(RenderGraph& graph)
 
     graph.RegisterRenderTarget(this,
         RESOURCE_ID(TextureID::ObjectIDBuffer),
-        VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight,
+        g_GraphicsManager->GetObjectIDBufferFormat(), renderWidth, renderHeight,
         2);
 
     graph.RegisterDepthOnlyTarget(this,
@@ -143,17 +143,13 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
     }
 
     VKW::DescriptorSet passSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
-    std::uint32_t const passSetBinding = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();
 
     VKW::PipelineLayout* passLayout = graph.GetPassPipelineLayout(GetID());
-    context.CmdBindDescriptorSets(passLayout, VKW::BindPoint::Graphics, passSetBinding, 1, &passSet);
-
-    std::uint32_t const startSet = 
-        g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount() +
-        (graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID()).IsValid() ? 1 : 0);
+    context.CmdBindDescriptorSets(passLayout, VKW::BindPoint::Graphics, graph.GetPassSetBinding(), 1, &passSet);
 
     auto& draws = batcher.GetDraws();
 
+    std::uint32_t const userSetBinding = graph.GetUserSetBinding(GetID());
     VKW::Pipeline* prevPipeline = nullptr;
     for (std::uint32_t i = 0, size = draws.Size(); i < size; i++)
     {
@@ -164,7 +160,7 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
             prevPipeline = atom.pipeline;
         }
 
-        context.CmdBindGraphicsDescriptorSets(atom.pipeline->GetLayout(), startSet, 1, &atom.descriptorSet);
+        context.CmdBindGraphicsDescriptorSets(atom.pipeline->GetLayout(), userSetBinding, 1, &atom.descriptorSet);
         context.CmdBindVertexBuffer(atom.vertexBuffer, atom.vertexOffset);
         context.CmdBindIndexBuffer(atom.indexBuffer, atom.indexOffset);
         context.CmdDrawIndexed(atom.indexCount);

@@ -22,7 +22,7 @@ void DebugPass::RegisterResources(RenderGraph& graph)
 {
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DisplayEncodedImage), VKW::FORMAT_B8G8R8A8_UNORM,
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DisplayEncodedImage), g_GraphicsManager->GetFinalImageFormat(),
         renderWidth, renderHeight,
         VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE,
         0);
@@ -56,10 +56,8 @@ void DebugPass::Render(RenderGraph& graph, VKW::Context& context)
 
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
     VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("debug_view");
-    std::uint32_t const firstSet = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();
 
-    //context.CmdBindComputeDescriptorSets(layout, firstSet, 1, &set);
-    context.CmdBindComputeDescriptorSets(pipeline->GetLayout(), firstSet, 1, &set);
+    context.CmdBindComputeDescriptorSets(pipeline->GetLayout(), graph.GetPassSetBinding(), 1, &set);
     context.CmdBindComputePipeline(pipeline);
 
     glm::uvec2 imageSize{ C_WATER_DIM, C_WATER_DIM };
