@@ -17,6 +17,7 @@ set(FOUNDATION_HEADER_LIST
 	"${DRE_SOURCE_DIR}/include/foundation/input/InputSystem.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/input/Keyboard.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/math/SimpleMath.hpp"
+	"${DRE_SOURCE_DIR}/include/foundation/math/Geometry.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/memory/AllocatorBuddy.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/memory/AllocatorLinear.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/memory/AllocatorPool.hpp"
@@ -40,6 +41,7 @@ set(FOUNDATION_SOURCE_LIST
 	"${DRE_SOURCE_DIR}/src/foundation/class_features/ContiniousDataStorage.cpp"
 	"${DRE_SOURCE_DIR}/src/foundation/input/InputSystem.cpp"
 	"${DRE_SOURCE_DIR}/src/foundation/input/Keyboard.cpp"
+	"${DRE_SOURCE_DIR}/src/foundation/math/Geometry.cpp"
 	"${DRE_SOURCE_DIR}/src/foundation/memory/AllocatorScopeStack.cpp"
 	"${DRE_SOURCE_DIR}/src/foundation/memory/ByteBuffer.cpp"
 	"${DRE_SOURCE_DIR}/src/foundation/memory/Memory.cpp"
@@ -55,6 +57,7 @@ add_library(foundation STATIC
 target_include_directories(foundation PUBLIC "${DRE_SOURCE_DIR}/include")
 
 target_compile_definitions(foundation PUBLIC WIN32_LEAN_AND_MEAN NOMINMAX)
+target_link_libraries(foundation public glm::glm)
 
 target_compile_features(foundation PUBLIC cxx_std_20)
 # TODO: disable exceptions
