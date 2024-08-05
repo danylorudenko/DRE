@@ -17,8 +17,7 @@ layout(location = 2) out vec3 out_normal;
 
 void main()
 {
-    float targetScale = 0.01;
-    float scale = GetCameraDistance() / (1.0 / targetScale);
+    float scale = GetCameraDistance() / (1.0);
 
     out_wpos = vec3(cb.m_Model * vec4(in_pos * scale, 1.0));
     out_color = in_color;
