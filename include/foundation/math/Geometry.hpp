@@ -37,6 +37,8 @@ struct Ray
 {
     glm::vec3 origin;
     glm::vec3 dir;
+
+    glm::vec3 Evaluate(float t) { return dir * t + origin; }
 };
 
 struct Cylinder
@@ -46,9 +48,9 @@ struct Cylinder
     float     r;
 };
 
-bool LineCircleIntersection(Line2D const& line, Circle2D const& circle, float& t0, float& t1);
+bool LineCircleIntersection(Line2D const& line, Circle2D const& circle, float& t1, float& t2);
 
-bool RayCylinderIntersection(Ray const& r, Cylinder const& c, float& outT);
+bool RayCylinderIntersection(Ray const& r, Cylinder const& c, float& t1, float& t2);
 
 DRE_END_NAMESPACE
 

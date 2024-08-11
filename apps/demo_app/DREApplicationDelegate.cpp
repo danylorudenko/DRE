@@ -5,6 +5,7 @@
 #include <assimp\Importer.hpp>
 #include <glm\geometric.hpp>
 #include <glm\ext\matrix_transform.hpp>
+#include <glm\glm.hpp>
 #include <imgui.h>
 
 #include <utility>
@@ -17,6 +18,8 @@
 
 #include <engine\data\Geometry.hpp>
 #include <engine\ApplicationContext.hpp>
+
+#include <foundation\math\Geometry.hpp>
 
 
 ////////////////
@@ -97,6 +100,26 @@ WORLD::Scene& DREApplicationDelegate::GetMainScene()
 
 void DREApplicationDelegate::start()
 {
+    /*TESTS*/
+
+    DRE::Ray ray;
+    ray.origin = glm::vec3{ 0.0f, 0.0f, 10.45f };
+    ray.dir = glm::normalize(glm::vec3{ -0.1752,0.66663, 7.71816 } - ray.origin);
+
+    DRE::Cylinder cylinder;
+    cylinder.p0 = glm::vec3{ 0.0f, 0.0f, 0.0f };
+    cylinder.p1 = glm::vec3{ -4.92072,4.3696 ,-2.85388, };
+    cylinder.r = 2.0f;
+
+    float t1 = 0.0f;
+    float t2 = 0.0f;
+    bool testIntersection = DRE::RayCylinderIntersection(ray, cylinder, t1, t2);
+
+    glm::vec3 inter1 = ray.Evaluate(t1);
+    glm::vec3 inter2 = ray.Evaluate(t2);
+
+    /*TESTS*/
+
     if (C_COMPILE_GLSL_SOURCES_ON_START)
     {  
         m_IOManager.CompileGLSLSources();
