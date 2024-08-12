@@ -103,13 +103,13 @@ void DREApplicationDelegate::start()
     /*TESTS*/
 
     DRE::Ray ray;
-    ray.origin = glm::vec3{ 0.0f, 0.0f, 10.45f };
-    ray.dir = glm::normalize(glm::vec3{ -0.1752,0.66663, 7.71816 } - ray.origin);
+    ray.origin = glm::vec3{ -2.47523,-0.05083,-1.2407 };
+    ray.dir = glm::normalize(glm::vec3{ 1.74114,4.56321,1.06711 } - ray.origin);
 
     DRE::Cylinder cylinder;
-    cylinder.p0 = glm::vec3{ 0.0f, 0.0f, 0.0f };
-    cylinder.p1 = glm::vec3{ -4.92072,4.3696 ,-2.85388, };
-    cylinder.r = 2.0f;
+    cylinder.p0 = glm::vec3{ 2.54, 1.57, -1.26 };
+    cylinder.p1 = glm::vec3{ -2, 6 ,1 };
+    cylinder.r = 1.0f;
 
     float t1 = 0.0f;
     float t2 = 0.0f;

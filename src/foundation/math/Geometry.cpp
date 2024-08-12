@@ -25,21 +25,23 @@ bool LineCircleIntersection(Line2D const& line, Circle2D const& circle, float& t
 
 bool RayCylinderIntersection(Ray const& r, Cylinder const& c, float& t1, float& t2)
 {
-    glm::vec3 const shaft = c.p1 - c.p0;
-    float const shaftLen = glm::length(shaft);
-    float const pitch = glm::asin(shaft.y / shaftLen) - glm::pi<float>() / 2.0f; 
-    float const yaw = glm::atan(shaft.z / glm::max(shaft.x, 0.00001f));
+    glm::vec3 const localY = glm::normalize(c.p1 - c.p0);
 
-    glm::quat const q{ glm::vec3{ pitch, yaw, 0.0f } };
-    glm::quat const invq = glm::inverse(q);
+    glm::vec3 arbitrary = glm::abs(glm::dot(glm::vec3{ 1.0f, 0.0f, 0.0f }, localY)) < 0.99f ? glm::vec3{ 1.0f, 0.0f, 0.0f } : glm::vec3{ 0.0f, 0.0f, 1.0f };
+    glm::vec3 localX = glm::normalize(glm::cross(arbitrary, localY));
+    glm::vec3 localZ = glm::cross(localY, localX);
 
-    glm::mat3 const toLocal{ invq };
+    glm::mat4 toLocal{
+        glm::vec4{ localX, 0.0f },
+        glm::vec4{ localY, 0.0f },
+        glm::vec4{ localZ, 0.0f },
+        glm::vec4{ c.p0, 1.0f }
+    };
 
-    glm::vec3 p1Local = c.p1 - c.p0;
-    p1Local = toLocal * p1Local;
+    toLocal = glm::inverse(toLocal);
 
-    glm::vec3 const rayStartLocal = r.origin - c.p0;
-    glm::vec3 const rayDirLocal = toLocal * r.dir;
+    glm::vec3 const rayStartLocal = toLocal * glm::vec4{ r.origin, 1.0 };
+    glm::vec3 const rayDirLocal = toLocal * glm::vec4{ r.dir, 0.0f };
 
     float A = rayDirLocal.x * rayDirLocal.x + rayDirLocal.z * rayDirLocal.z;
     float B = 2 * (rayDirLocal.x * rayStartLocal.x + rayDirLocal.z * rayStartLocal.z);
