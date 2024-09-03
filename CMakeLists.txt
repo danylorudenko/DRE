@@ -21,6 +21,7 @@ update_git_submodule(Vulkan-Headers)
 #override some assimp defaults
 #==========
 option(BUILD_SHARED_LIBS "Build package with shared libraries." OFF)
+option(BUILD_STATIC_LIBS "Build package with shared libraries." ON) # this one is for glm natvis
 option(ASSIMP_BUILD_ZLIB "Build your own zlib" ON)
 option(ASSIMP_BUILD_TESTS "If the test suite for Assimp is built in addition to the library." OFF)
 option(ASSIMP_INSTALL "Disable this if you want to use assimp as a submodule." ON)

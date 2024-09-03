@@ -72,7 +72,7 @@ target_compile_features(gfx PUBLIC cxx_std_20)
 target_compile_definitions(gfx PUBLIC WIN32_LEAN_AND_MEAN NOMINMAX)
 #TODO: disable exceptions
 
-target_link_libraries(gfx PUBLIC foundation engine vk_wrapper glm::glm imgui)
+target_link_libraries(gfx PUBLIC foundation engine vk_wrapper glm_static imgui)
 
 source_group(
 	TREE "${DRE_SOURCE_DIR}/include/gfx"

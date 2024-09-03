@@ -2,6 +2,8 @@
 
 #include <foundation\Common.hpp>
 #include <glm\vec3.hpp>
+#include <glm\vec2.hpp>
+#include <glm\mat4x4.hpp>
 
 DRE_BEGIN_NAMESPACE
 
@@ -9,6 +11,8 @@ struct Line2D // at + b
 {
     float a;
     float b;
+
+    inline float Evaluate(float t) const { return a * t + b; }
 };
 
 struct Circle2D // (x-h)^2 + (y-k)^2 = r^2
@@ -19,13 +23,6 @@ struct Circle2D // (x-h)^2 + (y-k)^2 = r^2
     float h;
     float k;
 };
-
-struct Line // "at + b" for each axis
-{
-    glm::vec3 a;
-    glm::vec3 b;
-};
-
 
 struct Sphere
 {
@@ -48,9 +45,19 @@ struct Cylinder
     float     r;
 };
 
-bool LineCircleIntersection(Line2D const& line, Circle2D const& circle, float& t1, float& t2);
+struct Plane // nX*x + nY*y + nZ*z + d = 0
+{
+    glm::vec3 n;
+    float     d;
+};
 
-bool RayCylinderIntersection(Ray const& r, Cylinder const& c, float& t1, float& t2);
+Ray     RayFromCamera(glm::uvec2 mousePos, glm::uvec2 screenSize, glm::mat4 iVP, glm::vec3 cameraPos);
+Plane   PlaneFromNormalAndPoint(glm::vec3 n, glm::vec3 p);
+
+bool    LineCircleIntersection(Line2D const& line, Circle2D const& circle, float& t1, float& t2);
+
+bool    RayPlaneIntersection(Ray const& r, Plane const& p, float& t);
+bool    RayCylinderIntersection(Ray const& r, Cylinder const& c, float& t1, float& t2);
 
 DRE_END_NAMESPACE
 

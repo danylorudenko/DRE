@@ -52,5 +52,13 @@ inline constexpr T Clamp(T value, T min, T max)
     return Max(Min(value, max), min);
 }
 
+inline bool FloatCompare(float lhs, float rhs)
+{
+    float const normalization = std::abs(lhs) + std::abs(rhs);
+    float const abs = std::abs(rhs - lhs);
+
+    return abs < (DRE_FLT_EPS * 128 * normalization);
+}
+
 DRE_END_NAMESPACE
 

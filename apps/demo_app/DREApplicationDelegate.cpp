@@ -102,21 +102,21 @@ void DREApplicationDelegate::start()
 {
     /*TESTS*/
 
-    DRE::Ray ray;
-    ray.origin = glm::vec3{ -2.47523,-0.05083,-1.2407 };
-    ray.dir = glm::normalize(glm::vec3{ 1.74114,4.56321,1.06711 } - ray.origin);
-
-    DRE::Cylinder cylinder;
-    cylinder.p0 = glm::vec3{ 2.54, 1.57, -1.26 };
-    cylinder.p1 = glm::vec3{ -2, 6 ,1 };
-    cylinder.r = 1.0f;
-
-    float t1 = 0.0f;
-    float t2 = 0.0f;
-    bool testIntersection = DRE::RayCylinderIntersection(ray, cylinder, t1, t2);
-
-    glm::vec3 inter1 = ray.Evaluate(t1);
-    glm::vec3 inter2 = ray.Evaluate(t2);
+    //DRE::Ray ray;
+    //ray.origin = glm::vec3{ -2.47523,-0.05083,-1.2407 };
+    //ray.dir = glm::normalize(glm::vec3{ 1.74114,4.56321,1.06711 } - ray.origin);
+    //
+    //DRE::Cylinder cylinder;
+    //cylinder.p0 = glm::vec3{ 2.54, 1.57, -1.26 };
+    //cylinder.p1 = glm::vec3{ -2, 6 ,1 };
+    //cylinder.r = 1.0f;
+    //
+    //float t1 = 0.0f;
+    //float t2 = 0.0f;
+    //bool testIntersection = DRE::RayCylinderIntersection(ray, cylinder, t1, t2);
+    //
+    //glm::vec3 inter1 = ray.Evaluate(t1);
+    //glm::vec3 inter2 = ray.Evaluate(t2);
 
     /*TESTS*/
 
@@ -130,8 +130,8 @@ void DREApplicationDelegate::start()
     //m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 7.28f, 5.57f, -1.07f });
     //m_MainScene.GetMainCamera().SetEulerOrientation(glm::vec3{ -17.26f, 107.37f, 0.0f });
 
-    m_MainScene.GetMainCamera().SetPosition(glm::vec3{ -0.23f, 10.41f, 14.70f });
-    m_MainScene.GetMainCamera().SetCameraEuler(glm::vec3{ -13.32f, -43.83f, 0.0f });
+    //m_MainScene.GetMainCamera().SetPosition(glm::vec3{ -0.23f, 10.41f, 14.70f });
+    //m_MainScene.GetMainCamera().SetCameraEuler(glm::vec3{ -13.32f, -43.83f, 0.0f });
 
     WORLD::Light* sunLight = m_MainScene.CreateSunLight(m_GraphicsManager.GetMainContext());
     m_MainScene.SetMainSunLight(sunLight);
@@ -262,6 +262,11 @@ void DREApplicationDelegate::update()
 
     // Rendering
     m_GraphicsManager.RenderFrame(DRE::g_AppContext.m_EngineFrame, DRE::g_AppContext.m_DeltaTimeUS, m_GlobalStopwatch.CurrentSeconds());
+
+    if (m_InputSystem.GetKeyboardButtonJustPressed(Keys::Space))
+    {
+        DebugBreak();
+    }
 
     DRE::g_AppContext.m_EngineFrame++;
 }

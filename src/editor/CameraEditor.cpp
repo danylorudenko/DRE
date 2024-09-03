@@ -44,7 +44,7 @@ void CameraEditor::Render()
         if (ImGui::Button("Reset", ImVec2(50.0, 20.0f)))
         {
             camera.SetPosition(glm::vec3{ 0.0f, 0.0f, 0.0f });
-            camera.SetEulerOrientation(glm::vec3{ 0.0f, 0.0f, 0.0f });
+            camera.SetCameraEuler(glm::vec3{ 0.0f, 0.0f, 0.0f });
         }
 
         float const cameraMod = (static_cast<float>(DRE::g_AppContext.m_DeltaTimeUS) / 10000);

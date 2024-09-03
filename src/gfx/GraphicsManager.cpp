@@ -1,5 +1,6 @@
 #include <gfx\GraphicsManager.hpp>
 
+#include <foundation\math\Geometry.hpp>
 #include <foundation\system\Window.hpp>
 
 #include <vk_wrapper\Device.hpp>
@@ -17,8 +18,10 @@
 #include <gfx\pass\DebugPass.hpp>
 #include <gfx\pass\EditorPass.hpp>
 
+#include <engine\ApplicationContext.hpp>
 #include <engine\io\IOManager.hpp>
 #include <engine\scene\Scene.hpp>
+
 #include <global_uniform.h>
 
 namespace GFX
@@ -208,6 +211,79 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
     context.ResetDependenciesVectors(&DRE::g_FrameScratchAllocator);
     PrepareGlobalData(context,  *WORLD::g_MainScene, deltaTimeUS, globalTimeS);
     m_LightsManager.UpdateGPULights(context);
+
+    float CYLINDER_RADIUS = 0.01f * glm::length(m_MainView.GetPosition());
+    float CYLINDER_LENGTH = 0.2f * glm::length(m_MainView.GetPosition());
+
+    DRE::Cylinder xCylinder{ glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ CYLINDER_LENGTH, 0.0f, 0.0f }, CYLINDER_RADIUS };
+    DRE::Cylinder yCylinder{ glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 0.0f, CYLINDER_LENGTH, 0.0f }, CYLINDER_RADIUS };
+    DRE::Cylinder zCylinder{ glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 0.0f, 0.0f, CYLINDER_LENGTH }, CYLINDER_RADIUS };
+
+    //glm::uvec2 cursorPos{ 164u, 772u };
+    //glm::vec3 cameraPos{ -0.2300004f, 10.409888f, 14.69998f };
+    //glm::mat4 invView;
+    //glm::mat4 invProj;
+    //
+    //((float*)&invView)[0] = 0.721397758;
+    //((float*)&invView)[1] = 7.45058060e-09;
+    //((float*)&invView)[2] = 0.692520976;
+    //((float*)&invView)[3] = -10.0141373;
+    //((float*)&invView)[4] = 0.159549624;
+    //((float*)&invView)[5] = 0.973098516;
+    //((float*)&invView)[6] = -0.166202530;
+    //((float*)&invView)[7] = -7.65008163;
+    //((float*)&invView)[8] = -0.673891127;
+    //((float*)&invView)[9] = 0.230389595;
+    //((float*)&invView)[10] = 0.701991081;
+    //((float*)&invView)[11] = -12.8726196;
+    //((float*)&invView)[12] = 0.00000000;
+    //((float*)&invView)[13] = 0.00000000;
+    //((float*)&invView)[14] = 0.00000000;
+    //((float*)&invView)[15] = 1.00000000;
+    //
+    //((float*)&invProj)[0] = 1.02640045;
+    //((float*)&invProj)[1] = 0.00000000;
+    //((float*)&invProj)[2] = -0.00000000;
+    //((float*)&invProj)[3] = -0.00000000;
+    //((float*)&invProj)[4] = 0.00000000;
+    //((float*)&invProj)[5] = -0.577350259;
+    //((float*)&invProj)[6] = 0.00000000;
+    //((float*)&invProj)[7] = -0.00000000;
+    //((float*)&invProj)[8] = -0.00000000;
+    //((float*)&invProj)[9] = 0.00000000;
+    //((float*)&invProj)[10] = -0.00000000;
+    //((float*)&invProj)[11] = 9.99900055;
+    //((float*)&invProj)[12] = 0.00000000;
+    //((float*)&invProj)[13] = -0.00000000;
+    //((float*)&invProj)[14] = -1.00000000;
+    //((float*)&invProj)[15] = 0.00100000005;
+    //
+    //glm::mat4 kek = invProj * invView;
+
+
+
+    //DRE::Ray ray = DRE::RayFromCamera(cursorPos, { 1600u, 900u }, kek);
+    //glm::ivec2 pos = { DRE::g_AppContext.m_CursorX, DRE::g_AppContext.m_CursorY };
+    glm::ivec2 pos = { 1600u, 900u }; pos /= 2;
+    DRE::Ray ray = DRE::RayFromCamera(pos, { 1600u, 900u }, m_MainView.GetInvProjectionM(), m_MainView.GetPosition());
+
+    std::cout << "Mouse: " << DRE::g_AppContext.m_CursorX << ' ' << DRE::g_AppContext.m_CursorY
+        << "; Origin: " << ray.origin.x << ", " << ray.origin.y << ", " << ray.origin.z 
+        << "; Direction: " << ray.dir.x << ", " << ray.dir.y << ", " << ray.dir.z << std::endl;
+
+    float t1, t2;
+    if (DRE::RayCylinderIntersection(ray, xCylinder, t1, t2))
+    {
+        std::cout << "X INTERSECTION" << std::endl;
+    }
+    if (DRE::RayCylinderIntersection(ray, yCylinder, t1, t2))
+    {
+        std::cout << "Y INTERSECTION" << std::endl;
+    }
+    if (DRE::RayCylinderIntersection(ray, xCylinder, t1, t2))
+    {
+        std::cout << "Z INTERSECTION" << std::endl;
+    }
 
     // globalData
     context.CmdBindGlobalDescriptorSets(*GetMainDevice()->GetDescriptorManager(), GetCurrentFrameID());

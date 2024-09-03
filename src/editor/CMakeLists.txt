@@ -26,7 +26,7 @@ target_compile_features(editor PUBLIC cxx_std_20)
 target_compile_definitions(editor PUBLIC WIN32_LEAN_AND_MEAN NOMINMAX)
 #TODO: disable exceptions
 
-target_link_libraries(editor PUBLIC engine foundation assimp glm::glm imgui stb_image)
+target_link_libraries(editor PUBLIC engine foundation assimp glm_static imgui stb_image)
 
 source_group(
 	TREE "${DRE_SOURCE_DIR}/include/editor"

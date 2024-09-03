@@ -1,11 +1,26 @@
 #pragma once
 
 #include <foundation\math\Geometry.hpp>
+
 #include <glm\glm.hpp>
 #include <glm\gtc\quaternion.hpp>
+#include <foundation\math\SimpleMath.hpp>
 
 
 DRE_BEGIN_NAMESPACE
+
+Ray RayFromCamera(glm::uvec2 mousePos, glm::uvec2 screenSize, glm::mat4 iVP, glm::vec3 cameraPos)
+{
+    glm::vec2 screenHalf = glm::vec2{ screenSize } / 2.0f;
+    glm::vec2 ndcXY = (glm::vec2{ mousePos } - screenHalf) / (screenHalf);
+
+    glm::vec4 rayDirNDC = glm::vec4{ ndcXY.x, ndcXY.y, 1.0f, 1.0f }; // Vulkan NDC: near=0, far=1, Y is from upper left corner
+
+    glm::vec4 rayDirView = rayDirNDC * iVP;
+    rayDirView = glm::vec4{ rayDirView.x / rayDirView.w, rayDirView.y / rayDirView.w, rayDirView.z / rayDirView.w, rayDirView.w };
+
+    return Ray{ cameraPos, glm::normalize(glm::vec3{ rayDirView }) };
+}
 
 bool LineCircleIntersection(Line2D const& line, Circle2D const& circle, float& t1, float& t2)
 {
@@ -21,6 +36,25 @@ bool LineCircleIntersection(Line2D const& line, Circle2D const& circle, float& t
     t2 = (-B - sqrt) / 4*A;
 
     return ((t1 - DRE_FLT_EPS) > DRE_FLT_EPS * 2.0f) || ((t2 - DRE_FLT_EPS) > DRE_FLT_EPS * 2.0f);
+}
+
+Plane PlaneFromNormalAndPoint(glm::vec3 n, glm::vec3 p)
+{
+    float d = -glm::dot(n, p);
+
+    return Plane{ n, d };
+}
+
+bool RayPlaneIntersection(Ray const& r, Plane const& p, float& t)
+{
+    // nX*x + nY*y + nZ*z + d = 0
+
+    float const nominator = -glm::dot(p.n, r.origin) + p.d;
+    float const denominator = glm::dot(p.n, r.dir);
+
+    t = nominator / denominator;
+
+    return DRE::FloatCompare(denominator, 0.0f);
 }
 
 bool RayCylinderIntersection(Ray const& r, Cylinder const& c, float& t1, float& t2)
@@ -52,7 +86,18 @@ bool RayCylinderIntersection(Ray const& r, Cylinder const& c, float& t1, float& 
     t1 = (-B+sqrt) / (2*A);
     t2 = (-B-sqrt) / (2*A);
 
-    return ((t1 - DRE_FLT_EPS) > DRE_FLT_EPS * 2.0f) || ((t2 - DRE_FLT_EPS) > DRE_FLT_EPS * 2.0f);
+    glm::vec3 pos1 = rayDirLocal * t1 + rayStartLocal;
+    glm::vec3 pos2 = rayDirLocal * t2 + rayStartLocal;
+
+    float const rsq = c.r * c.r;
+    float d1 = pos1.x * pos1.x + pos1.z * pos1.z;
+    float d2 = pos2.x * pos2.x + pos2.z * pos2.z;
+
+    float const shaftLength = glm::length(c.p1 - c.p0);
+    bool const intersecion1 = pos1.y > 0.0f && pos1.y < shaftLength && DRE::FloatCompare(rsq, d1);
+    bool const intersecion2 = pos2.y > 0.0f && pos2.y < shaftLength && DRE::FloatCompare(rsq, d2);
+
+    return intersecion1 || intersecion2;
 }
 
 DRE_END_NAMESPACE
