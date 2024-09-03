@@ -46,6 +46,8 @@ void RenderView::UpdateProjection(float fov, float zNear, float zFar)
 
     m_Current.VP = m_Current.P * m_Current.V;
     m_Current.iVP = m_Current.iP * m_Current.iV;
+
+    m_Current.fov = fov;
 }
 
 void RenderView::UpdateProjection(float left, float right, float bottom, float top, float zNear, float zFar)
@@ -57,6 +59,8 @@ void RenderView::UpdateProjection(float left, float right, float bottom, float t
 
     m_Current.VP = m_Current.P * m_Current.V;
     m_Current.iVP = m_Current.iP * m_Current.iV;
+
+    m_Current.fov = 0.0f;
 }
 
 void RenderView::UpdateJitter(float xJitter, float yJitter)

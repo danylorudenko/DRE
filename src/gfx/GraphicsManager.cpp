@@ -263,9 +263,10 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
 
 
     //DRE::Ray ray = DRE::RayFromCamera(cursorPos, { 1600u, 900u }, kek);
-    //glm::ivec2 pos = { DRE::g_AppContext.m_CursorX, DRE::g_AppContext.m_CursorY };
-    glm::ivec2 pos = { 1600u, 900u }; pos /= 2;
-    DRE::Ray ray = DRE::RayFromCamera(pos, { 1600u, 900u }, m_MainView.GetInvProjectionM(), m_MainView.GetPosition());
+    glm::ivec2 pos = { DRE::g_AppContext.m_CursorX, DRE::g_AppContext.m_CursorY };
+    //glm::ivec2 pos = { 1600u, 900u }; pos /= 2;
+    //DRE::Ray ray = DRE::RayFromCamera(pos, { 1600u, 900u }, m_MainView.GetInvProjectionM(), m_MainView.GetPosition());
+    DRE::Ray ray = DRE::RayFromCamera(pos, { 1600u, 900u }, m_MainView.GetFOV(), m_MainView.GetInvViewM());
 
     std::cout << "Mouse: " << DRE::g_AppContext.m_CursorX << ' ' << DRE::g_AppContext.m_CursorY
         << "; Origin: " << ray.origin.x << ", " << ray.origin.y << ", " << ray.origin.z 

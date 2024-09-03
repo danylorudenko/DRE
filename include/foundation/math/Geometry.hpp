@@ -51,7 +51,8 @@ struct Plane // nX*x + nY*y + nZ*z + d = 0
     float     d;
 };
 
-Ray     RayFromCamera(glm::uvec2 mousePos, glm::uvec2 screenSize, glm::mat4 iVP, glm::vec3 cameraPos);
+//Ray     RayFromCamera(glm::uvec2 mousePos, glm::uvec2 screenSize, glm::mat4 iVP, glm::vec3 cameraPos);
+Ray     RayFromCamera(glm::uvec2 pixel, glm::uvec2 screenSize, float fovDeg, glm::mat4 const& iV);
 Plane   PlaneFromNormalAndPoint(glm::vec3 n, glm::vec3 p);
 
 bool    LineCircleIntersection(Line2D const& line, Circle2D const& circle, float& t1, float& t2);

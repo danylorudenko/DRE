@@ -36,6 +36,7 @@ public:
 
     inline glm::uvec2 const&    GetOffset() const { return m_Current.offset; }
     inline glm::uvec2 const&    GetSize() const { return m_Current.size; }
+    inline float                GetFOV() const { return m_Current.fov; }
 
     inline glm::mat4 const&     GetViewM() const { return m_Current.V; }
     inline glm::mat4 const&     GetInvViewM() const { return m_Current.iV; }
@@ -52,6 +53,7 @@ public:
 
     inline glm::uvec2 const&    GetPrevOffset() const { return m_Prev.offset; }
     inline glm::uvec2 const&    GetPrevSize() const { return m_Prev.size; }
+    inline float                GetPrevFOV() const { return m_Prev.fov; }
 
     inline glm::mat4 const&     GetPrevViewM() const { return m_Prev.V; }
     inline glm::mat4 const&     GetPrevInvViewM() const { return m_Prev.iV; }
@@ -77,6 +79,7 @@ private:
         glm::uvec2 offset     = glm::uvec2{ 0, 0 };
         glm::uvec2 size       = glm::uvec2{ 0, 0 };
         glm::vec2  jitter     = glm::vec2{ 0.0f, 0.0f };
+        float      fov        = 0.0f;
 
         glm::mat4  V          = glm::identity<glm::mat4>();
         glm::mat4  iV         = glm::identity<glm::mat4>();
