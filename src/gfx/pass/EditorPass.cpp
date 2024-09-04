@@ -20,8 +20,11 @@ PassID EditorPass::GetID() const
     return PassID::Editor;
 }
 
-static float constexpr CYLINDER_RADIUS = 0.01f;
-static float constexpr CYLINDER_LENGTH = 0.2f;
+//static float constexpr CYLINDER_RADIUS = 0.01f;
+//static float constexpr CYLINDER_LENGTH = 0.2f;
+
+float CYLINDER_RADIUS = 0.1f;
+float CYLINDER_LENGTH = 2.f;
 
 template<std::uint32_t AXIS>
 void AssignCylinderVertex(GizmoVertex& vertexLower, GizmoVertex& vertexUpper, float offset0, float offset1);

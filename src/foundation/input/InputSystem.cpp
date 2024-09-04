@@ -7,6 +7,8 @@
 #include <cstring>
 #include <iostream>
 
+InputSystem* g_InputSystem = nullptr;
+
 InputSystem::InputSystem()
     : pendingMouseState_{}
     , mouseState_{}
@@ -100,6 +102,8 @@ InputSystem::InputSystem(HWND windowHandle)
         UINT err = GetLastError();
         std::cerr << "Input System: Failed to register raw input devices. Error code: " << err << std::endl;
     }
+
+    g_InputSystem = this;
 }
 
 InputSystem::InputSystem(InputSystem&& rhs)

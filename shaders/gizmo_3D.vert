@@ -19,7 +19,7 @@ void main()
 {
     float scale = GetCameraDistance() / (1.0);
 
-    out_wpos = vec3(cb.m_Model * vec4(in_pos * scale, 1.0));
+    out_wpos = vec3(cb.m_Model * vec4(in_pos/* * scale*/, 1.0));
     out_color = in_color;
     out_normal = in_normal;
 

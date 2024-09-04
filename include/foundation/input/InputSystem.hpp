@@ -74,3 +74,5 @@ private:
 
 };
 
+extern InputSystem* g_InputSystem;
+

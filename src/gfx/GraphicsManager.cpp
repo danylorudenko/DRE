@@ -24,6 +24,8 @@
 
 #include <global_uniform.h>
 
+#include <foundation/input/InputSystem.hpp>
+
 namespace GFX
 {
 
@@ -212,8 +214,11 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
     PrepareGlobalData(context,  *WORLD::g_MainScene, deltaTimeUS, globalTimeS);
     m_LightsManager.UpdateGPULights(context);
 
-    float CYLINDER_RADIUS = 0.01f * glm::length(m_MainView.GetPosition());
-    float CYLINDER_LENGTH = 0.2f * glm::length(m_MainView.GetPosition());
+    //float CYLINDER_RADIUS = 0.01f * glm::length(m_MainView.GetPosition());
+    //float CYLINDER_LENGTH = 0.2f * glm::length(m_MainView.GetPosition());
+    
+    float CYLINDER_RADIUS = 0.1f;
+    float CYLINDER_LENGTH = 2.f;
 
     DRE::Cylinder xCylinder{ glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ CYLINDER_LENGTH, 0.0f, 0.0f }, CYLINDER_RADIUS };
     DRE::Cylinder yCylinder{ glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 0.0f, CYLINDER_LENGTH, 0.0f }, CYLINDER_RADIUS };
@@ -273,17 +278,27 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
         << "; Direction: " << ray.dir.x << ", " << ray.dir.y << ", " << ray.dir.z << std::endl;
 
     float t1, t2;
+
+    if (g_InputSystem->GetKeyboardButtonDown(Keys::B))
+        DebugBreak();
+
     if (DRE::RayCylinderIntersection(ray, xCylinder, t1, t2))
     {
-        std::cout << "X INTERSECTION" << std::endl;
+        glm::vec3 p1 = ray.Evaluate(t1);
+        glm::vec3 p2 = ray.Evaluate(t2);
+        std::cout << "X INTERSECTION: t1=" << t1 << ", t2=" << t2 << "p=(" << p1.x << ' ' << p1.y << ' ' << p1.z << ")" << std::endl;
     }
     if (DRE::RayCylinderIntersection(ray, yCylinder, t1, t2))
     {
-        std::cout << "Y INTERSECTION" << std::endl;
+        glm::vec3 p1 = ray.Evaluate(t1);
+        glm::vec3 p2 = ray.Evaluate(t2);
+        std::cout << "Y INTERSECTION: t1=" << t1 << ", t2=" << t2 << "p=(" << p1.x << ' ' << p1.y << ' ' << p1.z << ")" << std::endl;
     }
-    if (DRE::RayCylinderIntersection(ray, xCylinder, t1, t2))
+    if (DRE::RayCylinderIntersection(ray, zCylinder, t1, t2))
     {
-        std::cout << "Z INTERSECTION" << std::endl;
+        glm::vec3 p1 = ray.Evaluate(t1);
+        glm::vec3 p2 = ray.Evaluate(t2);
+        std::cout << "Z INTERSECTION: t1=" << t1 << ", t2=" << t2 << "p=(" << p1.x << ' ' << p1.y << ' ' << p1.z << ")" << std::endl;
     }
 
     // globalData

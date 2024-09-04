@@ -29,7 +29,7 @@ Ray RayFromCamera(glm::uvec2 pixel, glm::uvec2 screenSize, float fovDeg, glm::ma
     glm::vec2 screenHalf = glm::vec2{ screenSize } / 2.0f;
     glm::vec2 pixelCentered = (glm::vec2{ pixel } + 0.5f) - screenHalf;
 
-    glm::vec3 viewSpaceDir = glm::vec3{ pixelCentered, -(screenSize.y * 0.5f) / glm::tan(glm::radians(fovDeg * 0.5f)) };
+    glm::vec3 viewSpaceDir = glm::vec3{ pixelCentered * glm::vec2{ 1.0f, -1.0f }, -(glm::abs(screenSize.y) * 0.5f) / glm::tan(glm::radians(fovDeg * 0.5f)) };
     viewSpaceDir = glm::normalize(viewSpaceDir);
 
     glm::vec3 worldSpaceDir = glm::vec3{ iV * glm::vec4{ viewSpaceDir, 0.0f } };
