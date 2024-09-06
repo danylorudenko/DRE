@@ -34,7 +34,7 @@ Ray RayFromCamera(glm::uvec2 pixel, glm::uvec2 screenSize, float fovDeg, glm::ma
 
     glm::vec3 worldSpaceDir = glm::vec3{ iV * glm::vec4{ viewSpaceDir, 0.0f } };
 
-    return Ray{ glm::vec3{ iV[0][3], iV[1][3], iV[2][3] }, (worldSpaceDir)};
+    return Ray{ -glm::vec3{ iV[0][3], iV[1][3], iV[2][3] }, (worldSpaceDir)};
 }
 
 bool LineCircleIntersection(Line2D const& line, Circle2D const& circle, float& t1, float& t2)
@@ -77,8 +77,8 @@ bool RayCylinderIntersection(Ray const& r, Cylinder const& c, float& t1, float& 
     glm::vec3 const localY = glm::normalize(c.p1 - c.p0);
 
     glm::vec3 arbitrary = glm::abs(glm::dot(glm::vec3{ 1.0f, 0.0f, 0.0f }, localY)) < 0.99f ? glm::vec3{ 1.0f, 0.0f, 0.0f } : glm::vec3{ 0.0f, 0.0f, 1.0f };
-    glm::vec3 localX = glm::normalize(glm::cross(arbitrary, localY));
-    glm::vec3 localZ = glm::cross(localY, localX);
+    glm::vec3 localZ = glm::normalize(glm::cross(arbitrary, localY));
+    glm::vec3 localX = glm::cross(localY, localZ);
 
     glm::mat4 toLocal{
         glm::vec4{ localX, 0.0f },
@@ -109,8 +109,8 @@ bool RayCylinderIntersection(Ray const& r, Cylinder const& c, float& t1, float& 
     float d2 = pos2.x * pos2.x + pos2.z * pos2.z;
 
     float const shaftLength = glm::length(c.p1 - c.p0);
-    bool const intersecion1 = pos1.y > 0.0f && pos1.y < shaftLength && DRE::FloatCompare(rsq, d1);
-    bool const intersecion2 = pos2.y > 0.0f && pos2.y < shaftLength && DRE::FloatCompare(rsq, d2);
+    bool const intersecion1 = pos1.y > 0.0f && pos1.y < shaftLength && DRE::FloatCompare(rsq, d1, 0.001);
+    bool const intersecion2 = pos2.y > 0.0f && pos2.y < shaftLength && DRE::FloatCompare(rsq, d2, 0.001);
 
     return intersecion1 || intersecion2;
 }

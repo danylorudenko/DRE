@@ -279,7 +279,7 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
 
     float t1, t2;
 
-    if (g_InputSystem->GetKeyboardButtonDown(Keys::B))
+    if (g_InputSystem->GetKeyboardButtonJustPressed(Keys::B))
         DebugBreak();
 
     if (DRE::RayCylinderIntersection(ray, xCylinder, t1, t2))
