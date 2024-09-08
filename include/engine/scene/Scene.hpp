@@ -8,6 +8,7 @@
 #include <engine\scene\Entity.hpp>
 #include <engine\scene\Light.hpp>
 #include <engine\scene\SceneNode.hpp>
+#include <engine\scene\SceneNodeManipulator.hpp>
 
 namespace Data
 {
@@ -43,6 +44,7 @@ public:
     ~Scene();
 
     SceneNode*                      GetRootNode() { return m_RootNode; }
+    SceneNodeManipulator&           GetNodeManipulator() { return m_Manipulator; }
 
     inline Camera&                  GetMainCamera() { return m_MainCamera; }
     inline Camera const &           GetMainCamera() const { return m_MainCamera; }
@@ -66,8 +68,9 @@ private:
     Light*                          CreateDirectionalLightInternal(VKW::Context& context, SceneNode* parent, std::uint32_t type);
 
 private:
-    Camera              m_MainCamera;
-    Light*              m_MainLight;
+    Camera                  m_MainCamera;
+    Light*                  m_MainLight;
+    SceneNodeManipulator    m_Manipulator;
 
     EntityID                                    m_EntityCounter;
     DRE::InplaceHashTable<EntityID, Entity>     m_SceneEntities;

@@ -87,10 +87,10 @@ class GraphicsManager final
 public:
     using ImGuiSyncQueue = DRE::Vector<Texture*, DRE::DefaultAllocator>;
 
-    GraphicsManager(HINSTANCE hInstance, Window* window, IO::IOManager* ioManager, bool debug = false);
+    GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::IOManager* ioManager, bool debug = false);
     ~GraphicsManager();
 
-    inline Window*                      GetMainWindow() { return m_MainWindow; }
+    inline SYS::Window*                 GetMainWindow() { return m_MainWindow; }
 
     inline VKW::Device*                 GetMainDevice() { return &m_Device; }
 
@@ -160,7 +160,7 @@ private:
 
 
 private:
-    Window*                     m_MainWindow;
+    SYS::Window*                m_MainWindow;
     IO::IOManager*              m_IOManager;
 
     VKW::Device                 m_Device;

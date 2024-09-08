@@ -8,33 +8,18 @@
 
 
 DRE_BEGIN_NAMESPACE
-//
-//Ray RayFromCamera(glm::uvec2 mousePos, glm::uvec2 screenSize, glm::mat4 iVP, glm::vec3 cameraPos)
-//{
-//    glm::vec2 screenHalf = glm::vec2{ screenSize } / 2.0f;
-//    glm::vec2 ndcXY = (glm::vec2{ mousePos } - screenHalf) / (screenHalf);
-//
-//    glm::vec4 rayDirNDC = glm::vec4{ ndcXY.x, ndcXY.y, -1.0f, 1.0f }; // Vulkan NDC: near=0, far=1, Y is from upper left corner
-//    //glm::vec4 rayDirNDC = glm::vec4{ -1.0f, -1.0f, -1.0f, 1.0f }; // Vulkan NDC: near=0, far=1, Y is from upper left corner
-//
-//    glm::vec4 rayDirView = iVP * rayDirNDC;
-//    //{ { 0 }, { 0 }, { -1 }, { 0 } }
-//
-//    return Ray{ cameraPos, glm::normalize(glm::vec3{ rayDirView }) };
-//}
 
-
-Ray RayFromCamera(glm::uvec2 pixel, glm::uvec2 screenSize, float fovDeg, glm::mat4 const& iV)
+Ray RayFromCamera(glm::uvec2 mousePos, glm::uvec2 screenSize, glm::mat4 iVP, glm::vec3 cameraPos)
 {
     glm::vec2 screenHalf = glm::vec2{ screenSize } / 2.0f;
-    glm::vec2 pixelCentered = (glm::vec2{ pixel } + 0.5f) - screenHalf;
+    glm::vec2 ndcXY = (glm::vec2{ mousePos } - screenHalf) / (screenHalf);
 
-    glm::vec3 viewSpaceDir = glm::vec3{ pixelCentered * glm::vec2{ 1.0f, -1.0f }, -(glm::abs(screenSize.y) * 0.5f) / glm::tan(glm::radians(fovDeg * 0.5f)) };
-    viewSpaceDir = glm::normalize(viewSpaceDir);
+    glm::vec4 rayPNDC = glm::vec4{ ndcXY.x, ndcXY.y, 1.0f, 1.0f };
 
-    glm::vec3 worldSpaceDir = glm::vec3{ iV * glm::vec4{ viewSpaceDir, 0.0f } };
+    glm::vec4 rayPWorld = iVP * rayPNDC;
+    glm::vec3 rayDirWorld = glm::normalize(glm::vec3{ rayPWorld } / rayPWorld.w - cameraPos);
 
-    return Ray{ -glm::vec3{ iV[0][3], iV[1][3], iV[2][3] }, (worldSpaceDir)};
+    return Ray{ cameraPos, glm::vec3{ rayDirWorld } };
 }
 
 bool LineCircleIntersection(Line2D const& line, Circle2D const& circle, float& t1, float& t2)

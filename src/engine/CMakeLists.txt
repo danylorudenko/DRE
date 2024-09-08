@@ -10,6 +10,7 @@ set(ENGINE_HEADER_LIST
 	"${DRE_SOURCE_DIR}/include/engine/scene/Entity.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/scene/Light.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/scene/SceneNode.hpp"
+	"${DRE_SOURCE_DIR}/include/engine/scene/SceneNodeManipulator.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/scene/ISceneNodeUser.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/scene/Scene.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/ApplicationContext.hpp")
@@ -26,6 +27,7 @@ set(ENGINE_SOURCE_LIST
 	"${DRE_SOURCE_DIR}/src/engine/scene/Entity.cpp"
 	"${DRE_SOURCE_DIR}/src/engine/scene/Light.cpp"
 	"${DRE_SOURCE_DIR}/src/engine/scene/SceneNode.cpp"
+	"${DRE_SOURCE_DIR}/src/engine/scene/SceneNodeManipulator.cpp"
 	"${DRE_SOURCE_DIR}/src/engine/scene/Scene.cpp"
 	"${DRE_SOURCE_DIR}/src/engine/ApplicationContext.cpp")
 	

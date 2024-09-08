@@ -102,6 +102,8 @@ using UPtr      = std::uintptr_t;
 #define DRE_S32_MIN (std::numeric_limits<DRE::S32>::min)()
 #define DRE_S64_MIN (std::numeric_limits<DRE::S64>::min)()
 
+#define DRE_FLT_MIN (std::numeric_limits<float>::min)();
+#define DRE_FLT_MAX (std::numeric_limits<float>::max)();
 #define DRE_FLT_EPS std::numeric_limits<float>::epsilon()
 #define DRE_DBL_EPS std::numeric_limits<double>::epsilon()
 

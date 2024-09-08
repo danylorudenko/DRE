@@ -7,11 +7,14 @@
 
 #include <foundation\class_features\NonCopyable.hpp>
 
+namespace SYS
+{
+
 class WindowClass
     : public NonCopyable
 {
 public:
-    using WinProcHandler = LRESULT (*)(HWND handle, UINT message, WPARAM wparam, LPARAM lparam);
+    using WinProcHandler = LRESULT(*)(HWND handle, UINT message, WPARAM wparam, LPARAM lparam);
 
 public:
     WindowClass();
@@ -26,11 +29,11 @@ public:
 
     ~WindowClass();
 
-    
+
 private:
     std::string name_;
     bool registered_;
-    
+
 };
 
 
@@ -44,7 +47,7 @@ public:
 public:
     Window();
     Window(HINSTANCE instance, char const* title, std::uint32_t width, std::uint32_t height, char const* className, WindowClass::WinProcHandler procHandler, void* userData);
-    
+
     Window(Window&& rhs);
 
     Window& operator=(Window&& rhs);
@@ -69,3 +72,5 @@ private:
 
     void* userData_;
 };
+
+} // namespace SYS

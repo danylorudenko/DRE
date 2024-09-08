@@ -7,8 +7,11 @@
 
 #include <vk_wrapper\Surface.hpp>
 
+namespace SYS
+{
 class Window;
 class InputSystem;
+}
 
 namespace VKW
 {
@@ -27,7 +30,7 @@ class ImGuiHelper : public NonCopyable
 {
 public:
     ImGuiHelper();
-    ImGuiHelper(Window* window, InputSystem* input, VKW::Instance& instance, VKW::Swapchain& swapchain, VKW::Device& device, VKW::Context& context);
+    ImGuiHelper(SYS::Window* window, SYS::InputSystem* input, VKW::Instance& instance, VKW::Swapchain& swapchain, VKW::Device& device, VKW::Context& context);
     ImGuiHelper(ImGuiHelper&& rhs);
 
     ImGuiHelper& operator=(ImGuiHelper&& rhs);
@@ -37,9 +40,9 @@ public:
     void BeginFrame();
     void EndFrame();
 
-    Window* GetTargetWindow();
+    SYS::Window* GetTargetWindow();
 
 private:
-    Window*         m_TargetWindow;
-    InputSystem*    m_InputSystem;
+    SYS::Window*         m_TargetWindow;
+    SYS::InputSystem*    m_InputSystem;
 };

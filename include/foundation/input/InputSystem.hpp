@@ -6,6 +6,11 @@
 #include <cstdint>
 #include <Windows.h>
 
+#include <foundation\Common.hpp>
+
+namespace SYS
+{
+
 class InputSystem
 {
 public:
@@ -74,5 +79,8 @@ private:
 
 };
 
+#ifdef DRE_DEBUG
 extern InputSystem* g_InputSystem;
+#endif
 
+} // namespace SYS

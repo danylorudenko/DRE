@@ -43,7 +43,7 @@ public:
 
     static LRESULT CALLBACK WinProc(HWND handle, UINT message, WPARAM wparam, LPARAM lparam);
 
-    InputSystem& GetInputSystem();
+    SYS::InputSystem& GetInputSystem();
 
     WORLD::Scene& GetMainScene();
 
@@ -53,8 +53,8 @@ private:
     void ImGuiUser();
     void ProcessFocusedObject();
 
-    Window                              m_MainWindow;
-    InputSystem                         m_InputSystem;
+    SYS::Window                         m_MainWindow;
+    SYS::InputSystem                    m_InputSystem;
     Data::MaterialLibrary               m_MaterialLibrary;
     Data::GeometryLibrary               m_GeometryLibrary;
     IO::IOManager                       m_IOManager;

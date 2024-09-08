@@ -88,7 +88,7 @@ LRESULT DREApplicationDelegate::WinProc(HWND handle, UINT message, WPARAM wparam
 }
 
 //////////////////////////////////////////
-InputSystem& DREApplicationDelegate::GetInputSystem()
+SYS::InputSystem& DREApplicationDelegate::GetInputSystem()
 {
     return m_InputSystem;
 }
@@ -128,6 +128,7 @@ void DREApplicationDelegate::start()
 
     m_MainScene.GetMainCamera().SetFOV(60.0f);
     //m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 7.28f, 5.57f, -1.07f });
+    //m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 0.0f, 0.0f, 11.0f });
     //m_MainScene.GetMainCamera().SetEulerOrientation(glm::vec3{ -17.26f, 107.37f, 0.0f });
 
     //m_MainScene.GetMainCamera().SetPosition(glm::vec3{ -0.23f, 10.41f, 14.70f });

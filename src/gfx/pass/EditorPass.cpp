@@ -2,6 +2,7 @@
 
 #include <gfx\GraphicsManager.hpp>
 #include <gfx\scheduling\RenderGraph.hpp>
+#include <engine\scene\SceneNodeManipulator.hpp>
 
 #include <gizmo_3D.h>
 
@@ -20,20 +21,14 @@ PassID EditorPass::GetID() const
     return PassID::Editor;
 }
 
-//static float constexpr CYLINDER_RADIUS = 0.01f;
-//static float constexpr CYLINDER_LENGTH = 0.2f;
-
-float CYLINDER_RADIUS = 0.1f;
-float CYLINDER_LENGTH = 2.f;
-
 template<std::uint32_t AXIS>
 void AssignCylinderVertex(GizmoVertex& vertexLower, GizmoVertex& vertexUpper, float offset0, float offset1);
 
 template<> // X
 void AssignCylinderVertex<0>(GizmoVertex& vertexLower, GizmoVertex& vertexUpper, float offset0, float offset1)
 {
-    float r = CYLINDER_RADIUS;
-    float l = CYLINDER_LENGTH;
+    float r = WORLD::SceneNodeManipulator::GIZMO_CYLINDER_RADIUS;
+    float l = WORLD::SceneNodeManipulator::GIZMO_CYLINDER_LENGTH;
 
     vertexLower.pos = glm::vec3{ 0.0f, offset1 * r, -offset0 * r };
     vertexLower.color = glm::vec3{ 1.0f, 0.0f, 0.0f };
@@ -47,8 +42,8 @@ void AssignCylinderVertex<0>(GizmoVertex& vertexLower, GizmoVertex& vertexUpper,
 template<> // Y
 void AssignCylinderVertex<1>(GizmoVertex& vertexLower, GizmoVertex& vertexUpper, float offset0, float offset1)
 {
-    float r = CYLINDER_RADIUS;
-    float l = CYLINDER_LENGTH;
+    float r = WORLD::SceneNodeManipulator::GIZMO_CYLINDER_RADIUS;
+    float l = WORLD::SceneNodeManipulator::GIZMO_CYLINDER_LENGTH;
 
     vertexLower.pos = glm::vec3{ offset0 * r, 0.0f, offset1 * r };
     vertexLower.color = glm::vec3{ 0.0f, 1.0f, 0.0f };
@@ -62,8 +57,8 @@ void AssignCylinderVertex<1>(GizmoVertex& vertexLower, GizmoVertex& vertexUpper,
 template<> // Z
 void AssignCylinderVertex<2>(GizmoVertex& vertexLower, GizmoVertex& vertexUpper, float offset0, float offset1)
 {
-    float r = CYLINDER_RADIUS;
-    float l = CYLINDER_LENGTH;
+    float r = WORLD::SceneNodeManipulator::GIZMO_CYLINDER_RADIUS;
+    float l = WORLD::SceneNodeManipulator::GIZMO_CYLINDER_LENGTH;
 
     vertexLower.pos = glm::vec3{ offset0 * r, -offset1 * r, 0.0f };
     vertexLower.color = glm::vec3{ 0.0f, 0.0f, 1.0f };
@@ -105,11 +100,13 @@ void FillConeSectionVertices(DRE::Vector<GizmoVertex, DRE::DefaultAllocator>& ve
 template<> // X
 void FillConeSectionVertices<0>(DRE::Vector<GizmoVertex, DRE::DefaultAllocator>& vertices, float angle, float nextAngle)
 {
-    float start = CYLINDER_LENGTH;
-    float end = CYLINDER_LENGTH + CYLINDER_LENGTH * 0.3f;
+    float constexpr len = WORLD::SceneNodeManipulator::GIZMO_CYLINDER_LENGTH;
+
+    float start = len;
+    float end = len + len * 0.3f;
 
     float h = end - start;
-    float w = 2.0f * CYLINDER_RADIUS;
+    float w = 2.0f * WORLD::SceneNodeManipulator::GIZMO_CYLINDER_RADIUS;
 
     float theta = glm::atan(h / w);
     float alpha = PI / 2 - theta;
@@ -148,11 +145,13 @@ void FillConeSectionVertices<0>(DRE::Vector<GizmoVertex, DRE::DefaultAllocator>&
 template<> // Y
 void FillConeSectionVertices<1>(DRE::Vector<GizmoVertex, DRE::DefaultAllocator>& vertices, float angle, float nextAngle)
 {
-    float start = CYLINDER_LENGTH;
-    float end = CYLINDER_LENGTH + CYLINDER_LENGTH * 0.3f;
+    float constexpr len = WORLD::SceneNodeManipulator::GIZMO_CYLINDER_LENGTH;
+
+    float start = len;
+    float end = len + len * 0.3f;
 
     float h = end - start;
-    float w = 2.0f * CYLINDER_RADIUS;
+    float w = 2.0f * WORLD::SceneNodeManipulator::GIZMO_CYLINDER_RADIUS;
 
     float theta = glm::atan(h / w);
     float alpha = PI / 2 - theta;
@@ -191,11 +190,13 @@ void FillConeSectionVertices<1>(DRE::Vector<GizmoVertex, DRE::DefaultAllocator>&
 template<> // Z
 void FillConeSectionVertices<2>(DRE::Vector<GizmoVertex, DRE::DefaultAllocator>& vertices, float angle, float nextAngle)
 {
-    float start = CYLINDER_LENGTH;
-    float end = CYLINDER_LENGTH + CYLINDER_LENGTH * 0.3f;
+    float constexpr len = WORLD::SceneNodeManipulator::GIZMO_CYLINDER_LENGTH;
+
+    float start = len;
+    float end = len + len * 0.3f;
 
     float h = end - start;
-    float w = 2.0f * CYLINDER_RADIUS;
+    float w = 2.0f * WORLD::SceneNodeManipulator::GIZMO_CYLINDER_RADIUS;
 
     float theta = glm::atan(h / w);
     float alpha = PI / 2 - theta;
@@ -288,6 +289,7 @@ void EditorPass::Render(RenderGraph& graph, VKW::Context& context)
     {
         GizmoPassBuffer uniformData;
         uniformData.m_Model = glm::identity<glm::mat4>();
+        //uniformData.m_Model[3][2] = -10.0f;
         uniformData.m_CameraDistance = glm::vec4{ glm::length(g_GraphicsManager->GetMainRenderView().GetPosition()), 0.0f, 0.0f, 0.0f }; // TEMPORARY, NO OBJECT IN FOCUS
 
         UniformProxy uniform = graph.GetPassUniform(GetID(), context, sizeof(GizmoPassBuffer));

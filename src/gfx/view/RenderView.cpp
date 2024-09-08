@@ -30,10 +30,10 @@ void RenderView::UpdatePlacement(glm::vec3 viewerPos, glm::vec3 viewDirection, g
     m_Current.dir = viewDirection;
 
     m_Current.V = glm::lookAtRH(viewerPos, viewerPos + viewDirection, up);
-    m_Current.iV = glm::transpose(m_Current.V);
+    m_Current.iV = glm::inverse(m_Current.V);
 
     m_Current.VP = m_Current.P * m_Current.V;
-    m_Current.iVP = m_Current.iP * m_Current.iV;
+    m_Current.iVP = glm::inverse(m_Current.VP);
 }
 
 void RenderView::UpdateProjection(float fov, float zNear, float zFar)
@@ -45,7 +45,7 @@ void RenderView::UpdateProjection(float fov, float zNear, float zFar)
     m_Current.iP = glm::inverse(m_Current.P);
 
     m_Current.VP = m_Current.P * m_Current.V;
-    m_Current.iVP = m_Current.iP * m_Current.iV;
+    m_Current.iVP = glm::inverse(m_Current.VP);
 
     m_Current.fov = fov;
 }
@@ -58,7 +58,7 @@ void RenderView::UpdateProjection(float left, float right, float bottom, float t
     m_Current.iP = glm::inverse(m_Current.P);
 
     m_Current.VP = m_Current.P * m_Current.V;
-    m_Current.iVP = m_Current.iP * m_Current.iV;
+    m_Current.iVP = glm::inverse(m_Current.VP);
 
     m_Current.fov = 0.0f;
 }

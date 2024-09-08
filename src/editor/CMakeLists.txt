@@ -1,4 +1,5 @@
 set(EDITOR_HEADER_LIST
+	"${DRE_SOURCE_DIR}/include/editor/EngineInputManager.hpp"
 	"${DRE_SOURCE_DIR}/include/editor/BaseEditor.hpp"
 	"${DRE_SOURCE_DIR}/include/editor/CameraEditor.hpp"
 	"${DRE_SOURCE_DIR}/include/editor/OceanEditor.hpp"
@@ -8,6 +9,7 @@ set(EDITOR_HEADER_LIST
 	"${DRE_SOURCE_DIR}/include/editor/TextureInspector.hpp")
 
 set(EDITOR_SOURCE_LIST
+	"${DRE_SOURCE_DIR}/src/editor/EngineInputManager.cpp"
 	"${DRE_SOURCE_DIR}/src/editor/BaseEditor.cpp"
 	"${DRE_SOURCE_DIR}/src/editor/CameraEditor.cpp"
 	"${DRE_SOURCE_DIR}/src/editor/OceanEditor.cpp"

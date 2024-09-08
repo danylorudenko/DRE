@@ -7,7 +7,12 @@
 #include <cstring>
 #include <iostream>
 
+namespace SYS
+{
+
+#ifdef DRE_DEBUG
 InputSystem* g_InputSystem = nullptr;
+#endif
 
 InputSystem::InputSystem()
     : pendingMouseState_{}
@@ -118,7 +123,7 @@ InputSystem& InputSystem::operator=(InputSystem&& rhs)
 
 InputSystem::~InputSystem()
 {
-    
+
 }
 
 InputSystem::MouseState const& InputSystem::GetMouseState() const
@@ -205,7 +210,7 @@ void InputSystem::SetKeysBitflagValue(std::uint64_t* bitflag, Keys key, bool val
     else {
         bitflag[member] &= ~(1ULL << bitOffset);
     }
-    
+
 }
 
 bool InputSystem::GetKeysBitflagValue(std::uint64_t const* bitflag, Keys key)
@@ -239,7 +244,7 @@ void InputSystem::ProcessSystemInput(HWND handle, WPARAM wparam, LPARAM lparam)
     UINT result = GetRawInputData((HRAWINPUT)lparam, RID_INPUT, NULL, &dataSize, sizeof(RAWINPUTHEADER));
     if (result != 0) {
         DWORD err = GetLastError();
-        std::cerr << 
+        std::cerr <<
             "InputSystem::ProcessSystemInput: GetRawInputData failed. Can't retrieve system input. "
             "Error code: " << err << std::endl;
         return;
@@ -262,16 +267,16 @@ void InputSystem::ProcessSystemInput(HWND handle, WPARAM wparam, LPARAM lparam)
         pendingMouseState_.xDelta_ = static_cast<float>(mouse.lLastX);
         pendingMouseState_.yDelta_ = static_cast<float>(mouse.lLastY);
 
-        if(mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN)
+        if (mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN)
             pendingMouseState_.mouseButtonStates_ |= 1 << static_cast<std::uint32_t>(MouseState::MouseButtonOffsets::Left);
 
-        if(mouse.usButtonFlags & RI_MOUSE_RIGHT_BUTTON_DOWN)
+        if (mouse.usButtonFlags & RI_MOUSE_RIGHT_BUTTON_DOWN)
             pendingMouseState_.mouseButtonStates_ |= 1 << static_cast<std::uint32_t>(MouseState::MouseButtonOffsets::Right);
 
-        if(mouse.usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_DOWN)
+        if (mouse.usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_DOWN)
             pendingMouseState_.mouseButtonStates_ |= 1 << static_cast<std::uint32_t>(MouseState::MouseButtonOffsets::Middle);
 
-        if(mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_UP)
+        if (mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_UP)
             pendingMouseState_.mouseButtonStates_ &= ~(1 << static_cast<std::uint32_t>(MouseState::MouseButtonOffsets::Left));
 
         if (mouse.usButtonFlags & RI_MOUSE_RIGHT_BUTTON_UP)
@@ -314,3 +319,5 @@ void InputSystem::ProcessSystemInput(HWND handle, WPARAM wparam, LPARAM lparam)
     }
 
 }
+
+} // namespace SYS

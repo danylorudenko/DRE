@@ -52,7 +52,7 @@ static int Platform_CreateVkSurface(ImGuiViewport* vp, ImU64 vk_inst, const void
     return err;
 }
 
-ImGuiHelper::ImGuiHelper(Window* window, InputSystem* input, VKW::Instance& instance, VKW::Swapchain& swapchain, VKW::Device& device, VKW::Context& context)
+ImGuiHelper::ImGuiHelper(SYS::Window* window, SYS::InputSystem* input, VKW::Instance& instance, VKW::Swapchain& swapchain, VKW::Device& device, VKW::Context& context)
     : m_TargetWindow{ window }
     , m_InputSystem{ input }
 {
@@ -179,7 +179,7 @@ void ImGuiHelper::EndFrame()
     ImGui::UpdatePlatformWindows();
 }
 
-Window* ImGuiHelper::GetTargetWindow()
+SYS::Window* ImGuiHelper::GetTargetWindow()
 {
     return m_TargetWindow;
 }
