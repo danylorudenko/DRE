@@ -70,7 +70,6 @@ private:
 private:
     Camera                  m_MainCamera;
     Light*                  m_MainLight;
-    SceneNodeManipulator    m_Manipulator;
 
     EntityID                                    m_EntityCounter;
     DRE::InplaceHashTable<EntityID, Entity>     m_SceneEntities;
