@@ -47,6 +47,7 @@ DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* t
     , m_WaterGeometry{ sizeof(Data::DREVertex), 4 }
     , m_WaterMaterial{ "water_mat" }
     , m_BeachMaterial{ "beach_mat" }
+    , m_ViewportInput{ &m_MainScene }
 {
     WORLD::g_MainScene = &m_MainScene;
 }
@@ -145,7 +146,7 @@ void DREApplicationDelegate::start()
         InitImGui();
 
 
-    m_GraphicsManager.LoadDefaultData();
+    m_GraphicsManager.LoadDefaultData(&m_ViewportInput);
 
 
 
@@ -236,7 +237,7 @@ void DREApplicationDelegate::update()
         m_ImGuiHelper->EndFrame();
     }
 
-    ProcessFocusedObject();
+    ProcessViewportInput();
 
     // Reload shaders
     if (m_InputSystem.GetKeyboardButtonJustReleased(Keys::R))
@@ -371,16 +372,11 @@ void DREApplicationDelegate::ImGuiUser()
     }
 }
 
-void DREApplicationDelegate::ProcessFocusedObject()
+void DREApplicationDelegate::ProcessViewportInput()
 {
-    if (!ImGui::GetIO().WantCaptureMouse && m_InputSystem.GetLeftMouseButtonJustReleased())
+    if (!ImGui::GetIO().WantCaptureMouse)
     {
-        WORLD::SceneNode* result = m_MainScene.GetRootNode()->FindChildByID(DRE::g_AppContext.m_PickedObjectID);
-        DRE_ASSERT(result != nullptr, "Can't find picked object.");
-        if (result != nullptr)
-        {
-            DRE::g_AppContext.m_FocusedObject = result->GetNodeUser();
-        }
+        m_ViewportInput.ProcessInput(m_InputSystem, m_GraphicsManager.GetMainRenderView());
     }
 }
 

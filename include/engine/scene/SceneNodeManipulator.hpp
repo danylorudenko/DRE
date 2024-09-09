@@ -28,7 +28,7 @@ public:
     SceneNodeManipulator();
 
     void SetFocusedNode(SceneNode* node);
-    void TryInteract(SYS::InputSystem& inputSystem, GFX::RenderView& view);
+    bool TryInteract(SYS::InputSystem& inputSystem, GFX::RenderView& view);
 
 private:
 

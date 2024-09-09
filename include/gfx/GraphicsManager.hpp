@@ -53,6 +53,11 @@ class Scene;
 class SceneNode;
 }
 
+namespace EDITOR
+{
+class ViewportInputManager;
+}
+
 namespace GFX
 {
 
@@ -137,7 +142,7 @@ public:
 
 
 public:
-    void                                LoadDefaultData();
+    void                                LoadDefaultData(EDITOR::ViewportInputManager* viewportInput);
     void                                ReloadShaders();
     void                                RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS, float globalTimeS);
     void                                WaitIdle();
@@ -153,7 +158,7 @@ public:
     GeometryGPU*                        LoadGPUGeometry(VKW::Context& context, Data::Geometry* geometry);
 
 private:
-    void                                CreateAllPasses();
+    void                                CreateAllPasses(EDITOR::ViewportInputManager* viewportInput);
 
     void            PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, std::uint64_t deltaTimeUS, float globalTimeS);
     VKW::QueueExecutionPoint TransferToSwapchainAndPresent(Texture& src);

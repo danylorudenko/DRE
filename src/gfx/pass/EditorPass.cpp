@@ -2,7 +2,7 @@
 
 #include <gfx\GraphicsManager.hpp>
 #include <gfx\scheduling\RenderGraph.hpp>
-#include <engine\scene\SceneNodeManipulator.hpp>
+#include <editor\ViewportInputManager.hpp>
 
 #include <gizmo_3D.h>
 
@@ -245,6 +245,11 @@ void Generate3Cones(DRE::Vector<GizmoVertex, DRE::DefaultAllocator>& vertices, s
     }
 }
 
+EditorPass::EditorPass(EDITOR::ViewportInputManager* viewportInput)
+    : m_ViewportInput{ viewportInput }
+{
+}
+
 void EditorPass::Initialize(RenderGraph& graph)
 {
     std::uint32_t constexpr cyllinderResolution = 20;
@@ -284,28 +289,35 @@ void EditorPass::Render(RenderGraph& graph, VKW::Context& context)
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, colorBuffer->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
 
-    VKW::DescriptorSet set = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
+    context.CmdBeginRendering(1, &colorBuffer, nullptr, nullptr);
 
+    if (m_ViewportInput->ShouldRenderTranslationGizmo())
     {
+        glm::vec3 const focusedObjectPosition = m_ViewportInput->GetFocusedObjectPosition();
+        float const gizmoScale = glm::length(g_GraphicsManager->GetMainRenderView().GetPosition() - focusedObjectPosition);
+
+        glm::mat4 gizmoTransform {
+            { gizmoScale, 0.0f, 0.0f, 0.0f },
+            { 0.0f, gizmoScale, 0.0f, 0.0f },
+            { 0.0f, 0.0f, gizmoScale, 0.0f },
+            { focusedObjectPosition, 1.0f }
+        };
+
         GizmoPassBuffer uniformData;
-        uniformData.m_Model = glm::identity<glm::mat4>();
-        //uniformData.m_Model[3][2] = -10.0f;
-        uniformData.m_CameraDistance = glm::vec4{ glm::length(g_GraphicsManager->GetMainRenderView().GetPosition()), 0.0f, 0.0f, 0.0f }; // TEMPORARY, NO OBJECT IN FOCUS
+        uniformData.m_Model = gizmoTransform;
 
         UniformProxy uniform = graph.GetPassUniform(GetID(), context, sizeof(GizmoPassBuffer));
         uniform.WriteMember140(uniformData);
+
+
+        VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
+        VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("gizmo_3D");
+        VKW::DescriptorSet set = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
+        context.CmdBindGraphicsDescriptorSets(pipeline->GetLayout(), graph.GetPassSetBinding(), 1, &set);
+        context.CmdBindVertexBuffer(m_GizmoVertices, 0);
+        context.CmdBindGraphicsPipeline(pipeline);
+        context.CmdDraw(m_GizmoGeometry->GetVertexCount());
     }
-
-    VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
-    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("gizmo_3D");
-
-    context.CmdBeginRendering(1, &colorBuffer, nullptr, nullptr);
-
-    context.CmdBindGraphicsDescriptorSets(pipeline->GetLayout(), graph.GetPassSetBinding(), 1, &set);
-    context.CmdBindVertexBuffer(m_GizmoVertices, 0);
-    context.CmdBindGraphicsPipeline(pipeline);
-    context.CmdDraw(m_GizmoGeometry->GetVertexCount());
-
     context.CmdEndRendering();
 }
 

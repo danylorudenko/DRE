@@ -73,14 +73,14 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::I
     m_Device.GetDescriptorManager()->AllocateDefaultDescriptors(VKW::CONSTANTS::FRAMES_BUFFERING, m_GlobalUniforms, m_PersistentStorage.GetStorage()->GetResource());
 }
 
-void GraphicsManager::LoadDefaultData()
+void GraphicsManager::LoadDefaultData(EDITOR::ViewportInputManager* viewportInput)
 {
     m_PipelineDB.CreateDefaultPipelines();
     m_TextureBank.LoadDefaultTextures();
-    CreateAllPasses();
+    CreateAllPasses(viewportInput);
 }
 
-void GraphicsManager::CreateAllPasses()
+void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInput)
 {
     m_RenderGraph.AddPass<ShadowPass>();
     m_RenderGraph.AddPass<CausticPass>();
@@ -93,7 +93,7 @@ void GraphicsManager::CreateAllPasses()
     m_RenderGraph.AddPass<WaterPass>();
     m_RenderGraph.AddPass<AntiAliasingPass>();
     m_RenderGraph.AddPass<ColorEncodingPass>();
-    m_RenderGraph.AddPass<EditorPass>();
+    m_RenderGraph.AddPass<EditorPass>(viewportInput);
     //m_RenderGraph.AddPass<DebugPass>();
     m_RenderGraph.AddPass<ImGuiRenderPass>();
     m_RenderGraph.ParseGraph();

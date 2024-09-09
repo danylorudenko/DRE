@@ -4,12 +4,19 @@
 #include <gfx\buffer\BufferBase.hpp>
 #include <engine\data\Geometry.hpp>
 
+namespace EDITOR
+{
+class ViewportInputManager;
+}
+
 namespace GFX
 {
 
 class EditorPass : public BasePass
 {
 public:
+    EditorPass(EDITOR::ViewportInputManager* viewportInput);
+
     virtual PassID  GetID               () const override;
 
     // Inherited via BasePass
@@ -18,6 +25,8 @@ public:
     virtual void    Render              (RenderGraph& graph, VKW::Context& context) override;
 
 private:
+    EDITOR::ViewportInputManager* m_ViewportInput;
+
     VKW::BufferResource* m_GizmoVertices = nullptr;
     Data::Geometry* m_GizmoGeometry = nullptr;
 };

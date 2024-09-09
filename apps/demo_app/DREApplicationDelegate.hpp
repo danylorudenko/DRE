@@ -27,6 +27,7 @@
 #include <engine\io\IOManager.hpp>
 
 #include <editor\RootEditor.hpp>
+#include <editor\ViewportInputManager.hpp>
 
 class DREApplicationDelegate
     : public Application::ApplicationDelegate
@@ -51,7 +52,7 @@ private:
     void InitImGui();
     void DestroyImGui();
     void ImGuiUser();
-    void ProcessFocusedObject();
+    void ProcessViewportInput();
 
     SYS::Window                         m_MainWindow;
     SYS::InputSystem                    m_InputSystem;
@@ -74,4 +75,5 @@ private:
     WORLD::Scene                        m_MainScene;
 
     EDITOR::RootEditor                  m_RootEditor;
+    EDITOR::ViewportInputManager        m_ViewportInput;
 };

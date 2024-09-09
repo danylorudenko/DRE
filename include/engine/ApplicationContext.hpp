@@ -29,7 +29,7 @@ struct ApplicationContext
 
     // Focused Object
     WORLD::ISceneNodeUser*  m_FocusedObject = nullptr;
-    DRE::U32                m_PickedObjectID = 0;
+    DRE::U32                m_MouseHoveredObjectID = 0;
 
     DRE::S32    m_CursorX = 0;
     DRE::S32    m_CursorY = 0;

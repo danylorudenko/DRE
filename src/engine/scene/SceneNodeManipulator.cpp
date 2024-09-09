@@ -40,15 +40,12 @@ SceneNodeManipulator::Axis SceneNodeManipulator::PickBestPlaneAxis(glm::vec3 cam
     return Axis::X;
 }
 
-void SceneNodeManipulator::TryInteract(SYS::InputSystem& inputSystem, GFX::RenderView& view)
+bool SceneNodeManipulator::TryInteract(SYS::InputSystem& inputSystem, GFX::RenderView& view)
 {
-    // I should be careful, because rn click will refocus the node
-
-    if (inputSystem.GetLeftMouseButtonJustPressed())
-        m_DraggedAxis = Axis(0.0f);
-
     if (m_FocusedNode == nullptr)
-        return;
+        return false;
+
+    bool hitGizmo = false;
 
     if (inputSystem.GetLeftMouseButtonJustPressed())
     {
@@ -95,13 +92,16 @@ void SceneNodeManipulator::TryInteract(SYS::InputSystem& inputSystem, GFX::Rende
         }
     }
 
-    if (m_DraggedAxis != Axis(0))
+    if (m_DraggedAxis != Axis(0) && inputSystem.GetLeftMouseButtonPressed())
     {
-        // continue dragging
+        hitGizmo = true;
+        // DRAGGING: IMPLEMENT ME
 
         if (inputSystem.GetLeftMouseButtonJustReleased())
-            m_DraggedAxis = Axis(0);
+            m_DraggedAxis = Axis(0); // stop dragging
     }
+
+    return false;
 }
 
 }

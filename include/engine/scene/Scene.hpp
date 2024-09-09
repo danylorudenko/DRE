@@ -44,7 +44,6 @@ public:
     ~Scene();
 
     SceneNode*                      GetRootNode() { return m_RootNode; }
-    SceneNodeManipulator&           GetNodeManipulator() { return m_Manipulator; }
 
     inline Camera&                  GetMainCamera() { return m_MainCamera; }
     inline Camera const &           GetMainCamera() const { return m_MainCamera; }

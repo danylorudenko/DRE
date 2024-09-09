@@ -182,7 +182,7 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
 
         DRE::S32 x = DRE::Clamp(DRE::g_AppContext.m_CursorX, 0, DRE::S32(renderWidth - 1));
         DRE::S32 y = DRE::Clamp(DRE::g_AppContext.m_CursorY, 0, DRE::S32(renderHeight - 1));
-        DRE::g_AppContext.m_PickedObjectID = ObjectIDFromBuffer(readbackData, x, y);
+        DRE::g_AppContext.m_MouseHoveredObjectID = ObjectIDFromBuffer(readbackData, x, y);
     }
 
     m_LastObjectIDsFuture = tempFuture;
