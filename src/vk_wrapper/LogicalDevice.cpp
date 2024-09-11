@@ -457,7 +457,13 @@ void LogicalDevice::RequestDeviceProperties(
     deviceProperties.vulkan12Features.pNext = &deviceProperties.vulkan13Features;
 
     deviceProperties.vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
-    deviceProperties.vulkan13Features.pNext = nullptr;
+    deviceProperties.vulkan13Features.pNext = &deviceProperties.accelerationStructureFeatures;
+
+    deviceProperties.accelerationStructureFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+    deviceProperties.accelerationStructureFeatures.pNext = &deviceProperties.rayTracingPipelineFeatures;
+
+    deviceProperties.rayTracingPipelineFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
+    deviceProperties.rayTracingPipelineFeatures.pNext = nullptr;
 
     table_->vkGetPhysicalDeviceFeatures2(targetDevice, &deviceProperties.features2);
 

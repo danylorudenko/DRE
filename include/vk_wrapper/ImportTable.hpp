@@ -187,10 +187,18 @@ public:
     PFN_vkCmdDraw vkCmdDraw = nullptr;
     PFN_vkCmdDrawIndexed vkCmdDrawIndexed = nullptr;
 
+    PFN_vkCreateQueryPool vkCreateQueryPool = nullptr;
+    PFN_vkResetQueryPool vkResetQueryPool = nullptr;
+
+    PFN_vkGetAccelerationStructureBuildSizesKHR vkGetAccelerationStructureBuildSizesKHR = nullptr;
+    PFN_vkCmdBuildAccelerationStructuresKHR vkCmdBuildAccelerationStructuresKHR = nullptr;
+    PFN_vkCmdCopyAccelerationStructureKHR vkCmdCopyAccelerationStructureKHR = nullptr;
+    PFN_vkCreateRayTracingPipelinesKHR vkCreateRayTracingPipelinesKHR = nullptr;
+    PFN_vkCmdTraceRaysKHR vkCmdTraceRaysKHR = nullptr;
+
     PFN_vkCmdBeginDebugUtilsLabelEXT vkCmdBeginDebugUtilsLabelEXT = nullptr;
     PFN_vkCmdEndDebugUtilsLabelEXT vkCmdEndDebugUtilsLabelEXT = nullptr;
     PFN_vkCmdInsertDebugUtilsLabelEXT vkCmdInsertDebugUtilsLabelEXT = nullptr;
-
 };
 
 }

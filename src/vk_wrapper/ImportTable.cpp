@@ -186,6 +186,15 @@ void ImportTable::GetDeviceProcAddresses(VkDevice device)
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdDraw);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdDrawIndexed);
 
+    VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCreateQueryPool);
+    VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkResetQueryPool);
+
+    VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkGetAccelerationStructureBuildSizesKHR);
+    VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdBuildAccelerationStructuresKHR);
+    VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdCopyAccelerationStructureKHR);
+    VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCreateRayTracingPipelinesKHR);
+    VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdTraceRaysKHR);
+
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdBeginDebugUtilsLabelEXT);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdEndDebugUtilsLabelEXT);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdInsertDebugUtilsLabelEXT);

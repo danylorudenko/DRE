@@ -65,6 +65,8 @@ public:
         VkPhysicalDeviceFeatures2 features2;
         VkPhysicalDeviceVulkan12Features vulkan12Features;
         VkPhysicalDeviceVulkan13Features vulkan13Features;
+        VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructureFeatures;
+        VkPhysicalDeviceRayTracingPipelineFeaturesKHR rayTracingPipelineFeatures;
     };
 
 public:

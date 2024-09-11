@@ -40,7 +40,7 @@ bool LineCircleIntersection(Line2D const& line, Circle2D const& circle, float& t
 
 Plane PlaneFromNormalAndPoint(glm::vec3 n, glm::vec3 p)
 {
-    float d = -glm::dot(n, p);
+    float d = glm::dot(n, p);
 
     return Plane{ n, d };
 }
