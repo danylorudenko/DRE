@@ -101,26 +101,6 @@ WORLD::Scene& DREApplicationDelegate::GetMainScene()
 
 void DREApplicationDelegate::start()
 {
-    /*TESTS*/
-
-    //DRE::Ray ray;
-    //ray.origin = glm::vec3{ -2.47523,-0.05083,-1.2407 };
-    //ray.dir = glm::normalize(glm::vec3{ 1.74114,4.56321,1.06711 } - ray.origin);
-    //
-    //DRE::Cylinder cylinder;
-    //cylinder.p0 = glm::vec3{ 2.54, 1.57, -1.26 };
-    //cylinder.p1 = glm::vec3{ -2, 6 ,1 };
-    //cylinder.r = 1.0f;
-    //
-    //float t1 = 0.0f;
-    //float t2 = 0.0f;
-    //bool testIntersection = DRE::RayCylinderIntersection(ray, cylinder, t1, t2);
-    //
-    //glm::vec3 inter1 = ray.Evaluate(t1);
-    //glm::vec3 inter2 = ray.Evaluate(t2);
-
-    /*TESTS*/
-
     if (C_COMPILE_GLSL_SOURCES_ON_START)
     {  
         m_IOManager.CompileGLSLSources();
@@ -132,8 +112,8 @@ void DREApplicationDelegate::start()
     //m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 0.0f, 0.0f, 11.0f });
     //m_MainScene.GetMainCamera().SetEulerOrientation(glm::vec3{ -17.26f, 107.37f, 0.0f });
 
-    //m_MainScene.GetMainCamera().SetPosition(glm::vec3{ -0.23f, 10.41f, 14.70f });
-    //m_MainScene.GetMainCamera().SetCameraEuler(glm::vec3{ -13.32f, -43.83f, 0.0f });
+    m_MainScene.GetMainCamera().SetPosition(glm::vec3{ -0.23f, 10.41f, 14.70f });
+    m_MainScene.GetMainCamera().SetCameraEuler(glm::vec3{ -13.32f, -43.83f, 0.0f });
 
     WORLD::Light* sunLight = m_MainScene.CreateSunLight(m_GraphicsManager.GetMainContext());
     m_MainScene.SetMainSunLight(sunLight);

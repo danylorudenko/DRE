@@ -24,22 +24,29 @@ void SceneNodeManipulator::SetFocusedNode(SceneNode* node)
     m_FocusedNode = node;
 }
 
-SceneNodeManipulator::Axis SceneNodeManipulator::PickBestPlaneAxis(glm::vec3 cameraDir)
+glm::vec3 SceneNodeManipulator::PickBestPlaneNormal(glm::vec3 cameraDir, SceneNodeManipulator::Axis dragAxis)
 {
     float dotX = glm::abs(glm::dot(cameraDir, glm::vec3{ 1.0f, 0.0f, 0.0f }));
     float dotY = glm::abs(glm::dot(cameraDir, glm::vec3{ 0.0f, 1.0f, 0.0f }));
     float dotZ = glm::abs(glm::dot(cameraDir, glm::vec3{ 0.0f, 0.0f, 1.0f }));
 
-    if (dotX >= dotY && dotX >= dotZ)
-        return Axis::X;
 
-    if (dotY >= dotX && dotY >= dotZ)
-        return Axis::Y;
+    struct NormalCandidate
+    {
+        Axis axis;
+        float dot;
+    };
 
-    if (dotZ >= dotY && dotZ >= dotX)
-        return Axis::Z;
+    DRE::InplaceVector<NormalCandidate, 3> rating;
+    rating.EmplaceBack(Axis::X, dotX);
+    rating.EmplaceBack(Axis::Y, dotY);
+    rating.EmplaceBack(Axis::Z, dotZ);
+    rating.SortBubble([](auto const& lhs, const auto& rhs){ return lhs.dot < rhs.dot; });
 
-    return Axis::X;
+    if (rating[0].axis != dragAxis)
+        return AxisToVector(rating[0].axis);
+    else
+        return AxisToVector(rating[1].axis);
 }
 
 glm::vec3 SceneNodeManipulator::AxisToVector(SceneNodeManipulator::Axis axis)
@@ -110,30 +117,33 @@ bool SceneNodeManipulator::TryInteract(SYS::InputSystem& inputSystem, GFX::Rende
 
         if (m_DraggedAxis != Axis(0))
         {
-            m_BeginTranslatePoint = cameraRay.Evaluate(tMin);
             m_BeginNodePosition = m_FocusedNode->GetPosition();
+
+            glm::vec3 dragPlaneNormal = PickBestPlaneNormal(view.GetDirection(), m_DraggedAxis);
+            DRE::Plane dragPlane = DRE::PlaneFromNormalAndPoint(dragPlaneNormal, m_BeginNodePosition);
+
+            float t = 0.0f;
+            DRE::RayPlaneIntersection(cameraRay, dragPlane, t);
+            m_BeginTranslatePoint = cameraRay.Evaluate(t);
         }
     }
 
     if (m_DraggedAxis != Axis(0) && inputSystem.GetLeftMouseButtonPressed())
     {
         hitGizmo = true;
-        // DRAGGING: IMPLEMENT ME
 
-        std::cout << "Interacted Axis: " << int(m_DraggedAxis) << std::endl;
-
-        Axis axis = PickBestPlaneAxis(view.GetDirection());
-        glm::vec3 dragPlaneNormal = AxisToVector(axis);
-        DRE::Plane dragPlane = DRE::PlaneFromNormalAndPoint(dragPlaneNormal, m_BeginTranslatePoint);
+        glm::vec3 dragPlaneNormal = PickBestPlaneNormal(view.GetDirection(), m_DraggedAxis);
+        DRE::Plane dragPlane = DRE::PlaneFromNormalAndPoint(dragPlaneNormal, m_BeginNodePosition);
 
         float t = 0.0f;
         if (DRE::RayPlaneIntersection(cameraRay, dragPlane, t))
         {
             glm::vec3 dragPoint = cameraRay.Evaluate(t);
             glm::vec3 dragAxis = AxisToVector(m_DraggedAxis);
-            float diff = glm::dot(dragPoint, dragAxis);
+            float axisDrag = glm::dot(dragPoint, dragAxis);
+            float axisStart = glm::dot(m_BeginTranslatePoint, dragAxis);
+            float diff = axisDrag - axisStart;
             glm::vec3 targetPosition = m_BeginNodePosition + dragAxis * diff;
-            std::cout << "DIFF: " << diff << std::endl;
             m_FocusedNode->SetPosition(targetPosition);
         }
 

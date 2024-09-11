@@ -39,7 +39,7 @@ private:
         Y = 1 << 1,
         Z = 1 << 2
     };
-    static Axis PickBestPlaneAxis(glm::vec3 cameraDir);
+    static glm::vec3 PickBestPlaneNormal(glm::vec3 cameraDir, SceneNodeManipulator::Axis dragAxis);
     static glm::vec3 AxisToVector(SceneNodeManipulator::Axis axis);
 
     SceneNode*  m_FocusedNode;
