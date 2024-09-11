@@ -54,7 +54,7 @@ bool RayPlaneIntersection(Ray const& r, Plane const& p, float& t)
 
     t = nominator / denominator;
 
-    return DRE::FloatCompare(denominator, 0.0f);
+    return !DRE::FloatCompare(denominator, 0.0f, 0.001f);
 }
 
 bool RayCylinderIntersection(Ray const& r, Cylinder const& c, float& t1, float& t2)

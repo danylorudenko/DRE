@@ -6,6 +6,8 @@
 #include <gfx\view\RenderView.hpp>
 #include <engine\scene\SceneNode.hpp>
 
+#include <iostream>
+
 namespace WORLD
 {
 
@@ -14,7 +16,7 @@ SceneNodeManipulator::SceneNodeManipulator()
     , m_PlaneAxis{ Axis(0) }
     , m_DraggedAxis{ Axis(0) }
     , m_BeginTranslatePoint{ 0.0f, 0.0f, 0.0f }
-    , m_CurrentTranslatePoint{ 0.0f, 0.0f, 0.0f }
+    , m_BeginNodePosition{ 0.0f, 0.0f, 0.0f }
 {}
 
 void SceneNodeManipulator::SetFocusedNode(SceneNode* node)
@@ -40,6 +42,22 @@ SceneNodeManipulator::Axis SceneNodeManipulator::PickBestPlaneAxis(glm::vec3 cam
     return Axis::X;
 }
 
+glm::vec3 SceneNodeManipulator::AxisToVector(SceneNodeManipulator::Axis axis)
+{
+    switch (axis)
+    {
+    case SceneNodeManipulator::Axis::X:
+        return glm::vec3{ 1.0f, 0.0f, 0.0f };
+    case SceneNodeManipulator::Axis::Y:
+        return glm::vec3{ 0.0f, 1.0f, 0.0f };
+    case SceneNodeManipulator::Axis::Z:
+        return glm::vec3{ 0.0f, 0.0f, 1.0f };
+    default:
+        DRE_ASSERT(false, "Invalid dragging plane normal.");
+        return glm::vec3{ 0.0f, 0.0f, 0.0f };
+    }
+}
+
 bool SceneNodeManipulator::TryInteract(SYS::InputSystem& inputSystem, GFX::RenderView& view)
 {
     if (m_FocusedNode == nullptr)
@@ -47,13 +65,12 @@ bool SceneNodeManipulator::TryInteract(SYS::InputSystem& inputSystem, GFX::Rende
 
     bool hitGizmo = false;
 
+    glm::ivec2 mousePos{ inputSystem.GetMouseState().mousePosX_, inputSystem.GetMouseState().mousePosY_ };
+    DRE::Ray cameraRay = DRE::RayFromCamera(mousePos, view.GetSize(), view.GetInvViewProjectionM(), view.GetPosition());
+
     if (inputSystem.GetLeftMouseButtonJustPressed())
     {
         m_DraggedAxis = Axis(0);
-
-        glm::ivec2 mousePos{ inputSystem.GetMouseState().mousePosX_, inputSystem.GetMouseState().mousePosY_ };
-        // raycast gizmo and startDragging
-        DRE::Ray cameraRay = DRE::RayFromCamera(mousePos, view.GetSize(), view.GetInvViewProjectionM(), view.GetPosition());
 
         float const gizmoDistance = glm::length(view.GetPosition() - m_FocusedNode->GetGlobalPosition());
         float const gizmoLength = WORLD::SceneNodeManipulator::GIZMO_CYLINDER_LENGTH * gizmoDistance;
@@ -90,6 +107,12 @@ bool SceneNodeManipulator::TryInteract(SYS::InputSystem& inputSystem, GFX::Rende
                 m_DraggedAxis = Axis::Z;
             }
         }
+
+        if (m_DraggedAxis != Axis(0))
+        {
+            m_BeginTranslatePoint = cameraRay.Evaluate(tMin);
+            m_BeginNodePosition = m_FocusedNode->GetPosition();
+        }
     }
 
     if (m_DraggedAxis != Axis(0) && inputSystem.GetLeftMouseButtonPressed())
@@ -97,11 +120,28 @@ bool SceneNodeManipulator::TryInteract(SYS::InputSystem& inputSystem, GFX::Rende
         hitGizmo = true;
         // DRAGGING: IMPLEMENT ME
 
+        std::cout << "Interacted Axis: " << int(m_DraggedAxis) << std::endl;
+
+        Axis axis = PickBestPlaneAxis(view.GetDirection());
+        glm::vec3 dragPlaneNormal = AxisToVector(axis);
+        DRE::Plane dragPlane = DRE::PlaneFromNormalAndPoint(dragPlaneNormal, m_BeginTranslatePoint);
+
+        float t = 0.0f;
+        if (DRE::RayPlaneIntersection(cameraRay, dragPlane, t))
+        {
+            glm::vec3 dragPoint = cameraRay.Evaluate(t);
+            glm::vec3 dragAxis = AxisToVector(m_DraggedAxis);
+            float diff = glm::dot(dragPoint, dragAxis);
+            glm::vec3 targetPosition = m_BeginNodePosition + dragAxis * diff;
+            std::cout << "DIFF: " << diff << std::endl;
+            m_FocusedNode->SetPosition(targetPosition);
+        }
+
         if (inputSystem.GetLeftMouseButtonJustReleased())
             m_DraggedAxis = Axis(0); // stop dragging
     }
 
-    return false;
+    return hitGizmo;
 }
 
 }

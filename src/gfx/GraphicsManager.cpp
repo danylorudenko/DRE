@@ -282,6 +282,7 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
     DRE::Ray ray = DRE::RayFromCamera(pos, { 1600u, 900u }, m_MainView.GetInvViewProjectionM(), m_MainView.GetPosition());
     //DRE::Ray ray = DRE::RayFromCamera(pos, { 1600u, 900u }, m_MainView.GetFOV(), m_MainView.GetInvViewM());
 
+    /*
     std::cout << "Mouse: " << DRE::g_AppContext.m_CursorX << ' ' << DRE::g_AppContext.m_CursorY
         << "; Origin: " << ray.origin.x << ", " << ray.origin.y << ", " << ray.origin.z 
         << "; Direction: " << ray.dir.x << ", " << ray.dir.y << ", " << ray.dir.z << std::endl;
@@ -306,7 +307,7 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
         glm::vec3 p2 = ray.Evaluate(t2);
         std::cout << "Z INTERSECTION: t1=" << t1 << ", t2=" << t2 << "p=(" << p1.x << ' ' << p1.y << ' ' << p1.z << ")" << std::endl;
     }
-
+    */
     // globalData
     context.CmdBindGlobalDescriptorSets(*GetMainDevice()->GetDescriptorManager(), GetCurrentFrameID());
 

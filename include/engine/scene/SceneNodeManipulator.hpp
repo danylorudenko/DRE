@@ -40,13 +40,14 @@ private:
         Z = 1 << 2
     };
     static Axis PickBestPlaneAxis(glm::vec3 cameraDir);
+    static glm::vec3 AxisToVector(SceneNodeManipulator::Axis axis);
 
     SceneNode*  m_FocusedNode;
 
     Axis        m_PlaneAxis;
     Axis        m_DraggedAxis;
     glm::vec3   m_BeginTranslatePoint;
-    glm::vec3   m_CurrentTranslatePoint;
+    glm::vec3   m_BeginNodePosition;
 
 
 };
