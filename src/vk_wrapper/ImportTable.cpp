@@ -191,6 +191,7 @@ void ImportTable::GetDeviceProcAddresses(VkDevice device)
 
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkGetAccelerationStructureBuildSizesKHR);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdBuildAccelerationStructuresKHR);
+    VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdWriteAccelerationStructuresPropertiesKHR);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdCopyAccelerationStructureKHR);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCreateRayTracingPipelinesKHR);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdTraceRaysKHR);
