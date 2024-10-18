@@ -19,6 +19,8 @@ struct DREVertex
     float uv0[2];
 };
 
+using DREIndex = std::uint32_t;
+
 class Geometry
 {
 public:

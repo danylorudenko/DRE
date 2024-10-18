@@ -265,7 +265,7 @@ void EditorPass::Initialize(RenderGraph& graph)
     m_GizmoGeometry = DRE::g_PersistentDataAllocator.Alloc<Data::Geometry>(std::uint16_t(sizeof(GizmoVertex)), std::uint16_t(0));
     m_GizmoGeometry->SetVertexData(DRE::ByteBuffer{ vertices.Data(), vertices.SizeInBytes() });
 
-    GraphicsManager::GeometryGPU* gpuGeometry = g_GraphicsManager->LoadGPUGeometry(g_GraphicsManager->GetMainContext(), m_GizmoGeometry);
+    GraphicsManager::GeometryGPU* gpuGeometry = g_GraphicsManager->FindOrLoadGPUGeometry(g_GraphicsManager->GetMainContext(), m_GizmoGeometry);
     m_GizmoVertices = gpuGeometry->vertexBuffer;
 }
 

@@ -54,6 +54,8 @@ private:
     void ImGuiUser();
     void ProcessViewportInput();
 
+    void DEBUGBuildAccelerationStructure();
+
     SYS::Window                         m_MainWindow;
     SYS::InputSystem                    m_InputSystem;
     Data::MaterialLibrary               m_MaterialLibrary;

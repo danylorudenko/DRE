@@ -353,8 +353,12 @@ void WriteMemorySequence(void*& memory, void const* data, std::uint32_t size)
     memory = DRE::PtrAdd(memory, size);
 }
 
-GraphicsManager::GeometryGPU* GraphicsManager::LoadGPUGeometry(VKW::Context& context, Data::Geometry* geometry)
+GraphicsManager::GeometryGPU* GraphicsManager::FindOrLoadGPUGeometry(VKW::Context& context, Data::Geometry* geometry)
 {
+    GeometryGPU* geometryGPU = m_GeometryGPUMap.Find(geometry).value;
+    if (geometryGPU != nullptr)
+        return geometryGPU;
+
     std::uint32_t const vertexMemoryRequirements = geometry->GetVertexSizeInBytes();
     std::uint32_t const indexMemoryRequirements = geometry->GetIndexSizeInBytes();
     std::uint32_t const meshMemoryRequirements = vertexMemoryRequirements + indexMemoryRequirements;
@@ -442,9 +446,7 @@ RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* scen
     EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::ROUGHNESS, m_TextureBank, "one_r", textures);
 
     // load geometry
-    GeometryGPU* geometryGPU = m_GeometryGPUMap.Find(geometry).value;
-    if (geometryGPU == nullptr)
-        geometryGPU = LoadGPUGeometry(context, geometry);
+    GeometryGPU* geometryGPU = FindOrLoadGPUGeometry(context, geometry);
 
     RenderableObject::DescriptorSetVector descriptors;
     RenderableObject::DescriptorSetVector shadowDescriptors;

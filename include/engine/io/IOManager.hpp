@@ -10,6 +10,7 @@
 
 #include <engine\data\Texture2D.hpp>
 #include <engine\data\Material.hpp>
+#include <engine\data\Geometry.hpp>
 
 #include <glm\mat4x4.hpp>
 #include <glm\gtc\matrix_transform.hpp>
@@ -114,6 +115,8 @@ private:
     void ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene, char const* sceneName);
     void ParseAssimpMaterials(aiScene const* scene, char const* sceneName, char const* path, char const* defaultShader, Data::TextureChannelVariations metalnessRoughnessOverride);
     void ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, char const* sceneName, aiNode const* node, WORLD::Scene& targetScene, WORLD::SceneNode* parentNode);
+
+    void BuildAssimpNodeAccelerationStructure(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, char const* sceneName, aiNode const* node, WORLD::Scene& targetScene, WORLD::SceneNode* parentNode, Data::Material* mat, Data::Geometry* geometry);
 
     void ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiMat, DRE::String256 const& assetFolderPath, Data::Material* material, Data::Material::TextureProperty::Slot slot, Data::TextureChannelVariations channels);
 

@@ -155,13 +155,13 @@ public:
         VKW::BufferResource* vertexBuffer;
         VKW::BufferResource* indexBuffer;
     };
-    GeometryGPU*                        LoadGPUGeometry(VKW::Context& context, Data::Geometry* geometry);
+    GeometryGPU*                        FindOrLoadGPUGeometry(VKW::Context& context, Data::Geometry* geometry);
 
 private:
     void                                CreateAllPasses(EDITOR::ViewportInputManager* viewportInput);
 
-    void            PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, std::uint64_t deltaTimeUS, float globalTimeS);
-    VKW::QueueExecutionPoint TransferToSwapchainAndPresent(Texture& src);
+    void                                PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, std::uint64_t deltaTimeUS, float globalTimeS);
+    VKW::QueueExecutionPoint            TransferToSwapchainAndPresent(Texture& src);
 
 
 private:

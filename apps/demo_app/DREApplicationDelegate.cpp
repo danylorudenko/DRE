@@ -253,6 +253,11 @@ void DREApplicationDelegate::update()
     DRE::g_AppContext.m_EngineFrame++;
 }
 
+void DREApplicationDelegate::DEBUGBuildAccelerationStructure()
+{
+    
+}
+
 //////////////////////////////////////////
 void DREApplicationDelegate::shutdown()
 {
