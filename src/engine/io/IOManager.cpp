@@ -350,7 +350,8 @@ void IOManager::BuildAssimpNodeAccelerationStructure(VKW::Context& gfxContext, c
     accelGeometry.geometry.triangles.maxVertex = geometry->GetVertexCount();
     accelGeometry.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
     accelGeometry.geometry.triangles.indexData.deviceAddress = gpuGeometry->indexBuffer->gpuAddress_;
-    accelGeometry.geometry.triangles.transformData = huh;
+    accelGeometry.geometry.triangles.transformData.deviceAddress = 
+    auto* accelGeometryPtr = &accelGeometry;
 
     VkAccelerationStructureBuildTypeKHR buildType = VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR;
     VkAccelerationStructureBuildGeometryInfoKHR buildInfo;
@@ -362,7 +363,7 @@ void IOManager::BuildAssimpNodeAccelerationStructure(VKW::Context& gfxContext, c
     buildInfo.srcAccelerationStructure = VK_NULL_HANDLE; // needed only for update
     buildInfo.dstAccelerationStructure = VK_NULL_HANDLE; // probably need it only for build, now we just get sizes
     buildInfo.geometryCount = 1;
-    buildInfo.
+    buildInfo.ppGeometries = &accelGeometryPtr;
 
     table->vkGetAccelerationStructureBuildSizesKHR()
 }

@@ -21,6 +21,7 @@
 #include <gfx\renderer\RenderableObject.hpp>
 #include <gfx\view\RenderView.hpp>
 #include <gfx\renderer\LightsManager.hpp>
+#include <gfx\renderer\TransformsManager.hpp>
 
 #include <engine\data\Geometry.hpp>
 #include <engine\data\Material.hpp>
@@ -191,6 +192,7 @@ private:
     PersistentStorage           m_PersistentStorage;
 
     LightsManager               m_LightsManager;
+    TransformsManager           m_TransformsManager;
 
     RenderGraph                 m_RenderGraph;
     DependencyManager           m_DependencyManager;

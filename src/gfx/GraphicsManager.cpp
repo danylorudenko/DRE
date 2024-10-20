@@ -53,6 +53,7 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::I
 #endif
     , m_PersistentStorage{ &m_Device, &m_UploadArena, &m_Device, C_PERSISTENT_STORAGE_SIZE }
     , m_LightsManager{ &m_PersistentStorage }
+    , m_TransformsManager{ &m_PersistentStorage }
     , m_RenderGraph{ this }
     , m_DependencyManager{}
     , m_MainView{ &DRE::g_MainAllocator }

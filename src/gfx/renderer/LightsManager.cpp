@@ -3,7 +3,6 @@
 #include <vk_wrapper\descriptor\DescriptorManager.hpp>
 
 #include <gfx\GraphicsManager.hpp>
-//#include <gfx\buffer\PersistentStorage.hpp>
 #include <lights.h>
 
 namespace GFX
