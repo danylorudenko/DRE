@@ -14,14 +14,14 @@ LightsManager::LightsManager(PersistentStorage* storage)
 {
 }
 
-LightsManager::Light LightsManager::AllocateLight()
+LightsManager::LightGPU LightsManager::AllocateLight()
 {
     std::uint16_t const id = m_ElementAllocator.Allocate();
     ++m_LightsCount;
-    return Light{ this, id };
+    return LightGPU{ this, id };
 }
 
-void LightsManager::FreeLight(LightsManager::Light& light)
+void LightsManager::FreeLight(LightsManager::LightGPU& light)
 {
     --m_LightsCount;
     m_ElementAllocator.Free(light.m_id);
@@ -64,13 +64,13 @@ void LightsManager::UpdateGPULights(VKW::Context& context)
 ///////////////////////////////////////////
 ///////////////////////////////////////////
 
-LightsManager::Light::Light(LightsManager* manager, std::uint16_t id)
+LightsManager::LightGPU::LightGPU(LightsManager* manager, std::uint16_t id)
     : m_LightsManager{ manager }
     , m_id{ id }
 {
 }
 
-void LightsManager::Light::ScheduleUpdate(glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, std::uint32_t type)
+void LightsManager::LightGPU::ScheduleUpdate(glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, std::uint32_t type)
 {
     m_LightsManager->ScheduleLightUpdate(m_id, position, orientation, color, flux, type);
 }

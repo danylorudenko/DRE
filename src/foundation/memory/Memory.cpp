@@ -4,8 +4,8 @@ DRE_BEGIN_NAMESPACE
 
 
 U64 constexpr DATA_EXCHANGE_ARENA_SIZE  = DataExchangeAllocatorBuddy::RequiredMemorySize();
-U64 constexpr FRAME_SCRATCH_ARENA_SIZE  = 1024 * 1024 * 16;
-U64 constexpr PERSISTENT_ARENA_SIZE     = 1024 * 1024 * 24;
+U64 constexpr FRAME_SCRATCH_ARENA_SIZE  = 1024 * 1024 * 64;
+U64 constexpr PERSISTENT_ARENA_SIZE     = 1024 * 1024 * 64;
 U64 constexpr THREAD_LOCAL_ARENA_SIZE   = 1024 * 1024 * 16;
 
 

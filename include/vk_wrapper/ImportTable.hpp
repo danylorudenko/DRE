@@ -186,17 +186,20 @@ public:
     PFN_vkCmdClearAttachments vkCmdClearAttachments = nullptr;
     PFN_vkCmdDraw vkCmdDraw = nullptr;
     PFN_vkCmdDrawIndexed vkCmdDrawIndexed = nullptr;
+    PFN_vkCmdTraceRaysKHR vkCmdTraceRaysKHR = nullptr;
 
     PFN_vkCreateQueryPool vkCreateQueryPool = nullptr;
     PFN_vkResetQueryPool vkResetQueryPool = nullptr;
 
     PFN_vkGetAccelerationStructureDeviceAddressKHR vkGetAccelerationStructureDeviceAddressKHR = nullptr;
     PFN_vkGetAccelerationStructureBuildSizesKHR vkGetAccelerationStructureBuildSizesKHR = nullptr;
+    PFN_vkCreateRayTracingPipelinesKHR vkCreateRayTracingPipelinesKHR = nullptr;
+    PFN_vkCreateAccelerationStructureKHR vkCreateAccelerationStructureKHR = nullptr;
+    PFN_vkDestroyAccelerationStructureKHR vkDestroyAccelerationStructureKHR = nullptr;
+
     PFN_vkCmdBuildAccelerationStructuresKHR vkCmdBuildAccelerationStructuresKHR = nullptr;
     PFN_vkCmdWriteAccelerationStructuresPropertiesKHR vkCmdWriteAccelerationStructuresPropertiesKHR = nullptr;
     PFN_vkCmdCopyAccelerationStructureKHR vkCmdCopyAccelerationStructureKHR = nullptr;
-    PFN_vkCreateRayTracingPipelinesKHR vkCreateRayTracingPipelinesKHR = nullptr;
-    PFN_vkCmdTraceRaysKHR vkCmdTraceRaysKHR = nullptr;
 
     PFN_vkCmdBeginDebugUtilsLabelEXT vkCmdBeginDebugUtilsLabelEXT = nullptr;
     PFN_vkCmdEndDebugUtilsLabelEXT vkCmdEndDebugUtilsLabelEXT = nullptr;

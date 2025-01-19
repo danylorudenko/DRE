@@ -10,7 +10,7 @@
     </Expand>
   </Type>
 
-  <Type Name="DRE::Vector&lt;*,*,*&gt;">
+  <Type Name="DRE::Vector&lt;*,*&gt;">
     <DisplayString>size = {m_Size}</DisplayString>
     <Expand>
       <ArrayItems>
@@ -20,8 +20,8 @@
     </Expand>
   </Type>
 
-  
-  
+
+
   <Type Name="DRE::InplaceHashTable&lt;*,*,*&gt;">
     <DisplayString>size = {m_Size}</DisplayString>
     <Expand>

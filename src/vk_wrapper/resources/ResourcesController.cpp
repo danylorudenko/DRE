@@ -49,14 +49,16 @@ ResourcesController& ResourcesController::operator=(ResourcesController&& rhs)
 ResourcesController::~ResourcesController()
 {
     VkDevice const device = device_->Handle();
-    
-    for (auto& bufferResource : buffers_) {
+
+    for (auto& bufferResource : buffers_)
+    {
         table_->vkDestroyBuffer(device, bufferResource->handle_, nullptr);
         memoryController_->ReleaseMemoryRegion(bufferResource->memory_);
         delete bufferResource;
     }
 
-    for (auto& imageResource : images_) {
+    for (auto& imageResource : images_)
+    {
         table_->vkDestroyImage(device, imageResource->handle_, nullptr);
         memoryController_->ReleaseMemoryRegion(imageResource->memory_);
         delete imageResource;
@@ -73,8 +75,11 @@ BufferResource* ResourcesController::CreateBuffer(std::uint32_t size, BufferUsag
     vkBufferCreateInfo.pQueueFamilyIndices = nullptr;
     vkBufferCreateInfo.size = size;
     vkBufferCreateInfo.flags = VK_FLAGS_NONE;
-    vkBufferCreateInfo.usage = VK_FLAGS_NONE; // temp value, assigned below
-
+#if defined(DRE_GET_BUFFER_ADDRESS)
+    vkBufferCreateInfo.usage = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+#else
+    vkBufferCreateInfo.usage = VK_FLAGS_NONE;
+#endif
 
     MemoryPageRegionDesc regionDesc;
 
@@ -82,36 +87,38 @@ BufferResource* ResourcesController::CreateBuffer(std::uint32_t size, BufferUsag
     {
     case BufferUsage::VERTEX_INDEX:
         regionDesc.memoryClass_ = MemoryClass::DeviceFast;
-        vkBufferCreateInfo.usage = (VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+        vkBufferCreateInfo.usage |= (VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR);
         break;
     case BufferUsage::VERTEX_INDEX_WRITABLE:
         regionDesc.memoryClass_ = MemoryClass::CpuStaging;
-        vkBufferCreateInfo.usage = (VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+        vkBufferCreateInfo.usage |= (VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
         break;
     case BufferUsage::UNIFORM:
         regionDesc.memoryClass_ = MemoryClass::CpuUniform;
-        vkBufferCreateInfo.usage = (VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+        vkBufferCreateInfo.usage |= (VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
         break;
     case BufferUsage::UPLOAD_BUFFER:
         regionDesc.memoryClass_ = MemoryClass::CpuStaging;
-        vkBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-#if defined(DRE_GET_BUFFER_ADDRESS)
-        vkBufferCreateInfo.usage |= VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
-#endif
+        vkBufferCreateInfo.usage |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
         break;
     case BufferUsage::READBACK_BUFFER:
         regionDesc.memoryClass_ = MemoryClass::CpuReadback;
-        vkBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+        vkBufferCreateInfo.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
         break;
     case BufferUsage::STORAGE:
         regionDesc.memoryClass_ = MemoryClass::DeviceFast;
-        vkBufferCreateInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-#if defined(DRE_GET_BUFFER_ADDRESS)
-        vkBufferCreateInfo.usage |= VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
-#endif
+        vkBufferCreateInfo.usage |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        break;
+    case BufferUsage::ACCELERATION_STRUCTURE:
+        regionDesc.memoryClass_ = MemoryClass::DeviceFast;
+        vkBufferCreateInfo.usage |= VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR;
+        break;
+    case BufferUsage::ACCELERATION_STRUCTURE_INPUT:
+        regionDesc.memoryClass_ = MemoryClass::CpuStaging;
+        vkBufferCreateInfo.usage |= VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
         break;
     default:
-        assert(false);
+        DRE_ASSERT(false, "Unsupported VKW::BufferUsage");
     }
 
 
@@ -132,7 +139,7 @@ BufferResource* ResourcesController::CreateBuffer(std::uint32_t size, BufferUsag
 
     std::uint64_t gpuAddress = 0;
 #if defined(DRE_GET_BUFFER_ADDRESS)
-    if (usage == BufferUsage::UPLOAD_BUFFER || usage == BufferUsage::STORAGE)
+    //if (usage == BufferUsage::UPLOAD_BUFFER || usage == BufferUsage::STORAGE)
     {
         VkBufferDeviceAddressInfo addressInfo;
         addressInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
@@ -260,6 +267,66 @@ ImageResource* ResourcesController::CreateImage(std::uint32_t width, std::uint32
 #endif
 
     return imageResource;
+}
+
+
+VkAccelerationStructureKHR ResourcesController::CreateAcceleratioStructureInternal(VKW::BufferResource* buffer, char const* name, bool isTlas)
+{
+    VkAccelerationStructureCreateInfoKHR info;
+    info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
+    info.pNext = nullptr;
+    info.createFlags = VK_FLAGS_NONE;
+    info.buffer = buffer->handle_;
+    info.offset = 0;
+    info.size = buffer->size_;
+    info.type = isTlas ? VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR : VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+    info.deviceAddress = NULL;
+
+    VkAccelerationStructureKHR accelStructure = VK_NULL_HANDLE;
+    table_->vkCreateAccelerationStructureKHR(device_->Handle(), &info, nullptr, &accelStructure);
+
+    DRE::String128 nameBuffer{ "AC|" };
+    nameBuffer.Append(name);
+
+    VkDebugUtilsObjectNameInfoEXT nameInfo;
+    nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+    nameInfo.pNext = nullptr;
+    nameInfo.objectType = VK_OBJECT_TYPE_ACCELERATION_STRUCTURE_KHR;
+    nameInfo.objectHandle = (std::uint64_t)accelStructure;
+    nameInfo.pObjectName = nameBuffer.GetData();
+
+    VK_ASSERT(table_->vkSetDebugUtilsObjectNameEXT(device_->Handle(), &nameInfo));
+
+    return accelStructure;
+}
+
+AccelerationStructureResource* ResourcesController::CreateBLAS(VKW::BufferResource* buffer, char const* name)
+{
+    VkAccelerationStructureKHR vkAccelerationStructure = CreateAcceleratioStructureInternal(buffer, name, false);
+    AccelerationStructureResource* resource = new AccelerationStructureResource{ vkAccelerationStructure, buffer };
+    accelerationStructures_.emplace(resource);
+
+    return resource;
+}
+
+AccelerationStructureResource* ResourcesController::CreateTLAS(VKW::BufferResource* buffer, char const* name)
+{
+    VkAccelerationStructureKHR vkAccelerationStructure = CreateAcceleratioStructureInternal(buffer, name, true);
+    AccelerationStructureResource* resource = new AccelerationStructureResource{ vkAccelerationStructure,  };
+    accelerationStructures_.emplace(resource);
+
+    return resource;
+}
+
+void ResourcesController::FreeAccelerationStructure(AccelerationStructureResource* resource)
+{
+    auto resourceIt = accelerationStructures_.find(resource);
+    assert(resourceIt != accelerationStructures_.end() && "Can't free AccelerationStructureResource.");
+
+    table_->vkDestroyAccelerationStructureKHR(device_->Handle(), resource->handle_, nullptr);
+    delete resource;
+
+    accelerationStructures_.erase(resourceIt);
 }
 
 void ResourcesController::FreeBuffer(BufferResource* buffer)

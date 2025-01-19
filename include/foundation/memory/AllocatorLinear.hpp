@@ -53,7 +53,14 @@ public:
 
     inline void Free(void* allocation)
     {
-        // noop
+        //noop
+    }
+
+    template<typename T>
+    inline void FreeObject(T* allocation)
+    {
+        // don't actually free memory
+        allocation->~T();
     }
 
 

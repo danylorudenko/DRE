@@ -64,7 +64,8 @@ PersistentStorage::Allocation::Allocation(StorageBuffer* buffer, UploadArena* up
 }
 
 PersistentStorage::PersistentStorage(VKW::Device* device, UploadArena* uploadArena, VKW::Device* divice, std::uint32_t size)
-    : m_UploadArena{ uploadArena }
+    : DeviceChild{ device }
+    , m_UploadArena{ uploadArena }
     , m_Buffer{}
     , m_Size{ size }
     , m_FreeOffset{ 0 }

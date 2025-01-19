@@ -40,13 +40,13 @@ public:
     void    ScheduleUpdateGPUData();
 
 private:
-    std::uint32_t               m_Type = DRE_LIGHT_TYPE_MAX; // DRE_LIGHT_TYPE_
-    glm::vec3                   m_Spectrum;
-    float                       m_Flux;
-    float                       m_Radius;
-    float                       m_Falloff;
+    std::uint32_t                   m_Type = DRE_LIGHT_TYPE_MAX; // DRE_LIGHT_TYPE_
+    glm::vec3                       m_Spectrum;
+    float                           m_Flux;
+    float                           m_Radius;
+    float                           m_Falloff;
 
-    GFX::LightsManager::Light   m_GPULight;
+    GFX::LightsManager::LightGPU    m_GPULight;
 };
 
 }

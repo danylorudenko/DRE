@@ -70,7 +70,7 @@ void AssignCylinderVertex<2>(GizmoVertex& vertexLower, GizmoVertex& vertexUpper,
 }
 
 template<std::uint32_t AXIS>
-void GenerateCyllinder(DRE::Vector<GizmoVertex, DRE::DefaultAllocator>& vertices, std::uint32_t sections)
+void GenerateCyllinder(DRE::Vector<GizmoVertex, DRE::AllocatorLinear>& vertices, std::uint32_t sections)
 {
     for (std::uint32_t i = 0; i < sections; i++)
     {
@@ -95,10 +95,10 @@ void GenerateCyllinder(DRE::Vector<GizmoVertex, DRE::DefaultAllocator>& vertices
 }
 
 template<std::uint32_t AXIS>
-void FillConeSectionVertices(DRE::Vector<GizmoVertex, DRE::DefaultAllocator>& vertices, float angle, float nextAngle);
+void FillConeSectionVertices(DRE::Vector<GizmoVertex, DRE::AllocatorLinear>& vertices, float angle, float nextAngle);
 
 template<> // X
-void FillConeSectionVertices<0>(DRE::Vector<GizmoVertex, DRE::DefaultAllocator>& vertices, float angle, float nextAngle)
+void FillConeSectionVertices<0>(DRE::Vector<GizmoVertex, DRE::AllocatorLinear>& vertices, float angle, float nextAngle)
 {
     float constexpr len = WORLD::SceneNodeManipulator::GIZMO_CYLINDER_LENGTH;
 
@@ -143,7 +143,7 @@ void FillConeSectionVertices<0>(DRE::Vector<GizmoVertex, DRE::DefaultAllocator>&
 }
 
 template<> // Y
-void FillConeSectionVertices<1>(DRE::Vector<GizmoVertex, DRE::DefaultAllocator>& vertices, float angle, float nextAngle)
+void FillConeSectionVertices<1>(DRE::Vector<GizmoVertex, DRE::AllocatorLinear>& vertices, float angle, float nextAngle)
 {
     float constexpr len = WORLD::SceneNodeManipulator::GIZMO_CYLINDER_LENGTH;
 
@@ -188,7 +188,7 @@ void FillConeSectionVertices<1>(DRE::Vector<GizmoVertex, DRE::DefaultAllocator>&
 }
 
 template<> // Z
-void FillConeSectionVertices<2>(DRE::Vector<GizmoVertex, DRE::DefaultAllocator>& vertices, float angle, float nextAngle)
+void FillConeSectionVertices<2>(DRE::Vector<GizmoVertex, DRE::AllocatorLinear>& vertices, float angle, float nextAngle)
 {
     float constexpr len = WORLD::SceneNodeManipulator::GIZMO_CYLINDER_LENGTH;
 
@@ -232,7 +232,7 @@ void FillConeSectionVertices<2>(DRE::Vector<GizmoVertex, DRE::DefaultAllocator>&
     vertices.EmplaceBack(section[0]).normal = normal;
 }
 
-void Generate3Cones(DRE::Vector<GizmoVertex, DRE::DefaultAllocator>& vertices, std::uint32_t sections)
+void Generate3Cones(DRE::Vector<GizmoVertex, DRE::AllocatorLinear>& vertices, std::uint32_t sections)
 {
     for (std::uint32_t i = 0; i < sections; i++)
     {
@@ -255,7 +255,7 @@ void EditorPass::Initialize(RenderGraph& graph)
     std::uint32_t constexpr cyllinderResolution = 20;
 
     // cyllinder
-    DRE::Vector<GizmoVertex, DRE::DefaultAllocator> vertices{ &DRE::g_MainAllocator };
+    DRE::Vector<GizmoVertex, DRE::AllocatorLinear> vertices{ &DRE::g_PersistentDataAllocator };
     GenerateCyllinder<0>(vertices, 20);
     GenerateCyllinder<1>(vertices, 20);
     GenerateCyllinder<2>(vertices, 20);

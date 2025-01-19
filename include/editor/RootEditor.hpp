@@ -42,8 +42,8 @@ public:
 private:
     WORLD::Scene* m_MainScene;
 
-    DRE::Vector<BaseEditor*, DRE::DefaultAllocator> m_Editors;
-    DRE::Vector<BaseEditor*, DRE::DefaultAllocator> m_CloseQueue;
+    DRE::Vector<BaseEditor*, DRE::AllocatorLinear> m_Editors;
+    DRE::Vector<BaseEditor*, DRE::AllocatorLinear> m_CloseQueue;
 };
 
 }

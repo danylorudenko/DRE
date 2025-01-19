@@ -16,6 +16,7 @@
 namespace VKW
 {
 class   ImportTable;
+class   Device;
 class   Queue;
 struct  BufferResource;
 class   Pipeline;
@@ -150,6 +151,21 @@ public:
     void CmdCopyImageToBuffer(VKW::BufferResource const* dst, VKW::ImageResource const* src, std::uint32_t bufferOffset);
     void CmdCopyBufferToImage(VKW::ImageResource const* dst, VKW::BufferResource const* src, std::uint32_t bufferOffset);
     void CmdCopyBufferToBuffer(VKW::BufferResource const* dst, std::uint32_t dstOffset, VKW::BufferResource const* scr, std::uint32_t srcOffset, std::uint32_t size);
+
+    void CmdBuildBLAS(
+        VKW::AccelerationStructureResource const* blas,
+        std::uint64_t scratchBufferAddress,
+        std::uint64_t vertexBufferAddress,
+        std::uint64_t vertexStride,
+        std::uint64_t vertexCount,
+        std::uint64_t indexBufferAddress,
+        std::uint64_t indexCount);
+
+    void CmdBuildTLAS(
+        VKW::AccelerationStructureResource const* tlas,
+        std::uint64_t scratchBufferAddress,
+        std::uint32_t instanceCount,
+        std::uint64_t instanceBufferAddress);
 
     void CmdBeginDebugLabel(char const* label);
     void CmdEndDebugLabel();

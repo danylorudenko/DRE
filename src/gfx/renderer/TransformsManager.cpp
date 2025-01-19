@@ -13,14 +13,16 @@ TransformsManager::TransformsManager(PersistentStorage* storage)
 {
 }
 
-TransformsManager::TransformWS TransformsManager::AllocateTransform()
+TransformsManager::TransformGPU TransformsManager::AllocateTransform()
 {
     std::uint16_t const id = m_ElementAllocator.Allocate();
     ++m_TransformsCount;
-    return TransformWS{ this, id };
+
+    std::uint64_t addressGPU = m_PersistentAllocation.GetGPUAddress() + sizeof(S_TRANSFORM) * id;
+    return TransformGPU{ this, addressGPU, id };
 }
 
-void TransformsManager::FreeTransform(TransformsManager::TransformWS& transform)
+void TransformsManager::FreeTransform(TransformsManager::TransformGPU& transform)
 {
     --m_TransformsCount;
     m_ElementAllocator.Free(transform.m_id);
@@ -36,12 +38,10 @@ std::uint32_t TransformsManager::GetTransformsCount() const
     return m_TransformsCount;
 }
 
-void TransformsManager::ScheduleTransformUpdate(std::uint32_t id, glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& scale)
+void TransformsManager::ScheduleTransformUpdate(std::uint32_t id, glm::mat4 const& worldSpace)
 {
     S_TRANSFORM STransform;
-    //SLight.world_pos = glm::vec4(position, 1.0f);
-    //SLight.direction_type = glm::vec4(orientation, *reinterpret_cast<float*>(&type));
-    //SLight.spectrum_flux = glm::vec4(color, flux);
+    STransform.world_space = worldSpace;
 
     m_TransformUpdateQueue.EmplaceBack(id, STransform);
 }
@@ -63,18 +63,22 @@ void TransformsManager::UpdateGPUTransforms(VKW::Context& context)
 ///////////////////////////////////////////
 ///////////////////////////////////////////
 
-TransformsManager::TransformWS::TransformWS(TransformsManager* manager, std::uint32_t id)
+TransformsManager::TransformGPU::TransformGPU(TransformsManager* manager, std::uint64_t addressGPU, std::uint32_t id)
     : m_TransformsManager{ manager }
+    , m_AddressGPU{ addressGPU }
     , m_id{ id }
 {
 }
 
-void TransformsManager::TransformWS::ScheduleUpdate(glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, std::uint32_t type)
+void TransformsManager::TransformGPU::ScheduleUpdate(glm::mat4 worldSpace)
 {
-    //m_TransformsManager->ScheduleTransformUpdate(m_id, position, orientation, color, flux, type);
+    m_TransformsManager->ScheduleTransformUpdate(m_id, worldSpace);
 }
 
-
+std::uint64_t TransformsManager::TransformGPU::GetAddressGPU() const
+{
+    return m_AddressGPU;
+}
 
 
 }

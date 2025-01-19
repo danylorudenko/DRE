@@ -66,9 +66,17 @@ struct ImageResourceView
     inline MemoryRegion*    GetMemoryRegion() const  { return &parentResource_->memory_; }
     inline MemoryPage*      GetMemoryPage() const    { return parentResource_->GetMemoryPage(); }
     inline VkImage          GetImageHandle() const   { return parentResource_->handle_; }
-    inline Format           GetImageFormat() const     { return parentResource_->format_; }
+    inline Format           GetImageFormat() const   { return parentResource_->format_; }
     inline std::uint32_t    GetImageWidth() const    { return parentResource_->width_; }
     inline std::uint32_t    GetImageHeight() const   { return parentResource_->height_; }
+};
+
+
+
+struct AccelerationStructureResource
+{
+    VkAccelerationStructureKHR      handle_             = VK_NULL_HANDLE;
+    BufferResource*                 residenceBuffer_    = nullptr;
 };
 
 }

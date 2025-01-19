@@ -89,7 +89,7 @@ public:
     };
 
 public:
-    IOManager(DRE::DefaultAllocator* allocator, Data::MaterialLibrary* materialLibrary, Data::GeometryLibrary* geometryLibrary);
+    IOManager(Data::MaterialLibrary* materialLibrary, Data::GeometryLibrary* geometryLibrary);
     ~IOManager();
 
     void LoadShaderBinaries();
@@ -114,21 +114,30 @@ public:
 private:
     void ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene, char const* sceneName);
     void ParseAssimpMaterials(aiScene const* scene, char const* sceneName, char const* path, char const* defaultShader, Data::TextureChannelVariations metalnessRoughnessOverride);
-    void ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, char const* sceneName, aiNode const* node, WORLD::Scene& targetScene, WORLD::SceneNode* parentNode);
 
-    void BuildAssimpNodeAccelerationStructure(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, char const* sceneName, aiNode const* node, WORLD::Scene& targetScene, WORLD::SceneNode* parentNode, Data::Material* mat, Data::Geometry* geometry);
+    using ASGeometryIndexCounts = DRE::Vector<std::uint32_t, DRE::AllocatorLinear>;
+    using ASGeometryVector = DRE::Vector<VkAccelerationStructureGeometryKHR, DRE::AllocatorLinear>;
+
+    void ParseAssimpNodeRecursive(
+        VKW::Context& gfxContext,
+        char const* assetPath,
+        aiScene const* scene,
+        char const* sceneName,
+        aiNode const* node,
+        WORLD::Scene& targetScene,
+        WORLD::SceneNode* parentNode,
+        ASGeometryVector& asGeometryVector,
+        ASGeometryIndexCounts& asGeometryIndexCounts);
 
     void ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiMat, DRE::String256 const& assetFolderPath, Data::Material* material, Data::Material::TextureProperty::Slot slot, Data::TextureChannelVariations channels);
 
     void ShaderObserver();
 
 private:
-    DRE::DefaultAllocator* m_Allocator;
+    Data::MaterialLibrary*  m_MaterialLibrary;
+    Data::GeometryLibrary*  m_GeometryLibrary;
 
-    Data::MaterialLibrary* m_MaterialLibrary;
-    Data::GeometryLibrary* m_GeometryLibrary;
-
-    DRE::HashTable<DRE::String64, ShaderData, DRE::DefaultAllocator> m_ShaderData;
+    DRE::HashTable<DRE::String64, ShaderData, DRE::AllocatorLinear> m_ShaderData;
 
     std::mutex  m_ShaderIncluderMutex;
 

@@ -17,7 +17,9 @@ enum class BufferUsage
     UNIFORM,
     UPLOAD_BUFFER,
     READBACK_BUFFER,
-    STORAGE
+    STORAGE,
+    ACCELERATION_STRUCTURE,
+    ACCELERATION_STRUCTURE_INPUT
 };
 
 enum class ImageUsage
@@ -52,6 +54,11 @@ public:
     ImageResource* CreateImage(std::uint32_t width, std::uint32_t height, Format format, ImageUsage usage, char const* name);
     void FreeImage(ImageResource* handle);
 
+    AccelerationStructureResource* CreateBLAS(VKW::BufferResource* buffer, char const* name);
+    AccelerationStructureResource* CreateTLAS(VKW::BufferResource* buffer, char const* name);
+    void FreeAccelerationStructure(AccelerationStructureResource* resource);
+
+
     ImageResourceView* ViewImageAs(
         ImageResource* resource,
         VkImageSubresourceRange const* subresource = nullptr, 
@@ -68,6 +75,9 @@ public:
     static VkComponentMapping      DefaultComponentMapping();
 
 private:
+    VkAccelerationStructureKHR CreateAcceleratioStructureInternal(VKW::BufferResource* buffer, char const* name, bool isTlas);
+
+private:
     ImportTable* table_;
     LogicalDevice* device_;
 
@@ -75,6 +85,7 @@ private:
 
     std::unordered_set<BufferResource*> buffers_;
     std::unordered_set<ImageResource*> images_;
+    std::unordered_set<AccelerationStructureResource*> accelerationStructures_;
     std::unordered_multimap<ImageResource*, ImageResourceView*> imageViewMap_;
 
 

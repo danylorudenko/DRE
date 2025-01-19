@@ -30,7 +30,7 @@ void InitializeGlobalMemory();
 void TerminateGlobalMemory();
 
 
-// To be used with all persistent stuff. WARNING, REQUIRES MANUAL DESTRUCTION
+// To be used with all persistent stuff
 extern AllocatorLinear                  g_PersistentDataAllocator;
 extern AllocatorLinear                  g_FrameScratchAllocator;
 

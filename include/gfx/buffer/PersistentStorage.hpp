@@ -16,6 +16,8 @@ namespace GFX
 {
 
 class PersistentStorage
+    : public NonMovable
+    , public DeviceChild
 {
 public:
     class Allocation
@@ -46,7 +48,7 @@ public:
 public:
     PersistentStorage(VKW::Device* device, UploadArena* uploadArena, VKW::Device* divice, std::uint32_t size);
 
-    ~PersistentStorage() = default;
+    virtual ~PersistentStorage() {};
 
     StorageBuffer* GetStorage() { return &m_Buffer; }
 

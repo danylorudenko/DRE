@@ -1,6 +1,9 @@
 #include <vk_wrapper\Context.hpp>
 
+#include <foundation\memory\Memory.hpp>
+
 #include <vk_wrapper\ImportTable.hpp>
+#include <vk_wrapper\Device.hpp>
 #include <vk_wrapper\resources\Resource.hpp>
 #include <vk_wrapper\pipeline\Pipeline.hpp>
 #include <vk_wrapper\pipeline\RenderPass.hpp>
@@ -581,6 +584,98 @@ void Context::CmdCopyBufferToBuffer(VKW::BufferResource const* dst, std::uint32_
 
     WriteResourceDependencies();
     m_ImportTable->vkCmdCopyBuffer2(*m_CurrentCommandList, &info);
+}
+
+void Context::CmdBuildBLAS(VKW::AccelerationStructureResource const* blas,
+    std::uint64_t scratchBufferAddress,
+    std::uint64_t vertexBufferAddress,
+    std::uint64_t vertexStride,
+    std::uint64_t vertexCount,
+    std::uint64_t indexBufferAddress,
+    std::uint64_t indexCount)
+{
+    VkAccelerationStructureGeometryKHR geometryInfo;
+    geometryInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
+    geometryInfo.pNext = nullptr;
+    geometryInfo.geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR;
+    geometryInfo.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
+    geometryInfo.geometry.triangles.pNext = nullptr;
+    geometryInfo.geometry.triangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
+    geometryInfo.geometry.triangles.vertexData.deviceAddress = vertexBufferAddress;
+    geometryInfo.geometry.triangles.vertexStride = vertexStride;
+    geometryInfo.geometry.triangles.maxVertex = vertexCount - 1; // yep, -1 is according to the spec
+    geometryInfo.geometry.triangles.indexData.deviceAddress = indexBufferAddress;
+    geometryInfo.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
+    geometryInfo.geometry.triangles.transformData.deviceAddress = 0;
+    geometryInfo.flags = VK_FLAGS_NONE;
+
+    VkAccelerationStructureBuildGeometryInfoKHR buildInfo;
+    buildInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
+    buildInfo.pNext = nullptr;
+    buildInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+    buildInfo.flags = VK_FLAGS_NONE;
+    buildInfo.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
+    buildInfo.srcAccelerationStructure = VK_NULL_HANDLE;
+    buildInfo.dstAccelerationStructure = blas->handle_;
+    buildInfo.geometryCount = 1;
+    buildInfo.pGeometries = &geometryInfo;
+    buildInfo.ppGeometries = nullptr;
+    buildInfo.scratchData.deviceAddress = scratchBufferAddress;
+
+    VkAccelerationStructureBuildRangeInfoKHR buildRange;
+    buildRange.primitiveCount = indexCount / 3;
+    buildRange.primitiveOffset = 0;
+    buildRange.firstVertex = 0;
+    buildRange.transformOffset = 0;
+
+    VkAccelerationStructureBuildRangeInfoKHR* buildRangePtr = &buildRange;
+
+    m_ImportTable->vkCmdBuildAccelerationStructuresKHR(*m_CurrentCommandList,
+        1,
+        &buildInfo,
+        &buildRangePtr);
+}
+
+void Context::CmdBuildTLAS(
+    VKW::AccelerationStructureResource const* tlas,
+    std::uint64_t scratchBufferAddress,
+    std::uint32_t instanceCount,
+    std::uint64_t instanceBufferAddress)
+{
+    VkAccelerationStructureGeometryKHR geometry;
+    geometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
+    geometry.pNext = nullptr;
+    geometry.geometryType = VK_GEOMETRY_TYPE_INSTANCES_KHR;
+    geometry.geometry.instances.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR;
+    geometry.geometry.instances.pNext = nullptr;
+    geometry.geometry.instances.arrayOfPointers = VK_FALSE;
+    geometry.geometry.instances.data.deviceAddress = instanceBufferAddress;
+    geometry.flags = VK_FLAGS_NONE;
+
+    VkAccelerationStructureBuildGeometryInfoKHR buildInfo;
+    buildInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
+    buildInfo.pNext = nullptr;
+    buildInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
+    buildInfo.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
+    buildInfo.srcAccelerationStructure = VK_NULL_HANDLE;
+    buildInfo.dstAccelerationStructure = tlas->handle_;
+    buildInfo.geometryCount = 1;
+    buildInfo.pGeometries = &geometry;
+    buildInfo.ppGeometries = nullptr;
+    buildInfo.scratchData.deviceAddress = scratchBufferAddress;
+
+    VkAccelerationStructureBuildRangeInfoKHR buildRange;
+    buildRange.primitiveCount = instanceCount;
+    buildRange.primitiveOffset = 0;
+    buildRange.firstVertex = 0;
+    buildRange.transformOffset = 0;
+
+    VkAccelerationStructureBuildRangeInfoKHR* buildRangePtr = &buildRange;
+
+    m_ImportTable->vkCmdBuildAccelerationStructuresKHR(*m_CurrentCommandList,
+        1,
+        &buildInfo,
+        &buildRangePtr);
 }
 
 void Context::CmdBeginDebugLabel(char const* label)

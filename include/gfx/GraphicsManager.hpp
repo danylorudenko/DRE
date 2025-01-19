@@ -21,6 +21,7 @@
 #include <gfx\renderer\RenderableObject.hpp>
 #include <gfx\view\RenderView.hpp>
 #include <gfx\renderer\LightsManager.hpp>
+#include <gfx\renderer\RayTracingManager.hpp>
 #include <gfx\renderer\TransformsManager.hpp>
 
 #include <engine\data\Geometry.hpp>
@@ -91,7 +92,7 @@ class GraphicsManager final
     , public NonMovable
 {
 public:
-    using ImGuiSyncQueue = DRE::Vector<Texture*, DRE::DefaultAllocator>;
+    using ImGuiSyncQueue = DRE::Vector<Texture*, DRE::AllocatorLinear>;
 
     GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::IOManager* ioManager, bool debug = false);
     ~GraphicsManager();
@@ -123,6 +124,7 @@ public:
     inline PipelineDB&                  GetPipelineDB() { return m_PipelineDB; }
     inline PersistentStorage&           GetPersistentStorage() { return m_PersistentStorage; }
     inline LightsManager&               GetLightsManager() { return m_LightsManager; }
+    inline RayTracingManager&           GetRayTracignManager() { return m_RayTracingManager; }
     inline DependencyManager&           GetDependencyManager() { return m_DependencyManager; }
     inline RenderGraph&                 GetMainRenderGraph() { return m_RenderGraph; }
 
@@ -192,6 +194,7 @@ private:
     PersistentStorage           m_PersistentStorage;
 
     LightsManager               m_LightsManager;
+    RayTracingManager           m_RayTracingManager;
     TransformsManager           m_TransformsManager;
 
     RenderGraph                 m_RenderGraph;

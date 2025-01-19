@@ -39,7 +39,7 @@ DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* t
     , m_InputSystem{ m_MainWindow.NativeHandle() }
     , m_MaterialLibrary{ &DRE::g_MainAllocator }
     , m_GeometryLibrary{ &DRE::g_MainAllocator }
-    , m_IOManager{ &DRE::g_MainAllocator, &m_MaterialLibrary, &m_GeometryLibrary }
+    , m_IOManager{ &m_MaterialLibrary, &m_GeometryLibrary }
     , m_GraphicsManager{ instance, &m_MainWindow, &m_IOManager, vkDebug }
     , m_ImGuiEnabled{ imguiEnabled }
     , m_MainScene{ &DRE::g_MainAllocator }
@@ -163,9 +163,9 @@ void DREApplicationDelegate::start()
     waterTransform[3][1] += 1.5f;
     //wTrans.model[3][2] -= 0.4f;
     waterTransform = glm::scale(waterTransform, glm::vec3{ 0.1f });
-    WORLD::Entity* waterEntity = m_MainScene.CreateOpaqueEntity(m_GraphicsManager.GetMainContext(), &m_WaterGeometry, &m_WaterMaterial);
-    waterEntity->SetMatrix(waterTransform);
-    waterEntity->GetSceneNode()->SetName("water");
+    //WORLD::Entity* waterEntity = m_MainScene.CreateOpaqueEntity(m_GraphicsManager.GetMainContext(), &m_WaterGeometry, &m_WaterMaterial);
+    //waterEntity->SetMatrix(waterTransform);
+    //waterEntity->GetSceneNode()->SetName("water");
 
     ////////////
     m_BeachMaterial.GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE);
@@ -179,9 +179,9 @@ void DREApplicationDelegate::start()
     //bTrans.model = glm::scale(bTrans.model, glm::vec3(1.5f));
     beachTransform = glm::rotate(beachTransform, glm::radians(20.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     beachTransform[3][2] -= 6.0f;
-    WORLD::Entity* beachEntity = m_MainScene.CreateOpaqueEntity(m_GraphicsManager.GetMainContext(), &m_WaterGeometry, &m_BeachMaterial); // reuse water geometry
-    beachEntity->SetMatrix(beachTransform);
-    beachEntity->GetSceneNode()->SetName("beach_plane");
+    //WORLD::Entity* beachEntity = m_MainScene.CreateOpaqueEntity(m_GraphicsManager.GetMainContext(), &m_WaterGeometry, &m_BeachMaterial); // reuse water geometry
+    //beachEntity->SetMatrix(beachTransform);
+    //beachEntity->GetSceneNode()->SetName("beach_plane");
 
     Data::Texture2D blueNoise256 = m_IOManager.ReadTexture2D("textures\\blue_noise_rgba.png", Data::TEXTURE_VARIATION_RGBA);
     m_GraphicsManager.GetTextureBank().LoadTexture2DSync("blue_noise_256", 256, 256, VKW::FORMAT_R8G8B8A8_UNORM, blueNoise256.GetBuffer());

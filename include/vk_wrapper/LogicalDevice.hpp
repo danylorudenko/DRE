@@ -56,6 +56,8 @@ public:
         VkPhysicalDeviceMemoryBudgetPropertiesEXT memoryBudgetProperties;
         VkPhysicalDeviceVulkan12Properties vulkan12Properties;
         VkPhysicalDeviceDescriptorIndexingProperties descriptorIndexingProperties;
+        VkPhysicalDeviceAccelerationStructurePropertiesKHR accelerationStructureProperties;
+        VkPhysicalDeviceRayTracingPipelinePropertiesKHR rayTracingPipelineProperties;
         std::vector<VkQueueFamilyProperties> queueFamilyProperties;
         std::vector<VkExtensionProperties> extensionProperties;
         std::vector<std::uint32_t> presentationFamilies;

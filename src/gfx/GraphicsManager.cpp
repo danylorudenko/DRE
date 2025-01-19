@@ -49,10 +49,11 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::I
     , m_TextureBank{ &m_MainContext, m_Device.GetResourcesController(), m_Device.GetDescriptorManager() }
     , m_PipelineDB{ &m_Device, ioManager }
 #ifdef DRE_IMGUI_CUSTOM_TEXTURE
-    , m_ImGuiSyncQueue{ &DRE::g_MainAllocator }
+    , m_ImGuiSyncQueue{ &DRE::g_PersistentDataAllocator }
 #endif
     , m_PersistentStorage{ &m_Device, &m_UploadArena, &m_Device, C_PERSISTENT_STORAGE_SIZE }
     , m_LightsManager{ &m_PersistentStorage }
+    , m_RayTracingManager{ &m_Device }
     , m_TransformsManager{ &m_PersistentStorage }
     , m_RenderGraph{ this }
     , m_DependencyManager{}
@@ -448,6 +449,10 @@ RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* scen
 
     // load geometry
     GeometryGPU* geometryGPU = FindOrLoadGPUGeometry(context, geometry);
+    if (m_RayTracingManager.GetGeometryBLAS(geometry) == nullptr)
+    {
+        m_RayTracingManager.RegisterGeometry(geometry, context);
+    }
 
     RenderableObject::DescriptorSetVector descriptors;
     RenderableObject::DescriptorSetVector shadowDescriptors;
@@ -471,8 +476,10 @@ RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* scen
         shadowDescriptors.EmplaceBack(descriptorManager->AllocateStandaloneSet(*shadowLayout->GetMember(shadowLayoutMemberId)));
     }
 
-    return m_RenderableObjectPool.Alloc(sceneNode, layers, pipeline, geometryGPU->vertexBuffer, geometry->GetVertexCount(),
-        geometryGPU->indexBuffer, geometry->GetIndexCount(),
+    TransformsManager::TransformGPU transform = m_TransformsManager.AllocateTransform();
+
+    return m_RenderableObjectPool.Alloc(sceneNode, transform, layers, pipeline, geometryGPU->vertexBuffer, geometry->GetVertexCount(),
+        geometryGPU->indexBuffer, geometry->GetIndexCount(), m_RayTracingManager.GetGeometryBLAS(geometry)->m_LogicalHandle,
         DRE_MOVE(textures), DRE_MOVE(descriptors), DRE_MOVE(shadowDescriptors));
 }
 

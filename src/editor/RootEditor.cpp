@@ -18,8 +18,8 @@ namespace EDITOR
 RootEditor::RootEditor(WORLD::Scene* mainScene)
     : BaseEditor{ nullptr, EDITOR_FLAGS_STATIC }
     , m_MainScene{ mainScene }
-    , m_Editors{ &DRE::g_MainAllocator }
-    , m_CloseQueue{ &DRE::g_MainAllocator }
+    , m_Editors{ &DRE::g_PersistentDataAllocator }
+    , m_CloseQueue{ &DRE::g_FrameScratchAllocator }
 {}
 
 RootEditor::RootEditor(RootEditor&& rhs)

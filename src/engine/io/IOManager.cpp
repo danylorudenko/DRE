@@ -32,11 +32,10 @@
 namespace IO
 {
 
-IOManager::IOManager(DRE::DefaultAllocator* allocator, Data::MaterialLibrary* materialLibrary, Data::GeometryLibrary* geometryLibrary)
-    : m_Allocator{ allocator }
-    , m_MaterialLibrary{ materialLibrary }
+IOManager::IOManager(Data::MaterialLibrary* materialLibrary, Data::GeometryLibrary* geometryLibrary)
+    : m_MaterialLibrary{ materialLibrary }
     , m_GeometryLibrary{ geometryLibrary }
-    , m_ShaderData{ allocator }
+    , m_ShaderData{ &DRE::g_PersistentDataAllocator }
     , m_PendingChangesFlag{ false }
 {
 }
@@ -295,7 +294,15 @@ void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiM
     }
 }
 
-void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, char const* sceneName, aiNode const* node, WORLD::Scene& targetScene, WORLD::SceneNode* parentNode)
+void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext,
+    char const* assetPath,
+    aiScene const* scene,
+    char const* sceneName,
+    aiNode const* node,
+    WORLD::Scene& targetScene,
+    WORLD::SceneNode* parentNode,
+    ASGeometryVector& asGeometryVector,
+    ASGeometryIndexCounts& asGeometryIndexCounts)
 {
     aiMatrix4x4 const t = node->mTransformation;
     glm::mat4 const transform {
@@ -320,52 +327,8 @@ void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext, char const* a
 
     for (std::uint32_t i = 0; i < node->mNumChildren; i++)
     {
-        ParseAssimpNodeRecursive(gfxContext, assetPath, scene, sceneName, node->mChildren[i], targetScene, aggregatorNode);
+        ParseAssimpNodeRecursive(gfxContext, assetPath, scene, sceneName, node->mChildren[i], targetScene, aggregatorNode, asGeometryVector, asGeometryIndexCounts);
     }
-}
-
-void IOManager::BuildAssimpNodeAccelerationStructure(VKW::Context& gfxContext, char const* assetPath, aiScene const* scene, char const* sceneName, aiNode const* node, WORLD::Scene& targetScene, WORLD::SceneNode* parentNode, Data::Material* mat, Data::Geometry* geometry)
-{
-    VKW::ImportTable* table = GFX::g_GraphicsManager->GetMainDevice()->GetFuncTable();
-    VkDevice vkDevice = GFX::g_GraphicsManager->GetMainDevice()->GetLogicalDevice()->Handle();
-
-    //typedef void (VKAPI_PTR *PFN_vkGetAccelerationStructureBuildSizesKHR)(VkDevice device, 
-    // VkAccelerationStructureBuildTypeKHR buildType, 
-    // const VkAccelerationStructureBuildGeometryInfoKHR*  pBuildInfo, const uint32_t*  pMaxPrimitiveCounts, VkAccelerationStructureBuildSizesInfoKHR* pSizeInfo);
-
-    GFX::GraphicsManager::GeometryGPU* gpuGeometry = GFX::g_GraphicsManager->FindOrLoadGPUGeometry(gfxContext, geometry);
-
-    static_assert(sizeof(Data::DREIndex) == 4);
-
-    VkAccelerationStructureGeometryKHR accelGeometry;
-    accelGeometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
-    accelGeometry.pNext = nullptr;
-    accelGeometry.flags = VK_FLAGS_NONE;
-    accelGeometry.geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR;
-    accelGeometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
-    accelGeometry.geometry.triangles.pNext = nullptr;
-    accelGeometry.geometry.triangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
-    accelGeometry.geometry.triangles.vertexData.deviceAddress = gpuGeometry->vertexBuffer->gpuAddress_;
-    accelGeometry.geometry.triangles.vertexStride = sizeof(Data::DREVertex);
-    accelGeometry.geometry.triangles.maxVertex = geometry->GetVertexCount();
-    accelGeometry.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
-    accelGeometry.geometry.triangles.indexData.deviceAddress = gpuGeometry->indexBuffer->gpuAddress_;
-    accelGeometry.geometry.triangles.transformData.deviceAddress = 
-    auto* accelGeometryPtr = &accelGeometry;
-
-    VkAccelerationStructureBuildTypeKHR buildType = VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR;
-    VkAccelerationStructureBuildGeometryInfoKHR buildInfo;
-    buildInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
-    buildInfo.pNext = nullptr;
-    buildInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
-    buildInfo.flags = VK_FLAGS_NONE;
-    buildInfo.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
-    buildInfo.srcAccelerationStructure = VK_NULL_HANDLE; // needed only for update
-    buildInfo.dstAccelerationStructure = VK_NULL_HANDLE; // probably need it only for build, now we just get sizes
-    buildInfo.geometryCount = 1;
-    buildInfo.ppGeometries = &accelGeometryPtr;
-
-    table->vkGetAccelerationStructureBuildSizesKHR()
 }
 
 WORLD::SceneNode* IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene, char const* defaultShader, glm::mat4 baseTransform, Data::TextureChannelVariations metalnessRoughnessOverride)
@@ -386,7 +349,9 @@ WORLD::SceneNode* IOManager::ParseModelFile(char const* path, WORLD::Scene& targ
     parentNode->SetMatrix(baseTransform);
     parentNode->SetName(sceneName);
 
-    ParseAssimpNodeRecursive(GFX::g_GraphicsManager->GetMainContext(), path, scene, sceneName, scene->mRootNode, targetScene, parentNode);
+    ASGeometryVector asGeometryVector{ &DRE::g_FrameScratchAllocator };
+    ASGeometryIndexCounts asGeometryIndexCounts{ &DRE::g_FrameScratchAllocator };
+    ParseAssimpNodeRecursive(GFX::g_GraphicsManager->GetMainContext(), path, scene, sceneName, scene->mRootNode, targetScene, parentNode, asGeometryVector, asGeometryIndexCounts);
     GFX::g_GraphicsManager->GetMainContext().FlushAll();
 
     return parentNode;
@@ -477,6 +442,7 @@ void IOManager::ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene
         }
 
         m_GeometryLibrary->AddGeometry(i, sceneName, DRE_MOVE(geometry));
+        GFX::g_GraphicsManager->GetRayTracignManager().RegisterGeometry(m_GeometryLibrary->GetGeometry(i, sceneName), gfxContext);
     }
 }
 

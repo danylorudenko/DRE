@@ -34,27 +34,29 @@ class TransformsManager
 public:
     static constexpr std::uint32_t MAX_TRANSFORMS = 1024 * 32;
 
-    class TransformWS
+    class TransformGPU
     {
         friend class TransformsManager;
 
     public:
-        void ScheduleUpdate(glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, std::uint32_t type);
+        TransformGPU(TransformsManager* manager, std::uint64_t addressGPU, std::uint32_t id);
+        void ScheduleUpdate(glm::mat4 worldSpace);
+
+        std::uint64_t GetAddressGPU() const;
+
 
     private:
-        TransformWS(TransformsManager* manager, std::uint32_t id);
-
         TransformsManager*  m_TransformsManager;
+        std::uint64_t       m_AddressGPU;
         std::uint32_t       m_id;
     };
 
 public:
     TransformsManager(PersistentStorage* storage);
 
-    TransformWS AllocateTransform();
-    void FreeTransform(TransformWS& transform);
+    TransformGPU AllocateTransform();
+    void FreeTransform(TransformGPU& transform);
 
-    void ScheduleTransformUpdate(std::uint32_t id, glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& scale);
     void ScheduleTransformUpdate(std::uint32_t id, glm::mat4 const& worldSpace);
     void UpdateGPUTransforms(VKW::Context& context);
 

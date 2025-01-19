@@ -416,8 +416,12 @@ void LogicalDevice::RequestDeviceProperties(
     ToolSetMemZero(deviceProperties.memoryBudgetProperties);
     ToolSetMemZero(deviceProperties.vulkan12Properties);
     ToolSetMemZero(deviceProperties.descriptorIndexingProperties);
+    ToolSetMemZero(deviceProperties.accelerationStructureProperties);
+    ToolSetMemZero(deviceProperties.rayTracingPipelineProperties);
     ToolSetMemZero(deviceProperties.features2);
     ToolSetMemZero(deviceProperties.vulkan12Features);
+    ToolSetMemZero(deviceProperties.accelerationStructureFeatures);
+    ToolSetMemZero(deviceProperties.rayTracingPipelineFeatures);
     deviceProperties.queueFamilyProperties.clear();
     deviceProperties.extensionProperties.clear();
 
@@ -429,7 +433,14 @@ void LogicalDevice::RequestDeviceProperties(
     deviceProperties.vulkan12Properties.pNext = &deviceProperties.descriptorIndexingProperties;
 
     deviceProperties.descriptorIndexingProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_PROPERTIES;
-    deviceProperties.descriptorIndexingProperties.pNext = nullptr;
+    deviceProperties.descriptorIndexingProperties.pNext = &deviceProperties.accelerationStructureProperties;
+
+    deviceProperties.accelerationStructureProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR;
+    deviceProperties.accelerationStructureProperties.pNext = &deviceProperties.rayTracingPipelineProperties;
+
+    deviceProperties.rayTracingPipelineProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR;
+    deviceProperties.rayTracingPipelineProperties.pNext = nullptr;
+
 
     table_->vkGetPhysicalDeviceProperties2(targetDevice, &deviceProperties.properties2);
 
