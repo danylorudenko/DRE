@@ -189,14 +189,20 @@ RayTracingManager::BLAS* RayTracingManager::GetGeometryBLAS(Data::Geometry* geom
 
 RayTracingManager::~RayTracingManager()
 {
-    VKW::ImportTable* table = m_ParentDevice->GetFuncTable();
-    VKW::LogicalDevice* device = m_ParentDevice->GetLogicalDevice();
+    VKW::ResourcesController* resourcesController = m_ParentDevice->GetResourcesController();
+
+    if (m_MainSceneTLAS.m_LogicalHandle != VK_NULL_HANDLE)
+    {
+        resourcesController->FreeAccelerationStructure(m_MainSceneTLAS.m_LogicalHandle);
+        resourcesController->FreeBuffer(m_MainSceneTLAS.m_ResidenceBuffer);
+    }
 
     m_ParentDevice->GetResourcesController()->FreeBuffer(m_ScratchBuffer);
-    m_BLASTable.ForEach([table, device](auto& pair)
+    m_BLASTable.ForEach([resourcesController](auto& pair)
     {
         BLAS* blas = pair.value;
-        table->vkDestroyAccelerationStructureKHR(device->Handle(), blas->m_LogicalHandle, nullptr);
+        resourcesController->FreeAccelerationStructure(blas->m_LogicalHandle);
+        resourcesController->FreeBuffer(blas->m_ResidenceBuffer);
     });
 }
 

@@ -197,6 +197,11 @@ void GraphicsManager::ReloadShaders()
     }
 }
 
+void GraphicsManager::BuildMainSceneTLAS()
+{
+    m_RayTracingManager.BuildSceneAccelerationStructure(m_MainView, GetMainContext());
+}
+
 void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS, float globalTimeS)
 {
     m_GraphicsFrame = frame;

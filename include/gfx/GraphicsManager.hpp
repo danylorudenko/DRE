@@ -147,6 +147,7 @@ public:
 public:
     void                                LoadDefaultData(EDITOR::ViewportInputManager* viewportInput);
     void                                ReloadShaders();
+    void                                BuildMainSceneTLAS();
     void                                RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS, float globalTimeS);
     void                                WaitIdle();
 
