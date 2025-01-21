@@ -45,6 +45,7 @@ class LogicalDevice;
 class ImportTable;
 struct ImageResourceView;
 struct BufferResource;
+struct AccelerationStructureResource;
 
 ///////////////////////////////
 class DescriptorManager
@@ -88,6 +89,7 @@ public:
     ~DescriptorManager();
 
     void                        AllocateDefaultDescriptors(std::uint8_t globalBuffersCount, BufferResource** globalUniformBuffers, BufferResource* persistentStorageBuffer);
+    void                        WriteTLASDescriptor(VKW::AccelerationStructureResource* tlas);
 
     TextureDescriptorIndex      AllocateTextureDescriptor(ImageResourceView const* view = nullptr);
     void                        FreeTextureDescriptor(TextureDescriptorIndex& handle);
@@ -102,7 +104,7 @@ public:
     DescriptorSetLayout&        GetGlobalSetLayout(std::uint32_t i) { return globalSetLayouts_[i]; }
     PipelineLayout*             GetGlobalPipelineLayout() { return &globalPipelineLayout_; }
 
-    DescriptorSet               GetGlobalSampler() const { return DescriptorSet{ globalSampler_, globalSetLayouts_ + 0 }; }
+    DescriptorSet               GetGlobalGenericSet() const { return DescriptorSet{ globalGenericSet_, globalSetLayouts_ + 0 }; }
     DescriptorSet               GetGlobalTexturesSet() const { return DescriptorSet{ globalTexturesSet_, globalSetLayouts_ + 1 }; }
     DescriptorSet               GetGlobalUniformSet(std::uint8_t bufferingID) { return DescriptorSet{ globalUniformSets_[bufferingID], globalSetLayouts_ + 2 }; }
 
@@ -132,7 +134,7 @@ private:
 
     VkDescriptorPool            perTextureDescriptors_;
 
-    VkDescriptorSet             globalSampler_;
+    VkDescriptorSet             globalGenericSet_; // samplers + TLAS
     VkDescriptorSet             globalTexturesSet_;
     VkDescriptorSet             globalUniformSets_[VKW::CONSTANTS::FRAMES_BUFFERING];
 

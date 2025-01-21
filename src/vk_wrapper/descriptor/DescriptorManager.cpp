@@ -53,15 +53,19 @@ DescriptorManager::DescriptorManager(ImportTable* table, LogicalDevice* device)
     sizes[1].type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     sizes[1].descriptorCount    = 1;
 
-    sizes[2].type               = VK_DESCRIPTOR_TYPE_SAMPLER;
-    sizes[2].descriptorCount    = std::uint32_t(SAMPLER_TYPE_MAX);
+    sizes[2].type               = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+    sizes[2].descriptorCount    = 1;
+
+    sizes[3].type               = VK_DESCRIPTOR_TYPE_SAMPLER;
+    sizes[3].descriptorCount    = std::uint32_t(SAMPLER_TYPE_MAX);
+
 
     VkDescriptorPoolCreateInfo globalSetPoolInfo;
     globalSetPoolInfo.sType          = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     globalSetPoolInfo.pNext          = nullptr;
     globalSetPoolInfo.flags          = VK_FLAGS_NONE;
-    globalSetPoolInfo.maxSets        = 3; // sampler/storage + 2 uniform buffers
-    globalSetPoolInfo.poolSizeCount  = 3;
+    globalSetPoolInfo.maxSets        = 4; // sampler/storage/TLAS + 2 uniform buffers
+    globalSetPoolInfo.poolSizeCount  = 4;
     globalSetPoolInfo.pPoolSizes     = sizes;
 
     VK_ASSERT(table_->vkCreateDescriptorPool(device_->Handle(), &globalSetPoolInfo, nullptr, &globalSetPool_));
@@ -123,7 +127,7 @@ DescriptorManager& DescriptorManager::operator=(DescriptorManager&& rhs)
     DRE_SWAP_MEMBER(globalSetLayouts_);
     DRE_SWAP_MEMBER(globalSetPool_);
 
-    DRE_SWAP_MEMBER(globalSampler_);
+    DRE_SWAP_MEMBER(globalGenericSet_);
     DRE_SWAP_MEMBER(globalUniformSets_);
 
     DRE_SWAP_MEMBER(globalTexturesPool_);
@@ -153,9 +157,10 @@ DescriptorManager::~DescriptorManager()
 
 void DescriptorManager::CreateGlobalDescriptorLayouts()
 {
-    DescriptorSetLayout::Descriptor globalSamplerLayoutDesc{ /*DESCRIPTOR_STAGE_ALL*/ };
-    globalSamplerLayoutDesc.Add(DESCRIPTOR_TYPE_SAMPLER, 0, DESCRIPTOR_STAGE_ALL, std::uint32_t(SAMPLER_TYPE_MAX));
-    globalSetLayouts_[0] = DescriptorSetLayout{ table_, device_, globalSamplerLayoutDesc };
+    DescriptorSetLayout::Descriptor globalGenericLayoutDesc{ /*DESCRIPTOR_STAGE_ALL*/ };
+    globalGenericLayoutDesc.Add(DESCRIPTOR_TYPE_SAMPLER, 0, DESCRIPTOR_STAGE_ALL, std::uint32_t(SAMPLER_TYPE_MAX));
+    globalGenericLayoutDesc.Add(DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE, 1, DESCRIPTOR_STAGE_ALL);
+    globalSetLayouts_[0] = DescriptorSetLayout{ table_, device_, globalGenericLayoutDesc };
 
     DescriptorSetLayout::Descriptor globalTexturesLayoutDesc{ /*DESCRIPTOR_STAGE_ALL */};
     globalTexturesLayoutDesc.AddVariableCount(DESCRIPTOR_TYPE_TEXTURE, 0, DESCRIPTOR_STAGE_ALL, CONSTANTS::TEXTURE_DESCRIPTOR_HEAP_SIZE);
@@ -185,7 +190,7 @@ void DescriptorManager::AllocateDefaultDescriptors(std::uint8_t globalBuffersCou
     allocateInfo.descriptorSetCount = 1;
     allocateInfo.pSetLayouts = layouts;
     layouts[0] = globalSetLayouts_[0].GetHandle();
-    VK_ASSERT(table_->vkAllocateDescriptorSets(device_->Handle(), &allocateInfo, &globalSampler_));
+    VK_ASSERT(table_->vkAllocateDescriptorSets(device_->Handle(), &allocateInfo, &globalGenericSet_));
 
 
     std::uint32_t countsData = VKW::CONSTANTS::TEXTURE_DESCRIPTOR_HEAP_SIZE;
@@ -329,7 +334,7 @@ void DescriptorManager::AllocateDefaultDescriptors(std::uint8_t globalBuffersCou
     VkWriteDescriptorSet& samplerWrite = writeInfos.EmplaceBack();
     samplerWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     samplerWrite.pNext = nullptr;
-    samplerWrite.dstSet = globalSampler_;
+    samplerWrite.dstSet = globalGenericSet_;
     samplerWrite.dstBinding = 0;
     samplerWrite.dstArrayElement = 0;
     samplerWrite.descriptorCount = (int)SAMPLER_TYPE_MAX;
@@ -339,6 +344,27 @@ void DescriptorManager::AllocateDefaultDescriptors(std::uint8_t globalBuffersCou
     samplerWrite.pTexelBufferView = nullptr;
 
     table_->vkUpdateDescriptorSets(device_->Handle(), writeInfos.Size(), writeInfos.Data(), 0, nullptr);
+}
+
+void DescriptorManager::WriteTLASDescriptor(VKW::AccelerationStructureResource* tlas)
+{
+    VkWriteDescriptorSetAccelerationStructureKHR tlasInfo;
+    tlasInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+    tlasInfo.pNext = nullptr;
+    tlasInfo.accelerationStructureCount = 1;
+    tlasInfo.pAccelerationStructures = &tlas->handle_;
+
+    VkWriteDescriptorSet writeInfo;
+    writeInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeInfo.pNext = nullptr;
+    writeInfo.dstSet = globalGenericSet_;
+    writeInfo.dstBinding = 1;
+    writeInfo.dstArrayElement = 0;
+    writeInfo.descriptorCount = 1;
+    writeInfo.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+    writeInfo.pImageInfo = nullptr;
+    writeInfo.pBufferInfo = nullptr;
+    writeInfo.pTexelBufferView = nullptr;
 }
 
 VkSampler DescriptorManager::GetDefaultSampler(SamplerType type) const

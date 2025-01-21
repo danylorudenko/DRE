@@ -45,6 +45,9 @@ VkDescriptorType DescriptorTypeToVK(DescriptorType type)
     case DescriptorTypeBits::DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
         return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
 
+    case DescriptorTypeBits::DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE:
+        return VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+
     default:
         assert(false && "Unsupported DescriptorType.");
         return VK_DESCRIPTOR_TYPE_MAX_ENUM;

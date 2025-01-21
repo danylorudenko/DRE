@@ -4,13 +4,16 @@
 
 #ifndef __cplusplus
 
-#extension GL_EXT_nonuniform_qualifier : enable
-#extension GL_EXT_buffer_reference2    : enable
+#extension GL_EXT_nonuniform_qualifier  : enable
+#extension GL_EXT_buffer_reference2     : enable
+#extension GL_EXT_ray_tracing           : enable
+#extension GL_EXT_ray_query             : enable
 
 #include "shaders_defines.h"
 
-layout(set = 0, binding = 0) uniform sampler    g_GlobalSamplers[];
-layout(set = 1, binding = 0) uniform texture2D  g_GlobalTextures[];
+layout(set = 0, binding = 0) uniform sampler                    g_GlobalSamplers[];
+layout(set = 1, binding = 1) uniform accelerationStructureEXT   g_TLAS;
+layout(set = 1, binding = 0) uniform texture2D                  g_GlobalTextures[];
 #include "global_uniform.h" // layout(set = 2, binding = 0)
 
 

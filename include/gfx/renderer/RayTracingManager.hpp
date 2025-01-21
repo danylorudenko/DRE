@@ -59,6 +59,7 @@ public:
     TLAS* BuildSceneAccelerationStructure(RenderView const& view, VKW::Context& context);
 
     BLAS* GetGeometryBLAS(Data::Geometry* geometry);
+    TLAS* GetMainSceneTLAS() { return &m_MainSceneTLAS; }
 
     ~RayTracingManager();
 

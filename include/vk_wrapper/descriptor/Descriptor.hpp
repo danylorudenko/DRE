@@ -30,6 +30,7 @@ enum DescriptorTypeBits
     DESCRIPTOR_TYPE_STORAGE_IMAGE           = 1 << 4,
     DESCRIPTOR_TYPE_STORAGE_BUFFER          = 1 << 5,
     DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC  = 1 << 6,
+    DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE  = 1 << 7
 };
 using DescriptorType = std::uint16_t;
 
@@ -45,6 +46,7 @@ inline bool IsTextureDescriptor(DescriptorType type)
     case DESCRIPTOR_TYPE_STORAGE_BUFFER:
     case DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
     case DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+    case DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE:
         return false;
     default:
         DRE_ASSERT(false, "Unsupported VKW::DescriptorType.");

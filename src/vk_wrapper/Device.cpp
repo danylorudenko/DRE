@@ -49,7 +49,8 @@ Device::Device(HINSTANCE hInstance, HWND hwnd, bool debug)
         VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
         VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
         VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
-        VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME
+        VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME, // validation layers scream that it's requred (but the support is optional, acc sturctures are built on queues, I don't use host operations)
+        VK_KHR_RAY_QUERY_EXTENSION_NAME,
 #ifndef DRE_COMPILE_FOR_RENDERDOC
         , VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME
 #endif // DRE_COMPILE_FOR_RENDERDOC

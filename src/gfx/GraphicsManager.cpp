@@ -200,6 +200,7 @@ void GraphicsManager::ReloadShaders()
 void GraphicsManager::BuildMainSceneTLAS()
 {
     m_RayTracingManager.BuildSceneAccelerationStructure(m_MainView, GetMainContext());
+    m_Device.GetDescriptorManager()->WriteTLASDescriptor(m_RayTracingManager.GetMainSceneTLAS()->m_LogicalHandle);
 }
 
 void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS, float globalTimeS)
