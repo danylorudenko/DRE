@@ -199,6 +199,7 @@ void GraphicsManager::ReloadShaders()
 
 void GraphicsManager::BuildMainSceneTLAS()
 {
+    m_TransformsManager.UpdateGPUTransforms(GetMainContext());
     m_RayTracingManager.BuildSceneAccelerationStructure(m_MainView, GetMainContext());
     m_Device.GetDescriptorManager()->WriteTLASDescriptor(m_RayTracingManager.GetMainSceneTLAS()->m_LogicalHandle);
 }
@@ -221,6 +222,7 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
 
     context.ResetDependenciesVectors(&DRE::g_FrameScratchAllocator);
     PrepareGlobalData(context,  *WORLD::g_MainScene, deltaTimeUS, globalTimeS);
+    m_TransformsManager.UpdateGPUTransforms(context);
     m_LightsManager.UpdateGPULights(context);
 
     float CYLINDER_RADIUS = WORLD::SceneNodeManipulator::GIZMO_CYLINDER_RADIUS * glm::length(m_MainView.GetPosition());
@@ -485,6 +487,7 @@ RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* scen
     }
 
     TransformsManager::TransformGPU transform = m_TransformsManager.AllocateTransform();
+    transform.ScheduleUpdate(sceneNode->GetGlobalMatrix());
 
     return m_RenderableObjectPool.Alloc(sceneNode, transform, layers, pipeline, geometryGPU->vertexBuffer, geometry->GetVertexCount(),
         geometryGPU->indexBuffer, geometry->GetIndexCount(), m_RayTracingManager.GetGeometryBLAS(geometry)->m_LogicalHandle,

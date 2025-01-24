@@ -72,12 +72,18 @@ TransformsManager::TransformGPU::TransformGPU(TransformsManager* manager, std::u
 
 void TransformsManager::TransformGPU::ScheduleUpdate(glm::mat4 worldSpace)
 {
+    m_Transform = worldSpace;
     m_TransformsManager->ScheduleTransformUpdate(m_id, worldSpace);
 }
 
 std::uint64_t TransformsManager::TransformGPU::GetAddressGPU() const
 {
     return m_AddressGPU;
+}
+
+glm::mat4 const& TransformsManager::TransformGPU::GetMatrix() const
+{
+    return m_Transform;
 }
 
 

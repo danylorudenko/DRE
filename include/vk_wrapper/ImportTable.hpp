@@ -1,5 +1,7 @@
 #pragma once
 
+#include <foundation/Common.hpp>
+
 #include <vulkan\vulkan.h>
 
 #include <foundation\system\DynamicLibrary.hpp>

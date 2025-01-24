@@ -117,10 +117,11 @@ RayTracingManager::TLAS* RayTracingManager::BuildSceneAccelerationStructure(Rend
     auto& renderableObjects = view.GetObjects();
     for (std::uint32_t i = 0, size = renderableObjects.Size(); i < size; i++)
     {
+        glm::mat4 const& m = renderableObjects[i]->GetTransform().GetMatrix();
         instancesStart[i].transform = {
-             1.0f, 0.0f, 0.0f, 0.0f,
-             0.0f, 1.0f, 0.0f, 0.0f,
-             0.0f, 0.0f, 1.0f, 0.0f FIX IT
+             m[0][0], m[1][0], m[2][0], m[3][0],
+             m[0][1], m[1][1], m[2][1], m[3][0],
+             m[0][2], m[1][2], m[2][2], m[3][0]
         };
         instancesStart[i].instanceCustomIndex = i;
         instancesStart[i].mask = 0xFF;

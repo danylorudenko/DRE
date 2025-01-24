@@ -43,10 +43,12 @@ public:
         void ScheduleUpdate(glm::mat4 worldSpace);
 
         std::uint64_t GetAddressGPU() const;
+        glm::mat4 const& GetMatrix() const;
 
 
     private:
         TransformsManager*  m_TransformsManager;
+        glm::mat4           m_Transform;
         std::uint64_t       m_AddressGPU;
         std::uint32_t       m_id;
     };
@@ -57,13 +59,15 @@ public:
     TransformGPU AllocateTransform();
     void FreeTransform(TransformGPU& transform);
 
-    void ScheduleTransformUpdate(std::uint32_t id, glm::mat4 const& worldSpace);
     void UpdateGPUTransforms(VKW::Context& context);
 
     std::uint32_t GetTransformsCount() const;
 
     std::uint64_t GetBufferAddress() const;
 
+private:
+    friend class TransformGPU;
+    void ScheduleTransformUpdate(std::uint32_t id, glm::mat4 const& worldSpace);
 
 private:
     PersistentStorage::Allocation m_PersistentAllocation;
