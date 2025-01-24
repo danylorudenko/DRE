@@ -680,6 +680,7 @@ void Context::CmdBuildTLAS(
 
 void Context::CmdBeginDebugLabel(char const* label)
 {
+#ifdef DRE_DEBUG
     VkDebugUtilsLabelEXT sLabel;
     sLabel.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
     sLabel.pNext = nullptr;
@@ -690,15 +691,19 @@ void Context::CmdBeginDebugLabel(char const* label)
     sLabel.color[3] = 1.0f;
 
     m_ImportTable->vkCmdBeginDebugUtilsLabelEXT(*m_CurrentCommandList, &sLabel);
+#endif // DRE_DEBUG
 }
 
 void Context::CmdEndDebugLabel()
 {
+#ifdef DRE_DEBUG
     m_ImportTable->vkCmdEndDebugUtilsLabelEXT(*m_CurrentCommandList);
+#endif // DRE_DEBUG
 }
 
 void Context::CmdInsertDebugLabel(char const* label)
 {
+#ifdef DRE_DEBUG
     VkDebugUtilsLabelEXT sLabel;
     sLabel.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
     sLabel.pNext = nullptr;
@@ -709,6 +714,7 @@ void Context::CmdInsertDebugLabel(char const* label)
     sLabel.color[3] = 1.0f;
 
     m_ImportTable->vkCmdInsertDebugUtilsLabelEXT(*m_CurrentCommandList, &sLabel);
+#endif // DRE_DEBUG
 }
 
 void Context::WaitIdle()

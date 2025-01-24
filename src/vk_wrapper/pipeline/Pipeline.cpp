@@ -401,7 +401,7 @@ Pipeline::Pipeline(ImportTable* table, LogicalDevice* device, Descriptor& descri
     nameInfo.pObjectName = nameBuffer.GetData();
 
     VK_ASSERT(table_->vkSetDebugUtilsObjectNameEXT(device_->Handle(), &nameInfo));
-#endif
+#endif // DRE_DEBUG
 
     layout_ = descriptor.GetLayout();
     descriptor_ = descriptor;

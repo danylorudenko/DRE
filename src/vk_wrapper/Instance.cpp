@@ -104,6 +104,7 @@ Instance::Instance(InstanceDesc const& desc)
 
     table_->GetInstanceProcAddresses(instance_);
 
+#ifdef DRE_DEBUG
     // Debug callbacks setup
     if (desc.debug_) {
         VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
@@ -130,6 +131,7 @@ Instance::Instance(InstanceDesc const& desc)
 
         VK_ASSERT(table_->vkCreateDebugUtilsMessengerEXT(instance_, &debugCreateInfo, nullptr, &debugMessenger_));
     }
+#endif // DRE_DEBUG
 }
 
 Instance::Instance(Instance&& rhs)
@@ -160,8 +162,10 @@ VkInstance Instance::Handle() const
 
 Instance::~Instance()
 {
+#ifdef DRE_DEBUG
     if (debugMessenger_)
         table_->vkDestroyDebugUtilsMessengerEXT(instance_, debugMessenger_, nullptr);
+#endif // DRE_DEBUG
 
     if (instance_)
         table_->vkDestroyInstance(instance_, nullptr);

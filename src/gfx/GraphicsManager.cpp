@@ -280,8 +280,10 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
     //
     //glm::mat4 kek = invProj * invView;
 
+#ifdef DRE_DEBUG
     if (SYS::g_InputSystem->GetKeyboardButtonJustPressed(Keys::B))
         DebugBreak();
+#endif
 
 
     //DRE::Ray ray = DRE::RayFromCamera(cursorPos, { 1600u, 900u }, kek);

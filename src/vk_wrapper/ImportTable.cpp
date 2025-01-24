@@ -50,9 +50,11 @@ void ImportTable::GetInstanceProcAddresses(VkInstance instance)
     VKW_IMPORT_VULKAN_INSTANCE_FUNCTION(vkGetPhysicalDeviceSurfaceFormatsKHR);
     VKW_IMPORT_VULKAN_INSTANCE_FUNCTION(vkGetPhysicalDeviceSurfacePresentModesKHR);
 
+#ifdef DRE_DEBUG
     VKW_IMPORT_VULKAN_INSTANCE_FUNCTION(vkCreateDebugUtilsMessengerEXT);
     VKW_IMPORT_VULKAN_INSTANCE_FUNCTION(vkDestroyDebugUtilsMessengerEXT);
     VKW_IMPORT_VULKAN_INSTANCE_FUNCTION(vkSetDebugUtilsObjectNameEXT);
+#endif // DRE_DEBUG
 
     VKW_IMPORT_VULKAN_INSTANCE_FUNCTION(vkCreateDevice);
     VKW_IMPORT_VULKAN_INSTANCE_FUNCTION(vkDeviceWaitIdle);

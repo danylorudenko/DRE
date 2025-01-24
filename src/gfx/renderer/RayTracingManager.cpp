@@ -117,6 +117,11 @@ RayTracingManager::TLAS* RayTracingManager::BuildSceneAccelerationStructure(Rend
     auto& renderableObjects = view.GetObjects();
     for (std::uint32_t i = 0, size = renderableObjects.Size(); i < size; i++)
     {
+        instancesStart[i].transform = {
+             1.0f, 0.0f, 0.0f, 0.0f,
+             0.0f, 1.0f, 0.0f, 0.0f,
+             0.0f, 0.0f, 1.0f, 0.0f FIX IT
+        };
         instancesStart[i].instanceCustomIndex = i;
         instancesStart[i].mask = 0xFF;
         instancesStart[i].instanceShaderBindingTableRecordOffset = 0; // hmm

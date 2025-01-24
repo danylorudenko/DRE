@@ -108,7 +108,9 @@ InputSystem::InputSystem(HWND windowHandle)
         std::cerr << "Input System: Failed to register raw input devices. Error code: " << err << std::endl;
     }
 
+#ifdef DRE_DEBUG
     g_InputSystem = this;
+#endif
 }
 
 InputSystem::InputSystem(InputSystem&& rhs)

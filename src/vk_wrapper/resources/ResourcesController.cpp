@@ -164,7 +164,7 @@ BufferResource* ResourcesController::CreateBuffer(std::uint32_t size, BufferUsag
     nameInfo.pObjectName = nameBuffer.GetData();
 
     VK_ASSERT(table_->vkSetDebugUtilsObjectNameEXT(device_->Handle(), &nameInfo));
-#endif
+#endif // DRE_DEBUG
 
     return resource;
 }
@@ -264,7 +264,7 @@ ImageResource* ResourcesController::CreateImage(std::uint32_t width, std::uint32
     nameInfo.pObjectName = nameBuffer.GetData();
 
     VK_ASSERT(table_->vkSetDebugUtilsObjectNameEXT(device_->Handle(), &nameInfo));
-#endif
+#endif // DRE_DEBUG
 
     return imageResource;
 }
@@ -285,6 +285,7 @@ VkAccelerationStructureKHR ResourcesController::CreateAcceleratioStructureIntern
     VkAccelerationStructureKHR accelStructure = VK_NULL_HANDLE;
     table_->vkCreateAccelerationStructureKHR(device_->Handle(), &info, nullptr, &accelStructure);
 
+#ifdef  DRE_DEBUG
     DRE::String128 nameBuffer{ "AC|" };
     nameBuffer.Append(name);
 
@@ -296,6 +297,7 @@ VkAccelerationStructureKHR ResourcesController::CreateAcceleratioStructureIntern
     nameInfo.pObjectName = nameBuffer.GetData();
 
     VK_ASSERT(table_->vkSetDebugUtilsObjectNameEXT(device_->Handle(), &nameInfo));
+#endif // DRE_DEBUG
 
     return accelStructure;
 }
