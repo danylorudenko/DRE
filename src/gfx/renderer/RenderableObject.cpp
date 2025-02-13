@@ -6,7 +6,7 @@ namespace GFX
 {
 
 RenderableObject::RenderableObject(
-    WORLD::SceneNode* sceneNode, TransformsManager::TransformGPU transform, LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount,
+    WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount,
     VKW::BufferResource* indexBuffer, std::uint32_t indexCount,
     VKW::AccelerationStructureResource* blasResource,
     TexturesVector&& textures, DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets)
@@ -18,7 +18,7 @@ RenderableObject::RenderableObject(
     , m_BLASResource{ blasResource }
     , m_VertexCount{ vertexCount }
     , m_IndexCount{ indexCount }
-    , m_Transform{ transform }
+    , m_InstanceGPU{ instanceGPU }
     , m_DescriptorSets{ DRE_MOVE(sets) }
     , m_DescriptorSetsShadow{ DRE_MOVE(shadowSets) }
     , m_Textures{ DRE_MOVE(textures) }
@@ -26,7 +26,7 @@ RenderableObject::RenderableObject(
 }
 
 RenderableObject::RenderableObject(
-    WORLD::SceneNode* sceneNode, TransformsManager::TransformGPU transform, LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount,
+    WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount,
     VKW::BufferResource* indexBuffer, std::uint32_t indexCount,
     VKW::AccelerationStructureResource* blasResource,
     DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets)
@@ -38,14 +38,14 @@ RenderableObject::RenderableObject(
     , m_BLASResource{ blasResource }
     , m_VertexCount{ vertexCount }
     , m_IndexCount{ indexCount }
-    , m_Transform{ transform }
+    , m_InstanceGPU{ instanceGPU }
     , m_DescriptorSets{ DRE_MOVE(sets) }
     , m_DescriptorSetsShadow{ DRE_MOVE(shadowSets) }
     , m_Textures{}
 {
 }
 
-RenderableObject::RenderableObject(WORLD::SceneNode* sceneNode, TransformsManager::TransformGPU transform, LayerBits layers, VKW::Pipeline* pipeline,
+RenderableObject::RenderableObject(WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline,
     VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount,
     VKW::AccelerationStructureResource* blasResource)
     : m_SceneNode{ sceneNode }
@@ -56,7 +56,7 @@ RenderableObject::RenderableObject(WORLD::SceneNode* sceneNode, TransformsManage
     , m_BLASResource{ blasResource }
     , m_VertexCount{ vertexCount }
     , m_IndexCount{ indexCount }
-    , m_Transform{ transform }
+    , m_InstanceGPU{ instanceGPU }
     , m_DescriptorSets{}
     , m_DescriptorSetsShadow{}
     , m_Textures{}

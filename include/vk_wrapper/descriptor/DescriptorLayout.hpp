@@ -72,6 +72,10 @@ public:
 
     inline VkDescriptorSetLayout    GetHandle() const { return handle_; };
 
+#ifdef DEBUG_LAYOUT_MEMBERS
+    inline Descriptor const& GetDescriptor() const { return descriptor_; }
+#endif
+
 private:
     ImportTable*            table_;
     LogicalDevice*          device_;
@@ -128,6 +132,10 @@ public:
     inline VkPipelineLayout             GetHandle() const { return handle_; }
     inline std::uint16_t                GetMemberCount() const { return members_.Size(); }
     inline DescriptorSetLayout const*   GetMember(std::uint8_t i) const { return members_[i]; }
+
+#ifdef DEBUG_LAYOUT_MEMBERS
+    inline Descriptor const& GetDescriptor() const { return descriptor_; }
+#endif
 
 private:
     ImportTable*        table_;

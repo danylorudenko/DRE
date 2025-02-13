@@ -251,7 +251,7 @@ PipelineLayout::PipelineLayout(ImportTable* table, LogicalDevice* device, Descri
     cInfo.pNext = nullptr;
     cInfo.flags = VK_FLAGS_NONE;
     cInfo.pushConstantRangeCount = descriptor.GetPushConstantsCount();
-    cInfo.pPushConstantRanges = pushRanges  ;
+    cInfo.pPushConstantRanges = pushRanges;
     cInfo.setLayoutCount = descriptor.GetSetCount();
     cInfo.pSetLayouts = layouts;
 

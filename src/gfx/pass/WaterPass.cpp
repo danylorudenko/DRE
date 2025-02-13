@@ -61,7 +61,7 @@ void WaterPass::Initialize(RenderGraph& graph)
 {
 }
 
-void WaterObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view)
+void WaterObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view, VKW::PipelineLayout const* layout)
 {
     //std::uint32_t constexpr uniformSize =
     //    sizeof(glm::mat4) * 2 + sizeof(std::uint32_t) * 4;
@@ -105,8 +105,9 @@ void WaterPass::Render(RenderGraph& graph, VKW::Context& context)
 
     VKW::ImageResourceView* attachments[2] = { waterAttachment, velocityAttachment };
 
+    VKW::PipelineLayout* passLayout = graph.GetPassPipelineLayout(GetID());
     DrawBatcher batcher{ &DRE::g_FrameScratchAllocator, g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), &g_GraphicsManager->GetUniformArena() };
-    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), RenderableObject::LAYER_WATER_BIT, WaterObjectDelegate);
+    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), passLayout, RenderableObject::LAYER_WATER_BIT, WaterObjectDelegate);
 
     context.CmdBeginRendering(2, attachments, depthAttachment, nullptr);
 
@@ -133,7 +134,6 @@ void WaterPass::Render(RenderGraph& graph, VKW::Context& context)
     VKW::DescriptorSet passSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
     std::uint32_t const passSetBinding = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();
 
-    VKW::PipelineLayout* passLayout = graph.GetPassPipelineLayout(GetID());
     context.CmdBindGraphicsDescriptorSets(passLayout, passSetBinding, 1, &passSet);
 
     std::uint32_t const startSet = graph.GetUserSetBinding(GetID());

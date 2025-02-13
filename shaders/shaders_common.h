@@ -11,8 +11,14 @@
 
 #include "shaders_defines.h"
 
+layout(push_constant) uniform GlobalPushConstant
+{
+    uint value_int1;
+} globalPushConstant;
+
 layout(set = 0, binding = 0) uniform sampler                    g_GlobalSamplers[];
-layout(set = 1, binding = 1) uniform accelerationStructureEXT   g_TLAS;
+layout(set = 0, binding = 1) uniform accelerationStructureEXT   g_TLAS;
+//layout(set = 0, binding = 2) uniform PersistentStorage          g_PersistentStorage; it's usually used by direct pointer from global uniform
 layout(set = 1, binding = 0) uniform texture2D                  g_GlobalTextures[];
 #include "global_uniform.h" // layout(set = 2, binding = 0)
 

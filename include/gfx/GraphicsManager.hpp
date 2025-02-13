@@ -22,7 +22,7 @@
 #include <gfx\view\RenderView.hpp>
 #include <gfx\renderer\LightsManager.hpp>
 #include <gfx\renderer\RayTracingManager.hpp>
-#include <gfx\renderer\TransformsManager.hpp>
+#include <gfx\renderer\InstanceDataManager.hpp>
 
 #include <engine\data\Geometry.hpp>
 #include <engine\data\Material.hpp>
@@ -124,6 +124,7 @@ public:
     inline PipelineDB&                  GetPipelineDB() { return m_PipelineDB; }
     inline PersistentStorage&           GetPersistentStorage() { return m_PersistentStorage; }
     inline LightsManager&               GetLightsManager() { return m_LightsManager; }
+    inline InstanceDataManager&         GetInstanceDataManager() { return m_InstanceDataManager; }
     inline RayTracingManager&           GetRayTracignManager() { return m_RayTracingManager; }
     inline DependencyManager&           GetDependencyManager() { return m_DependencyManager; }
     inline RenderGraph&                 GetMainRenderGraph() { return m_RenderGraph; }
@@ -196,7 +197,7 @@ private:
 
     LightsManager               m_LightsManager;
     RayTracingManager           m_RayTracingManager;
-    TransformsManager           m_TransformsManager;
+    InstanceDataManager         m_InstanceDataManager;
 
     RenderGraph                 m_RenderGraph;
     DependencyManager           m_DependencyManager;

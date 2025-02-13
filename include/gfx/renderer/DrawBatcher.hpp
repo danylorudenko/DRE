@@ -53,9 +53,9 @@ class DrawBatcher
 public:
     DrawBatcher(DRE::AllocatorLinear* allocator, VKW::DescriptorManager* descriptorManager, UniformArena* uniformArena);
 
-    using AtomDataDelegate = void(*)(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view);
-    void Batch(VKW::Context& context, RenderView const& view, RenderableObject::LayerBits layers, AtomDataDelegate atomDelegate);
-    void BatchShadow(VKW::Context& context, RenderView const& view, RenderableObject::LayerBits layers, AtomDataDelegate atomDelegate);
+    using AtomDataDelegate = void(*)(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view, VKW::PipelineLayout const* layout);
+    void Batch(VKW::Context& context, RenderView const& view, VKW::PipelineLayout const* layout, RenderableObject::LayerBits layers, AtomDataDelegate atomDelegate);
+    void BatchShadow(VKW::Context& context, RenderView const& view, VKW::PipelineLayout const* layout, RenderableObject::LayerBits layers, AtomDataDelegate atomDelegate);
 
     inline auto const& GetDraws() const { return m_Draws; }
 

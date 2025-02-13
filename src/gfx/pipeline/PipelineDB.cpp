@@ -1,6 +1,7 @@
 #include <gfx\pipeline\PipelineDB.hpp>
 
 #include <vk_wrapper\Device.hpp>
+#include <vk_wrapper\Helper.hpp>
 #include <vk_wrapper\descriptor\DescriptorManager.hpp>
 #include <vk_wrapper\pipeline\ShaderModule.hpp>
 
@@ -17,9 +18,6 @@ PipelineDB::PipelineDB(VKW::Device* device, IO::IOManager* ioManager)
     : m_Device(device)
     , m_IOManager{ ioManager }
 {
-    VKW::PipelineLayout::Descriptor globalLayoutDescriptor;
-    AddGlobalLayouts(globalLayoutDescriptor);
-    m_GlobalLayout = VKW::PipelineLayout{ device->GetFuncTable(), device->GetLogicalDevice(), globalLayoutDescriptor };
 }
 
 PipelineDB::~PipelineDB()
@@ -34,7 +32,6 @@ void PipelineDB::CreateDefaultPipelines()
 {
     // default plane material shader
     {
-        CreateGraphicsForwardPipeline("default_lit");
         CreateGraphicsForwardPipeline("default_pbr");
         CreateGraphicsForwardPipeline("gltf_spheres");
         CreateGraphicsForwardPipeline("sand_beach");
@@ -336,25 +333,20 @@ DRE::String64 const* PipelineDB::CreatePipelineLayoutFromShader(char const* shad
     IO::IOManager::ShaderData const* fragShader = fragName != nullptr ? m_IOManager->GetShaderData(fragName) : nullptr;
     IO::IOManager::ShaderData const* compShader = compName != nullptr ? m_IOManager->GetShaderData(compName) : nullptr;
 
-    IO::IOManager::ShaderData const* pushConstantShader = nullptr;
-
     IO::IOManager::ShaderInterface shaderInterface;
     if (vertShader != nullptr)
     {
         shaderInterface.Merge(vertShader->m_Interface);
-        pushConstantShader = vertShader->m_Interface.m_PushConstantPresent ? vertShader : nullptr;
     }
 
     if (fragShader != nullptr)
     {
         shaderInterface.Merge(fragShader->m_Interface);
-        pushConstantShader = fragShader->m_Interface.m_PushConstantPresent ? fragShader : nullptr;
     }
 
     if (compShader != nullptr)
     {
         shaderInterface.Merge(compShader->m_Interface);
-        pushConstantShader = compShader->m_Interface.m_PushConstantPresent ? compShader : nullptr;
     }
 
     shaderInterface.m_Members.SortBubble([](auto const& lhs, auto const& rhs) {
@@ -403,11 +395,6 @@ DRE::String64 const* PipelineDB::CreatePipelineLayoutFromShader(char const* shad
         layoutDesc.Add(&layouts[i]);
     }
 
-    if (pushConstantShader != nullptr)
-    {
-        layoutDesc.AddPushConstant(pushConstantShader->m_Interface.m_PushConstantSize, pushConstantShader->m_Interface.m_PushConstantStages);
-    }
-
     DRE::String64 layoutName{ shaderName }; layoutName.Append("_layout");
     CreatePipelineLayout(layoutName.GetData(), layoutDesc);
 
@@ -424,13 +411,18 @@ void PipelineDB::AddGlobalLayouts(VKW::PipelineLayout::Descriptor& descriptor)
     {
         descriptor.Add(&allocator->GetGlobalSetLayout(i));
     }
+
+    descriptor.AddPushConstant(4, VKW::DESCRIPTOR_STAGE_ALL);
 }
 
 VKW::PipelineLayout* PipelineDB::CreatePipelineLayout(char const* name, VKW::PipelineLayout::Descriptor const& descriptor)
 {
-    DRE_ASSERT(descriptor.GetLayout(0) == &m_Device->GetDescriptorManager()->GetGlobalSetLayout(0), "Invalid layout creation in PipelineDB.");
-    DRE_ASSERT(descriptor.GetLayout(1) == &m_Device->GetDescriptorManager()->GetGlobalSetLayout(1), "Invalid layout creation in PipelineDB.");
-    DRE_ASSERT(descriptor.GetLayout(2) == &m_Device->GetDescriptorManager()->GetGlobalSetLayout(2), "Invalid layout creation in PipelineDB.");
+    DRE_ASSERT(descriptor.GetLayout(0) == &m_Device->GetDescriptorManager()->GetGlobalSetLayout(0), "Invalid global layout in PipelineDB.");
+    DRE_ASSERT(descriptor.GetLayout(1) == &m_Device->GetDescriptorManager()->GetGlobalSetLayout(1), "Invalid global layout in PipelineDB.");
+    DRE_ASSERT(descriptor.GetLayout(2) == &m_Device->GetDescriptorManager()->GetGlobalSetLayout(2), "Invalid global layout in PipelineDB.");
+    DRE_ASSERT(descriptor.GetPushConstantsCount() == 1, "Each pipeline must have a push constant");
+    DRE_ASSERT(descriptor.GetPushConstant(0).size == 4, "Default size for push constant must be 4");
+    DRE_ASSERT(descriptor.GetPushConstant(0).stageFlags == VKW::HELPER::DescriptorStageToVK(VKW::DESCRIPTOR_STAGE_ALL), "DescriptorStage for push constant must be VKW::DESCRIPTOR_STAGE_ALL");
 
     return &(m_PipelineLayouts.Emplace(name, m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), descriptor));
 }
@@ -443,11 +435,6 @@ VKW::DescriptorSetLayout* PipelineDB::CreateDescriptorSetLayout(const char* name
 VKW::Pipeline* PipelineDB::CreatePipeline(char const* name, VKW::Pipeline::Descriptor& descriptor)
 {
     return &(m_Pipelines.Emplace(name, m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), descriptor, name));
-}
-
-VKW::PipelineLayout const* PipelineDB::GetGlobalLayout() const
-{
-    return &m_GlobalLayout;
 }
 
 VKW::PipelineLayout* PipelineDB::GetLayout(char const* name)

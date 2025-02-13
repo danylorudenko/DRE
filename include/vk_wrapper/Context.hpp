@@ -173,6 +173,8 @@ public:
 
     void WaitIdle();
 
+    static bool TestLayoutCompatibility(VKW::PipelineLayout const* parentLayout, VKW::PipelineLayout const* childLayout);
+
 private:
     VKW::ImportTable*       m_ImportTable;
     VKW::Queue*             m_ParentQueue;

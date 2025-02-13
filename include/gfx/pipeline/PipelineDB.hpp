@@ -67,8 +67,6 @@ private:
     VKW::Device*        m_Device;
     IO::IOManager*      m_IOManager;
 
-    VKW::PipelineLayout m_GlobalLayout;
-
     using ShaderLayoutsMap = DRE::InplaceHashTable<DRE::String64, DRE::InplaceVector<VKW::DescriptorSetLayout, VKW::CONSTANTS::MAX_PIPELINE_LAYOUT_MEMBERS - 3>>;
 
     ShaderLayoutsMap                                                m_ShaderLayouts;

@@ -40,7 +40,7 @@ GraphicsManager* g_GraphicsManager = nullptr;
 GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::IOManager* ioManager, bool debug)
     : m_MainWindow{ window }
     , m_IOManager{ ioManager }
-    , m_Device{ hInstance, window->NativeHandle(), debug}
+    , m_Device{ hInstance, window->NativeHandle(), debug }
     , m_MainContext{ m_Device.GetFuncTable(), m_Device.GetMainQueue(), &DRE::g_FrameScratchAllocator }
     , m_GraphicsFrame{ 0 }
     , m_UploadArena{ &m_Device, C_STAGING_ARENA_SIZE }
@@ -54,7 +54,7 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::I
     , m_PersistentStorage{ &m_Device, &m_UploadArena, &m_Device, C_PERSISTENT_STORAGE_SIZE }
     , m_LightsManager{ &m_PersistentStorage }
     , m_RayTracingManager{ &m_Device }
-    , m_TransformsManager{ &m_PersistentStorage }
+    , m_InstanceDataManager{ &m_PersistentStorage }
     , m_RenderGraph{ this }
     , m_DependencyManager{}
     , m_MainView{ &DRE::g_MainAllocator }
@@ -178,6 +178,7 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
 
     globalUniform.lightsCount           = glm::uvec4{ m_LightsManager.GetLightsCount(), 0u, 0u, 0u };
     globalUniform.LightBuffer           = m_LightsManager.GetBufferAddress();
+    globalUniform.InstanceBuffer        = m_InstanceDataManager.GetBufferAddress();
 
     std::memcpy(dst, &globalUniform, sizeof(globalUniform));
 
@@ -199,7 +200,7 @@ void GraphicsManager::ReloadShaders()
 
 void GraphicsManager::BuildMainSceneTLAS()
 {
-    m_TransformsManager.UpdateGPUTransforms(GetMainContext());
+    m_InstanceDataManager.UpdateGPUInstances(GetMainContext());
     m_RayTracingManager.BuildSceneAccelerationStructure(m_MainView, GetMainContext());
     m_Device.GetDescriptorManager()->WriteTLASDescriptor(m_RayTracingManager.GetMainSceneTLAS()->m_LogicalHandle);
 }
@@ -222,7 +223,7 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
 
     context.ResetDependenciesVectors(&DRE::g_FrameScratchAllocator);
     PrepareGlobalData(context,  *WORLD::g_MainScene, deltaTimeUS, globalTimeS);
-    m_TransformsManager.UpdateGPUTransforms(context);
+    m_InstanceDataManager.UpdateGPUInstances(context);
     m_LightsManager.UpdateGPULights(context);
 
     float CYLINDER_RADIUS = WORLD::SceneNodeManipulator::GIZMO_CYLINDER_RADIUS * glm::length(m_MainView.GetPosition());
@@ -486,10 +487,20 @@ RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* scen
         shadowDescriptors.EmplaceBack(descriptorManager->AllocateStandaloneSet(*shadowLayout->GetMember(shadowLayoutMemberId)));
     }
 
-    TransformsManager::TransformGPU transform = m_TransformsManager.AllocateTransform();
-    transform.ScheduleUpdate(sceneNode->GetGlobalMatrix());
+    InstanceDataManager::InstanceGPU instanceGPU = m_InstanceDataManager.AllocateTransform();
+    instanceGPU.ScheduleUpdate(
+        sceneNode->GetGlobalMatrix(),
+        glm::inverse(sceneNode->GetGlobalMatrix()),
+        glm::uvec4{
+            textures[0]->GetShaderGlobalDescriptor().id_,
+            textures[1]->GetShaderGlobalDescriptor().id_,
+            textures[2]->GetShaderGlobalDescriptor().id_,
+            textures[3]->GetShaderGlobalDescriptor().id_
+        },
+        sceneNode->GetGlobalID()
+    );
 
-    return m_RenderableObjectPool.Alloc(sceneNode, transform, layers, pipeline, geometryGPU->vertexBuffer, geometry->GetVertexCount(),
+    return m_RenderableObjectPool.Alloc(sceneNode, instanceGPU, layers, pipeline, geometryGPU->vertexBuffer, geometry->GetVertexCount(),
         geometryGPU->indexBuffer, geometry->GetIndexCount(), m_RayTracingManager.GetGeometryBLAS(geometry)->m_LogicalHandle,
         DRE_MOVE(textures), DRE_MOVE(descriptors), DRE_MOVE(shadowDescriptors));
 }

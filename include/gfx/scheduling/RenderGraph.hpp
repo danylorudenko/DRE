@@ -46,7 +46,7 @@ public:
     void RegisterStorageBuffer      (BasePass* pass, char const* id, std::uint32_t size, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding);
     void RegisterUniformBuffer      (BasePass* pass, VKW::Stages stage, std::uint32_t binding);
 
-    void RegisterPushConstant       (BasePass* pass, std::uint32_t size, VKW::Stages stage);
+    //void RegisterPushConstant       (BasePass* pass, std::uint32_t size, VKW::DescriptorStage stage);
 
     VKW::DescriptorSet              GetPassDescriptorSet(PassID pass, FrameID frameID);
     VKW::PipelineLayout*            GetPassPipelineLayout(PassID pass);

@@ -30,7 +30,7 @@ void ForwardOpaquePass::RegisterResources(RenderGraph& graph)
         RESOURCE_ID(TextureID::ShadowMap),
         VKW::FORMAT_D16_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_VERTEX | VKW::STAGE_FRAGMENT, 0);
 
-    graph.RegisterUniformBuffer(this, VKW::STAGE_FRAGMENT, 1);
+    graph.RegisterUniformBuffer(this, VKW::STAGE_VERTEX | VKW::STAGE_FRAGMENT, 1);
 
     graph.RegisterTexture(this,
         RESOURCE_ID(TextureID::CausticMap),
@@ -61,7 +61,7 @@ void ForwardOpaquePass::Initialize(RenderGraph& graph)
 {
 }
 
-void ForwardObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view)
+void ForwardObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view, VKW::PipelineLayout const* passLayout)
 {
     std::uint32_t constexpr uniformSize = sizeof(InstanceUniform);
 
@@ -85,6 +85,9 @@ void ForwardObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::De
     uniformProxy.WriteMember140(textureIDs, sizeof(textureIDs));
 
     uniformProxy.WriteMember140(obj.GetSceneNode()->GetGlobalID());
+
+    std::uint32_t const instanceID = obj.GetInstanceGPU().GetID();
+    //context.CmdPushConstants(passLayout, VKW::DESCRIPTOR_STAGE_RENDERING, 0, sizeof(std::uint32_t), &instanceID);
 }
 
 void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
@@ -111,8 +114,9 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
     static_assert(FORWARD_PASS_OUTPUT_COUNT == attachmentsCount, "Don't forget to modify PipelineDB and ForwardOpaquePass");
     VKW::ImageResourceView* attachments[attachmentsCount] = { colorAttachment, velocityAttachment, objectIDAttachment };
 
+    VKW::PipelineLayout* passLayout = graph.GetPassPipelineLayout(GetID());
     DrawBatcher batcher{ &DRE::g_FrameScratchAllocator, g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), &g_GraphicsManager->GetUniformArena() };
-    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), RenderableObject::LAYER_OPAQUE_BIT, GFX::ForwardObjectDelegate);
+    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), passLayout, RenderableObject::LAYER_OPAQUE_BIT, GFX::ForwardObjectDelegate);
 
 
     context.CmdBeginRendering(attachmentsCount, attachments, depthAttachment, nullptr);
@@ -143,8 +147,6 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
     }
 
     VKW::DescriptorSet passSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
-
-    VKW::PipelineLayout* passLayout = graph.GetPassPipelineLayout(GetID());
     context.CmdBindDescriptorSets(passLayout, VKW::BindPoint::Graphics, graph.GetPassSetBinding(), 1, &passSet);
 
     auto& draws = batcher.GetDraws();

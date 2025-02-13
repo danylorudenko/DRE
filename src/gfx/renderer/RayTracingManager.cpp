@@ -117,7 +117,7 @@ RayTracingManager::TLAS* RayTracingManager::BuildSceneAccelerationStructure(Rend
     auto& renderableObjects = view.GetObjects();
     for (std::uint32_t i = 0, size = renderableObjects.Size(); i < size; i++)
     {
-        glm::mat4 const& m = renderableObjects[i]->GetTransform().GetMatrix();
+        glm::mat4 const& m = renderableObjects[i]->GetInstanceGPU().GetTransform();
         instancesStart[i].transform = {
              m[0][0], m[1][0], m[2][0], m[3][0],
              m[0][1], m[1][1], m[2][1], m[3][0],

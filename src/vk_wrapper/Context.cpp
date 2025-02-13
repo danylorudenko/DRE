@@ -722,6 +722,90 @@ void Context::WaitIdle()
     m_ParentQueue->WaitIdle();
 }
 
+bool Context::TestLayoutCompatibility(VKW::PipelineLayout const* parentLayout, VKW::PipelineLayout const* childLayout)
+{
+    bool compatible = true;
+
+#ifdef DEBUG_LAYOUT_MEMBERS
+    if (childLayout->GetMemberCount() < parentLayout->GetMemberCount())
+    {
+        std::cerr << "child layout must have at least the same number of members" << std::endl;
+        return false;
+    }
+
+    if (parentLayout->GetDescriptor().GetPushConstantsCount() != childLayout->GetDescriptor().GetPushConstantsCount())
+    {
+        compatible = false;
+        std::cerr << "Incompatible pipeline layout. parent pushConstantCount==" << (std::uint32_t)parentLayout->GetDescriptor().GetPushConstantsCount()
+        << " but child pushConstantCount==" << (std::uint32_t)childLayout->GetDescriptor().GetPushConstantsCount() << std::endl;
+    }
+    else
+    {
+        for (std::uint32_t i = 0, size = parentLayout->GetDescriptor().GetPushConstantsCount(); i < size; i++)
+        {
+#define check_property(prop) \
+            if (parentLayout->GetDescriptor().GetPushConstant(i).##prop != childLayout->GetDescriptor().GetPushConstant(i).##prop)\
+            {\
+                std::cerr << "Incompatible pipeline layout. parent pushConstant" << i << "."#prop"==" << parentLayout->GetDescriptor().GetPushConstant(i).##prop\
+                    << " but child ." #prop"==" << childLayout->GetDescriptor().GetPushConstant(i).##prop << std::endl;\
+                compatible = false;\
+            }
+
+            check_property(stageFlags);
+            check_property(offset);
+            check_property(size);
+
+#undef check_property
+        }
+
+        if (!compatible)
+            return false;
+    }
+
+
+
+    for (std::uint32_t i = 0, size = parentLayout->GetMemberCount(); i < size; i++)
+    {
+        auto* layout1 = parentLayout->GetMember(i);
+        auto* layout2 = childLayout->GetMember(i);
+
+        if (layout1->GetDescriptor().GetCount() != layout2->GetDescriptor().GetCount())
+        {
+            std::cerr << "Incompatible pipeline layout. DescriptorLayout " << i << " has different member count. Parent:"
+                << layout1->GetDescriptor().GetCount() << ", Child:" << layout2->GetDescriptor().GetCount() << std::endl;
+            compatible = false;
+        }
+
+        for (std::uint32_t ii = 0; ii < layout1->GetDescriptor().GetCount(); ii++)
+        {
+            auto& m1 = layout1->GetDescriptor().GetMember(ii);
+            auto& m2 = layout2->GetDescriptor().GetMember(ii);
+
+#define check_property(prop) if(m1.##prop != m2.##prop) {\
+            std::cerr << "Incompatible pipeline layout. DescriptorLayout " << i << ", member " << ii\
+            << ".\nparent."#prop"==" << m1.##prop << ", but child."#prop"==" << m2.##prop << std::endl;\
+            compatible = false;\
+            }
+
+            check_property(type_);
+            check_property(binding_);
+            check_property(stage_);
+            check_property(count_);
+            check_property(variableCount_);
+            check_property(updateAfterBind_);
+
+        }
+#undef check_property
+        if (!compatible)
+            return false;
+
+#endif // DEBUG_LAYOUT_MEMBERS
+
+
+    }
+    return compatible;
+}
+
 }
 
 

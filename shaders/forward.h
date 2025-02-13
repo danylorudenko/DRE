@@ -2,7 +2,14 @@
 #define __FORWARD_H__
 
 #include "shaders_defines.h"
+#include "global_uniform.h"
 
+//////////////
+#ifndef __cplusplus
+S_INSTANCE_GPURef GetInstance() { return GetInstance(globalPushConstant.value_int1); }
+#endif
+
+//////////////
 #ifndef __cplusplus
 layout(set = 3, binding = 0) uniform texture2D shadowMap;
 #endif

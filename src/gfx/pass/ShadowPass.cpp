@@ -30,7 +30,7 @@ void ShadowPass::RegisterResources(RenderGraph& graph)
 }
 
 
-void ShadowObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view)
+void ShadowObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view, VKW::PipelineLayout const* passLayout)
 {
     std::uint32_t constexpr uniformSize = sizeof(glm::mat4) * 2;
 
@@ -72,7 +72,7 @@ void ShadowPass::Render(RenderGraph& graph, VKW::Context& context)
     // 1. take all RenderableObject's in main scene
     DrawBatcher batcher{ &DRE::g_FrameScratchAllocator, g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), &g_GraphicsManager->GetUniformArena() };
 
-    batcher.BatchShadow(context, g_GraphicsManager->GetSunShadowRenderView(), RenderableObject::LAYER_OPAQUE_BIT, GFX::ShadowObjectDelegate);
+    batcher.BatchShadow(context, g_GraphicsManager->GetSunShadowRenderView(), graph.GetPassPipelineLayout(GetID()), RenderableObject::LAYER_OPAQUE_BIT, GFX::ShadowObjectDelegate);
 
     std::uint32_t const startSet = graph.GetUserSetBinding(GetID());
 

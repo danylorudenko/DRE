@@ -24,6 +24,7 @@
 
 ////////////////
 constexpr bool C_COMPILE_GLSL_SOURCES_ON_START = true;
+constexpr bool C_COMPILE_GLSL_PARALLEL = true;
 ////////////////
 
 //////////////////////////////////////////
@@ -103,7 +104,7 @@ void DREApplicationDelegate::start()
 {
     if (C_COMPILE_GLSL_SOURCES_ON_START)
     {  
-        m_IOManager.CompileGLSLSources();
+        m_IOManager.CompileGLSLSources(C_COMPILE_GLSL_PARALLEL);
     }
     m_IOManager.LoadShaderBinaries();
 

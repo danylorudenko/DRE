@@ -174,6 +174,7 @@ void DescriptorManager::CreateGlobalDescriptorLayouts()
     layoutDesc.Add(globalSetLayouts_ + 0);
     layoutDesc.Add(globalSetLayouts_ + 1);
     layoutDesc.Add(globalSetLayouts_ + 2);
+    layoutDesc.AddPushConstant(4, DESCRIPTOR_STAGE_ALL);
 
     globalPipelineLayout_ = VKW::PipelineLayout{ table_, device_, layoutDesc };
 }
@@ -313,7 +314,7 @@ void DescriptorManager::AllocateDefaultDescriptors(std::uint8_t globalBuffersCou
         samplerInfo[i].sampler = defaultSamplers_[i];
     }
 
-    std::uint16_t constexpr writeCount = VKW::CONSTANTS::FRAMES_BUFFERING * 2 + 1;
+    std::uint16_t constexpr writeCount = VKW::CONSTANTS::FRAMES_BUFFERING * 2 + 1; // 2 global uniforms, sampler
     DRE::InplaceVector<VkWriteDescriptorSet, writeCount> writeInfos;
 
     for (std::uint16_t i = 0; i < globalBuffersCount; i++)

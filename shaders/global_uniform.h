@@ -3,6 +3,8 @@
 
 #include "shaders_defines.h"
 #include "lights.h"
+#include "instances.h"
+
 
 BEGIN_CONSTANT_BUFFER(GlobalUniforms, g_GlobalUniforms, 2, 0)
 {
@@ -37,6 +39,7 @@ BEGIN_CONSTANT_BUFFER(GlobalUniforms, g_GlobalUniforms, 2, 0)
 
     uvec4 lightsCount;
     S_LIGHT_GPURef LightBuffer;
+    S_INSTANCE_GPURef InstanceBuffer;
     // end
 }
 END_CONSTANT_BUFFER(GlobalUniforms, g_GlobalUniforms, 2, 0)
@@ -76,6 +79,8 @@ uint    GetShadowMapID() { return g_GlobalUniforms.TEX_ID_shadow.x; }
 
 uint    GetLightsCount() { return g_GlobalUniforms.lightsCount.x; }
 S_LIGHT_GPURef GetLight(uint i) { return g_GlobalUniforms.LightBuffer[i]; }
+
+S_INSTANCE_GPURef GetInstance(uint i) { return g_GlobalUniforms.InstanceBuffer[i]; }
 
 #endif // !__cplusplus
 

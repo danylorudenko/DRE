@@ -32,7 +32,7 @@ public:
     void RegisterTexture        (PassID pass, char const* id, VKW::ResourceAccess access, VKW::DescriptorStage stages, std::uint8_t binding);
     void RegisterBuffer         (PassID pass, char const* id,  VKW::ResourceAccess access, VKW::DescriptorStage stages, std::uint8_t binding);
     void RegisterUniformBuffer  (PassID pass, VKW::DescriptorStage stages, std::uint8_t binding);
-    void RegisterPushConstant   (PassID pass, std::uint32_t size, VKW::DescriptorStage stages);
+    //void RegisterPushConstant   (PassID pass, std::uint32_t size, VKW::DescriptorStage stages);
 
     void InitDescriptors();
     void DestroyDescriptors();

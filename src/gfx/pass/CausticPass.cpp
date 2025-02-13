@@ -34,7 +34,7 @@ void CausticPass::RegisterResources(RenderGraph& graph)
 }
 
 
-void WaterCausticDelegate(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view)
+void WaterCausticDelegate(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view, VKW::PipelineLayout const* layout)
 {
     auto uniformRegion = arena.AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(),
         sizeof(glm::mat4) * 2 +
@@ -92,7 +92,7 @@ void CausticPass::Render(RenderGraph& graph, VKW::Context& context)
     // 1. take all RenderableObject's in main scene
     DrawBatcher batcher{ &DRE::g_FrameScratchAllocator, g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), &g_GraphicsManager->GetUniformArena() };
 
-    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), RenderableObject::LAYER_WATER_BIT, GFX::WaterCausticDelegate);
+    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), passLayout, RenderableObject::LAYER_WATER_BIT, GFX::WaterCausticDelegate);
 
     std::uint32_t const startSet = graph.GetUserSetBinding(GetID());
 

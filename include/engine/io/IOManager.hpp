@@ -74,8 +74,8 @@ public:
         };
 
         DRE::InplaceVector<Member, 16> m_Members;
-        std::uint8_t m_PushConstantSize     : 7;
-        std::uint8_t m_PushConstantPresent  : 1;
+        std::uint8_t m_PushConstantSize     : 7 = 0;
+        std::uint8_t m_PushConstantPresent  : 1 = 0;
         VKW::DescriptorStage m_PushConstantStages = VKW::DESCRIPTOR_STAGE_NONE;
 
         void Merge(ShaderInterface const& rhs);
@@ -93,7 +93,7 @@ public:
     ~IOManager();
 
     void LoadShaderBinaries();
-    void CompileGLSLSources();
+    void CompileGLSLSources(bool parallel);
     ShaderData* GetShaderData(char const* name) { return m_ShaderData.Find(name).value; }
 
     Data::Texture2D ReadTexture2D(char const* path, Data::TextureChannelVariations channels);

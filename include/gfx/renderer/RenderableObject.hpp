@@ -9,7 +9,7 @@
 #include <vk_wrapper\descriptor\Descriptor.hpp>
 
 #include <gfx\FrameID.hpp>
-#include <gfx\renderer\TransformsManager.hpp>
+#include <gfx\renderer\InstanceDataManager.hpp>
 
 #include <engine\data\Material.hpp>
 
@@ -44,19 +44,19 @@ public:
     using TexturesVector      = DRE::InplaceVector<Texture*, Data::Material::TextureProperty::Slot::MAX>;
 
     RenderableObject(
-        WORLD::SceneNode* sceneNode, TransformsManager::TransformGPU transform, LayerBits layers, VKW::Pipeline* pipeline,
+        WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline,
         VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount,
         VKW::AccelerationStructureResource* blasResource,
         TexturesVector&& textures, DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets);
 
     RenderableObject(
-        WORLD::SceneNode* sceneNode, TransformsManager::TransformGPU transform, LayerBits layers, VKW::Pipeline* pipeline,
+        WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline,
         VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount,
         VKW::AccelerationStructureResource* blasResource,
         DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets);
 
     RenderableObject(
-        WORLD::SceneNode* sceneNode, TransformsManager::TransformGPU transform, LayerBits layers, VKW::Pipeline* pipeline,
+        WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline,
         VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount,
         VKW::AccelerationStructureResource* blasResource);
 
@@ -68,7 +68,7 @@ public:
     inline VKW::AccelerationStructureResource*  GetBLASResource() const { return m_BLASResource; }
     inline std::uint32_t                        GetVertexCount() const { return m_VertexCount; }
     inline std::uint32_t                        GetIndexCount() const { return m_IndexCount; }
-    inline TransformsManager::TransformGPU&     GetTransform() { return m_Transform; }
+    inline InstanceDataManager::InstanceGPU&    GetInstanceGPU() { return m_InstanceGPU; }
     inline VKW::DescriptorSet const&            GetDescriptorSet(FrameID frameID) const { return m_DescriptorSets[frameID]; }
     inline VKW::DescriptorSet const&            GetShadowDescriptorSet(FrameID frameID) const { return m_DescriptorSetsShadow[frameID]; }
     inline Texture*                             GetDiffuseTexture() const { return m_Textures[0]; }
@@ -87,7 +87,7 @@ private:
     std::uint32_t                       m_VertexCount;
     std::uint32_t                       m_IndexCount;
 
-    TransformsManager::TransformGPU     m_Transform;
+    InstanceDataManager::InstanceGPU    m_InstanceGPU;
 
     TexturesVector                      m_Textures;
 

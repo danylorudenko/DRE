@@ -459,6 +459,10 @@ void IOManager::ShaderInterface::Merge(IOManager::ShaderInterface const& rhs)
 
         m_Members.EmplaceBack(rhs.m_Members[i]);
     }
+
+    m_PushConstantPresent |= rhs.m_PushConstantPresent;
+    m_PushConstantSize = rhs.m_PushConstantSize > m_PushConstantSize ? rhs.m_PushConstantSize : m_PushConstantSize;
+    m_PushConstantStages = static_cast<VKW::DescriptorStage>(static_cast<std::uint16_t>(rhs.m_PushConstantStages) | m_PushConstantStages);
 }
 
 bool IOManager::ShaderInterface::Member::operator==(IOManager::ShaderInterface::Member const& rhs) const
@@ -551,7 +555,7 @@ void ParseShaderInterface(spirv_cross::Compiler& compiler, IOManager::ShaderInte
     }
 }
 
-void IOManager::CompileGLSLSources()
+void IOManager::CompileGLSLSources(bool parallel)
 {
     std::filesystem::recursive_directory_iterator dir_iterator{ "shaders", std::filesystem::directory_options::follow_directory_symlink };
     DRE::Vector<DRE::String64, DRE::AllocatorLinear> fileNames{ &DRE::g_FrameScratchAllocator };
@@ -565,10 +569,11 @@ void IOManager::CompileGLSLSources()
         }
     }
 
-    std::uint32_t constexpr parallelFactor = 4;
+    std::uint32_t constexpr MAX_PARALLEL_FACTOR = 8;
+    std::uint32_t const parallelFactor = parallel ? MAX_PARALLEL_FACTOR : 1;
     std::uint32_t const parallelChunkSize = fileNames.Size() / parallelFactor + 1;
 
-    DRE::InplaceVector<std::future<void>, parallelFactor> parallelCompilations;
+    DRE::InplaceVector<std::future<void>, MAX_PARALLEL_FACTOR> parallelCompilations;
     for (std::uint32_t i = 0; i < parallelFactor; i++)
     {
         parallelCompilations.EmplaceBack(std::async(std::launch::async, [parallelChunkSize, &parallelCompilations, &fileNames, this](std::uint32_t chunkID) 
