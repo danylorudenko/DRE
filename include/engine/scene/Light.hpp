@@ -38,6 +38,7 @@ public:
     inline void SetLightType(std::uint32_t type/*DRE_LIGHT_TYPE_*/) { m_Type = type; }
 
     void    ScheduleUpdateGPUData();
+    virtual void OnTransformChanged(glm::mat4 const& transform) override;
 
 private:
     std::uint32_t                   m_Type = DRE_LIGHT_TYPE_MAX; // DRE_LIGHT_TYPE_

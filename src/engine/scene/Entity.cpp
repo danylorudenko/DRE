@@ -14,6 +14,11 @@ Entity::Entity()
 {
 }
 
+void Entity::OnTransformChanged(glm::mat4 const& transform)
+{
+    m_RenderableObject->GetInstanceGPU().ScheduleUpdate(transform, glm::inverse(transform));
+}
+
 Entity::~Entity()
 {
 }

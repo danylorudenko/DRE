@@ -41,6 +41,8 @@ void DrawBatcher::Batch(VKW::Context& context, RenderView const& view, VKW::Pipe
         atom.indexOffset   = 0;
         atom.indexCount    = obj.GetIndexCount();
 
+        atom.instanceID    = obj.GetInstanceGPU().GetID();
+
         atom.pipeline      = obj.GetPipeline();
         atom.descriptorSet = obj.GetDescriptorSet(g_GraphicsManager->GetCurrentFrameID());
 

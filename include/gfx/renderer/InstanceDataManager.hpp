@@ -41,6 +41,7 @@ public:
     public:
         InstanceGPU(InstanceDataManager* manager, std::uint64_t addressGPU, std::uint32_t id);
         void ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform, glm::uvec4 textureIndices, std::uint32_t globalID);
+        void ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform);
 
         std::uint32_t GetID() const { return m_id; }
         std::uint64_t GetAddressGPU() const { return m_AddressGPU; }

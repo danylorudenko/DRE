@@ -17,6 +17,11 @@ Light::Light(GFX::LightsManager* lightsManager, std::uint32_t type)
 {
 }
 
+void Light::OnTransformChanged(glm::mat4 const& transform)
+{
+    ScheduleUpdateGPUData();
+}
+
 void Light::ScheduleUpdateGPUData()
 {
     m_GPULight.ScheduleUpdate(GetGlobalPosition(), -GetForward(), GetSpectrum(), GetFlux(), m_Type);

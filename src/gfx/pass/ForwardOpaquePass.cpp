@@ -85,9 +85,6 @@ void ForwardObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::De
     uniformProxy.WriteMember140(textureIDs, sizeof(textureIDs));
 
     uniformProxy.WriteMember140(obj.GetSceneNode()->GetGlobalID());
-
-    std::uint32_t const instanceID = obj.GetInstanceGPU().GetID();
-    //context.CmdPushConstants(passLayout, VKW::DESCRIPTOR_STAGE_RENDERING, 0, sizeof(std::uint32_t), &instanceID);
 }
 
 void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
@@ -165,6 +162,7 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
         context.CmdBindGraphicsDescriptorSets(atom.pipeline->GetLayout(), userSetBinding, 1, &atom.descriptorSet);
         context.CmdBindVertexBuffer(atom.vertexBuffer, atom.vertexOffset);
         context.CmdBindIndexBuffer(atom.indexBuffer, atom.indexOffset);
+        context.CmdPushConstants(passLayout, VKW::DESCRIPTOR_STAGE_ALL, 0, sizeof(std::uint32_t), &atom.instanceID);
         context.CmdDrawIndexed(atom.indexCount);
     }
 

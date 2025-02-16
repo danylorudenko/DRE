@@ -3,6 +3,7 @@
 #include <foundation\memory\Memory.hpp>
 #include <gfx\GraphicsManager.hpp>
 #include <engine\data\Material.hpp>
+#include <engine\scene\ISceneNodeUser.hpp>
 
 
 namespace WORLD
@@ -19,6 +20,8 @@ SceneNode::SceneNode()
     , m_Right{ 1.0f, 0.0f, 0.0f }
     , m_Up{ 0.0f, 1.0f, 0.0f }
     , m_Scale{ 1.0f }
+    , m_Name{}
+    , m_GlobalID{ 0 }
     , m_Children{ &DRE::g_MainAllocator }
 {}
 
@@ -31,6 +34,8 @@ SceneNode::SceneNode(SceneNode* parent, ISceneNodeUser* user)
     , m_Right{ 1.0f, 0.0f, 0.0f }
     , m_Up{ 0.0f, 1.0f, 0.0f }
     , m_Scale{ 1.0f }
+    , m_Name{}
+    , m_GlobalID{ 0 }
     , m_Children{ &DRE::g_MainAllocator }
 {
     // don't use last 8 bits, it's easeir to see in ImGui :P
@@ -107,6 +112,7 @@ void SceneNode::SetParent(SceneNode* parent)
 {
     m_Parent = parent;
     CalculateDirectionVectors();
+    m_NodeUser->OnTransformChanged(GetGlobalMatrix());
 }
 
 glm::vec3 SceneNode::GetEulerOrientation() const
@@ -150,6 +156,17 @@ glm::mat4 SceneNode::GetGlobalMatrixNoScale() const
     return m_Parent ? m_Parent->GetGlobalMatrix() * matrix : matrix;
 }
 
+void SceneNode::NotifyTransformChange()
+{
+    if (m_NodeUser)
+        m_NodeUser->OnTransformChanged(GetGlobalMatrix());
+
+    for (std::uint32_t i = 0, size = m_Children.Size(); i < size; i++)
+    {
+        m_Children[i]->NotifyTransformChange();
+    }
+}
+
 void SceneNode::SetMatrix(glm::mat4 const& matrix)
 {
     m_Position[0] = matrix[3][0];
@@ -164,30 +181,54 @@ void SceneNode::SetMatrix(glm::mat4 const& matrix)
     mat[2] /= scale[2];
 
     m_Orientation = glm::quat{ mat };
+
+    NotifyTransformChange();
+}
+
+void SceneNode::SetPosition(glm::vec3 const& position)
+{
+    m_Position = position;
+    NotifyTransformChange();
 }
 
 void SceneNode::SetOrientation(glm::quat const& orientation)
 {
     m_Orientation = orientation;
     CalculateDirectionVectors();
+    NotifyTransformChange();
 }
 
 void SceneNode::SetEulerOrientation(glm::vec3 const& orientation)
 {
     m_Orientation = glm::quat{ glm::radians(orientation) };
     CalculateDirectionVectors();
+    NotifyTransformChange();
+}
+
+void SceneNode::SetScale(float scale)
+{
+    m_Scale = scale;
+    NotifyTransformChange();
+}
+
+void SceneNode::Move(glm::vec3 const& movement)
+{
+    m_Position += movement;
+    NotifyTransformChange();
 }
 
 void SceneNode::Rotate(glm::quat const& rotation)
 {
     m_Orientation *= rotation;
     CalculateDirectionVectors();
+    NotifyTransformChange();
 }
 
 void SceneNode::Rotate(glm::vec3 const& eulerRotation)
 {
     m_Orientation *= glm::quat{ glm::radians(eulerRotation) };
     CalculateDirectionVectors();
+    NotifyTransformChange();
 }
 
 void SceneNode::CalculateDirectionVectors()

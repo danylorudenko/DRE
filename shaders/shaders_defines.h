@@ -22,11 +22,9 @@ using mat4 = glm::mat4;
     struct GPUPointer
     {
         std::uint64_t pointer;
-        std::uint64_t ___pad;
 
         GPUPointer(std::uint64_t ptr = 0)
             : pointer{ ptr }
-            , ___pad{ 0 }
         {}
 
         GPUPointer& operator=(std::uint64_t ptr)

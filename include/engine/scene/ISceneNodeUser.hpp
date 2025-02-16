@@ -32,6 +32,8 @@ public:
 
     inline Type             GetType() const { return m_UserType; }
 
+    virtual void            OnTransformChanged(glm::mat4 const& transform) {};
+
     inline glm::vec3 const& GetPosition() const { return m_SceneNode->GetPosition(); }
     inline glm::quat const& GetOrientation() const { return m_SceneNode->GetOrientation(); }
     inline glm::vec3        GetEulerOrientation() const { return m_SceneNode->GetEulerOrientation(); }

@@ -78,4 +78,11 @@ void InstanceDataManager::InstanceGPU::ScheduleUpdate(glm::mat4 transform, glm::
 }
 
 
+void InstanceDataManager::InstanceGPU::ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform)
+{
+    m_InstanceDataCPU.world_space = transform;
+    m_InstanceDataCPU.inv_world_space = invTransform;
+    m_Manager->ScheduleInstanceUpdate(m_id, m_InstanceDataCPU);
+}
+
 }

@@ -36,6 +36,8 @@ public:
     inline void                     SetGeometry(Data::Geometry* geometry) { m_Geometry = geometry; }
     inline Data::Geometry*          GetGeometry() const { return m_Geometry; }
 
+    virtual void                    OnTransformChanged(glm::mat4 const& transform) override;
+
 private:
     GFX::RenderableObject*  m_RenderableObject;
     Data::Geometry*         m_Geometry;

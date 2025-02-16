@@ -65,12 +65,12 @@ public:
     void                    SetMatrix(glm::mat4 const& matrix);
 
 
-    inline void             SetPosition(glm::vec3 const& position) { m_Position = position; }
+    void                    SetPosition(glm::vec3 const& position);
     void                    SetOrientation(glm::quat const& orientation);
     void                    SetEulerOrientation(glm::vec3 const& orientation);
-    inline void             SetScale(float scale) { m_Scale = scale; }
+    void                    SetScale(float scale);
 
-    inline void             Move(glm::vec3 const& movement) { m_Position += movement; }
+    void                    Move(glm::vec3 const& movement);
     void                    Rotate(glm::quat const& rotation);
     void                    Rotate(glm::vec3 const& eulerRotation);
 
@@ -82,6 +82,7 @@ public:
 
 private:
     void CalculateDirectionVectors();
+    void NotifyTransformChange();
 
 private:
     SceneNode*      m_Parent;
