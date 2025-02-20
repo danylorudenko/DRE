@@ -25,6 +25,7 @@ option(BUILD_STATIC_LIBS "Build package with shared libraries." ON) # this one i
 option(ASSIMP_BUILD_ZLIB "Build your own zlib" ON)
 option(ASSIMP_BUILD_TESTS "If the test suite for Assimp is built in addition to the library." OFF)
 option(ASSIMP_INSTALL "Disable this if you want to use assimp as a submodule." ON)
+option(SHADERC_ENABLE_SHARED_CRT "Use the shared CRT instead of the static CRT" ON)
 #==========
 add_subdirectory(extern/assimp)
 
