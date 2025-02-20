@@ -1,8 +1,8 @@
 #ifndef __FORWARD_H__
 #define __FORWARD_H__
 
-#include "shaders_defines.h"
-#include "global_uniform.h"
+#include "common/shaders_defines.h"
+#include "common/global_uniform.h"
 
 //////////////
 #ifndef __cplusplus

@@ -9,7 +9,7 @@
 
 #include <engine\io\IOManager.hpp>
 
-#include <forward_output.h>
+#include <common\forward_output.h>
 
 namespace GFX
 {

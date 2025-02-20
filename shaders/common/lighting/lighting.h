@@ -1,10 +1,10 @@
 #ifndef _LIGHTING_H_
 #define _LIGHTING_H_
 
-#include "global_uniform.h"
-#include "lighting_model.h"
-#include "lights.h"
-#include "shadows.h"
+#include "common/global_uniform.h"
+#include "common/lighting/lighting_model.h"
+#include "common/lighting/lights.h"
+#include "common/shadows/shadows.h"
 
 struct S_LIGHTING_RESULT
 {

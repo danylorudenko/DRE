@@ -24,7 +24,7 @@
 #include <engine\scene\Scene.hpp>
 #include <engine\scene\SceneNodeManipulator.hpp>
 
-#include <global_uniform.h>
+#include <common\global_uniform.h>
 
 
 namespace GFX

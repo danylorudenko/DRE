@@ -1,4 +1,4 @@
-#include "poisson.h"
+#include "common/utils/poisson.h"
 
 #ifndef _SHADOWS_H_
 #define _SHADOWS_H_

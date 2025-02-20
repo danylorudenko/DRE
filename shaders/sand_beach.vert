@@ -2,8 +2,8 @@
 
 #extension GL_GOOGLE_include_directive : enable
 
-#include "shaders_common.h"
-#include "forward.h"
+#include "common/shaders_common.h"
+#include "common/forward.h"
 
 layout(location = 0) in vec3 in_pos;
 layout(location = 1) in vec3 in_norm;

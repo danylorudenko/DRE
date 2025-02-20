@@ -2,7 +2,7 @@
 
 #extension GL_GOOGLE_include_directive : enable
 
-#include "shaders_common.h"
+#include "common/shaders_common.h"
 
 layout (set=3, binding=0, rgba8) uniform readonly 	image2D linearRT;
 layout (set=3, binding=1, rgba8) uniform 			image2D encodedOutput;

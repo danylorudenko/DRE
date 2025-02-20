@@ -1,7 +1,7 @@
 #ifndef _GIZMO_3D_H_
 #define _GIZMO_3D_H_
 
-#include "shaders_common.h"
+#include "common/shaders_common.h"
 
 BEGIN_CONSTANT_BUFFER(GizmoPassBuffer, cb, 3, 0)
 {

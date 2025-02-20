@@ -11,7 +11,7 @@
 
 #include <gfx\buffer\PersistentStorage.hpp>
 
-#include <lights.h>
+#include <common\lighting\lights.h>
 
 #include <glm\vec3.hpp>
 

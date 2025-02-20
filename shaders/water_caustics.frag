@@ -2,9 +2,9 @@
 
 #extension GL_GOOGLE_include_directive : enable
 
-#include "shaders_common.h"
-#include "poisson.h"
-#include "lighting_model.h"
+#include "common/shaders_common.h"
+#include "common/utils/poisson.h"
+#include "common/lighting/lighting_model.h"
 
 layout(location = 0) in vec3 in_ray_start;
 layout(location = 1) in vec3 in_ray_end;

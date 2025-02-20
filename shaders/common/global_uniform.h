@@ -1,9 +1,9 @@
 #ifndef _GLOBAL_UNIFORM_H_
 #define _GLOBAL_UNIFORM_H_
 
-#include "shaders_defines.h"
-#include "lights.h"
-#include "instances.h"
+#include "common/shaders_defines.h"
+#include "common/lighting/lights.h"
+#include "common/instances.h"
 
 
 BEGIN_CONSTANT_BUFFER(GlobalUniforms, g_GlobalUniforms, 2, 0)

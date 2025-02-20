@@ -5,10 +5,10 @@
 #define ENABLE_PCF
 #define ENABLE_PCF_POISSON
 
-#include "shaders_common.h"
-#include "lighting.h"
-#include "forward.h"
-#include "forward_output.h"
+#include "common/shaders_common.h"
+#include "common/lighting/lighting.h"
+#include "common/forward.h"
+#include "common/forward_output.h"
 
 layout(location = 0) in vec3 in_wpos;
 layout(location = 1) in vec2 in_uv;

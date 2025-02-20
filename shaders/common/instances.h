@@ -1,7 +1,7 @@
 #ifndef _INSTANCES_H_
 #define _INSTANCES_H_
 
-#include "shaders_defines.h"
+#include "common/shaders_defines.h"
 
 DeclareStorageBuffer(S_INSTANCE)
 {

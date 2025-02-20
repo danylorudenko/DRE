@@ -2,7 +2,7 @@
 
 #extension GL_GOOGLE_include_directive : enable
 
-#include "shaders_common.h"
+#include "common/shaders_common.h"
 
 layout(set = 3, binding = 0, rgba32f) uniform image2D butterflyTexture;
 

@@ -1,7 +1,7 @@
 #ifndef _LIGHTS_H_
 #define _LIGHTS_H_
 
-#include "shaders_defines.h"
+#include "common/shaders_defines.h"
 
 #define DRE_LIGHT_TYPE_SUN          0
 #define DRE_LIGHT_TYPE_DIRECTIONAL  1

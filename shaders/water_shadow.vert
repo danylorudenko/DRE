@@ -2,7 +2,7 @@
 
 #extension GL_GOOGLE_include_directive : enable
 
-#include "shaders_common.h"
+#include "common/shaders_common.h"
 
 layout(location = 0) in vec3 in_pos;
 

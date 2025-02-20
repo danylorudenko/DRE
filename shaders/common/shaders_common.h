@@ -9,7 +9,7 @@
 #extension GL_EXT_ray_tracing           : enable
 #extension GL_EXT_ray_query             : enable
 
-#include "shaders_defines.h"
+#include "common/shaders_defines.h"
 
 layout(push_constant) uniform GlobalPushConstant
 {
@@ -20,7 +20,7 @@ layout(set = 0, binding = 0) uniform sampler                    g_GlobalSamplers
 layout(set = 0, binding = 1) uniform accelerationStructureEXT   g_TLAS;
 //layout(set = 0, binding = 2) uniform PersistentStorage          g_PersistentStorage; it's usually used by direct pointer from global uniform
 layout(set = 1, binding = 0) uniform texture2D                  g_GlobalTextures[];
-#include "global_uniform.h" // layout(set = 2, binding = 0)
+#include "common/global_uniform.h" // layout(set = 2, binding = 0)
 
 
 // Global textures

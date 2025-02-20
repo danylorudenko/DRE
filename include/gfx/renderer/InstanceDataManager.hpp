@@ -11,7 +11,7 @@
 
 #include <gfx\buffer\PersistentStorage.hpp>
 
-#include <instances.h>
+#include <common\instances.h>
 
 #include <glm\vec3.hpp>
 
