@@ -357,7 +357,7 @@ void DescriptorManager::WriteTLASDescriptor(VKW::AccelerationStructureResource* 
 
     VkWriteDescriptorSet writeInfo;
     writeInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writeInfo.pNext = nullptr;
+    writeInfo.pNext = &tlasInfo;
     writeInfo.dstSet = globalGenericSet_;
     writeInfo.dstBinding = 1;
     writeInfo.dstArrayElement = 0;
@@ -366,6 +366,8 @@ void DescriptorManager::WriteTLASDescriptor(VKW::AccelerationStructureResource* 
     writeInfo.pImageInfo = nullptr;
     writeInfo.pBufferInfo = nullptr;
     writeInfo.pTexelBufferView = nullptr;
+
+    table_->vkUpdateDescriptorSets(device_->Handle(), 1, &writeInfo, 0, nullptr);
 }
 
 VkSampler DescriptorManager::GetDefaultSampler(SamplerType type) const

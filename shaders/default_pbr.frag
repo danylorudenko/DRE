@@ -1,4 +1,4 @@
-#version 450 core
+#version 460 core
 
 #extension GL_GOOGLE_include_directive : enable
 
@@ -26,8 +26,23 @@ void main()
 
     vec3 n = normalize(in_TBN * (normal * 2.0 - 1.0));
 
-    float shadow = CalculateShadow(in_wpos, passUniform.shadow_VP, passUniform.shadow_size.xy, shadowMap);
+    rayQueryEXT rayQuery;
+    rayQueryInitializeEXT(
+        rayQuery,
+        g_TLAS,
+        gl_RayFlagsTerminateOnFirstHitEXT,
+        0xFFFFFFFF,
+        in_wpos,
+        0.1f, // tMin
+        normalize(vec3(1.0f,  10.0f, 1.0f)),
+        10000); // tMax
 
+    rayQueryProceedEXT(rayQuery);
+
+    if (rayQueryGetIntersectionTypeEXT(rayQuery, true) == gl_RayQueryCommittedIntersectionTriangleEXT)
+    {
+        diffuse = vec3(0.0f, 0.0f, 0.0f);
+    }
 
     S_SURFACE surface;
     surface.wpos = in_wpos;

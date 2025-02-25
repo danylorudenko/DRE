@@ -607,7 +607,7 @@ void Context::CmdBuildBLAS(VKW::AccelerationStructureResource const* blas,
     geometryInfo.geometry.triangles.indexData.deviceAddress = indexBufferAddress;
     geometryInfo.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
     geometryInfo.geometry.triangles.transformData.deviceAddress = 0;
-    geometryInfo.flags = VK_FLAGS_NONE;
+    geometryInfo.flags = VK_GEOMETRY_OPAQUE_BIT_KHR; // WARNING, DIDN'T HAVE ANY HITS WITHOUT IT FOR SHADOWS
 
     VkAccelerationStructureBuildGeometryInfoKHR buildInfo;
     buildInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
@@ -645,18 +645,19 @@ void Context::CmdBuildTLAS(
     VkAccelerationStructureGeometryKHR geometry;
     geometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
     geometry.pNext = nullptr;
+    geometry.flags = VK_GEOMETRY_OPAQUE_BIT_KHR;
     geometry.geometryType = VK_GEOMETRY_TYPE_INSTANCES_KHR;
     geometry.geometry.instances.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR;
     geometry.geometry.instances.pNext = nullptr;
     geometry.geometry.instances.arrayOfPointers = VK_FALSE;
     geometry.geometry.instances.data.deviceAddress = instanceBufferAddress;
-    geometry.flags = VK_FLAGS_NONE;
 
     VkAccelerationStructureBuildGeometryInfoKHR buildInfo;
     buildInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
     buildInfo.pNext = nullptr;
     buildInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
     buildInfo.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
+    buildInfo.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
     buildInfo.srcAccelerationStructure = VK_NULL_HANDLE;
     buildInfo.dstAccelerationStructure = tlas->handle_;
     buildInfo.geometryCount = 1;

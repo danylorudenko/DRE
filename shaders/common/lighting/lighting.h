@@ -40,6 +40,7 @@ S_LIGHTING_RESULT CalculateLighting(S_SURFACE surface)
             case DRE_LIGHT_TYPE_SUN:
             {
                 float shadow = CalculateShadow(surface.wpos, GetSunShadowVP(), GetSunShadowSize(), GetGlobalTexture(GetShadowMapID()));
+                shadow = 1.0f;
                 vec3 L = GetDirection(light);
                 vec3 h = normalize(v + L);
                 float NdotH = max(0.0, dot(n, h));
