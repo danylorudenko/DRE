@@ -84,3 +84,4 @@ add_subdirectory(src)
 
 #==============
 add_subdirectory(apps/demo_app)
+add_subdirectory(apps/unit_tests)

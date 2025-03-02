@@ -62,6 +62,9 @@ public:
 
         U64 const potSize = (U64)NextPowOf2((U32)size);
         U8 const depth = GetDepthBySize(potSize);
+        if (size > RootChunkSize())
+            return nullptr;
+
         void* result = RecursiveAllocInternal(potSize, depth);
         if (result != nullptr)
         {
@@ -194,12 +197,12 @@ private:
 public:
     inline U64 MemorySize() const
     {
-        return m_Size;
+        return m_MemorySize;
     }
 
     inline void Reset()
     {
-        MemZero(m_Memory, m_Size);
+        MemZero(m_Memory, m_MemorySize);
         m_ChunksStart = ChunksStart();
 
         MetaPutFreeChunkOnDepth(0, m_ChunksStart);
@@ -221,7 +224,7 @@ public:
 public:
     AllocatorBuddy()
         : m_Memory      { nullptr }
-        , m_Size        { 0 }
+        , m_MemorySize        { 0 }
         , m_MetaData    { nullptr }
         , m_ChunksStart { nullptr }
     {
@@ -229,19 +232,19 @@ public:
 
     AllocatorBuddy(void* memory, U64 size)
         : m_Memory      { memory }
-        , m_Size        { size }
+        , m_MemorySize        { size }
         , m_MetaData    { (MetaData*)PtrAlign(memory, alignof(MetaData)) }
         , m_ChunksStart { nullptr }
     {
         DRE_ASSERT(m_Memory != nullptr, "AlloocatorRandom: received null memory.");
-        DRE_ASSERT(m_Size != 0, "AllocatorBuddy: received null size.");
+        DRE_ASSERT(m_MemorySize != 0, "AllocatorBuddy: received null size.");
 
         Reset();
     }
 
     AllocatorBuddy(AllocatorBuddy&& rhs)
         : m_Memory      { nullptr }
-        , m_Size        { 0 }
+        , m_MemorySize        { 0 }
         , m_MetaData    { nullptr }
         , m_ChunksStart { nullptr }
     {
@@ -251,7 +254,7 @@ public:
     AllocatorBuddy& operator=(AllocatorBuddy&& rhs)
     {
         m_Memory = rhs.m_Memory;            rhs.m_Memory = nullptr;
-        m_Size = rhs.m_Size;                rhs.m_Size = 0;
+        m_MemorySize = rhs.m_MemorySize;                rhs.m_MemorySize = 0;
         m_MetaData = rhs.m_MetaData;        rhs.m_MetaData = nullptr;
         m_ChunksStart = rhs.m_ChunksStart;  rhs.m_ChunksStart = nullptr;
 
@@ -264,7 +267,7 @@ public:
     ~AllocatorBuddy()
     {
         m_Memory = nullptr;
-        m_Size = 0;
+        m_MemorySize = 0;
         m_MetaData = nullptr;
         m_ChunksStart = nullptr;
     }
@@ -274,13 +277,13 @@ public:
 private:
     // Generic allocator section
     void*       m_Memory;
-    U64         m_Size;
+    U64         m_MemorySize;
 
 
 
 
 // chunk management
-private:
+public:
     static constexpr bool IsValidRootChunkSize()
     {
         return IsPowOf2(RootChunkSize());
@@ -328,6 +331,8 @@ private:
         U64 const rootPow = Log2(RootChunkSize());
         U64 const pow = Log2(size);
 
+        DRE_ASSERT(pow <= rootPow, "Requested too big chunk");
+
         return (U8)Min<U64>(MaxDepth(), rootPow - pow);
     }
 
@@ -342,6 +347,7 @@ private:
         return (1U << depth) - 1;
     }
 
+private:
     inline void* ChunksStart()
     {
         return PtrAlign(PtrAdd(m_Memory, sizeof(MetaData) + alignof(MetaData)), RootChunkAlignment());
@@ -367,7 +373,7 @@ private:
     static_assert(IsValidRootChunkSize(), "AllocatorBuddy: root chunk is not POT.");
 
 
-    
+
 // metadata
 private:
     inline bool MetaIsChunkFreeOnDepth(void* chunk, U8 depth)
