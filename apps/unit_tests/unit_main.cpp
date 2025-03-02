@@ -2,7 +2,7 @@
 
 int main()
 {
-    //AllocatorBuddyTest();
+    AllocatorBuddyTest();
     ElementAllocatorBuddyTest();
 
     return 0;

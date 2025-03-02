@@ -65,7 +65,7 @@ public:
         if (size > RootChunkSize())
             return nullptr;
 
-        void* result = RecursiveAllocInternal(potSize, depth);
+        void* result = RecursiveAllocInternal(depth);
         if (result != nullptr)
         {
             MetaSetChunkDepth(result, depth);
@@ -103,7 +103,7 @@ public:
     }
 
 private:
-    void* RecursiveAllocInternal(U64 size, U8 depth)
+    void* RecursiveAllocInternal(U8 depth)
     {
         void* freeChunk = nullptr;
         if (freeChunk = MetaExtractFirstFreeChunkOnDepth(depth))
@@ -115,7 +115,7 @@ private:
             if (depth == 0)
                 return nullptr;
 
-            freeChunk = RecursiveAllocInternal(size, depth - 1);
+            freeChunk = RecursiveAllocInternal(depth - 1);
             if (freeChunk) 
             {
                 // here we split chunk on *depth*, put two children on free list on (depth)
@@ -132,11 +132,11 @@ private:
 
     void SplitChunkOnDepth(void* chunk, U8 depth)
     {
-        U64 const childSize = ChunkSizeByDepth(depth) / 2;
+        U8 const childDepth = depth + 1;
+        U64 const childSize = ChunkSizeByDepth(childDepth);
         void* left = chunk;
         void* right = PtrAdd(chunk, (PtrDiff)childSize);
 
-        U8 const childDepth = depth + 1;
         MetaSetChunkDepth(left, childDepth);
         MetaSetChunkDepth(right, childDepth);
 
@@ -145,6 +145,9 @@ private:
 
         MetaPutFreeChunkOnDepth(childDepth, left);
         MetaPutFreeChunkOnDepth(childDepth, right);
+
+        MetaSetChunkFreeByGlobalIndex(GetGlobalStateIndex(left, childDepth));
+        MetaSetChunkFreeByGlobalIndex(GetGlobalStateIndex(right, childDepth));
     }
 
 
@@ -155,18 +158,25 @@ private:
 
         U32 const index = GetIndexInDepth(memory, depth);
         U64 const size = GetChunkSize(memory);
+
+        DRE_ASSERT(MetaIsChunkFreeOnDepth(memory, depth), "The merging memory is not free on merging depth!");
+
         if (index % 2 == 0) // uneven
         {
             // buddy is on the right
             void* buddy = PtrAdd(memory, size);
             if (MetaIsChunkFreeOnDepth(buddy, depth)) // merge
             {
+                DRE_ASSERT(MetaGetChunkDepth(memory) == MetaGetChunkDepth(buddy), "The merging memory has incorrect depth!");
+
                 MetaRemoveFreeChunkOnDepth(depth, memory);
                 MetaRemoveFreeChunkOnDepth(depth, buddy);
 
                 MetaPutFreeChunkOnDepth(depth - 1, memory);
 
+                DRE_DEBUG_ONLY(MetaSetChunkDepth(buddy, 255));
                 MetaSetChunkDepth(memory, depth - 1);
+
                 U32 const globalIndex = GetGlobalStateIndex(memory, depth - 1);
                 MetaSetChunkFreeByGlobalIndex(globalIndex);
 
@@ -179,11 +189,14 @@ private:
             void* buddy = PtrAdd(memory, -((PtrDiff)size));
             if (MetaIsChunkFreeOnDepth(buddy, depth))
             {
+                DRE_ASSERT(MetaGetChunkDepth(memory) == MetaGetChunkDepth(buddy), "The merging memory has incorrect depth!");
+
                 MetaRemoveFreeChunkOnDepth(depth, memory);
                 MetaRemoveFreeChunkOnDepth(depth, buddy);
 
                 MetaPutFreeChunkOnDepth(depth - 1, buddy);
-                
+
+                DRE_DEBUG_ONLY(MetaSetChunkDepth(memory, 255));
                 MetaSetChunkDepth(buddy, depth - 1);
                 U32 const globalIndex = GetGlobalStateIndex(buddy, depth - 1);
                 MetaSetChunkFreeByGlobalIndex(globalIndex);
@@ -212,6 +225,7 @@ public:
         }
 
         MetaSetChunkDepth(m_ChunksStart, 0);
+        MetaSetChunkFreeByGlobalIndex(0);
     }
 
     inline static constexpr U64 RequiredMemorySize()
@@ -301,7 +315,7 @@ public:
 
     static constexpr U32 LeavesCount()
     {
-        return 1U << (MAX_DEPTH - 1);
+        return 1U << (MAX_DEPTH);
     }
 
     static constexpr U32 AllPossibleChunksCount()
@@ -399,13 +413,21 @@ private:
 
     inline U8 MetaGetChunkDepth(void* chunk)
     {
-                                       // lowest leaf index
+        DRE_DEBUG_ONLY(DRE_ASSERT(m_MetaData->chunksDepth[PtrDifference(chunk, m_ChunksStart) / LeafSize()], "Junk depth in MetaData!"));
+
         return m_MetaData->chunksDepth[PtrDifference(chunk, m_ChunksStart) / LeafSize()];
     }
 
     inline void MetaSetChunkDepth(void* chunk, U8 depth)
     {
-                                // lowest leaf index
+#ifdef DRE_DEBUG
+        U32 leavesPerChunk = ChunkSizeByDepth(depth) / LEAF_SIZE;
+        for (U32 i = 1; i < leavesPerChunk; i++)
+        {
+            MetaSetChunkDepth(PtrAdd(chunk, i * LEAF_SIZE), 255);
+        }
+#endif
+
         m_MetaData->chunksDepth[PtrDifference(chunk, m_ChunksStart) / LeafSize()] = depth;
     }
 
@@ -416,6 +438,7 @@ private:
             MetaChunkHeader* result = m_MetaData->depthFreeLists[depth];
             if (result->next != nullptr)
             {
+                DRE_ASSERT(result->next->prev == result, "Discrepancy in double-linked list. Prev and Next don't link each other.");
                 result->next->prev = nullptr; // no prev because it's first
             }
             m_MetaData->depthFreeLists[depth] = result->next;
@@ -450,20 +473,16 @@ private:
     {
         MetaChunkHeader* lastFree = m_MetaData->depthFreeLists[depth];
         MetaChunkHeader* newFree = (MetaChunkHeader*)chunk;
-        if (lastFree)
-        {
-            lastFree->next = newFree;
 
-            newFree->prev = lastFree;
-            newFree->next = nullptr;
-        }
-        else
-        {
-            newFree->prev = nullptr;
-            newFree->next = nullptr;
+        newFree->prev = nullptr;
+        newFree->next = m_MetaData->depthFreeLists[depth];
 
-            m_MetaData->depthFreeLists[depth] = newFree;
+        if (m_MetaData->depthFreeLists[depth] != nullptr)
+        {
+            lastFree->prev = newFree;
         }
+
+        m_MetaData->depthFreeLists[depth] = newFree;
     }
 
     struct MetaChunkHeader

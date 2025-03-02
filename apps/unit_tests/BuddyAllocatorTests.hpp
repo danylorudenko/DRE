@@ -32,8 +32,7 @@ bool AllocatorBuddyTest()
 
     // Allowed allocation sizes (all powers of two, never less than 256 bytes).
     auto randomSize = []() {
-        // Random exponent from 8 (2^8 = 256) to 16 (2^16 = 65536).
-        int exp = 8 + (std::rand() % 9);
+        int exp = 8 + (std::rand() % (AllocatorBuddySetup::MaxDepth() + 1));
         return std::min(static_cast<size_t>(1) << exp, AllocatorBuddySetup::RootChunkSize());
     };
 
@@ -98,10 +97,11 @@ bool ElementAllocatorBuddyTest()
 
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 
-    using BuddyElementSetup = DRE::BuddyElementAllocator<1024, 3>;
+    static constexpr DRE::U8 MAX_DEPTH = 5;
+
+    using BuddyElementSetup = DRE::BuddyElementAllocator<1024, MAX_DEPTH>;
 
     BuddyElementSetup allocator;
-    allocator.Reset();
 
     // --- Long-Term Random Allocation/Free Test ---
     // We simulate a long-lived allocator by randomly allocating and freeing blocks.
@@ -113,8 +113,7 @@ bool ElementAllocatorBuddyTest()
 
     // Allowed allocation sizes (all powers of two, never less than 256 bytes).
     auto randomSize = []() {
-        // Random exponent from 8 (2^8 = 256) to 16 (2^16 = 65536).
-        int exp = 8 + (std::rand() % 9);
+        int exp = 8 + (std::rand() % (MAX_DEPTH + 1));
         return std::min(static_cast<size_t>(1) << exp, BuddyElementSetup::RootChunkSize());
     };
 
@@ -131,7 +130,8 @@ bool ElementAllocatorBuddyTest()
             DRE::U64 element = allocator.Alloc(size, 256);
             if (element != BuddyElementSetup::INVALID_ELEMENT)
             {
-                printf("allocated %i, size %i\n", allocCount, (int)size);
+                printf("allocated %i, no.%i, size %i\n", (int)element, allocCount, (int)size);
+                allocator.PrintIsFreeState();
                 // Check that this allocation does not duplicate any existing allocation.
                 for (int j = 0; j < allocCount; ++j)
                 {
@@ -150,6 +150,7 @@ bool ElementAllocatorBuddyTest()
             DRE::U64 element = allocations[index];
             allocator.Free(element);
             printf("freed %i\n", index);
+            allocator.PrintIsFreeState();
             allocations[index] = allocations[--allocCount];
         }
     }

@@ -153,24 +153,41 @@ class BuddyElementAllocator
 public:
     static constexpr U64 INVALID_ELEMENT = DRE_U64_MAX;
 
+
+#ifdef DRE_DEBUG
+    inline void PrintIsFreeState()
+    {
+        int globalIndex = 0;
+        for (int i = 0; i < MAX_DEPTH + 1; i++)
+        {
+            printf("level%i:", i);
+            for (int ii = 0; ii < GetChunksCountOnDepth(i); ii++)
+            {
+                printf("%d", MetaIsChunkFreeByGlobalIndex(globalIndex));
+                globalIndex++;
+            }
+            printf("\n");
+        }
+
+    }
+#endif
+
     // WARNING: alignment param is unused, all allocations are 256-aligned
     inline U64 Alloc(U64 size, U32 alignment)
     {
         DRE_ASSERT(size < DRE_U32_MAX, "BuddyElementAllocator currently supports allocations only < DRE_U32_MAX");
 
         U64 const potSize = (U64)NextPowOf2((U32)size);
-        U8 const depth = GetDepthBySize(potSize);
+         U8 const depth = GetDepthBySize(potSize);
         if (size > RootChunkSize())
             return INVALID_ELEMENT;
 
-        U64 result = RecursiveAllocInternal(potSize, depth);
+        U64 result = RecursiveAllocInternal(depth);
         if (result != INVALID_ELEMENT)
         {
-            MetaSetChunkDepth(result, depth);
             U32 const globalIndex = GetGlobalStateIndex(result, depth);
             MetaSetChunkUsedByGlobalIndex(globalIndex);
         }
-
         return result;
     }
 
@@ -182,12 +199,13 @@ public:
         MetaSetChunkFreeByGlobalIndex(globalIndex);
 
         MetaPutFreeChunkOnDepth(depth, element);
+
         RecursiveMergeInternal(depth, element);
     }
 
 
 private:
-    U64 RecursiveAllocInternal(U64 size, U8 depth)
+    U64 RecursiveAllocInternal(U8 depth)
     {
         U64 freeChunkOffset = INVALID_ELEMENT;
         MetaChunkHeader* freeChunk = MetaExtractFirstFreeChunkOnDepth(depth);
@@ -200,7 +218,7 @@ private:
             if (depth == 0)
                 return INVALID_ELEMENT;
 
-            freeChunkOffset = RecursiveAllocInternal(size, depth - 1);
+            freeChunkOffset = RecursiveAllocInternal(depth - 1);
             if (freeChunkOffset != INVALID_ELEMENT)
             {
                 // here we split chunk on *depth*, put two children on free list on (depth)
@@ -217,11 +235,11 @@ private:
 
     void SplitChunkOnDepth(U64 chunk, U8 depth)
     {
-        U64 const childSize = ChunkSizeByDepth(depth) / 2;
+        U8 const childDepth = depth + 1;
+        U64 const childSize = ChunkSizeByDepth(childDepth);
         U64 left = chunk;
         U64 right = chunk + childSize;
 
-        U8 const childDepth = depth + 1;
         MetaSetChunkDepth(left, childDepth);
         MetaSetChunkDepth(right, childDepth);
 
@@ -230,6 +248,9 @@ private:
 
         MetaPutFreeChunkOnDepth(childDepth, left);
         MetaPutFreeChunkOnDepth(childDepth, right);
+
+        MetaSetChunkFreeByGlobalIndex(GetGlobalStateIndex(left, childDepth));
+        MetaSetChunkFreeByGlobalIndex(GetGlobalStateIndex(right, childDepth));
     }
 
 
@@ -256,7 +277,9 @@ private:
 
                 MetaPutFreeChunkOnDepth(depth - 1, element);
 
+                DRE_DEBUG_ONLY(MetaSetChunkDepth(buddy, 255));
                 MetaSetChunkDepth(element, depth - 1);
+
                 U32 const globalIndex = GetGlobalStateIndex(element, depth - 1);
                 MetaSetChunkFreeByGlobalIndex(globalIndex);
 
@@ -276,7 +299,9 @@ private:
 
                 MetaPutFreeChunkOnDepth(depth - 1, buddy);
 
+                DRE_DEBUG_ONLY(MetaSetChunkDepth(element, 255));
                 MetaSetChunkDepth(buddy, depth - 1);
+
                 U32 const globalIndex = GetGlobalStateIndex(buddy, depth - 1);
                 MetaSetChunkFreeByGlobalIndex(globalIndex);
 
@@ -296,6 +321,7 @@ public:
         }
 
         MetaSetChunkDepth(0, 0);
+        MetaSetChunkFreeByGlobalIndex(0);
     }
 
 
@@ -349,7 +375,7 @@ public:
 
     static constexpr U32 LeavesCount()
     {
-        return 1U << (MAX_DEPTH - 1);
+        return 1U << (MAX_DEPTH);
     }
 
     static constexpr U32 AllPossibleChunksCount()
@@ -464,13 +490,21 @@ private:
 
     inline U8 MetaGetChunkDepth(U64 chunk)
     {
-        // lowest leaf index
+        DRE_DEBUG_ONLY(DRE_ASSERT(m_MetaData.chunksDepth[chunk / LeafSize()] != 255, "Junk depth in MetaData!"));
+
         return m_MetaData.chunksDepth[chunk / LeafSize()];
     }
 
     inline void MetaSetChunkDepth(U64 chunk, U8 depth)
     {
-        // lowest leaf index
+#ifdef DRE_DEBUG
+        U32 leavesPerChunk = ChunkSizeByDepth(depth) / LEAF_SIZE;
+        for (U32 i = 1; i < leavesPerChunk; i++)
+        {
+            MetaSetChunkDepth(chunk + i * LEAF_SIZE, 255);
+        }
+#endif
+
         m_MetaData.chunksDepth[chunk / LeafSize()] = depth;
     }
 
@@ -481,6 +515,7 @@ private:
             MetaChunkHeader* result = m_MetaData.depthFreeLists[depth];
             if (result->next != nullptr)
             {
+                DRE_ASSERT(result->next->prev == result, "Discrepancy in double-linked list. Prev and Next don't link each other.");
                 result->next->prev = nullptr; // no prev because it's first
             }
             m_MetaData.depthFreeLists[depth] = result->next;
@@ -504,6 +539,8 @@ private:
         MetaChunkHeader* prev = header->prev;
         MetaChunkHeader* next = header->next;
 
+        DRE_ASSERT(prev != nullptr, "Prev header must exist");
+
         prev->next = next;
 
         if (next)
@@ -514,21 +551,17 @@ private:
     {
         MetaChunkHeader* lastFree = m_MetaData.depthFreeLists[depth];
         MetaChunkHeader* newFree = m_MetaData.chunkHeaderStorage + GetGlobalStateIndex(element, depth);
+
+        newFree->prev = nullptr;
+        newFree->next = m_MetaData.depthFreeLists[depth];
         newFree->elementOffset = element;
-        if (lastFree)
-        {
-            lastFree->next = newFree;
 
-            newFree->prev = lastFree;
-            newFree->next = nullptr;
-        }
-        else
+        if (m_MetaData.depthFreeLists[depth] != nullptr)
         {
-            newFree->prev = nullptr;
-            newFree->next = nullptr;
-
-            m_MetaData.depthFreeLists[depth] = newFree;
+            lastFree->prev = newFree;
         }
+
+        m_MetaData.depthFreeLists[depth] = newFree;
     }
 
     MetaData m_MetaData;
