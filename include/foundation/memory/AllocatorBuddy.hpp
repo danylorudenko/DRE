@@ -381,7 +381,9 @@ private:
     {
         U32 const depthGlobalIndex = GetChunkStateDepthStart(depth);
         U32 const indexInDepth = GetIndexInDepth(chunk, depth);
-        return depthGlobalIndex + indexInDepth;
+        U32 const result = depthGlobalIndex + indexInDepth;
+        DRE_ASSERT(result < AllPossibleChunksCount(), "Invalid global index");
+        return result;
     }
 
     static_assert(IsValidRootChunkSize(), "AllocatorBuddy: root chunk is not POT.");
@@ -413,7 +415,7 @@ private:
 
     inline U8 MetaGetChunkDepth(void* chunk)
     {
-        DRE_DEBUG_ONLY(DRE_ASSERT(m_MetaData->chunksDepth[PtrDifference(chunk, m_ChunksStart) / LeafSize()], "Junk depth in MetaData!"));
+        DRE_DEBUG_ONLY(DRE_ASSERT(m_MetaData->chunksDepth[PtrDifference(chunk, m_ChunksStart) / LeafSize()] != 255, "Junk depth in MetaData!"));
 
         return m_MetaData->chunksDepth[PtrDifference(chunk, m_ChunksStart) / LeafSize()];
     }
@@ -427,6 +429,7 @@ private:
             MetaSetChunkDepth(PtrAdd(chunk, i * LEAF_SIZE), 255);
         }
 #endif
+        DRE_ASSERT(depth <= MAX_DEPTH || depth == 255, "Attempt to store invalid depth.");
 
         m_MetaData->chunksDepth[PtrDifference(chunk, m_ChunksStart) / LeafSize()] = depth;
     }
@@ -435,6 +438,8 @@ private:
     {
         if (m_MetaData->depthFreeLists[depth] != nullptr)
         {
+            DRE_ASSERT(m_MetaData->depthFreeLists[depth]->prev == nullptr, "First header must have prev == nullptr");
+
             MetaChunkHeader* result = m_MetaData->depthFreeLists[depth];
             if (result->next != nullptr)
             {
@@ -453,15 +458,24 @@ private:
 
     inline void MetaRemoveFreeChunkOnDepth(U8 depth, void* chunk)
     {
+        DRE_ASSERT(m_MetaData->depthFreeLists[depth]->prev == nullptr, "First header must have prev == nullptr");
+
         if (chunk == m_MetaData->depthFreeLists[depth])
         {
+            if (m_MetaData->depthFreeLists[depth]->next != nullptr)
+                DRE_ASSERT(m_MetaData->depthFreeLists[depth] == m_MetaData->depthFreeLists[depth]->next->prev, "Discrepancy in double-linked list. Prev and Next don't link each other.");
+
             m_MetaData->depthFreeLists[depth] = m_MetaData->depthFreeLists[depth]->next;
+            if (m_MetaData->depthFreeLists[depth] != nullptr)
+                m_MetaData->depthFreeLists[depth]->prev = nullptr;
             return;
         }
 
         MetaChunkHeader* header = (MetaChunkHeader*)chunk;
         MetaChunkHeader* prev = header->prev;
         MetaChunkHeader* next = header->next;
+
+        DRE_ASSERT(prev != nullptr, "Prev header must exist");
 
         prev->next = next;
 
@@ -498,7 +512,7 @@ private:
         
         // in 1 bits we will store states of the chunks on all levels: Allocated/Free
         // 0 - free, 1 - used
-        U8 chunksStates[AllPossibleChunksCount() / 8];
+        U8 chunksStates[std::max(1u, AllPossibleChunksCount() / 8 + 1)];
 
         // for all possible locations buddy can return
         U8 chunksDepth[LeavesCount()];

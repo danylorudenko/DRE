@@ -16,7 +16,7 @@ bool AllocatorBuddyTest()
 
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 
-    using AllocatorBuddySetup = DRE::AllocatorBuddy<256, 13>;
+    using AllocatorBuddySetup = DRE::AllocatorBuddy<1024, 7>;
     static char arena[AllocatorBuddySetup::RequiredMemorySize()];
 
     AllocatorBuddySetup allocator(arena, AllocatorBuddySetup::RequiredMemorySize());
@@ -97,7 +97,7 @@ bool ElementAllocatorBuddyTest()
 
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 
-    static constexpr DRE::U8 MAX_DEPTH = 5;
+    static constexpr DRE::U8 MAX_DEPTH = 7;
 
     using BuddyElementSetup = DRE::BuddyElementAllocator<1024, MAX_DEPTH>;
 
