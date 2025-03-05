@@ -2,6 +2,7 @@
 
 #include <foundation\Common.hpp>
 #include <foundation\math\SimpleMath.hpp>
+#include <foundation\memory\MemoryOps.hpp>
 
 DRE_BEGIN_NAMESPACE
 
@@ -107,7 +108,7 @@ public:
 
 /*
 *
-* BuddyElementAllocator.
+* BuddyAllocatorBase.
 *
 * Basic interface:
 *
@@ -147,11 +148,11 @@ public:
 * 3 - there is no block, try to get free chunk on highest level, there is a root chunk, split it and return recursively
 *
 */
-template<U64 LEAF_SIZE, U8 MAX_DEPTH>
-class BuddyElementAllocator
+template<U64 LEAF_SIZE, U8 MAX_DEPTH, typename TDerived>
+class BuddyAllocatorBase
 {
 public:
-    static constexpr U64 INVALID_ELEMENT = DRE_U64_MAX;
+    static constexpr U64 INVALID_OFFSET = DRE_U64_MAX;
 
 
 #ifdef DRE_DEBUG
@@ -175,15 +176,15 @@ public:
     // WARNING: alignment param is unused, all allocations are 256-aligned
     inline U64 Alloc(U64 size, U32 alignment)
     {
-        DRE_ASSERT(size < DRE_U32_MAX, "BuddyElementAllocator currently supports allocations only < DRE_U32_MAX");
+        DRE_ASSERT(size < DRE_U32_MAX, "BuddyAllocatorBase currently supports allocations only < DRE_U32_MAX");
 
         U64 const potSize = (U64)NextPowOf2((U32)size);
          U8 const depth = GetDepthBySize(potSize);
         if (size > RootChunkSize())
-            return INVALID_ELEMENT;
+            return INVALID_OFFSET;
 
         U64 result = RecursiveAllocInternal(depth);
-        if (result != INVALID_ELEMENT)
+        if (result != INVALID_OFFSET)
         {
             U32 const globalIndex = GetGlobalStateIndex(result, depth);
             MetaSetChunkUsedByGlobalIndex(globalIndex);
@@ -191,46 +192,46 @@ public:
         return result;
     }
 
-    inline void Free(U64 element)
+    inline void Free(U64 chunkOffset)
     {
-        U8 const depth = MetaGetChunkDepth(element);
+        U8 const depth = MetaGetChunkDepth(chunkOffset);
 
-        U32 const globalIndex = GetGlobalStateIndex(element, depth);
+        U32 const globalIndex = GetGlobalStateIndex(chunkOffset, depth);
         MetaSetChunkFreeByGlobalIndex(globalIndex);
 
-        MetaPutFreeChunkOnDepth(depth, element);
+        MetaPutFreeChunkOnDepth(depth, chunkOffset);
 
-        RecursiveMergeInternal(depth, element);
+        RecursiveMergeInternal(depth, chunkOffset);
     }
 
 
 private:
     U64 RecursiveAllocInternal(U8 depth)
     {
-        U64 freeChunkOffset = INVALID_ELEMENT;
+        U64 freeChunkOffset = INVALID_OFFSET;
         MetaChunkHeader* freeChunk = MetaExtractFirstFreeChunkOnDepth(depth);
         if (freeChunk != nullptr)
         {
-            return freeChunk->elementOffset;
+            return freeChunk->chunkOffset;
         }
         else
         {
             if (depth == 0)
-                return INVALID_ELEMENT;
+                return INVALID_OFFSET;
 
             freeChunkOffset = RecursiveAllocInternal(depth - 1);
-            if (freeChunkOffset != INVALID_ELEMENT)
+            if (freeChunkOffset != INVALID_OFFSET)
             {
                 // here we split chunk on *depth*, put two children on free list on (depth)
                 SplitChunkOnDepth(freeChunkOffset, depth - 1);
             }
             else
             {
-                return INVALID_ELEMENT;
+                return INVALID_OFFSET;
             }
         }
 
-        return MetaExtractFirstFreeChunkOnDepth(depth)->elementOffset;
+        return MetaExtractFirstFreeChunkOnDepth(depth)->chunkOffset;
     }
 
     void SplitChunkOnDepth(U64 chunk, U8 depth)
@@ -254,52 +255,52 @@ private:
     }
 
 
-    void RecursiveMergeInternal(U8 depth, U64 element)
+    void RecursiveMergeInternal(U8 depth, U64 chunkOffset)
     {
         if (depth == 0)
             return;
 
-        U32 const index = GetIndexInDepth(element, depth);
-        U64 const size = GetChunkSize(element);
+        U32 const index = GetIndexInDepth(chunkOffset, depth);
+        U64 const size = GetChunkSize(chunkOffset);
 
-        DRE_ASSERT(MetaIsChunkFreeOnDepth(element, depth), "The merging element is not free on merging depth!");
+        DRE_ASSERT(MetaIsChunkFreeOnDepth(chunkOffset, depth), "The merging chunkOffset is not free on merging depth!");
 
         if (index % 2 == 0) // uneven
         {
             // buddy is on the right
-            U64 buddy = element + size;
+            U64 buddy = chunkOffset + size;
             if (MetaIsChunkFreeOnDepth(buddy, depth)) // merge
             {
-                DRE_ASSERT(MetaGetChunkDepth(element) == MetaGetChunkDepth(buddy), "The merging element has incorrect depth!");
+                DRE_ASSERT(MetaGetChunkDepth(chunkOffset) == MetaGetChunkDepth(buddy), "The merging chunkOffset has incorrect depth!");
 
-                MetaRemoveFreeChunkOnDepth(depth, element);
+                MetaRemoveFreeChunkOnDepth(depth, chunkOffset);
                 MetaRemoveFreeChunkOnDepth(depth, buddy);
 
-                MetaPutFreeChunkOnDepth(depth - 1, element);
+                MetaPutFreeChunkOnDepth(depth - 1, chunkOffset);
 
                 DRE_DEBUG_ONLY(MetaSetChunkDepth(buddy, 255));
-                MetaSetChunkDepth(element, depth - 1);
+                MetaSetChunkDepth(chunkOffset, depth - 1);
 
-                U32 const globalIndex = GetGlobalStateIndex(element, depth - 1);
+                U32 const globalIndex = GetGlobalStateIndex(chunkOffset, depth - 1);
                 MetaSetChunkFreeByGlobalIndex(globalIndex);
 
-                RecursiveMergeInternal(depth - 1, element);
+                RecursiveMergeInternal(depth - 1, chunkOffset);
             }
         }
         else // even
         {
             // buddy is on the left
-            U64 buddy = element - size;
+            U64 buddy = chunkOffset - size;
             if (MetaIsChunkFreeOnDepth(buddy, depth))
             {
-                DRE_ASSERT(MetaGetChunkDepth(element) == MetaGetChunkDepth(buddy), "The merging element has incorrect depth!");
+                DRE_ASSERT(MetaGetChunkDepth(chunkOffset) == MetaGetChunkDepth(buddy), "The merging chunkOffset has incorrect depth!");
 
-                MetaRemoveFreeChunkOnDepth(depth, element);
+                MetaRemoveFreeChunkOnDepth(depth, chunkOffset);
                 MetaRemoveFreeChunkOnDepth(depth, buddy);
 
                 MetaPutFreeChunkOnDepth(depth - 1, buddy);
 
-                DRE_DEBUG_ONLY(MetaSetChunkDepth(element, 255));
+                DRE_DEBUG_ONLY(MetaSetChunkDepth(chunkOffset, 255));
                 MetaSetChunkDepth(buddy, depth - 1);
 
                 U32 const globalIndex = GetGlobalStateIndex(buddy, depth - 1);
@@ -317,7 +318,7 @@ public:
         MetaPutFreeChunkOnDepth(0, 0);
         for (U32 i = 1; i < (U32)(MaxDepth() + 1); ++i)
         {
-            m_MetaData.depthFreeLists[i] = nullptr;
+            GetMetaData().depthFreeLists[i] = nullptr;
         }
 
         MetaSetChunkDepth(0, 0);
@@ -326,31 +327,25 @@ public:
 
 
 public:
-    BuddyElementAllocator()
-        : m_MetaData{}
+    BuddyAllocatorBase()
     {
-        Reset();
     }
 
-    BuddyElementAllocator(BuddyElementAllocator&& rhs)
-        : m_MetaData{}
+    BuddyAllocatorBase(BuddyAllocatorBase&& rhs)
     {
         operator=(DRE_MOVE(rhs));
     }
 
-    BuddyElementAllocator& operator=(BuddyElementAllocator&& rhs)
+    BuddyAllocatorBase& operator=(BuddyAllocatorBase&& rhs)
     {
-        m_MetaData = rhs.m_MetaData;        rhs.m_MetaData = MetaData{};
-
         return *this;
     }
 
-    BuddyElementAllocator(BuddyElementAllocator const&) = delete;
-    BuddyElementAllocator& operator=(BuddyElementAllocator const& rhs) = delete;
+    BuddyAllocatorBase(BuddyAllocatorBase const&) = delete;
+    BuddyAllocatorBase& operator=(BuddyAllocatorBase const& rhs) = delete;
 
-    ~BuddyElementAllocator()
+    virtual ~BuddyAllocatorBase()
     {
-        m_MetaData = MetaData();
     }
 
 
@@ -421,7 +416,7 @@ public:
         return (1U << depth) - 1;
     }
 
-private:
+protected:
     inline U64 GetChunkSize(U64 chunk)
     {
         return ChunkSizeByDepth(MetaGetChunkDepth(chunk));
@@ -441,25 +436,23 @@ private:
         return result;
     }
 
-    static_assert(IsValidRootChunkSize(), "BuddyElementAllocator: root chunk is not POT.");
+    static_assert(IsValidRootChunkSize(), "BuddyAllocatorBase: root chunk is not POT.");
 
 
 
     // metadata
-private:
+protected:
     struct MetaChunkHeader
     {
         MetaChunkHeader* prev;
         MetaChunkHeader* next;
-        U64 elementOffset;
+        U64 chunkOffset;
     };
 
     struct MetaData
     {
         // freelists for chunks on all depths
         MetaChunkHeader* depthFreeLists[MaxDepth() + 1];
-
-        MetaChunkHeader chunkHeaderStorage[AllPossibleChunksCount()];
 
         // in 1 bits we will store states of the chunks on all levels: Allocated/Free
         // 0 - free, 1 - used
@@ -469,32 +462,42 @@ private:
         U8 chunksDepth[LeavesCount()];
     };
 
-    inline bool MetaIsChunkFreeOnDepth(U64 chunk, U8 depth)
+    MetaData& GetMetaData()
     {
-        U32 const stateGlobalIndex = GetGlobalStateIndex(chunk, depth);
+        return static_cast<TDerived*>(this)->GetMetaDataImpl();
+    }
+
+    MetaChunkHeader* GetChunkHeader(U8 depth, U64 chunkOffset)
+    {
+        return static_cast<TDerived*>(this)->GetChunkHeaderImpl(depth, chunkOffset);
+    }
+
+    inline bool MetaIsChunkFreeOnDepth(U64 chunkOffset, U8 depth)
+    {
+        U32 const stateGlobalIndex = GetGlobalStateIndex(chunkOffset, depth);
         return MetaIsChunkFreeByGlobalIndex(stateGlobalIndex);
     }
 
     inline bool MetaIsChunkFreeByGlobalIndex(U32 globalIndex)
     {
-        return ((m_MetaData.chunksStates[globalIndex / 8]) & (1 << (globalIndex % 8))) == 0;
+        return ((GetMetaData().chunksStates[globalIndex / 8]) & (1 << (globalIndex % 8))) == 0;
     }
 
     inline void MetaSetChunkUsedByGlobalIndex(U32 globalIndex)
     {
-        m_MetaData.chunksStates[globalIndex / 8] |= (1 << (globalIndex % 8));
+        GetMetaData().chunksStates[globalIndex / 8] |= (1 << (globalIndex % 8));
     }
 
     inline void MetaSetChunkFreeByGlobalIndex(U32 globalIndex)
     {
-        m_MetaData.chunksStates[globalIndex / 8] &= (~(1 << (globalIndex % 8)));
+        GetMetaData().chunksStates[globalIndex / 8] &= (~(1 << (globalIndex % 8)));
     }
 
     inline U8 MetaGetChunkDepth(U64 chunk)
     {
-        DRE_DEBUG_ONLY(DRE_ASSERT(m_MetaData.chunksDepth[chunk / LeafSize()] != 255, "Junk depth in MetaData!"));
+        DRE_DEBUG_ONLY(DRE_ASSERT(GetMetaData().chunksDepth[chunk / LeafSize()] != 255, "Junk depth in MetaData!"));
 
-        return m_MetaData.chunksDepth[chunk / LeafSize()];
+        return GetMetaData().chunksDepth[chunk / LeafSize()];
     }
 
     inline void MetaSetChunkDepth(U64 chunk, U8 depth)
@@ -508,22 +511,22 @@ private:
 #endif
         DRE_ASSERT(depth <= MAX_DEPTH || depth == 255, "Attempt to store invalid depth.");
 
-        m_MetaData.chunksDepth[chunk / LeafSize()] = depth;
+        GetMetaData().chunksDepth[chunk / LeafSize()] = depth;
     }
 
-    inline typename BuddyElementAllocator<LEAF_SIZE, MAX_DEPTH>::MetaChunkHeader* MetaExtractFirstFreeChunkOnDepth(U8 depth)
+    inline typename BuddyAllocatorBase<LEAF_SIZE, MAX_DEPTH, TDerived>::MetaChunkHeader* MetaExtractFirstFreeChunkOnDepth(U8 depth)
     {
-        if (m_MetaData.depthFreeLists[depth] != nullptr)
+        if (GetMetaData().depthFreeLists[depth] != nullptr)
         {
-            DRE_ASSERT(m_MetaData.depthFreeLists[depth]->prev == nullptr, "First header must have prev == nullptr");
+            DRE_ASSERT(GetMetaData().depthFreeLists[depth]->prev == nullptr, "First header must have prev == nullptr");
 
-            MetaChunkHeader* result = m_MetaData.depthFreeLists[depth];
+            MetaChunkHeader* result = GetMetaData().depthFreeLists[depth];
             if (result->next != nullptr)
             {
                 DRE_ASSERT(result->next->prev == result, "Discrepancy in double-linked list. Prev and Next don't link each other.");
                 result->next->prev = nullptr; // no prev because it's first
             }
-            m_MetaData.depthFreeLists[depth] = result->next;
+            GetMetaData().depthFreeLists[depth] = result->next;
             return result;
         }
         else
@@ -532,22 +535,23 @@ private:
         }
     }
 
-    inline void MetaRemoveFreeChunkOnDepth(U8 depth, U64 element)
+    inline void MetaRemoveFreeChunkOnDepth(U8 depth, U64 chunkOffset)
     {
-        DRE_ASSERT(m_MetaData.depthFreeLists[depth]->prev == nullptr, "First header must have prev == nullptr");
+        DRE_ASSERT(GetMetaData().depthFreeLists[depth]->prev == nullptr, "First header must have prev == nullptr");
 
-        if (element == m_MetaData.depthFreeLists[depth]->elementOffset)
+        if (chunkOffset == GetMetaData().depthFreeLists[depth]->chunkOffset)
         {
-            if (m_MetaData.depthFreeLists[depth]->next != nullptr)
-                DRE_ASSERT(m_MetaData.depthFreeLists[depth] == m_MetaData.depthFreeLists[depth]->next->prev, "Discrepancy in double-linked list. Prev and Next don't link each other.");
+            if (GetMetaData().depthFreeLists[depth]->next != nullptr)
+                DRE_ASSERT(GetMetaData().depthFreeLists[depth] == GetMetaData().depthFreeLists[depth]->next->prev, "Discrepancy in double-linked list. Prev and Next don't link each other.");
 
-            m_MetaData.depthFreeLists[depth] = m_MetaData.depthFreeLists[depth]->next;
-            if (m_MetaData.depthFreeLists[depth] != nullptr)
-                m_MetaData.depthFreeLists[depth]->prev = nullptr;
+            GetMetaData().depthFreeLists[depth] = GetMetaData().depthFreeLists[depth]->next;
+            if (GetMetaData().depthFreeLists[depth] != nullptr)
+                GetMetaData().depthFreeLists[depth]->prev = nullptr;
             return;
         }
 
-        MetaChunkHeader* header = m_MetaData.chunkHeaderStorage + GetGlobalStateIndex(element, depth);
+        //MetaChunkHeader* header = m_MetaData->chunkHeaderStorage + GetGlobalStateIndex(chunkOffset, depth);
+        MetaChunkHeader* header = GetChunkHeader(depth, chunkOffset);
         MetaChunkHeader* prev = header->prev;
         MetaChunkHeader* next = header->next;
 
@@ -559,24 +563,53 @@ private:
             next->prev = prev;
     }
 
-    inline void MetaPutFreeChunkOnDepth(U8 depth, U64 element)
+    inline void MetaPutFreeChunkOnDepth(U8 depth, U64 chunkOffset)
     {
-        MetaChunkHeader* lastFree = m_MetaData.depthFreeLists[depth];
-        MetaChunkHeader* newFree = m_MetaData.chunkHeaderStorage + GetGlobalStateIndex(element, depth);
+        MetaChunkHeader* lastFree = GetMetaData().depthFreeLists[depth];
+        MetaChunkHeader* newFree = GetChunkHeader(depth, chunkOffset);
 
         newFree->prev = nullptr;
-        newFree->next = m_MetaData.depthFreeLists[depth];
-        newFree->elementOffset = element;
+        newFree->next = GetMetaData().depthFreeLists[depth];
+        newFree->chunkOffset = chunkOffset;
 
-        if (m_MetaData.depthFreeLists[depth] != nullptr)
+        if (GetMetaData().depthFreeLists[depth] != nullptr)
         {
             lastFree->prev = newFree;
         }
 
-        m_MetaData.depthFreeLists[depth] = newFree;
+        GetMetaData().depthFreeLists[depth] = newFree;
+    }
+};
+
+////////////////////////////////////////////////
+template<U64 LEAF_SIZE, U8 MAX_DEPTH>
+class BuddyAllocatorOffsets : public BuddyAllocatorBase<LEAF_SIZE, MAX_DEPTH, BuddyAllocatorOffsets<LEAF_SIZE, MAX_DEPTH>>
+{
+public:
+    using Base = BuddyAllocatorBase<LEAF_SIZE, MAX_DEPTH, BuddyAllocatorOffsets<LEAF_SIZE, MAX_DEPTH>>;
+
+    BuddyAllocatorOffsets()
+        : Base{}
+    {
+        MemZero(&m_MetaData, sizeof(m_MetaData));
+        MemZero(m_MetaHeaderStorage, sizeof(m_MetaHeaderStorage));
+
+        Base::Reset();
     }
 
-    MetaData m_MetaData;
+    Base::MetaData& GetMetaDataImpl()
+    {
+        return m_MetaData;
+    }
+
+    Base::MetaChunkHeader* GetChunkHeaderImpl(U8 depth, U64 chunkOffset)
+    {
+        return m_MetaHeaderStorage + Base::GetGlobalStateIndex(chunkOffset, depth);
+    }
+
+    Base::MetaData m_MetaData;
+    Base::MetaChunkHeader m_MetaHeaderStorage[Base::AllPossibleChunksCount()];
+
 };
 
 

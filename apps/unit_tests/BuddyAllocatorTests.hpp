@@ -99,7 +99,7 @@ bool ElementAllocatorBuddyTest()
 
     static constexpr DRE::U8 MAX_DEPTH = 7;
 
-    using BuddyElementSetup = DRE::BuddyElementAllocator<1024, MAX_DEPTH>;
+    using BuddyElementSetup = DRE::BuddyAllocatorOffsets<1024, MAX_DEPTH>;
 
     BuddyElementSetup allocator;
 
@@ -128,7 +128,7 @@ bool ElementAllocatorBuddyTest()
             if (size < 256) size = 256; // enforce minimum
 
             DRE::U64 element = allocator.Alloc(size, 256);
-            if (element != BuddyElementSetup::INVALID_ELEMENT)
+            if (element != BuddyElementSetup::INVALID_OFFSET)
             {
                 printf("allocated %i, no.%i, size %i\n", (int)element, allocCount, (int)size);
                 allocator.PrintIsFreeState();
@@ -164,7 +164,7 @@ bool ElementAllocatorBuddyTest()
 
     // As a final check, perform one more allocation.
     DRE::U64 finalElement = allocator.Alloc(256, 256);
-    assert(finalElement != BuddyElementSetup::INVALID_ELEMENT && "Final allocation failed after long-term random operations.");
+    assert(finalElement != BuddyElementSetup::INVALID_OFFSET && "Final allocation failed after long-term random operations.");
     allocator.Free(finalElement);
 
     if (testPassed)
