@@ -1,13 +1,13 @@
 #pragma once
 
-#include <cstdint>
+#include <foundation\Common.hpp>
 
 #include <foundation\class_features\NonCopyable.hpp>
 #include <foundation\class_features\NonMovable.hpp>
 
 #include <foundation\memory\AllocatorLinear.hpp>
 #include <foundation\Container\Vector.hpp>
-#include <foundation\memory\ElementAllocator.hpp>
+#include <foundation\memory\OffsetAllocator.hpp>
 
 #include <vk_wrapper\resources\Resource.hpp>
 #include <gfx\DeviceChild.hpp>
@@ -29,7 +29,7 @@ class GlobalGeometry
     , public DeviceChild
 {
 public:
-    static constexpr std::uint32_t MAX_GEOMETRY = 1024;
+    static constexpr DRE::U64 PERSISTENT_GEOMETRY_SIZE = 16384 * (1 << 13); // == 134,217,728  ~134MB
 
     class GeometryGPU
     {
@@ -45,20 +45,21 @@ public:
     };
 
 public:
-    GlobalGeometry(PersistentStorage* storage);
+    GlobalGeometry();
 
     GeometryGPU AllocateGeometry(std::uint32_t size);
     GeometryGPU AllocatePersistentGeometry(std::uint32_t size);
     void FreeGeometry(GeometryGPU& geometry);
 
-    std::uint32_t GetGeometryCount() const;
-    std::uint64_t GetBufferAddress() const;
+    DRE::U32 GetGeometryCount() const;
+    DRE::U64 GetBufferAddress() const;
 
 private:
     VKW::BufferResource* m_PersistentGeometryBuffer;
-    std::uint32_t        m_PersistentGeometryNextFreeOffset;
+    DRE::LinearOffsetAllocator<PERSISTENT_GEOMETRY_SIZE> m_PersistentGeometryAllocator;
 
     VKW::BufferResource* m_MainGeometryBuffer;
+    DRE::BuddyOffsetAllocator<16384, 16> m_MainGeometryAllocator;
 };
 
 }

@@ -7,7 +7,7 @@
 
 #include <foundation\memory\AllocatorLinear.hpp>
 #include <foundation\Container\Vector.hpp>
-#include <foundation\memory\ElementAllocator.hpp>
+#include <foundation\memory\OffsetAllocator.hpp>
 
 #include <gfx\buffer\PersistentStorage.hpp>
 
@@ -74,7 +74,7 @@ private:
 
 private:
     PersistentStorage::Allocation m_PersistentAllocation;
-    DRE::FreeListElementAllocator<MAX_INSTANCES> m_ElementAllocator;
+    DRE::FreeListOffsetAllocator<MAX_INSTANCES> m_ElementAllocator;
     std::uint32_t m_InstancesCount;
 
     struct InstanceUpdateEntry

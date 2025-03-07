@@ -7,7 +7,7 @@
 
 #include <vulkan\vulkan.h>
 
-#include <foundation\memory\ElementAllocator.hpp>
+#include <foundation\memory\OffsetAllocator.hpp>
 
 #include <vk_wrapper\Constant.hpp>
 #include <vk_wrapper\ImportTable.hpp>
@@ -122,7 +122,7 @@ private:
 
 private:
 
-    DRE::FreeListElementAllocator<VKW::CONSTANTS::TEXTURE_DESCRIPTOR_HEAP_SIZE> dynamicTextureHeap_;
+    DRE::FreeListOffsetAllocator<VKW::CONSTANTS::TEXTURE_DESCRIPTOR_HEAP_SIZE> dynamicTextureHeap_;
 
     VkSampler                   defaultSamplers_[(int)SAMPLER_TYPE_MAX];
 

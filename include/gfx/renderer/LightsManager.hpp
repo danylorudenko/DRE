@@ -7,7 +7,7 @@
 
 #include <foundation\memory\AllocatorLinear.hpp>
 #include <foundation\Container\Vector.hpp>
-#include <foundation\memory\ElementAllocator.hpp>
+#include <foundation\memory\OffsetAllocator.hpp>
 
 #include <gfx\buffer\PersistentStorage.hpp>
 
@@ -64,7 +64,7 @@ public:
 
 private:
     PersistentStorage::Allocation m_PersistentAllocation;
-    DRE::FreeListElementAllocator<MAX_LIGHTS> m_ElementAllocator;
+    DRE::FreeListOffsetAllocator<MAX_LIGHTS> m_ElementAllocator;
     std::uint32_t m_LightsCount;
 
     struct LightUpdateEntry

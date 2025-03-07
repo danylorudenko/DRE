@@ -286,6 +286,12 @@ GraphicsManager::GeometryGPU* GraphicsManager::FindOrLoadGPUGeometry(VKW::Contex
     std::uint32_t const indexMemoryRequirements = geometry->GetIndexSizeInBytes();
     std::uint32_t const meshMemoryRequirements = vertexMemoryRequirements + indexMemoryRequirements;
 
+
+    static DRE::U64 sum = 0;
+
+    sum += meshMemoryRequirements;
+    std::cout << "MESH_MEMORY: " << meshMemoryRequirements << ". SUM: " << sum << std::endl;
+
     auto meshMemory = GetUploadArena().AllocateTransientRegion(GetCurrentFrameID(), meshMemoryRequirements, 256);
 
     void* memorySequence = meshMemory.m_MappedRange;

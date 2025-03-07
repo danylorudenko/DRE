@@ -8,7 +8,7 @@
 #include <foundation\Common.hpp>
 
 #include <foundation\memory\AllocatorBuddy.hpp>
-#include <foundation\memory\ElementAllocator.hpp>
+#include <foundation\memory\OffsetAllocator.hpp>
 
 bool AllocatorBuddyTest()
 {
@@ -20,7 +20,6 @@ bool AllocatorBuddyTest()
     static char arena[AllocatorBuddySetup::RequiredMemorySize()];
 
     AllocatorBuddySetup allocator(arena, AllocatorBuddySetup::RequiredMemorySize());
-    allocator.Reset();
 
     // --- Long-Term Random Allocation/Free Test ---
     // We simulate a long-lived allocator by randomly allocating and freeing blocks.
@@ -99,7 +98,7 @@ bool ElementAllocatorBuddyTest()
 
     static constexpr DRE::U8 MAX_DEPTH = 7;
 
-    using BuddyElementSetup = DRE::BuddyAllocatorOffsets<1024, MAX_DEPTH>;
+    using BuddyElementSetup = DRE::BuddyOffsetAllocator<1024, MAX_DEPTH>;
 
     BuddyElementSetup allocator;
 

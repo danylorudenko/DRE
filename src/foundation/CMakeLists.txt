@@ -24,7 +24,7 @@ set(FOUNDATION_HEADER_LIST
 	"${DRE_SOURCE_DIR}/include/foundation/memory/AllocatorScopeStack.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/memory/AllocatorSystem.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/memory/ByteBuffer.hpp"
-	"${DRE_SOURCE_DIR}/include/foundation/memory/ElementAllocator.hpp"
+	"${DRE_SOURCE_DIR}/include/foundation/memory/OffsetAllocator.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/memory/InplaceObjectAllocator.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/memory/Memory.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/memory/MemoryOps.hpp"
