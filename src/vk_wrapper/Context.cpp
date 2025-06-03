@@ -105,20 +105,6 @@ void Context::CmdDispatch(std::uint32_t x, std::uint32_t y, std::uint32_t z)
     m_ImportTable->vkCmdDispatch(*m_CurrentCommandList, x, y, z);
 }
 
-void Context::CmdBindVertexBuffer(VKW::BufferResource const* buffer, std::uint32_t offset)
-{
-    VkDeviceSize const offsetDevice = static_cast<VkDeviceSize>(offset);
-    VkBuffer handle = buffer->handle_;
-    m_ImportTable->vkCmdBindVertexBuffers(*m_CurrentCommandList, 0, 1, &handle, &offsetDevice);
-}
-
-void Context::CmdBindIndexBuffer(VKW::BufferResource const* buffer, std::uint32_t offset)
-{
-    VkDeviceSize const offsetDevice = static_cast<VkDeviceSize>(offset);
-    VkBuffer handle = buffer->handle_;
-    m_ImportTable->vkCmdBindIndexBuffer(*m_CurrentCommandList, handle, offsetDevice, VK_INDEX_TYPE_UINT32);
-}
-
 void Context::CmdBindPipeline(BindPoint bindPoint, VKW::Pipeline const* pipeline)
 {
     VkPipelineBindPoint const vkBindPoint = (bindPoint == BindPoint::Graphics) ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE;
@@ -220,6 +206,16 @@ void Context::CmdPushConstants(VKW::PipelineLayout const* layout, VKW::Descripto
 {
     VkShaderStageFlags const shaderStages = VKW::HELPER::DescriptorStageToVK(stages);
     m_ImportTable->vkCmdPushConstants(*m_CurrentCommandList, layout->GetHandle(), shaderStages, offset, size, pValues);
+}
+
+void Context::CmdMemoryDependency(
+    ResourceAccess srcAccess, Stages srcStage,
+    ResourceAccess dstAccess, Stages dstStage)
+{
+    m_PendingDependency.Add(
+        srcAccess, srcStage,
+        dstAccess, dstStage
+    );
 }
 
 void Context::CmdResourceDependency(VKW::ImageResource const* resource,
@@ -447,13 +443,13 @@ void Context::CmdEndRendering()
     m_ImportTable->vkCmdEndRendering(*m_CurrentCommandList);
 }
 
-void Context::CmdBindVertexBuffer(VKW::BufferResource* vertexBuffer, std::uint32_t offset)
+void Context::CmdBindVertexBuffer(VKW::BufferResource const* vertexBuffer, std::uint32_t offset)
 {
     VkDeviceSize vkOffset = static_cast<VkDeviceSize>(offset);
     m_ImportTable->vkCmdBindVertexBuffers(*m_CurrentCommandList, 0, 1, &vertexBuffer->handle_, &vkOffset);
 }
 
-void Context::CmdBindIndexBuffer(VKW::BufferResource* indexBuffer, std::uint32_t offset, std::uint8_t indexSize)
+void Context::CmdBindIndexBuffer(VKW::BufferResource const* indexBuffer, std::uint32_t offset, std::uint8_t indexSize)
 {
     m_ImportTable->vkCmdBindIndexBuffer(*m_CurrentCommandList, indexBuffer->handle_, static_cast<VkDeviceSize>(offset), indexSize == 16 ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32);
 }

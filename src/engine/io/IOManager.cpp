@@ -239,13 +239,6 @@ Data::Texture2D IOManager::ReadTexture2D(char const* path, Data::TextureChannelV
     return texture;
 }
 
-template<typename T>
-void WriteMemorySequence(void*& memory, T& data)
-{
-    std::memcpy(memory, &data, sizeof(data));
-    memory = DRE::PtrAdd(memory, sizeof(data));
-}
-
 void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiMat, DRE::String256 const& assetFolderPath, Data::Material* material, Data::Material::TextureProperty::Slot slot, Data::TextureChannelVariations channels)
 {
     aiString aiTexturePath;

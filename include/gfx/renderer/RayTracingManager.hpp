@@ -5,8 +5,9 @@
 #include <foundation\container\HashTable.hpp>
 #include <foundation\memory\AllocatorLinear.hpp>
 
-#include <gfx\buffer\StorageBuffer.hpp>
 #include <vk_wrapper\resources\Resource.hpp>
+#include <gfx\buffer\StorageBuffer.hpp>
+#include <gfx\renderer\GlobalGeometryManager.hpp>
 
 
 namespace VKW
@@ -40,18 +41,18 @@ class RayTracingManager
 public:
     struct BLAS
     {
-        VKW::AccelerationStructureResource* m_LogicalHandle;
-        VKW::BufferResource*                m_ResidenceBuffer;
-        Data::Geometry*                     m_ReferenceGeometry;
+        VKW::AccelerationStructureResource* m_LogicalHandle     = nullptr;
+        VKW::BufferResource*                m_ResidenceBuffer   = nullptr;
+        Data::Geometry*                     m_ReferenceGeometry = nullptr;
     };
 
     struct TLAS
     {
-        VKW::AccelerationStructureResource* m_LogicalHandle;
-        VKW::BufferResource*                m_ResidenceBuffer;
+        VKW::AccelerationStructureResource* m_LogicalHandle     = nullptr;
+        VKW::BufferResource*                m_ResidenceBuffer   = nullptr;
     };
 
-    RayTracingManager(VKW::Device* device);
+    RayTracingManager(VKW::Device* device, GlobalGeometry* globalGeometry);
 
     BLAS* RegisterGeometry(Data::Geometry* geometry, VKW::Context& context);
     void UnregisterGeometry(BLAS* blas);
@@ -64,6 +65,8 @@ public:
     ~RayTracingManager();
 
 private:
+    GlobalGeometry* m_GlobalGeometryManager;
+
     DRE::HashTable<Data::Geometry*, BLAS, DRE::AllocatorLinear> m_BLASTable;
     TLAS m_MainSceneTLAS;
 

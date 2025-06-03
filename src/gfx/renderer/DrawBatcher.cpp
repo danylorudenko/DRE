@@ -33,13 +33,13 @@ void DrawBatcher::Batch(VKW::Context& context, RenderView const& view, VKW::Pipe
         atomDelegate(obj, context, *m_DescriptorManager, *m_UniformArena, view, layout);
 
         AtomDraw& atom = m_Draws.EmplaceBack();
-        atom.vertexBuffer  = obj.GetVertexBuffer();
-        atom.vertexOffset  = 0;
-        atom.vertexCount   = obj.GetVertexCount();
+        atom.vertexBuffer  = obj.GetGeometryGPU().GetBuffer();
+        atom.vertexOffset  = obj.GetGeometryGPU().GetVertexOffset();
+        atom.vertexCount   = obj.GetGeometryGPU().GetVertexCount();
 
-        atom.indexBuffer   = obj.GetIndexBuffer();
-        atom.indexOffset   = 0;
-        atom.indexCount    = obj.GetIndexCount();
+        atom.indexBuffer   = obj.GetGeometryGPU().GetBuffer();
+        atom.indexOffset   = obj.GetGeometryGPU().GetIndexOffset();
+        atom.indexCount    = obj.GetGeometryGPU().GetIndexCount();
 
         atom.instanceID    = obj.GetInstanceGPU().GetID();
 
@@ -64,13 +64,15 @@ void DrawBatcher::BatchShadow(VKW::Context& context, RenderView const& view, VKW
         atomDelegate(obj, context, *m_DescriptorManager, *m_UniformArena, view, passLayout);
 
         AtomDraw& atom = m_Draws.EmplaceBack();
-        atom.vertexBuffer  = obj.GetVertexBuffer();
-        atom.vertexOffset  = 0;
-        atom.vertexCount   = obj.GetVertexCount();
+        atom.vertexBuffer  = obj.GetGeometryGPU().GetBuffer();
+        atom.vertexOffset  = obj.GetGeometryGPU().GetVertexOffset();
+        atom.vertexCount   = obj.GetGeometryGPU().GetVertexCount();
 
-        atom.indexBuffer   = obj.GetIndexBuffer();
-        atom.indexOffset   = 0;
-        atom.indexCount    = obj.GetIndexCount();
+        atom.indexBuffer   = obj.GetGeometryGPU().GetBuffer();
+        atom.indexOffset   = obj.GetGeometryGPU().GetIndexOffset();
+        atom.indexCount    = obj.GetGeometryGPU().GetIndexCount();
+
+        atom.instanceID    = obj.GetInstanceGPU().GetID();
 
         atom.pipeline      = shadowGenericPipeline;
         atom.descriptorSet = obj.GetShadowDescriptorSet(g_GraphicsManager->GetCurrentFrameID());

@@ -265,8 +265,7 @@ void EditorPass::Initialize(RenderGraph& graph)
     m_GizmoGeometry = DRE::g_PersistentDataAllocator.Alloc<Data::Geometry>(std::uint16_t(sizeof(GizmoVertex)), std::uint16_t(0));
     m_GizmoGeometry->SetVertexData(DRE::ByteBuffer{ vertices.Data(), vertices.SizeInBytes() });
 
-    GraphicsManager::GeometryGPU* gpuGeometry = g_GraphicsManager->FindOrLoadGPUGeometry(g_GraphicsManager->GetMainContext(), m_GizmoGeometry);
-    m_GizmoVertices = gpuGeometry->vertexBuffer;
+    m_GizmoVertices = *g_GraphicsManager->GetGlobalGeometryManager().FindOrUploadGeometry(m_GizmoGeometry);
 }
 
 void EditorPass::RegisterResources(RenderGraph& graph)
@@ -314,7 +313,7 @@ void EditorPass::Render(RenderGraph& graph, VKW::Context& context)
         VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("gizmo_3D");
         VKW::DescriptorSet set = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
         context.CmdBindGraphicsDescriptorSets(pipeline->GetLayout(), graph.GetPassSetBinding(), 1, &set);
-        context.CmdBindVertexBuffer(m_GizmoVertices, 0);
+        context.CmdBindVertexBuffer(m_GizmoVertices.GetBuffer(), m_GizmoVertices.GetVertexOffset());
         context.CmdBindGraphicsPipeline(pipeline);
         context.CmdDraw(m_GizmoGeometry->GetVertexCount());
     }

@@ -6,18 +6,14 @@ namespace GFX
 {
 
 RenderableObject::RenderableObject(
-    WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount,
-    VKW::BufferResource* indexBuffer, std::uint32_t indexCount,
+    WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline, GlobalGeometry::GeometryGPU const& geometryGPU,
     VKW::AccelerationStructureResource* blasResource,
     TexturesVector&& textures, DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets)
     : m_SceneNode{ sceneNode }
     , m_Layer{ layers }
     , m_Pipeline{ pipeline }
-    , m_VertexBuffer{ vertexBuffer }
-    , m_IndexBuffer{ indexBuffer }
     , m_BLASResource{ blasResource }
-    , m_VertexCount{ vertexCount }
-    , m_IndexCount{ indexCount }
+    , m_GeometryGPU{ geometryGPU }
     , m_InstanceGPU{ instanceGPU }
     , m_DescriptorSets{ DRE_MOVE(sets) }
     , m_DescriptorSetsShadow{ DRE_MOVE(shadowSets) }
@@ -26,18 +22,14 @@ RenderableObject::RenderableObject(
 }
 
 RenderableObject::RenderableObject(
-    WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline, VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount,
-    VKW::BufferResource* indexBuffer, std::uint32_t indexCount,
+    WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline, GlobalGeometry::GeometryGPU const& geometryGPU,
     VKW::AccelerationStructureResource* blasResource,
     DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets)
     : m_SceneNode{ sceneNode }
     , m_Layer{ layers }
     , m_Pipeline{ pipeline }
-    , m_VertexBuffer{ vertexBuffer }
-    , m_IndexBuffer{ indexBuffer }
     , m_BLASResource{ blasResource }
-    , m_VertexCount{ vertexCount }
-    , m_IndexCount{ indexCount }
+    , m_GeometryGPU{ geometryGPU }
     , m_InstanceGPU{ instanceGPU }
     , m_DescriptorSets{ DRE_MOVE(sets) }
     , m_DescriptorSetsShadow{ DRE_MOVE(shadowSets) }
@@ -46,16 +38,13 @@ RenderableObject::RenderableObject(
 }
 
 RenderableObject::RenderableObject(WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline,
-    VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount,
+    GlobalGeometry::GeometryGPU const& geometryGPU,
     VKW::AccelerationStructureResource* blasResource)
     : m_SceneNode{ sceneNode }
     , m_Layer{ layers }
     , m_Pipeline{ pipeline }
-    , m_VertexBuffer{ vertexBuffer }
-    , m_IndexBuffer{ indexBuffer }
     , m_BLASResource{ blasResource }
-    , m_VertexCount{ vertexCount }
-    , m_IndexCount{ indexCount }
+    , m_GeometryGPU{ geometryGPU }
     , m_InstanceGPU{ instanceGPU }
     , m_DescriptorSets{}
     , m_DescriptorSetsShadow{}

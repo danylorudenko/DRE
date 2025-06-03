@@ -23,6 +23,7 @@
 #include <gfx\renderer\LightsManager.hpp>
 #include <gfx\renderer\RayTracingManager.hpp>
 #include <gfx\renderer\InstanceDataManager.hpp>
+#include <gfx\renderer\GlobalGeometryManager.hpp>
 
 #include <engine\data\Geometry.hpp>
 #include <engine\data\Material.hpp>
@@ -123,6 +124,7 @@ public:
     inline TextureBank&                 GetTextureBank() { return m_TextureBank; }
     inline PipelineDB&                  GetPipelineDB() { return m_PipelineDB; }
     inline PersistentStorage&           GetPersistentStorage() { return m_PersistentStorage; }
+    inline GlobalGeometry&              GetGlobalGeometryManager() { return m_GlobalGeometryManager; }
     inline LightsManager&               GetLightsManager() { return m_LightsManager; }
     inline InstanceDataManager&         GetInstanceDataManager() { return m_InstanceDataManager; }
     inline RayTracingManager&           GetRayTracignManager() { return m_RayTracingManager; }
@@ -155,13 +157,6 @@ public:
     RenderableObject*                   CreateRenderableObject(WORLD::SceneNode* sceneNode, VKW::Context& context, Data::Geometry* geometry, Data::Material* material);
     void                                FreeRenderableObject(RenderableObject* obj);
 
-    struct GeometryGPU
-    {
-        VKW::BufferResource* vertexBuffer;
-        VKW::BufferResource* indexBuffer;
-    };
-    GeometryGPU*                        FindOrLoadGPUGeometry(VKW::Context& context, Data::Geometry* geometry);
-
 private:
     void                                CreateAllPasses(EDITOR::ViewportInputManager* viewportInput);
 
@@ -180,6 +175,9 @@ private:
     std::uint64_t               m_GraphicsFrame;
     VKW::QueueExecutionPoint    m_FrameProcessingCompletePoint[VKW::CONSTANTS::FRAMES_BUFFERING];
 
+    RenderGraph                 m_RenderGraph;
+    DependencyManager           m_DependencyManager;
+
     UploadArena                 m_UploadArena;
     UniformArena                m_UniformArena;
     ReadbackArena               m_ReadbackArena;
@@ -195,13 +193,10 @@ private:
     VKW::BufferResource*        m_GlobalUniforms[VKW::CONSTANTS::FRAMES_BUFFERING];
     PersistentStorage           m_PersistentStorage;
 
+    GlobalGeometry              m_GlobalGeometryManager;
     LightsManager               m_LightsManager;
     RayTracingManager           m_RayTracingManager;
     InstanceDataManager         m_InstanceDataManager;
-
-    RenderGraph                 m_RenderGraph;
-    DependencyManager           m_DependencyManager;
-
 
     RenderView                  m_MainView;
     RenderView                  m_SunShadowView;
@@ -209,8 +204,6 @@ private:
     using RenderablePool        = DRE::InplaceObjectAllocator<RenderableObject, 2048>;
     RenderablePool              m_RenderableObjectPool;
 
-    using GeometryGPUMap        = DRE::InplaceHashTable<Data::Geometry*, GeometryGPU>;
-    GeometryGPUMap              m_GeometryGPUMap;
 
     GraphicsSettings            m_Settings;
 };

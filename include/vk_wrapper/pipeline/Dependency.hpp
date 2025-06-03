@@ -37,7 +37,8 @@ enum ResourceAccess : std::uint64_t
     RESOURCE_ACCESS_CLEAR                       = (1 << 13),
     RESOURCE_ACCESS_PRESENT                     = (1 << 14),
     RESOURCE_ACCESS_GENERIC_READ                = (1 << 15),
-    RESOURCE_ACCESS_GENERIC_WRITE               = (1 << 16)
+    RESOURCE_ACCESS_GENERIC_WRITE               = (1 << 16),
+    RESOURCE_ACCESS_GENERIC_RW                  = (1 << 17)
 };
 
 /////////////////////////////////////
@@ -54,6 +55,7 @@ enum StageBits : std::uint64_t
     STAGE_TOP               = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
     STAGE_BOTTOM            = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
     STAGE_ALL_GRAPHICS      = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT,
+    STAGE_ALL_GLOBAL        = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
     STAGE_PRESENT           = STAGE_TOP,
 };
 using Stages = std::uint64_t;
@@ -74,6 +76,10 @@ class Dependency
 public:
     Dependency();
     Dependency(DRE::AllocatorLinear* allocator);
+
+    void Add(
+        ResourceAccess srcAccess, Stages srcStage,
+        ResourceAccess dstAccess, Stages dstStage);
 
     void Add(VKW::ImageResource const* resource,
         ResourceAccess srcAccess, Stages srcStage, std::uint32_t srcQueueFamily,

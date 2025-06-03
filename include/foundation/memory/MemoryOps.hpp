@@ -15,7 +15,7 @@ inline void MemSet(void* mem, U64 size, U32 val)
     ::FillMemory(mem, size, val);
 }
 
-inline void MemCpy(void* dst, void* src, U64 size)
+inline void MemCpy(void* dst, void const* src, U64 size)
 {
     ::CopyMemory(dst, src, size);
 }

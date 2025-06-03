@@ -2,26 +2,31 @@
 
 #include <foundation\Common.hpp>
 
-#include <foundation\class_features\NonCopyable.hpp>
 #include <foundation\class_features\NonMovable.hpp>
 
+#include <foundation\memory\Memory.hpp>
 #include <foundation\memory\AllocatorLinear.hpp>
-#include <foundation\Container\Vector.hpp>
 #include <foundation\memory\OffsetAllocator.hpp>
+#include <foundation\container\Vector.hpp>
+#include <foundation\container\HashTable.hpp>
 
 #include <vk_wrapper\resources\Resource.hpp>
+
 #include <gfx\DeviceChild.hpp>
+#include <gfx\buffer\TransientArena.hpp>
 
 namespace VKW
 {
     class Context;
-    class DescriptorManager;
+}
+
+namespace Data
+{
+class Geometry;
 }
 
 namespace GFX
 {
-
-class PersistentStorage;
 
 /////////////////////////////
 class GlobalGeometry
@@ -29,37 +34,67 @@ class GlobalGeometry
     , public DeviceChild
 {
 public:
-    static constexpr DRE::U64 PERSISTENT_GEOMETRY_SIZE = 16384 * (1 << 13); // == 134,217,728  ~134MB
-
     class GeometryGPU
     {
+    public:
         friend class GlobalGeometry;
 
-    private:
-        GeometryGPU(GlobalGeometry* manager, std::uint16_t id);
+        GeometryGPU();
+
+        VKW::BufferResource*    GetBuffer() const { return m_ParentBuffer; }
+
+        DRE::U32                GetVertexOffset() const { return m_VertexOffset; }
+        DRE::U32                GetVertexCount() const { return m_VertexCount; }
+        DRE::U64                GetVertexGPUAddress() const { return m_ParentBuffer->gpuAddress_ + m_VertexOffset; }
+
+        DRE::U32                GetIndexOffset() const { return m_IndexOffset; }
+        DRE::U32                GetIndexCount() const { return m_IndexCount; }
+        DRE::U64                GetIndexGPUAddress() const { return m_ParentBuffer->gpuAddress_ + m_IndexOffset; }
+
+        // MAKE IT PRIVATE
+    public:
+        GeometryGPU(GlobalGeometry* manager, VKW::BufferResource* buffer,
+            DRE::U64 vertexOffset, DRE::U32 vertexCount,
+            DRE::U64 indexOffset, DRE::U32 indexCount);
 
         GlobalGeometry*         m_GlobalGeometryManager;
         VKW::BufferResource*    m_ParentBuffer;
-        std::uint32_t           m_Offset;
-        std::uint32_t           m_Size;
+
+        DRE::U64                m_VertexOffset;
+        DRE::U32                m_VertexCount;
+
+        DRE::U64                m_IndexOffset;
+        DRE::U32                m_IndexCount;
     };
 
 public:
-    GlobalGeometry();
+    GlobalGeometry(VKW::Device* device, UploadArena* uploadArena);
 
-    GeometryGPU AllocateGeometry(std::uint32_t size);
-    GeometryGPU AllocatePersistentGeometry(std::uint32_t size);
     void FreeGeometry(GeometryGPU& geometry);
 
-    DRE::U32 GetGeometryCount() const;
-    DRE::U64 GetBufferAddress() const;
+    DRE::U64 GetMainBufferAddress() const;
+    GeometryGPU* ScheduleGeometryUpload(Data::Geometry* source);
+    GeometryGPU* FindOrUploadGeometry(Data::Geometry* source);
+
+    void UpdateGPUGeometry(VKW::Context& context);
+
+    virtual ~GlobalGeometry();
 
 private:
-    VKW::BufferResource* m_PersistentGeometryBuffer;
-    DRE::LinearOffsetAllocator<PERSISTENT_GEOMETRY_SIZE> m_PersistentGeometryAllocator;
+    UploadArena* m_UploadArena;
 
     VKW::BufferResource* m_MainGeometryBuffer;
-    DRE::BuddyOffsetAllocator<16384, 16> m_MainGeometryAllocator;
+    DRE::BuddyOffsetAllocator<16384, 13> m_MainGeometryAllocator; // manages ~134MB  (134,217,728)
+
+    DRE::HashTable<Data::Geometry*, GeometryGPU, DRE::DefaultAllocator> m_GeometryMap;
+
+    struct UpdateEntry
+    {
+        UploadArena::Allocation m_TransientUpload;
+        GeometryGPU* m_GeometryGPU;
+        DRE::U32 m_IndexStart;
+    };
+    DRE::Vector<UpdateEntry, DRE::AllocatorLinear> m_PendingUpdates;
 };
 
 }

@@ -58,6 +58,9 @@ VkAccessFlags2KHR AccessToFlags(ResourceAccess access)
     case RESOURCE_ACCESS_GENERIC_WRITE:
         return VK_ACCESS_2_MEMORY_WRITE_BIT;
 
+    case RESOURCE_ACCESS_GENERIC_RW:
+        return VK_ACCESS_2_MEMORY_READ_BIT | VK_ACCESS_2_MEMORY_WRITE_BIT;
+
 
     default:
         DRE_ASSERT(false, "Unsupported ResourceAccess.");
@@ -210,16 +213,18 @@ Dependency::Dependency()
     : memoryBarriers_{}
     , bufferBarriers_{}
     , imageBarriers_{}
-{}
+{
+}
 
 Dependency::Dependency(DRE::AllocatorLinear* allocator)
     : memoryBarriers_{ allocator }
     , bufferBarriers_{ allocator }
     , imageBarriers_{ allocator }
-{}
+{
+}
 
 void Dependency::Add(
-    VKW::ImageResource const* resource, 
+    VKW::ImageResource const* resource,
     ResourceAccess srcAccess, Stages srcStage, std::uint32_t srcQueueFamily,
     ResourceAccess dstAccess, Stages dstStage, std::uint32_t dstQueueFamily)
 {
@@ -235,8 +240,21 @@ void Dependency::Add(
     barrier.image           = resource->handle_;
 
     VkImageAspectFlags aspectFlags = Format2Aspect(resource->format_);
-    
+
     barrier.subresourceRange = HELPER::DefaultImageSubresourceRange(aspectFlags);
+}
+
+void Dependency::Add(
+    ResourceAccess srcAccess, Stages srcStage,
+    ResourceAccess dstAccess, Stages dstStage)
+{
+    VkMemoryBarrier2KHR& barrier = memoryBarriers_.EmplaceBack();
+    barrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2_KHR;
+    barrier.pNext = nullptr;
+    barrier.srcStageMask    = StagesToFlags(srcStage);
+    barrier.srcAccessMask   = AccessToFlags(srcAccess);
+    barrier.dstStageMask    = StagesToFlags(dstStage);
+    barrier.dstAccessMask   = AccessToFlags(dstAccess);
 }
 
 void Dependency::Add(

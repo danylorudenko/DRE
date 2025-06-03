@@ -9,6 +9,7 @@
 #include <vk_wrapper\descriptor\Descriptor.hpp>
 
 #include <gfx\FrameID.hpp>
+#include <gfx\renderer\GlobalGeometryManager.hpp>
 #include <gfx\renderer\InstanceDataManager.hpp>
 
 #include <engine\data\Material.hpp>
@@ -45,30 +46,27 @@ public:
 
     RenderableObject(
         WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline,
-        VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount,
+        GlobalGeometry::GeometryGPU const& geometryGPU,
         VKW::AccelerationStructureResource* blasResource,
         TexturesVector&& textures, DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets);
 
     RenderableObject(
         WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline,
-        VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount,
+        GlobalGeometry::GeometryGPU const& goemtryGPU,
         VKW::AccelerationStructureResource* blasResource,
         DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets);
 
     RenderableObject(
         WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline,
-        VKW::BufferResource* vertexBuffer, std::uint32_t vertexCount, VKW::BufferResource* indexBuffer, std::uint32_t indexCount,
+        GlobalGeometry::GeometryGPU const& geometryGPU,
         VKW::AccelerationStructureResource* blasResource);
 
     inline WORLD::SceneNode*                    GetSceneNode() const { return m_SceneNode; }
     inline LayerBits                            GetLayer() const { return m_Layer; }
     inline VKW::Pipeline*                       GetPipeline() const{ return m_Pipeline; }
-    inline VKW::BufferResource*                 GetVertexBuffer() const{ return m_VertexBuffer; }
-    inline VKW::BufferResource*                 GetIndexBuffer() const { return m_IndexBuffer; }
     inline VKW::AccelerationStructureResource*  GetBLASResource() const { return m_BLASResource; }
-    inline std::uint32_t                        GetVertexCount() const { return m_VertexCount; }
-    inline std::uint32_t                        GetIndexCount() const { return m_IndexCount; }
     inline InstanceDataManager::InstanceGPU&    GetInstanceGPU() { return m_InstanceGPU; }
+    inline GlobalGeometry::GeometryGPU&         GetGeometryGPU() { return m_GeometryGPU; }
     inline VKW::DescriptorSet const&            GetDescriptorSet(FrameID frameID) const { return m_DescriptorSets[frameID]; }
     inline VKW::DescriptorSet const&            GetShadowDescriptorSet(FrameID frameID) const { return m_DescriptorSetsShadow[frameID]; }
     inline Texture*                             GetDiffuseTexture() const { return m_Textures[0]; }
@@ -80,13 +78,9 @@ private:
     WORLD::SceneNode*                   m_SceneNode;
     LayerBits                           m_Layer;
     VKW::Pipeline*                      m_Pipeline;
-    VKW::BufferResource*                m_VertexBuffer;
-    VKW::BufferResource*                m_IndexBuffer;
     VKW::AccelerationStructureResource* m_BLASResource;
 
-    std::uint32_t                       m_VertexCount;
-    std::uint32_t                       m_IndexCount;
-
+    GlobalGeometry::GeometryGPU         m_GeometryGPU;
     InstanceDataManager::InstanceGPU    m_InstanceGPU;
 
     TexturesVector                      m_Textures;

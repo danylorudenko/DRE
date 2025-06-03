@@ -1,80 +1,150 @@
-#include <gfx/renderer/GlobalGeometryManager.hpp>
+#include <gfx\renderer\GlobalGeometryManager.hpp>
 
-#include <vk_wrapper/descriptor/DescriptorManager.hpp>
-#include <gfx/GraphicsManager.hpp>
+#include <foundation\memory\MemoryOps.hpp>
 
-/*
-#include <common/geometry/geometry.h>
+#include <vk_wrapper\descriptor\DescriptorManager.hpp>
+#include <gfx\GraphicsManager.hpp>
+
+#include <engine\data\Geometry.hpp>
 
 namespace GFX
 {
 
-GlobalGeometry::GlobalGeometry(PersistentStorage* storage)
-    : m_PersistentAllocation{ storage->AllocateRegion(MAX_GEOMETRY * sizeof(S_GEOMETRY)) }
-    , m_GeometryCount{ 0 }
+GlobalGeometry::GeometryGPU::GeometryGPU(GlobalGeometry* manager, VKW::BufferResource* buffer,
+    DRE::U64 vertexOffset, DRE::U32 vertexCount,
+    DRE::U64 indexOffset, DRE::U32 indexCount)
+    : m_GlobalGeometryManager{ manager }
+    , m_ParentBuffer{ buffer }
+    , m_VertexOffset{ vertexOffset }
+    , m_VertexCount{ vertexCount }
+    , m_IndexOffset{ indexOffset }
+    , m_IndexCount{ indexCount }
 {
+
 }
 
-GlobalGeometry::GeometryGPU GlobalGeometry::AllocateGeometry()
+GlobalGeometry::GeometryGPU::GeometryGPU()
+    : m_GlobalGeometryManager{ nullptr }
+    , m_ParentBuffer{ nullptr }
+    , m_VertexOffset{ 0 }
+    , m_VertexCount{ 0 }
+    , m_IndexOffset{ 0 }
+    , m_IndexCount{ 0 }
 {
-    std::uint16_t const id = m_ElementAllocator.Allocate();
-    ++m_GeometryCount;
-    return GeometryGPU{ this, id };
+
+}
+
+GlobalGeometry::GlobalGeometry(VKW::Device* device, UploadArena* uploadArena)
+    : DeviceChild{ device }
+    , m_UploadArena{ uploadArena }
+    , m_GeometryMap{ &DRE::g_MainAllocator }
+    , m_MainGeometryBuffer{ nullptr }
+    , m_PendingUpdates{ &DRE::g_FrameScratchAllocator }
+{
+    VKW::ResourcesController* controller = m_ParentDevice->GetResourcesController();
+    m_MainGeometryBuffer = controller->CreateBuffer(decltype(m_MainGeometryAllocator)::RootChunkSize(), VKW::BufferUsage::VERTEX_INDEX, "main_geometry");
+}
+
+GlobalGeometry::~GlobalGeometry()
+{
+    VKW::ResourcesController* controller = m_ParentDevice->GetResourcesController();
+    controller->FreeBuffer(m_MainGeometryBuffer);
 }
 
 void GlobalGeometry::FreeGeometry(GeometryGPU& geometry)
 {
-    --m_GeometryCount;
-    m_ElementAllocator.Free(geometry.m_id);
+    m_MainGeometryAllocator.Free(geometry.m_VertexOffset);
+    m_MainGeometryAllocator.Free(geometry.m_IndexOffset);
 }
 
-std::uint64_t GlobalGeometry::GetBufferAddress() const
+std::uint64_t GlobalGeometry::GetMainBufferAddress() const
 {
-    return m_PersistentAllocation.GetGPUAddress();
+    return m_MainGeometryBuffer->gpuAddress_;
 }
 
-std::uint32_t GlobalGeometry::GetGeometryCount() const
+GlobalGeometry::GeometryGPU* GlobalGeometry::FindOrUploadGeometry(Data::Geometry* source)
 {
-    return m_GeometryCount;
+    auto result = m_GeometryMap.Find(source);
+    if (result.value == nullptr)
+    {
+        return ScheduleGeometryUpload(source);
+    }
+    else
+    {
+        return result.value;
+    }
 }
 
-void GlobalGeometry::ScheduleGeometryUpdate(std::uint16_t id)
+GlobalGeometry::GeometryGPU* GlobalGeometry::ScheduleGeometryUpload(Data::Geometry* source)
 {
-    S_GEOMETRY geometryData;
-    // TODO: Fill 'geometryData' with the appropriate geometry update information.
-    
-    m_GeometryUpdateQueue.EmplaceBack(id, geometryData);
+    DRE::U32 const requiredMemorySize = source->GetVertexSizeInBytes() + source->GetIndexSizeInBytes() + 8;
+    auto geometryMemory = g_GraphicsManager->GetUploadArena().AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), requiredMemorySize, 256);
+
+    void* vertexStart = DRE::PtrAlign(geometryMemory.m_MappedRange, 4);
+    DRE::MemCpy(vertexStart, source->GetVertexData(), source->GetVertexSizeInBytes());
+
+    void* indexStart = DRE::PtrAlign(DRE::PtrAdd(vertexStart, source->GetVertexSizeInBytes()), 4);
+    DRE::U32 indexStartOffset = 0; // offset to copy indicies from
+    if (source->GetIndexSizeInBytes() > 0)
+    {
+        DRE::MemCpy(indexStart, source->GetIndexData(), source->GetIndexSizeInBytes());
+        indexStartOffset = DRE::U32(DRE::PtrDifference(indexStart, vertexStart));
+    }
+
+    DRE::U64 vertexOffset = m_MainGeometryAllocator.Alloc(source->GetVertexSizeInBytes(), 256);
+    DRE::U64 indexOffset = m_MainGeometryAllocator.Alloc(source->GetIndexSizeInBytes(), 256);
+
+    GeometryGPU geometryGPU{
+        this, m_MainGeometryBuffer,
+        DRE::U32(vertexOffset), source->GetVertexCount(),
+        DRE::U32(indexOffset), source->GetIndexCount() };
+
+    GeometryGPU& result = m_GeometryMap.Emplace(source, geometryGPU);
+
+    m_PendingUpdates.EmplaceBack(geometryMemory, &result, indexStartOffset);
+    return &result;
 }
 
 void GlobalGeometry::UpdateGPUGeometry(VKW::Context& context)
 {
-    std::uint64_t baseAddress = m_PersistentAllocation.GetGPUAddress();
-
-    for (std::uint32_t i = 0, count = m_GeometryUpdateQueue.Size(); i < count; i++)
+    if (!m_PendingUpdates.Empty())
     {
-        GeometryUpdateEntry& entry = m_GeometryUpdateQueue[i];
-        m_PersistentAllocation.Update(context, sizeof(S_GEOMETRY) * entry.id, &entry.payload, sizeof(S_GEOMETRY));
+        context.CmdMemoryDependency(
+            VKW::RESOURCE_ACCESS_GENERIC_WRITE, VKW::STAGE_ALL_GLOBAL,
+            VKW::RESOURCE_ACCESS_GENERIC_RW, VKW::STAGE_ALL_GLOBAL);
     }
 
-    m_GeometryUpdateQueue.Clear();
-}
+    for (std::uint32_t i = 0, count = m_PendingUpdates.Size(); i < count; i++)
+    {
+        UpdateEntry& entry = m_PendingUpdates[i];
+        entry.m_TransientUpload.FlushCaches();
 
-///////////////////////////////////////////
-///////////////////////////////////////////
-///////////////////////////////////////////
+        VKW::BufferResource* const dstBuffer = m_MainGeometryBuffer;
+        VKW::BufferResource* const srcBuffer = entry.m_TransientUpload.m_Buffer;
 
-GlobalGeometry::GeometryGPU::GeometryGPU(GlobalGeometry* manager, std::uint16_t id)
-    : m_GlobalGeometryManager{ manager }
-    , m_id{ id }
-{
-}
+        DRE::U32 const dstVertexOffset = entry.m_GeometryGPU->GetVertexOffset();
+        DRE::U32 const dstVertexSize = entry.m_GeometryGPU->GetVertexCount() * sizeof(Data::DREVertex);
+        DRE::U32 const srcVertexOffset = entry.m_TransientUpload.m_OffsetInBuffer;
+        context.CmdCopyBufferToBuffer(dstBuffer, dstVertexOffset, srcBuffer, srcVertexOffset, dstVertexSize);
 
-void GlobalGeometry::GeometryGPU::ScheduleUpdate()
-{
-    // Forward the update scheduling to the manager.
-    // Example:
-    // m_GlobalGeometryManager->ScheduleGeometryUpdate(m_id, );
+        if (entry.m_IndexStart != 0)
+        {
+            DRE::U32 const dstIndexOffset = entry.m_GeometryGPU->GetIndexOffset();
+            DRE::U32 const dstIndexSize = entry.m_GeometryGPU->GetIndexCount() * sizeof(DRE::U32);
+            DRE::U32 const srcIndexOffset = entry.m_TransientUpload.m_OffsetInBuffer + entry.m_IndexStart;
+            context.CmdCopyBufferToBuffer(dstBuffer, dstIndexOffset, srcBuffer, srcIndexOffset, dstIndexSize);
+        }
+    }
+
+    if (!m_PendingUpdates.Empty())
+    {
+        context.CmdMemoryDependency(
+            VKW::RESOURCE_ACCESS_GENERIC_WRITE, VKW::STAGE_TRANSFER,
+            VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_ALL_GLOBAL);
+    }
+
+    m_PendingUpdates.Clear();
 }
 
 } // namespace GFX
-*/
+

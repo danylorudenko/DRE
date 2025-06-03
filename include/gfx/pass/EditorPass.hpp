@@ -1,7 +1,7 @@
 #pragma once
 
 #include <gfx\pass\BasePass.hpp>
-#include <gfx\buffer\BufferBase.hpp>
+#include <gfx\renderer\GlobalGeometryManager.hpp>
 #include <engine\data\Geometry.hpp>
 
 namespace EDITOR
@@ -27,7 +27,7 @@ public:
 private:
     EDITOR::ViewportInputManager* m_ViewportInput;
 
-    VKW::BufferResource* m_GizmoVertices = nullptr;
+    GlobalGeometry::GeometryGPU m_GizmoVertices;
     Data::Geometry* m_GizmoGeometry = nullptr;
 };
 

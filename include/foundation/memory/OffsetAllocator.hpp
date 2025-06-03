@@ -134,10 +134,6 @@ public:
         return *this;
     }
 
-    BuddyOffsetAllocator::BuddyOffsetAllocator()
-        : Base{}
-
-
     Base::MetaChunkHeader* GetChunkHeaderImpl(U64 chunkOffset)
     {
         return m_MetaHeaderStorage + (chunkOffset / Base::LeafSize());

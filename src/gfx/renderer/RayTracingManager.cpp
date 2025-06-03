@@ -13,9 +13,11 @@ namespace GFX
 std::uint32_t constexpr MAX_INSTACES_IN_TLAS        = 1024 * 8;
 std::uint32_t constexpr BLAS_SCRATCH_BUFFER_SIZE    = 1024 * 1024 * 64;
 
-RayTracingManager::RayTracingManager(VKW::Device* device)
+RayTracingManager::RayTracingManager(VKW::Device* device, GlobalGeometry* globalGeometry)
     : DeviceChild{ device }
+    , m_GlobalGeometryManager{ globalGeometry }
     , m_BLASTable{ &DRE::g_PersistentDataAllocator }
+    , m_MainSceneTLAS{}
     , m_ScratchBuffer{ nullptr }
 {
     m_InstanceInputBuffer = device->GetResourcesController()->CreateBuffer(
@@ -38,7 +40,8 @@ RayTracingManager::BLAS* RayTracingManager::RegisterGeometry(Data::Geometry* geo
 {
     VKW::ImportTable* table = m_ParentDevice->GetFuncTable();
 
-    GraphicsManager::GeometryGPU* gpuGeometry = g_GraphicsManager->FindOrLoadGPUGeometry(context, geometry);
+    GlobalGeometry::GeometryGPU* gpuGeometry = m_GlobalGeometryManager->FindOrUploadGeometry(geometry);
+    m_GlobalGeometryManager->UpdateGPUGeometry(context);
 
     VkAccelerationStructureGeometryKHR geometryDesc;
     geometryDesc.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
@@ -48,14 +51,14 @@ RayTracingManager::BLAS* RayTracingManager::RegisterGeometry(Data::Geometry* geo
     geometryDesc.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
     geometryDesc.geometry.triangles.pNext = nullptr;
     geometryDesc.geometry.triangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
-    geometryDesc.geometry.triangles.vertexData.deviceAddress = gpuGeometry->vertexBuffer->gpuAddress_;
+    geometryDesc.geometry.triangles.vertexData.deviceAddress = gpuGeometry->GetVertexGPUAddress(); 
     geometryDesc.geometry.triangles.vertexStride = sizeof(Data::DREVertex);
-    geometryDesc.geometry.triangles.maxVertex = geometry->GetVertexCount() - 1; // yep, -1 is according to the spec
+    geometryDesc.geometry.triangles.maxVertex = gpuGeometry->GetVertexCount() - 1; // yep, -1 is according to the spec
     geometryDesc.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
-    geometryDesc.geometry.triangles.indexData.deviceAddress = gpuGeometry->indexBuffer->gpuAddress_;
+    geometryDesc.geometry.triangles.indexData.deviceAddress = gpuGeometry->GetIndexGPUAddress();
     geometryDesc.geometry.triangles.transformData.deviceAddress = 0;
 
-    std::uint32_t primCount = geometry->GetIndexCount() / 3;
+    std::uint32_t primCount = gpuGeometry->GetIndexCount() / 3;
 
 
     VkAccelerationStructureBuildGeometryInfoKHR buildInfo;
@@ -90,8 +93,8 @@ RayTracingManager::BLAS* RayTracingManager::RegisterGeometry(Data::Geometry* geo
     std::uint64_t scratchAddress = reinterpret_cast<std::uint64_t>(m_ScratchLinearAllocator.Alloc(buildSizeInfo.buildScratchSize, m_ScratchAlignment));
     context.CmdBuildBLAS(
         vkBLAS, scratchAddress,
-        gpuGeometry->vertexBuffer->gpuAddress_, sizeof(Data::DREVertex), geometry->GetVertexCount(),
-        gpuGeometry->indexBuffer->gpuAddress_, geometry->GetIndexCount());
+        gpuGeometry->GetVertexGPUAddress(), sizeof(Data::DREVertex), gpuGeometry->GetVertexCount(),
+        gpuGeometry->GetIndexGPUAddress(), gpuGeometry->GetIndexCount());
 
     context.FlushAll();
     context.WaitIdle();

@@ -85,9 +85,6 @@ public:
     void CmdDrawIndexed(std::uint32_t indexCount, std::uint32_t instanceCount = 1, std::uint32_t firstIndex = 0, std::int32_t vertexOffset = 0, std::uint32_t firstInstance = 0);
     void CmdDispatch(std::uint32_t x, std::uint32_t y, std::uint32_t z);
 
-    void CmdBindVertexBuffer(VKW::BufferResource const* buffer, std::uint32_t offset = 0);
-    void CmdBindIndexBuffer(VKW::BufferResource const* buffer, std::uint32_t offset = 0);
-
     void CmdBindPipeline(BindPoint bindPoint, VKW::Pipeline const* pipeline);
     void CmdBindGraphicsPipeline(VKW::Pipeline const* pipeline);
     void CmdBindComputePipeline(VKW::Pipeline const* pipeline);
@@ -121,6 +118,11 @@ public:
     // very heavy
     //void CmdPipelineBarrier(VKW::Dependency& dependency);
 
+    void CmdMemoryDependency(
+        ResourceAccess srcAccess, Stages srcStage,
+        ResourceAccess dstAccess, Stages dstStage
+    );
+
     void CmdResourceDependency(VKW::ImageResource const* resource,
         ResourceAccess srcAccess, Stages srcStage,
         ResourceAccess dstAccess, Stages dstStage);
@@ -141,8 +143,8 @@ public:
     void CmdClearAttachments(AttachmentMask attachments, float depth, std::uint32_t stencil);
     void CmdEndRendering();
 
-    void CmdBindVertexBuffer(VKW::BufferResource* vertexBuffer, std::uint32_t offset);
-    void CmdBindIndexBuffer(VKW::BufferResource* indexBuffer, std::uint32_t offset, std::uint8_t indexSize = 32);
+    void CmdBindVertexBuffer(VKW::BufferResource const* vertexBuffer, std::uint32_t offset = 0);
+    void CmdBindIndexBuffer(VKW::BufferResource const* indexBuffer, std::uint32_t offset = 0, std::uint8_t indexSize = 32);
 
     void CmdClearColorImage(VKW::ImageResource const* image, float color[4]);
     void CmdClearDepthStencilImage(VKW::ImageResource const* image, float depth, std::uint32_t stencil);

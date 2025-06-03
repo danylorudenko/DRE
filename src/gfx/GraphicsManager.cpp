@@ -43,6 +43,8 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::I
     , m_Device{ hInstance, window->NativeHandle(), debug }
     , m_MainContext{ m_Device.GetFuncTable(), m_Device.GetMainQueue(), &DRE::g_FrameScratchAllocator }
     , m_GraphicsFrame{ 0 }
+    , m_RenderGraph{ this }
+    , m_DependencyManager{}
     , m_UploadArena{ &m_Device, C_STAGING_ARENA_SIZE }
     , m_UniformArena{ &m_Device, C_UNIFORM_ARENA_SIZE }
     , m_ReadbackArena{ &m_Device, C_READBACK_ARENA_SIZE }
@@ -52,11 +54,10 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::I
     , m_ImGuiSyncQueue{ &DRE::g_PersistentDataAllocator }
 #endif
     , m_PersistentStorage{ &m_Device, &m_UploadArena, &m_Device, C_PERSISTENT_STORAGE_SIZE }
+    , m_GlobalGeometryManager{ &m_Device, &m_UploadArena }
     , m_LightsManager{ &m_PersistentStorage }
-    , m_RayTracingManager{ &m_Device }
+    , m_RayTracingManager{ &m_Device, &m_GlobalGeometryManager }
     , m_InstanceDataManager{ &m_PersistentStorage }
-    , m_RenderGraph{ this }
-    , m_DependencyManager{}
     , m_MainView{ &DRE::g_MainAllocator }
     , m_SunShadowView{ &DRE::g_MainAllocator }
     , m_Settings{}
@@ -95,7 +96,7 @@ void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInpu
     m_RenderGraph.AddPass<WaterPass>();
     m_RenderGraph.AddPass<AntiAliasingPass>();
     m_RenderGraph.AddPass<ColorEncodingPass>();
-    m_RenderGraph.AddPass<EditorPass>(viewportInput);
+    //m_RenderGraph.AddPass<EditorPass>(viewportInput);
     //m_RenderGraph.AddPass<DebugPass>();
     m_RenderGraph.AddPass<ImGuiRenderPass>();
     m_RenderGraph.ParseGraph();
@@ -223,6 +224,9 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
 
     context.ResetDependenciesVectors(&DRE::g_FrameScratchAllocator);
     PrepareGlobalData(context,  *WORLD::g_MainScene, deltaTimeUS, globalTimeS);
+
+    // maybe I should do these earlier?
+    m_GlobalGeometryManager.UpdateGPUGeometry(context);
     m_InstanceDataManager.UpdateGPUInstances(context);
     m_LightsManager.UpdateGPULights(context);
 
@@ -268,62 +272,6 @@ VKW::QueueExecutionPoint GraphicsManager::TransferToSwapchainAndPresent(Texture&
     GetMainContext().Present(presentationContext);
 
     return transferCompletePoint;
-}
-
-void WriteMemorySequence(void*& memory, void const* data, std::uint32_t size)
-{
-    std::memcpy(memory, data, size);
-    memory = DRE::PtrAdd(memory, size);
-}
-
-GraphicsManager::GeometryGPU* GraphicsManager::FindOrLoadGPUGeometry(VKW::Context& context, Data::Geometry* geometry)
-{
-    GeometryGPU* geometryGPU = m_GeometryGPUMap.Find(geometry).value;
-    if (geometryGPU != nullptr)
-        return geometryGPU;
-
-    std::uint32_t const vertexMemoryRequirements = geometry->GetVertexSizeInBytes();
-    std::uint32_t const indexMemoryRequirements = geometry->GetIndexSizeInBytes();
-    std::uint32_t const meshMemoryRequirements = vertexMemoryRequirements + indexMemoryRequirements;
-
-
-    static DRE::U64 sum = 0;
-
-    sum += meshMemoryRequirements;
-    std::cout << "MESH_MEMORY: " << meshMemoryRequirements << ". SUM: " << sum << std::endl;
-
-    auto meshMemory = GetUploadArena().AllocateTransientRegion(GetCurrentFrameID(), meshMemoryRequirements, 256);
-
-    void* memorySequence = meshMemory.m_MappedRange;
-    WriteMemorySequence(memorySequence, geometry->GetVertexData(), vertexMemoryRequirements);
-
-    if (indexMemoryRequirements > 0)
-    {
-        void* indexStart = memorySequence;
-        WriteMemorySequence(memorySequence, geometry->GetIndexData(), indexMemoryRequirements);
-    }
-
-    meshMemory.FlushCaches();
-
-    VKW::BufferResource* vertexBuffer = GetMainDevice()->GetResourcesController()->CreateBuffer(vertexMemoryRequirements, VKW::BufferUsage::VERTEX_INDEX, "data_vtx");
-
-    context.CmdResourceDependency(meshMemory.m_Buffer, meshMemory.m_OffsetInBuffer, meshMemory.m_Size, VKW::RESOURCE_ACCESS_HOST_WRITE, VKW::STAGE_HOST, VKW::RESOURCE_ACCESS_TRANSFER_SRC, VKW::STAGE_TRANSFER);
-
-    // schedule copy
-    context.CmdResourceDependency(vertexBuffer, VKW::RESOURCE_ACCESS_NONE, VKW::STAGE_TOP, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
-    context.CmdCopyBufferToBuffer(vertexBuffer, 0, meshMemory.m_Buffer, meshMemory.m_OffsetInBuffer, vertexMemoryRequirements);
-    context.CmdResourceDependency(vertexBuffer, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER, VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_INPUT_ASSEMBLER);
-
-    VKW::BufferResource* indexBuffer = nullptr;
-    if (indexMemoryRequirements > 0)
-    {
-        indexBuffer = GetMainDevice()->GetResourcesController()->CreateBuffer(indexMemoryRequirements, VKW::BufferUsage::VERTEX_INDEX, "data_idx");
-        context.CmdResourceDependency(indexBuffer, VKW::RESOURCE_ACCESS_NONE, VKW::STAGE_TOP, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
-        context.CmdCopyBufferToBuffer(indexBuffer, 0, meshMemory.m_Buffer, meshMemory.m_OffsetInBuffer + vertexMemoryRequirements, indexMemoryRequirements);
-        context.CmdResourceDependency(indexBuffer, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER, VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_INPUT_ASSEMBLER);
-    }
-
-    return &m_GeometryGPUMap.Emplace(geometry, vertexBuffer, indexBuffer);
 }
 
 void EmplaceRenderableObjectTexture(Data::Material* material, Data::Material::TextureProperty::Slot slot, TextureBank& textureBank, char const* defaultName, RenderableObject::TexturesVector& result)
@@ -375,7 +323,7 @@ RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* scen
     EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::ROUGHNESS, m_TextureBank, "one_r", textures);
 
     // load geometry
-    GeometryGPU* geometryGPU = FindOrLoadGPUGeometry(context, geometry);
+    GlobalGeometry::GeometryGPU* geometryGPU = m_GlobalGeometryManager.FindOrUploadGeometry(geometry);
     if (m_RayTracingManager.GetGeometryBLAS(geometry) == nullptr)
     {
         m_RayTracingManager.RegisterGeometry(geometry, context);
@@ -416,8 +364,7 @@ RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* scen
         sceneNode->GetGlobalID()
     );
 
-    return m_RenderableObjectPool.Alloc(sceneNode, instanceGPU, layers, pipeline, geometryGPU->vertexBuffer, geometry->GetVertexCount(),
-        geometryGPU->indexBuffer, geometry->GetIndexCount(), m_RayTracingManager.GetGeometryBLAS(geometry)->m_LogicalHandle,
+    return m_RenderableObjectPool.Alloc(sceneNode, instanceGPU, layers, pipeline, *geometryGPU, m_RayTracingManager.GetGeometryBLAS(geometry)->m_LogicalHandle,
         DRE_MOVE(textures), DRE_MOVE(descriptors), DRE_MOVE(shadowDescriptors));
 }
 
