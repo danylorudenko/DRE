@@ -6,6 +6,7 @@ namespace GFX
 enum class PassID
 {
     BulletForward,
+    GBuffer,
     ForwardOpaque,
     Shadow,
     Caustic,

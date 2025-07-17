@@ -67,6 +67,7 @@ public:
     inline VKW::AccelerationStructureResource*  GetBLASResource() const { return m_BLASResource; }
     inline InstanceDataManager::InstanceGPU&    GetInstanceGPU() { return m_InstanceGPU; }
     inline GlobalGeometry::GeometryGPU&         GetGeometryGPU() { return m_GeometryGPU; }
+    inline bool                                 HasDescriptorSet() const { return !m_DescriptorSets.Empty(); }
     inline VKW::DescriptorSet const&            GetDescriptorSet(FrameID frameID) const { return m_DescriptorSets[frameID]; }
     inline VKW::DescriptorSet const&            GetShadowDescriptorSet(FrameID frameID) const { return m_DescriptorSetsShadow[frameID]; }
     inline Texture*                             GetDiffuseTexture() const { return m_Textures[0]; }

@@ -61,6 +61,7 @@ void ForwardOpaquePass::Initialize(RenderGraph& graph)
 {
 }
 
+/*
 void ForwardObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view, VKW::PipelineLayout const* passLayout)
 {
     std::uint32_t constexpr uniformSize = sizeof(InstanceUniform);
@@ -86,6 +87,7 @@ void ForwardObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::De
 
     uniformProxy.WriteMember140(obj.GetSceneNode()->GetGlobalID());
 }
+*/
 
 void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
 {
@@ -113,7 +115,7 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
 
     VKW::PipelineLayout* passLayout = graph.GetPassPipelineLayout(GetID());
     DrawBatcher batcher{ &DRE::g_FrameScratchAllocator, g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), &g_GraphicsManager->GetUniformArena() };
-    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), passLayout, RenderableObject::LAYER_OPAQUE_BIT, GFX::ForwardObjectDelegate);
+    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), passLayout, RenderableObject::LAYER_OPAQUE_BIT, nullptr/*GFX::ForwardObjectDelegate*/);
 
 
     context.CmdBeginRendering(attachmentsCount, attachments, depthAttachment, nullptr);
@@ -159,7 +161,7 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
             prevPipeline = atom.pipeline;
         }
 
-        context.CmdBindGraphicsDescriptorSets(atom.pipeline->GetLayout(), userSetBinding, 1, &atom.descriptorSet);
+        //context.CmdBindGraphicsDescriptorSets(atom.pipeline->GetLayout(), userSetBinding, 1, &atom.descriptorSet);
         context.CmdBindVertexBuffer(atom.vertexBuffer, atom.vertexOffset);
         context.CmdBindIndexBuffer(atom.indexBuffer, atom.indexOffset);
         context.CmdPushConstants(passLayout, VKW::DESCRIPTOR_STAGE_ALL, 0, sizeof(std::uint32_t), &atom.instanceID);

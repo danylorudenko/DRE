@@ -30,7 +30,8 @@ void DrawBatcher::Batch(VKW::Context& context, RenderView const& view, VKW::Pipe
         if ((obj.GetLayer() & layers) == 0)
             continue;
 
-        atomDelegate(obj, context, *m_DescriptorManager, *m_UniformArena, view, layout);
+        if (atomDelegate != nullptr)
+            atomDelegate(obj, context, *m_DescriptorManager, *m_UniformArena, view, layout);
 
         AtomDraw& atom = m_Draws.EmplaceBack();
         atom.vertexBuffer  = obj.GetGeometryGPU().GetBuffer();
@@ -44,7 +45,8 @@ void DrawBatcher::Batch(VKW::Context& context, RenderView const& view, VKW::Pipe
         atom.instanceID    = obj.GetInstanceGPU().GetID();
 
         atom.pipeline      = obj.GetPipeline();
-        atom.descriptorSet = obj.GetDescriptorSet(g_GraphicsManager->GetCurrentFrameID());
+        if (obj.HasDescriptorSet())
+            atom.descriptorSet = obj.GetDescriptorSet(g_GraphicsManager->GetCurrentFrameID());
 
     }
 }

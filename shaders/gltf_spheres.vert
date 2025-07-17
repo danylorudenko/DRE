@@ -29,7 +29,7 @@ void main()
 	ndc_pos.xy += (GetJitter() * ndc_pos.w); // perspective-correct jitter
 	
     gl_Position = ndc_pos;
-	out_prev_wpos = instanceUniform.prev_model_mat * vec4(in_pos, 1.0);
+	out_prev_wpos = GetInvWorldTransform(InstanceRef) * vec4(in_pos, 1.0);
 	
     vec3 T = normalize(vec3(model_mat * vec4(in_tan, 0.0)));
     vec3 B = normalize(vec3(model_mat * vec4(in_btan, 0.0)));

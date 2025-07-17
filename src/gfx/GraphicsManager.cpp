@@ -9,6 +9,7 @@
 #include <vk_wrapper\pipeline\ShaderModule.hpp>
 
 #include <gfx\pass\ForwardOpaquePass.hpp>
+#include <gfx\pass\GBufferPass.hpp>
 #include <gfx\pass\WaterPass.hpp>
 #include <gfx\pass\FFTWaterPass.hpp>
 #include <gfx\pass\AntiAliasingPass.hpp>
@@ -87,6 +88,7 @@ void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInpu
 {
     m_RenderGraph.AddPass<ShadowPass>();
     m_RenderGraph.AddPass<CausticPass>();
+    //m_RenderGraph.AddPass<GBufferPass>();
     m_RenderGraph.AddPass<ForwardOpaquePass>();
     m_RenderGraph.AddPass<FFTButterflyGenPass>();
     m_RenderGraph.AddPass<FFTWaterH0GenPass>();
@@ -340,11 +342,11 @@ RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* scen
     std::uint8_t const layoutMemberId = std::uint8_t(descriptorManager->GetGlobalSetLayoutsCount() + mainRenderingPassSetCount); // globals + pass set
     std::uint8_t const shadowLayoutMemberId = std::uint8_t(descriptorManager->GetGlobalSetLayoutsCount() + shadowPassSetCount); // globals + pass set
 
-    DRE_ASSERT(layout->GetMemberCount() == layoutMemberId + 1, "All renderable items should currently contain everything in one set.");
-    for (std::uint8_t i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
-    {
-        descriptors.EmplaceBack(descriptorManager->AllocateStandaloneSet(*layout->GetMember(layoutMemberId)));
-    }
+    //DRE_ASSERT(layout->GetMemberCount() <= layoutMemberId + 1, "All renderable items should currently contain everything in one set.");
+    //for (std::uint8_t i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
+    //{
+    //    descriptors.EmplaceBack(descriptorManager->AllocateStandaloneSet(*layout->GetMember(layoutMemberId)));
+    //}
 
     for (std::uint8_t i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
     {

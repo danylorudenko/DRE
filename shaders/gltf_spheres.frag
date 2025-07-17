@@ -18,9 +18,12 @@ layout(location = 3) in mat3 in_TBN;
 
 void main()
 {
-    vec3 diffuse    = SampleGlobalTextureAnisotropic(DiffuseTextureID, in_uv).rgb;
-    vec3 normal     = SampleGlobalTextureAnisotropic(NormalTextureID, in_uv).rgb;
-    vec2 metalness_roughness = SampleGlobalTextureAnisotropic(MetalnessTextureID, in_uv).bg;
+    S_INSTANCE_GPURef InstanceRef = GetInstance();
+
+    vec3 diffuse    = SampleGlobalTextureAnisotropic(GetDiffuseTextureID(InstanceRef), in_uv).rgb;
+    vec3 normal     = SampleGlobalTextureAnisotropic(GetNormalTextureID(InstanceRef), in_uv).rgb;
+    vec2 metalness_roughness = SampleGlobalTextureAnisotropic(GetMetalnessTextureID(InstanceRef), in_uv).bg;
+
     float metalness = metalness_roughness.x;
     float roughness = metalness_roughness.y;
 

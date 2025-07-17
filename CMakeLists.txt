@@ -7,7 +7,7 @@ project(DRE
 
 
 find_package(Git REQUIRED)
-include(CmakeDREHelpers.txt)
+include(CMakeDREHelpers.txt)
 update_git_submodule(assimp)
 update_git_submodule(glm)
 update_git_submodule(shaderc)
