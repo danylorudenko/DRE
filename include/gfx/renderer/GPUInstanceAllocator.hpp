@@ -25,6 +25,31 @@ class GPUInstanceAllocator
 public:
     using PayloadType = PayloadT;
 
+    class Payload
+    {
+    public:
+        Payload(GPUInstanceAllocator* manager, std::uint64_t addressGPU, std::uint16_t id)
+            : m_Manager{ manager }
+            , m_AddressGPU{ addressGPU }
+            , m_id{ id }
+        { }
+
+        void ScheduleUpdate(PayloadT const& data)
+        {
+            m_Manager->ScheduleUpdate(m_id, data);
+        }
+
+        std::uint32_t GetID() const { return m_id; }
+        std::uint64_t GetAddressGPU() const { return m_AddressGPU; }
+
+    protected:
+        GPUInstanceAllocator* m_Manager;
+        std::uint64_t        m_AddressGPU;
+        std::uint32_t        m_id;
+    };
+
+    friend class Payload;
+
     GPUInstanceAllocator(PersistentStorage* storage)
         : m_PersistentAllocation{ storage->AllocateRegion(MAX_COUNT * sizeof(PayloadT)) }
         , m_Count{ 0 }

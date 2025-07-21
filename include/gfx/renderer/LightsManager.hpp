@@ -28,24 +28,20 @@ class PersistentStorage;
 
 /////////////////////////////
 class LightsManager
-    : public NonMovable
-    , public NonCopyable
+    : public GPUInstanceAllocator<S_LIGHT, 64, 8>
 {
 public:
     static constexpr std::uint32_t MAX_LIGHTS = 64;
 
-    class LightGPU
+    using Base = GPUInstanceAllocator<S_LIGHT, 64, 8>;
+
+    class LightGPU : public Base::Payload
     {
         friend class LightsManager;
 
     public:
+        LightGPU(LightsManager* manager, std::uint64_t addressGPU, std::uint16_t id);
         void ScheduleUpdate(glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, std::uint32_t type);
-
-    private:
-        LightGPU(LightsManager* manager, std::uint16_t id);
-
-        LightsManager*  m_LightsManager;
-        std::uint16_t   m_id;
     };
 
 public:

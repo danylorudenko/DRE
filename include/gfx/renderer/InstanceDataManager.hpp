@@ -34,7 +34,9 @@ class InstanceDataManager
 public:
     static constexpr std::uint32_t MAX_INSTANCES = 1024 * 32;
 
-    class InstanceGPU
+    using Base = GPUInstanceAllocator<S_INSTANCE, 1024 * 32, 1024>;
+
+    class InstanceGPU : public Base::Payload
     {
         friend class InstanceDataManager;
 
@@ -43,18 +45,10 @@ public:
         void ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform, glm::uvec4 textureIndices, std::uint32_t globalID);
         void ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform);
 
-        std::uint32_t GetID() const { return m_id; }
-        std::uint64_t GetAddressGPU() const { return m_AddressGPU; }
         glm::mat4 const& GetTransform() const { return m_InstanceDataCPU.world_space; }
 
-
     private:
-        InstanceDataManager*    m_Manager;
-
-        S_INSTANCE              m_InstanceDataCPU;
-
-        std::uint64_t           m_AddressGPU;
-        std::uint32_t           m_id;
+        S_INSTANCE m_InstanceDataCPU;
     };
 
 public:
@@ -70,7 +64,6 @@ public:
 
 private:
     friend class InstanceGPU;
-    void ScheduleInstanceUpdate(std::uint32_t id, S_INSTANCE const& transform);
 };
 
 }
