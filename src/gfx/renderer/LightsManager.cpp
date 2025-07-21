@@ -9,32 +9,30 @@ namespace GFX
 {
 
 LightsManager::LightsManager(PersistentStorage* storage)
-    : m_PersistentAllocation{ storage->AllocateRegion(MAX_LIGHTS * sizeof(S_LIGHT)) }
-    , m_LightsCount{ 0 }
+    : GPUInstanceAllocator<S_LIGHT, 64, 8>{ storage }
 {
 }
 
 LightsManager::LightGPU LightsManager::AllocateLight()
 {
-    std::uint16_t const id = m_ElementAllocator.Allocate();
-    ++m_LightsCount;
-    return LightGPU{ this, id };
+    std::uint16_t const id = AllocateID();
+    std::uint64_t address = GetBufferAddress() + sizeof(S_LIGHT) * id;
+    return LightGPU{ this, address, id };
 }
 
 void LightsManager::FreeLight(LightsManager::LightGPU& light)
 {
-    --m_LightsCount;
-    m_ElementAllocator.Free(light.m_id);
+    FreeID(static_cast<std::uint16_t>(light.GetID()));
 }
 
 std::uint64_t LightsManager::GetBufferAddress() const
 {
-    return m_PersistentAllocation.GetGPUAddress();
+    return GPUInstanceAllocator::GetBufferAddress();
 }
 
 std::uint32_t LightsManager::GetLightsCount() const
 {
-    return m_LightsCount;
+    return GPUInstanceAllocator::GetCount();
 }
 
 void LightsManager::ScheduleLightUpdate(std::uint16_t id, glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, std::uint32_t type)
@@ -44,35 +42,26 @@ void LightsManager::ScheduleLightUpdate(std::uint16_t id, glm::vec3 const& posit
     SLight.direction_type = glm::vec4(orientation, *reinterpret_cast<float*>(&type));
     SLight.spectrum_flux = glm::vec4(color, flux);
 
-    m_LightUpdateQueue.EmplaceBack(id, SLight);
+    ScheduleUpdate(id, SLight);
 }
 
 void LightsManager::UpdateGPULights(VKW::Context& context)
 {
-    std::uint64_t baseAddress = m_PersistentAllocation.GetGPUAddress();
-
-    for (std::uint32_t i = 0, count = m_LightUpdateQueue.Size(); i < count; i++)
-    {
-        LightUpdateEntry& entry = m_LightUpdateQueue[i];
-        m_PersistentAllocation.Update(context, sizeof(S_LIGHT) * entry.id, &entry.payload, sizeof(S_LIGHT));
-    }
-
-    m_LightUpdateQueue.Clear();
+    FlushUpdates(context);
 }
 
 ///////////////////////////////////////////
 ///////////////////////////////////////////
 ///////////////////////////////////////////
 
-LightsManager::LightGPU::LightGPU(LightsManager* manager, std::uint16_t id)
-    : m_LightsManager{ manager }
-    , m_id{ id }
+LightsManager::LightGPU::LightGPU(LightsManager* manager, std::uint64_t addressGPU, std::uint16_t id)
+    : Base::Payload{ manager, addressGPU, id }
 {
 }
 
 void LightsManager::LightGPU::ScheduleUpdate(glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, std::uint32_t type)
 {
-    m_LightsManager->ScheduleLightUpdate(m_id, position, orientation, color, flux, type);
+    m_Manager->ScheduleLightUpdate(static_cast<std::uint16_t>(m_id), position, orientation, color, flux, type);
 }
 
 
