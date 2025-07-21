@@ -60,19 +60,6 @@ public:
     std::uint32_t GetLightsCount() const;
 
     std::uint64_t GetBufferAddress() const;
-
-
-private:
-    PersistentStorage::Allocation m_PersistentAllocation;
-    DRE::FreeListOffsetAllocator<MAX_LIGHTS> m_ElementAllocator;
-    std::uint32_t m_LightsCount;
-
-    struct LightUpdateEntry
-    {
-        std::uint16_t id;
-        S_LIGHT payload;
-    };
-    DRE::InplaceVector<LightUpdateEntry, 8> m_LightUpdateQueue;
 };
 
 }

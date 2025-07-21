@@ -8,6 +8,7 @@
 #include <foundation\memory\AllocatorLinear.hpp>
 #include <foundation\Container\Vector.hpp>
 #include <foundation\memory\OffsetAllocator.hpp>
+#include <gfx\renderer\GPUInstanceAllocator.hpp>
 
 #include <gfx\buffer\PersistentStorage.hpp>
 
@@ -28,8 +29,7 @@ class PersistentStorage;
 
 /////////////////////////////
 class InstanceDataManager
-    : public NonMovable
-    , public NonCopyable
+    : public GPUInstanceAllocator<S_INSTANCE, 1024 * 32, 1024>
 {
 public:
     static constexpr std::uint32_t MAX_INSTANCES = 1024 * 32;
@@ -71,18 +71,6 @@ public:
 private:
     friend class InstanceGPU;
     void ScheduleInstanceUpdate(std::uint32_t id, S_INSTANCE const& transform);
-
-private:
-    PersistentStorage::Allocation m_PersistentAllocation;
-    DRE::FreeListOffsetAllocator<MAX_INSTANCES> m_ElementAllocator;
-    std::uint32_t m_InstancesCount;
-
-    struct InstanceUpdateEntry
-    {
-        std::uint32_t   id;
-        S_INSTANCE      payload;
-    };
-    DRE::InplaceVector<InstanceUpdateEntry, 1024> m_UpdateQueue;
 };
 
 }

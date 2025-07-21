@@ -8,52 +8,41 @@ namespace GFX
 {
 
 InstanceDataManager::InstanceDataManager(PersistentStorage* storage)
-    : m_PersistentAllocation{ storage->AllocateRegion(MAX_INSTANCES * sizeof(S_INSTANCE)) }
-    , m_InstancesCount{ 0 }
+    : GPUInstanceAllocator<S_INSTANCE, 1024 * 32, 1024>{ storage }
 {
 }
 
 InstanceDataManager::InstanceGPU InstanceDataManager::AllocateTransform()
 {
-    std::uint16_t const id = m_ElementAllocator.Allocate();
-    ++m_InstancesCount;
+    std::uint16_t const id = AllocateID();
 
-    std::uint64_t addressGPU = m_PersistentAllocation.GetGPUAddress() + sizeof(S_INSTANCE) * id;
+    std::uint64_t addressGPU = GetBufferAddress() + sizeof(S_INSTANCE) * id;
     return InstanceGPU{ this, addressGPU, id };
 }
 
 void InstanceDataManager::FreeTransform(InstanceDataManager::InstanceGPU& transform)
 {
-    --m_InstancesCount;
-    m_ElementAllocator.Free(transform.m_id);
+    FreeID(static_cast<std::uint16_t>(transform.m_id));
 }
 
 std::uint64_t InstanceDataManager::GetBufferAddress() const
 {
-    return m_PersistentAllocation.GetGPUAddress();
+    return GPUInstanceAllocator::GetBufferAddress();
 }
 
 std::uint32_t InstanceDataManager::GetInstanceCount() const
 {
-    return m_InstancesCount;
+    return GPUInstanceAllocator::GetCount();
 }
 
 void InstanceDataManager::ScheduleInstanceUpdate(std::uint32_t id, S_INSTANCE const& instanceData)
 {
-    m_UpdateQueue.EmplaceBack(id, instanceData);
+    ScheduleUpdate(id, instanceData);
 }
 
 void InstanceDataManager::UpdateGPUInstances(VKW::Context& context)
 {
-    std::uint64_t baseAddress = m_PersistentAllocation.GetGPUAddress();
-
-    for (std::uint32_t i = 0, count = m_UpdateQueue.Size(); i < count; i++)
-    {
-        InstanceUpdateEntry& entry = m_UpdateQueue[i];
-        m_PersistentAllocation.Update(context, entry.id * sizeof(S_INSTANCE), &entry.payload, sizeof(S_INSTANCE));
-    }
-
-    m_UpdateQueue.Clear();
+    FlushUpdates(context);
 }
 
 ///////////////////////////////////////////
