@@ -47,13 +47,4 @@ extern DefaultAllocator                 g_MainAllocator;
 #endif
 
 
-
-
-// To be used for persistent data exchange between threads on JOIN stages, etc.
-U64 constexpr DATA_EXCHANGE_LEAF_SIZE   = 1024;
-U64 constexpr DATA_EXCHANGE_MAX_DEPTH   = 5;
-using  DataExchangeAllocatorBuddy       = AllocatorBuddy<DATA_EXCHANGE_LEAF_SIZE, DATA_EXCHANGE_MAX_DEPTH>;
-extern DataExchangeAllocatorBuddy       g_MultithreadDataExchangeAllocator;
-
-
 DRE_END_NAMESPACE
