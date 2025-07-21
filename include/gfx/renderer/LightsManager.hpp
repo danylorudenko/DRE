@@ -10,6 +10,7 @@
 #include <foundation\memory\OffsetAllocator.hpp>
 
 #include <gfx\buffer\PersistentStorage.hpp>
+#include <gfx\renderer\GPUInstanceAllocator.hpp>
 
 #include <common\lighting\lights.h>
 
@@ -31,8 +32,6 @@ class LightsManager
     : public GPUInstanceAllocator<S_LIGHT, 64, 8>
 {
 public:
-    static constexpr std::uint32_t MAX_LIGHTS = 64;
-
     using Base = GPUInstanceAllocator<S_LIGHT, 64, 8>;
 
     class LightGPU : public Base::Payload
@@ -49,13 +48,6 @@ public:
 
     LightGPU AllocateLight();
     void FreeLight(LightGPU& light);
-
-    void ScheduleLightUpdate(std::uint16_t id, glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, std::uint32_t type);
-    void UpdateGPULights(VKW::Context& context);
-
-    std::uint32_t GetLightsCount() const;
-
-    std::uint64_t GetBufferAddress() const;
 };
 
 }

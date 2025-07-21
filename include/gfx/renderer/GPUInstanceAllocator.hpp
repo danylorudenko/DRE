@@ -23,8 +23,6 @@ class GPUInstanceAllocator
     , public NonCopyable
 {
 public:
-    using PayloadType = PayloadT;
-
     class Payload
     {
     public:
@@ -70,7 +68,6 @@ public:
     std::uint64_t GetBufferAddress() const { return m_PersistentAllocation.GetGPUAddress(); }
     std::uint32_t GetCount() const { return m_Count; }
 
-protected:
     void ScheduleUpdate(std::uint32_t id, PayloadT const& payload)
     {
         m_UpdateQueue.EmplaceBack(id, payload);

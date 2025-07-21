@@ -25,21 +25,6 @@ void InstanceDataManager::FreeTransform(InstanceDataManager::InstanceGPU& transf
     FreeID(static_cast<std::uint16_t>(transform.GetID()));
 }
 
-std::uint64_t InstanceDataManager::GetBufferAddress() const
-{
-    return GPUInstanceAllocator::GetBufferAddress();
-}
-
-std::uint32_t InstanceDataManager::GetInstanceCount() const
-{
-    return GPUInstanceAllocator::GetCount();
-}
-
-void InstanceDataManager::UpdateGPUInstances(VKW::Context& context)
-{
-    FlushUpdates(context);
-}
-
 ///////////////////////////////////////////
 ///////////////////////////////////////////
 ///////////////////////////////////////////

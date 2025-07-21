@@ -3,7 +3,6 @@
 DRE_BEGIN_NAMESPACE
 
 
-U64 constexpr DATA_EXCHANGE_ARENA_SIZE  = DataExchangeAllocatorBuddy::RequiredMemorySize();
 U64 constexpr FRAME_SCRATCH_ARENA_SIZE  = 1024 * 1024 * 64;
 U64 constexpr PERSISTENT_ARENA_SIZE     = 1024 * 1024 * 64;
 U64 constexpr THREAD_LOCAL_ARENA_SIZE   = 1024 * 1024 * 16;
@@ -27,10 +26,6 @@ DefaultAllocator                g_MainAllocator;
 #else
 AllocatorSystem                 g_MainAllocator;
 #endif
-DataExchangeAllocatorBuddy      g_DataExchangeAllocator;
-
-
-
 
 
 
@@ -47,9 +42,6 @@ void InitializeGlobalMemory()
     g_MainArena = DRE_MALLOC(mainAllocatorMemorySize);
     g_MainAllocator = DefaultAllocator{ g_MainArena, mainAllocatorMemorySize };
 #endif
-
-    g_DataExchangeArena = DRE_MALLOC(DATA_EXCHANGE_ARENA_SIZE);
-    g_DataExchangeAllocator = DataExchangeAllocatorBuddy(g_DataExchangeArena, DATA_EXCHANGE_ARENA_SIZE);
 }
 
 void TerminateGlobalMemory()
