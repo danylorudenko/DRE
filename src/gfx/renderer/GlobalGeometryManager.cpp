@@ -92,7 +92,10 @@ GlobalGeometry::GeometryGPU* GlobalGeometry::ScheduleGeometryUpload(Data::Geomet
     }
 
     DRE::U64 vertexOffset = m_MainGeometryAllocator.Alloc(source->GetVertexSizeInBytes(), 256);
-    DRE::U64 indexOffset = m_MainGeometryAllocator.Alloc(source->GetIndexSizeInBytes(), 256);
+    DRE::U64 indexOffset = DRE_U64_MAX;
+    if (source->GetIndexSizeInBytes() > 0)
+        indexOffset = m_MainGeometryAllocator.Alloc(source->GetIndexSizeInBytes(), 256);
+
 
     GeometryGPU geometryGPU{
         this, m_MainGeometryBuffer,

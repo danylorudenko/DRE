@@ -6,11 +6,7 @@
 #include "common/lighting/lighting.h"
 #include "common/forward.h"
 
-layout(location = 0) in vec3 in_pos;
-layout(location = 1) in vec3 in_norm;
-layout(location = 2) in vec3 in_tan;
-layout(location = 3) in vec3 in_btan;
-layout(location = 4) in vec2 in_uv;
+#include "common/vertex/dre_vertex_layout.h"
 
 layout(location = 0) out vec3 out_wpos;
 layout(location = 1) out vec2 out_uv;

@@ -36,7 +36,7 @@ private:
         DRE::U32 m_CurrentID = 0u;
     };
 
-    static DRE::String64 GetUniqueLabel(WORLD::SceneNode* node, SceneGraphEditor::RenderingContext& context);
+    DRE::String64 GetUniqueLabel(WORLD::SceneNode* node, SceneGraphEditor::RenderingContext& context);
 
     void RenderSceneNodeRecursive(WORLD::SceneNode* node, RenderingContext& context);
 
@@ -45,6 +45,7 @@ private:
 
 private:
     WORLD::Scene* m_Scene;
+    bool m_ShowIDs;
 };
 
 }

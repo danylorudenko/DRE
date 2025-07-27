@@ -227,9 +227,7 @@ DRE::String64 const* PipelineDB::CreateGraphicsGizmoPipeline(char const* name)
     desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
     desc.AddColorOutput(g_GraphicsManager->GetMainColorFormat());
 
-    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT);
-    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT);
-    desc.AddVertexAttribute(VKW::FORMAT_R32G32B32_FLOAT);
+    AddDREVertexAttributes(desc);
 
     CreatePipeline(name, desc);
 

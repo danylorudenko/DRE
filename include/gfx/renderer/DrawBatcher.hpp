@@ -34,14 +34,14 @@ class RenderView;
 struct AtomDraw
 {
     VKW::BufferResource*    vertexBuffer;
-    std::uint32_t           vertexOffset;
-    std::uint32_t           vertexCount;
+    DRE::U32                vertexOffset;
+    DRE::U32                vertexCount;
 
     VKW::BufferResource*    indexBuffer;
-    std::uint32_t           indexOffset;
-    std::uint32_t           indexCount;
+    DRE::U32                indexOffset;
+    DRE::U32                indexCount;
 
-    std::uint32_t           instanceID;
+    DRE::U32                instanceID;
 
     VKW::Pipeline*          pipeline;
     VKW::DescriptorSet      descriptorSet;

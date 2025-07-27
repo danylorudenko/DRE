@@ -1,5 +1,6 @@
 #include <gfx\pass\EditorPass.hpp>
 
+#include <engine\data\Geometry.hpp>
 #include <gfx\GraphicsManager.hpp>
 #include <gfx\scheduling\RenderGraph.hpp>
 #include <editor\ViewportInputManager.hpp>
@@ -19,6 +20,18 @@ struct GizmoVertex
 PassID EditorPass::GetID() const
 {
     return PassID::Editor;
+}
+
+Data::DREVertex GizmoVertex2DREVertex(GizmoVertex const& vtx)
+{
+    return Data::DREVertex
+    {
+        vtx.pos.x, vtx.pos.y, vtx.pos.z,
+        vtx.normal.x, vtx.normal.y, vtx.normal.z,
+        vtx.color.x, vtx.color.y, vtx.color.z,
+        0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f
+    };
 }
 
 template<std::uint32_t AXIS>
@@ -255,14 +268,20 @@ void EditorPass::Initialize(RenderGraph& graph)
     std::uint32_t constexpr cyllinderResolution = 20;
 
     // cyllinder
-    DRE::Vector<GizmoVertex, DRE::AllocatorLinear> vertices{ &DRE::g_PersistentDataAllocator };
-    GenerateCyllinder<0>(vertices, 20);
-    GenerateCyllinder<1>(vertices, 20);
-    GenerateCyllinder<2>(vertices, 20);
+    DRE::Vector<GizmoVertex, DRE::AllocatorLinear> tempVertices{ &DRE::g_FrameScratchAllocator };
+    GenerateCyllinder<0>(tempVertices, 20);
+    GenerateCyllinder<1>(tempVertices, 20);
+    GenerateCyllinder<2>(tempVertices, 20);
 
-    Generate3Cones(vertices, 20);
+    Generate3Cones(tempVertices, 20);
 
-    m_GizmoGeometry = DRE::g_PersistentDataAllocator.Alloc<Data::Geometry>(std::uint16_t(sizeof(GizmoVertex)), std::uint16_t(0));
+    DRE::Vector<Data::DREVertex, DRE::AllocatorLinear> vertices { &DRE::g_PersistentDataAllocator, DRE::U32(tempVertices.Size() * sizeof(Data::DREVertex)) };
+    for (DRE::U32 i = 0, size = tempVertices.Size(); i < size; i++)
+    {
+        vertices.EmplaceBack(GizmoVertex2DREVertex(tempVertices[i]));
+    }
+
+    m_GizmoGeometry = DRE::g_PersistentDataAllocator.Alloc<Data::Geometry>(std::uint16_t(sizeof(Data::DREVertex)), std::uint16_t(0));
     m_GizmoGeometry->SetVertexData(DRE::ByteBuffer{ vertices.Data(), vertices.SizeInBytes() });
 
     m_GizmoVertices = *g_GraphicsManager->GetGlobalGeometryManager().FindOrUploadGeometry(m_GizmoGeometry);

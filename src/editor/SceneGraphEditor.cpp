@@ -18,6 +18,7 @@ namespace EDITOR
 SceneGraphEditor::SceneGraphEditor(BaseEditor* rootEditor, EditorFlags flags, WORLD::Scene* scene)
     : BaseEditor{ rootEditor, flags }
     , m_Scene{ scene }
+    , m_ShowIDs{ false }
 {}
 
 SceneGraphEditor::SceneGraphEditor(SceneGraphEditor&& rhs)
@@ -32,6 +33,7 @@ SceneGraphEditor& SceneGraphEditor::operator=(SceneGraphEditor&& rhs)
     BaseEditor::operator=(DRE_MOVE(rhs));
 
     DRE_SWAP_MEMBER(m_Scene);
+    DRE_SWAP_MEMBER(m_ShowIDs);
 
     return *this;
 }
@@ -41,8 +43,14 @@ void SceneGraphEditor::Render()
     ImGui::SetNextWindowSize(ImVec2(500, 440), ImGuiCond_FirstUseEver);
 
     bool isOpen = true;
-    if (ImGui::Begin("Scene Graph Editor", &isOpen, ImGuiWindowFlags_None))
+    if (ImGui::Begin("Scene Graph Editor", &isOpen, ImGuiWindowFlags_MenuBar))
     {
+        if (ImGui::BeginMenuBar())
+        {
+            ImGui::MenuItem("Show IDs", nullptr, &m_ShowIDs);
+        }
+        ImGui::EndMenuBar();
+
         if (ImGui::BeginChild("nodes_tree", ImVec2(150, 0), ImGuiChildFlags_Border | ImGuiChildFlags_ResizeX))
         {
             RenderingContext context;
@@ -190,9 +198,13 @@ DRE::String64 SceneGraphEditor::GetUniqueLabel(WORLD::SceneNode* node, SceneGrap
         }
     }
 
-    char buffer[64];
+    char buffer[128];
     char const* label = std::strlen(node->GetName()) > 0 ? node->GetName() : typeStr;
-    std::sprintf(buffer, "%s##%u", label, context.m_CurrentID++);
+
+    if (m_ShowIDs)
+        std::sprintf(buffer, "%s (%u)##%u", label, node->GetGlobalID(), context.m_CurrentID++);
+    else
+        std::sprintf(buffer, "%s##%u", label, context.m_CurrentID++);
 
     return DRE::String64{ buffer };
 }

@@ -4,10 +4,7 @@
 
 #include "common/shaders_common.h"
 #include "gizmo_3D.h"
-
-layout(location = 0) in vec3 in_pos;
-layout(location = 1) in vec3 in_color;
-layout(location = 2) in vec3 in_normal;
+#include "common/vertex/dre_vertex_layout.h"
 
 layout(location = 0) out vec3 out_wpos;
 layout(location = 1) out vec3 out_color;
@@ -18,8 +15,8 @@ layout(location = 2) out vec3 out_normal;
 void main()
 {
     out_wpos = vec3(cb.m_Model * vec4(in_pos, 1.0));
-    out_color = in_color;
-    out_normal = in_normal;
+    out_normal = in_norm;
+    out_color = in_tan;
 
     vec4 ndc_pos = GetCameraViewProjM() * vec4(out_wpos, 1.0);
 

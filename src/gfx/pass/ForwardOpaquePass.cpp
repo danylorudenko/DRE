@@ -61,34 +61,6 @@ void ForwardOpaquePass::Initialize(RenderGraph& graph)
 {
 }
 
-/*
-void ForwardObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view, VKW::PipelineLayout const* passLayout)
-{
-    std::uint32_t constexpr uniformSize = sizeof(InstanceUniform);
-
-    auto uniformAllocation = arena.AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), uniformSize, 256);
-    VKW::DescriptorManager::WriteDesc writeDesc;
-    writeDesc.AddUniform(uniformAllocation.m_Buffer, uniformAllocation.m_OffsetInBuffer, uniformAllocation.m_Size, 0);
-    descriptorManager.WriteDescriptorSet(obj.GetDescriptorSet(g_GraphicsManager->GetCurrentFrameID()), writeDesc);
-
-    UniformProxy uniformProxy{ &context, uniformAllocation };
-    glm::mat4 worldMatrix = obj.GetSceneNode()->GetGlobalMatrix();
-    uniformProxy.WriteMember140(worldMatrix);
-    uniformProxy.WriteMember140(worldMatrix); // prev world matrix is same, geometry is static
-
-    std::uint32_t textureIDs[4] = {
-       obj.GetDiffuseTexture()->GetShaderGlobalDescriptor().id_,
-       obj.GetNormalTexture()->GetShaderGlobalDescriptor().id_,
-       obj.GetMetalnessTexture()->GetShaderGlobalDescriptor().id_,
-       obj.GetRoughnessTexture()->GetShaderGlobalDescriptor().id_
-    };
-
-    uniformProxy.WriteMember140(textureIDs, sizeof(textureIDs));
-
-    uniformProxy.WriteMember140(obj.GetSceneNode()->GetGlobalID());
-}
-*/
-
 void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
 {
     DRE_GPU_SCOPE(ForwardOpaque);
@@ -185,6 +157,7 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
         DRE::S32 x = DRE::Clamp(DRE::g_AppContext.m_CursorX, 0, DRE::S32(renderWidth - 1));
         DRE::S32 y = DRE::Clamp(DRE::g_AppContext.m_CursorY, 0, DRE::S32(renderHeight - 1));
         DRE::g_AppContext.m_MouseHoveredObjectID = ObjectIDFromBuffer(readbackData, x, y);
+        std::cout << DRE::g_AppContext.m_MouseHoveredObjectID << std::endl;
     }
 
     m_LastObjectIDsFuture = tempFuture;
