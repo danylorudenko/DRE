@@ -41,10 +41,12 @@ public:
         friend class InstanceDataManager;
 
     public:
-        InstanceGPU(InstanceDataManager* manager, std::uint64_t addressGPU, std::uint32_t id);
+        InstanceGPU(InstanceDataManager* manager, DRE::U64 addressGPU, DRE::U32 id);
 
-        void ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform, glm::uvec4 textureIndices, std::uint32_t globalID);
+        void ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform, glm::uvec4 textureIndices, DRE::U32 globalID, NormalMode normalMode);
         void ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform);
+        void ScheduleUpdate(glm::uvec4 textureIndicies);
+        void ScheduleUpdate(NormalMode mode);
 
         glm::mat4 const& GetTransform() const { return m_InstanceDataCPU.world_space; }
 

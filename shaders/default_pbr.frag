@@ -24,7 +24,21 @@ void main()
     float metalness = SampleGlobalTextureAnisotropic(GetMetalnessTextureID(InstanceRef), in_uv).r;
     float roughness = SampleGlobalTextureAnisotropic(GetRoughnessTextureID(InstanceRef), in_uv).r;
 
-    vec3 n = normalize(in_TBN * (normal * 2.0 - 1.0));
+    vec3 n = vec3(0,0,1);
+    uint normalMode = GetNormalMode(InstanceRef);
+    switch(normalMode)
+    {
+        case NORMAL_MODE_TEXTURE:
+            n = normalize(in_TBN * (normal * 2.0 - 1.0));
+            break;
+        case NORMAL_MODE_TEXTURE_INVERT_Y:
+            normal = vec3(normal.r, 1 - normal.g, normal.b);
+            n = normalize(in_TBN * (normal * 2.0 - 1.0));
+            break;
+        case NORMAL_MODE_TBN:
+            n = normalize(in_TBN[2]);
+            break;
+    }
 
     rayQueryEXT rayQuery;
     rayQueryInitializeEXT(
@@ -41,7 +55,7 @@ void main()
 
     if (rayQueryGetIntersectionTypeEXT(rayQuery, true) == gl_RayQueryCommittedIntersectionTriangleEXT)
     {
-        diffuse = vec3(0.0f, 0.0f, 0.0f);
+        diffuse *= vec3(0.1f, 0.1f, 0.1f);
     }
 
     S_SURFACE surface;
@@ -50,20 +64,9 @@ void main()
     surface.diffuseSpectrum = diffuse;
     surface.roughness = roughness;
     surface.metalness = metalness;
+    surface.prevWpos = in_prev_wpos;
 
     S_LIGHTING_RESULT lighting = CalculateLighting(surface);
 
-    finalColor = vec4(lighting.finalRadiance, 1.0);
-
-    vec4 prev_ndc = GetPrevCameraViewProjM() * in_prev_wpos;
-    prev_ndc /= prev_ndc.w;
-
-    vec2 pixel_pos_uv = gl_FragCoord.xy / GetViewportSize();
-    vec2 pixel_pos_ndc = pixel_pos_uv * 2.0 - 1.0;
-
-    vec2 vel = (pixel_pos_ndc - prev_ndc.xy);
-    vec2 vel_uv = vel * 0.5;
-
-    velocity = vec2(vel_uv);
-    id = GlobalID2Color();
+    OutputForwardPass(lighting, surface);
 }

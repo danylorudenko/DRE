@@ -6,6 +6,8 @@
 #include <engine\data\Texture2D.hpp>
 #include <vk_wrapper\pipeline\Pipeline.hpp>
 
+#include <common\instances.h>
+
 namespace Data
 {
 
@@ -39,25 +41,6 @@ public:
 
 
     //////////////////////////////////////
-    // DataProperty
-    class DataProperty
-    {
-    public:
-        friend class Material;
-
-        void AssignData(void const* data, DRE::SizeT size);
-        template<typename T>
-        void AssignData(T const& data) { AssignData(&data, sizeof(data)); }
-
-        void* GetData() const;
-
-    private:
-        DRE::ByteBuffer m_DataBuffer;
-    };
-    //////////////////////////////////////
-
-
-    //////////////////////////////////////
     // PipelineProperties
     class RenderingProperties
     {
@@ -75,8 +58,12 @@ public:
         inline void SetMaterialType(MaterialType type) { m_Type = type; }
         inline MaterialType GetMaterialType() const { return m_Type; }
 
+        inline void SetNormalMode(NormalMode mode) { m_NormalMode = mode; }
+        inline NormalMode GetNormalMode() const { return m_NormalMode; }
+
     private:
         MaterialType m_Type = MATERIAL_TYPE_MAX;
+        NormalMode m_NormalMode = NormalMode::TEXTURE;
         DRE::String32 m_Shader;
     };
 
@@ -86,9 +73,6 @@ public:
     //////////////////////////////////////
     // Material
     void AssignTextureToSlot(TextureProperty::Slot slot, Texture2D&& texture);
-    void AssignData(void const* data, DRE::SizeT size);
-    template<typename T>
-    void AssignData(T const& data) { m_DataProperty.AssignData(data); }
 
     RenderingProperties& GetRenderingProperties() { return m_RenderingProperties; }
     RenderingProperties const& GetRenderingProperties() const { return m_RenderingProperties; }
@@ -101,7 +85,6 @@ private:
     DRE::String32       m_Name;
 
     TextureProperty     m_TextureProperties[TextureProperty::Slot::MAX];
-    DataProperty        m_DataProperty;
     RenderingProperties m_RenderingProperties;
 };
 

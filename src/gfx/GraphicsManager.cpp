@@ -363,7 +363,8 @@ RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* scen
             textures[2]->GetShaderGlobalDescriptor().id_,
             textures[3]->GetShaderGlobalDescriptor().id_
         },
-        sceneNode->GetGlobalID()
+        sceneNode->GetGlobalID(),
+        material->GetRenderingProperties().GetNormalMode()
     );
 
     return m_RenderableObjectPool.Alloc(sceneNode, instanceGPU, layers, pipeline, *geometryGPU, m_RayTracingManager.GetGeometryBLAS(geometry)->m_LogicalHandle,

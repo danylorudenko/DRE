@@ -22,10 +22,14 @@ void main()
 
     vec3 diffuse    = SampleGlobalTextureAnisotropic(GetDiffuseTextureID(InstanceRef), in_uv).rgb;
     vec3 normal     = SampleGlobalTextureAnisotropic(GetNormalTextureID(InstanceRef), in_uv).rgb;
+    // this is the reason for this shader to exist: unpack metalness and roughness
     vec2 metalness_roughness = SampleGlobalTextureAnisotropic(GetMetalnessTextureID(InstanceRef), in_uv).bg;
 
     float metalness = metalness_roughness.x;
     float roughness = metalness_roughness.y;
+
+    // another reason for it to exist: normal is borked on these spheres
+    vec3 n = normalize(in_TBN * (normal * 2.0 - 1.0));
 
     S_SURFACE surface;
     surface.wpos = in_wpos;

@@ -29,18 +29,18 @@ void InstanceDataManager::FreeTransform(InstanceDataManager::InstanceGPU& transf
 ///////////////////////////////////////////
 ///////////////////////////////////////////
 
-InstanceDataManager::InstanceGPU::InstanceGPU(InstanceDataManager* manager, std::uint64_t addressGPU, std::uint32_t id)
+InstanceDataManager::InstanceGPU::InstanceGPU(InstanceDataManager* manager, DRE::U64 addressGPU, DRE::U32 id)
     : Base::Payload{ manager, addressGPU, static_cast<std::uint16_t>(id) }
     , m_InstanceDataCPU{}
 {
 }
 
-void InstanceDataManager::InstanceGPU::ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform, glm::uvec4 textureIndices, std::uint32_t globalID)
+void InstanceDataManager::InstanceGPU::ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform, glm::uvec4 textureIndices, DRE::U32 globalID, NormalMode normalMode)
 {
     m_InstanceDataCPU.world_space = transform;
     m_InstanceDataCPU.inv_world_space = invTransform;
     m_InstanceDataCPU.texture_indicies = textureIndices;
-    m_InstanceDataCPU.globalID = glm::uvec4{ globalID, 0, 0, 0 };
+    m_InstanceDataCPU.globalID_normalMode = glm::uvec4{ globalID, DRE::U32(normalMode), 0, 0 };
     Base::Payload::ScheduleUpdate(m_InstanceDataCPU);
 }
 
@@ -51,5 +51,18 @@ void InstanceDataManager::InstanceGPU::ScheduleUpdate(glm::mat4 transform, glm::
     m_InstanceDataCPU.inv_world_space = invTransform;
     Base::Payload::ScheduleUpdate(m_InstanceDataCPU);
 }
+
+void InstanceDataManager::InstanceGPU::ScheduleUpdate(glm::uvec4 textureIndicies)
+{
+    m_InstanceDataCPU.texture_indicies = textureIndicies;
+    Base::Payload::ScheduleUpdate(m_InstanceDataCPU);
+}
+
+void InstanceDataManager::InstanceGPU::ScheduleUpdate(NormalMode mode)
+{
+    m_InstanceDataCPU.globalID_normalMode.y = DRE::U32(mode);
+    Base::Payload::ScheduleUpdate(m_InstanceDataCPU);
+}
+
 
 }

@@ -2,6 +2,8 @@
 
 #include <glm\gtc\quaternion.hpp>
 
+#include <gfx\texture\Texture.hpp>
+
 namespace GFX
 {
 
@@ -50,6 +52,51 @@ RenderableObject::RenderableObject(WORLD::SceneNode* sceneNode, InstanceDataMana
     , m_DescriptorSetsShadow{}
     , m_Textures{}
 {
+}
+
+void RenderableObject::SetDiffuseTexture(Texture* texture)
+{
+    DRE_ASSERT(m_Textures[Data::Material::TextureProperty::DIFFUSE] == nullptr, "Overriding textures is not supported");
+    m_Textures[Data::Material::TextureProperty::DIFFUSE] = texture;
+
+    UpdateGPUInstanceTextures();
+}
+void RenderableObject::SetNormalTexture(Texture* texture)
+{
+    DRE_ASSERT(m_Textures[Data::Material::TextureProperty::NORMAL] == nullptr, "Overriding textures is not supported");
+    m_Textures[Data::Material::TextureProperty::NORMAL] = texture;
+    UpdateGPUInstanceTextures();
+}
+
+void RenderableObject::SetMetalnessTexture(Texture* texture)
+{
+    DRE_ASSERT(m_Textures[Data::Material::TextureProperty::METALNESS] == nullptr, "Overriding textures is not supported");
+    m_Textures[Data::Material::TextureProperty::METALNESS] = texture;
+    UpdateGPUInstanceTextures();
+}
+
+void RenderableObject::SetRoughnessTexture(Texture* texture)
+{
+    DRE_ASSERT(m_Textures[Data::Material::TextureProperty::ROUGHNESS] == nullptr, "Overriding textures is not supported");
+    m_Textures[Data::Material::TextureProperty::ROUGHNESS] = texture;
+    UpdateGPUInstanceTextures();
+}
+
+void RenderableObject::SetNormalMode(NormalMode mode)
+{
+    m_InstanceGPU.ScheduleUpdate(mode);
+}
+
+void RenderableObject::UpdateGPUInstanceTextures()
+{
+    m_InstanceGPU.ScheduleUpdate(
+        glm::uvec4{
+            GetDiffuseTexture()->GetShaderGlobalDescriptor().id_,
+            GetNormalTexture()->GetShaderGlobalDescriptor().id_,
+            GetMetalnessTexture()->GetShaderGlobalDescriptor().id_,
+            GetRoughnessTexture()->GetShaderGlobalDescriptor().id_
+        }
+    );
 }
 
 }

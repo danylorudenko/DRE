@@ -74,6 +74,16 @@ public:
     void                    Rotate(glm::quat const& rotation);
     void                    Rotate(glm::vec3 const& eulerRotation);
 
+    template<typename TDelegate>
+    void                    ForEachChild(TDelegate&& func)
+    {
+        for (DRE::U32 i = 0, size = m_Children.Size(); i < size; i++)
+        {
+            func(m_Children[i]);
+            m_Children[i]->ForEachChild(func);
+        }
+    }
+
 
     inline SceneNode* GetParent() const { return m_Parent; }
     void SetParent(SceneNode* parent);

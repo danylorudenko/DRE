@@ -133,7 +133,6 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
             prevPipeline = atom.pipeline;
         }
 
-        //context.CmdBindGraphicsDescriptorSets(atom.pipeline->GetLayout(), userSetBinding, 1, &atom.descriptorSet);
         context.CmdBindVertexBuffer(atom.vertexBuffer, atom.vertexOffset);
         context.CmdBindIndexBuffer(atom.indexBuffer, atom.indexOffset);
         context.CmdPushConstants(passLayout, VKW::DESCRIPTOR_STAGE_ALL, 0, sizeof(std::uint32_t), &atom.instanceID);
@@ -157,7 +156,6 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
         DRE::S32 x = DRE::Clamp(DRE::g_AppContext.m_CursorX, 0, DRE::S32(renderWidth - 1));
         DRE::S32 y = DRE::Clamp(DRE::g_AppContext.m_CursorY, 0, DRE::S32(renderHeight - 1));
         DRE::g_AppContext.m_MouseHoveredObjectID = ObjectIDFromBuffer(readbackData, x, y);
-        std::cout << DRE::g_AppContext.m_MouseHoveredObjectID << std::endl;
     }
 
     m_LastObjectIDsFuture = tempFuture;

@@ -139,7 +139,19 @@ void DREApplicationDelegate::start()
 
 
     glm::mat spheresTransform = glm::rotate(glm::identity<glm::mat4>(), glm::radians(180.0f), glm::vec3{ 1.0f, 0.0, 0.0f });
-    m_IOManager.ParseModelFile("data\\MetalRoughSpheres\\glTF\\MetalRoughSpheres.gltf", m_MainScene, "gltf_spheres", spheresTransform, Data::TEXTURE_VARIATION_RGBA);
+    WORLD::SceneNode* spheresNode = m_IOManager.ParseModelFile("data\\MetalRoughSpheres\\glTF\\MetalRoughSpheres.gltf", m_MainScene, "default_pbr", spheresTransform, Data::TEXTURE_VARIATION_RGBA);
+    spheresNode->ForEachChild([this](WORLD::SceneNode* node)
+    {
+        WORLD::ISceneNodeUser* nodeUser = node->GetNodeUser();
+        if (nodeUser == nullptr)
+            return;
+
+        if (nodeUser->GetType() == WORLD::ISceneNodeUser::Type::Entity)
+        {
+            WORLD::Entity* entity = reinterpret_cast<WORLD::Entity*>(nodeUser);
+            entity->GetRenderableObject()->SetNormalMode(NormalMode::TBN);
+        }
+    });
 
     m_GraphicsManager.GetMainContext().FlushAll();
 

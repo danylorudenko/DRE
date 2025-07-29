@@ -18,6 +18,7 @@ struct S_SURFACE
     vec3 diffuseSpectrum;
     float roughness;
     float metalness;
+    vec4 prevWpos;
 };
 
 S_LIGHTING_RESULT CalculateLighting(S_SURFACE surface)

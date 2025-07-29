@@ -70,10 +70,20 @@ public:
     inline bool                                 HasDescriptorSet() const { return !m_DescriptorSets.Empty(); }
     inline VKW::DescriptorSet const&            GetDescriptorSet(FrameID frameID) const { return m_DescriptorSets[frameID]; }
     inline VKW::DescriptorSet const&            GetShadowDescriptorSet(FrameID frameID) const { return m_DescriptorSetsShadow[frameID]; }
-    inline Texture*                             GetDiffuseTexture() const { return m_Textures[0]; }
-    inline Texture*                             GetNormalTexture() const { return m_Textures[1]; }
-    inline Texture*                             GetMetalnessTexture() const { return m_Textures[2]; }
-    inline Texture*                             GetRoughnessTexture() const { return m_Textures[3]; }
+    inline Texture*                             GetDiffuseTexture() const { return m_Textures[Data::Material::TextureProperty::DIFFUSE]; }
+    inline Texture*                             GetNormalTexture() const { return m_Textures[Data::Material::TextureProperty::NORMAL]; }
+    inline Texture*                             GetMetalnessTexture() const { return m_Textures[Data::Material::TextureProperty::METALNESS]; }
+    inline Texture*                             GetRoughnessTexture() const { return m_Textures[Data::Material::TextureProperty::ROUGHNESS]; }
+
+    void                                        SetDiffuseTexture(Texture* texture);
+    void                                        SetNormalTexture(Texture* texture);
+    void                                        SetMetalnessTexture(Texture* texture);
+    void                                        SetRoughnessTexture(Texture* texture);
+
+    void                                        SetNormalMode(NormalMode mode);
+
+private:
+    void                                        UpdateGPUInstanceTextures();
 
 private:
     WORLD::SceneNode*                   m_SceneNode;
