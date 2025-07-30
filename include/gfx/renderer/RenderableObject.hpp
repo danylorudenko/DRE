@@ -48,18 +48,21 @@ public:
         WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline,
         GlobalGeometry::GeometryGPU const& geometryGPU,
         VKW::AccelerationStructureResource* blasResource,
-        TexturesVector&& textures, DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets);
+        TexturesVector&& textures, DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets,
+        InstanceFlags instanceFlags);
 
     RenderableObject(
         WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline,
         GlobalGeometry::GeometryGPU const& goemtryGPU,
         VKW::AccelerationStructureResource* blasResource,
-        DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets);
+        DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets,
+        InstanceFlags instanceFlags);
 
     RenderableObject(
         WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline,
         GlobalGeometry::GeometryGPU const& geometryGPU,
-        VKW::AccelerationStructureResource* blasResource);
+        VKW::AccelerationStructureResource* blasResource,
+        InstanceFlags instanceFlags);
 
     inline WORLD::SceneNode*                    GetSceneNode() const { return m_SceneNode; }
     inline LayerBits                            GetLayer() const { return m_Layer; }
@@ -80,10 +83,14 @@ public:
     void                                        SetMetalnessTexture(Texture* texture);
     void                                        SetRoughnessTexture(Texture* texture);
 
-    void                                        SetNormalMode(NormalMode mode);
+    void                                        SetInstanceFlags(InstanceFlags flags);
+    void                                        EnableTextureNormals(bool enable);
+    void                                        EnableInvertNormalY(bool enable);
+    void                                        EnableTBN(bool enable);
 
 private:
     void                                        UpdateGPUInstanceTextures();
+    void                                        SetFlag(InstanceFlags flag, bool enable);
 
 private:
     WORLD::SceneNode*                   m_SceneNode;
@@ -95,6 +102,8 @@ private:
     InstanceDataManager::InstanceGPU    m_InstanceGPU;
 
     TexturesVector                      m_Textures;
+
+    InstanceFlags                       m_InstanceFlags{};
 
     DescriptorSetVector                 m_DescriptorSets;
     DescriptorSetVector                 m_DescriptorSetsShadow;

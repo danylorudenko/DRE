@@ -149,7 +149,7 @@ void DREApplicationDelegate::start()
         if (nodeUser->GetType() == WORLD::ISceneNodeUser::Type::Entity)
         {
             WORLD::Entity* entity = reinterpret_cast<WORLD::Entity*>(nodeUser);
-            entity->GetRenderableObject()->SetNormalMode(NormalMode::TBN);
+            entity->GetRenderableObject()->EnableTBN(true);
         }
     });
 

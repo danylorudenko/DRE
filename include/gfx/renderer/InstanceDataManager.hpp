@@ -43,10 +43,11 @@ public:
     public:
         InstanceGPU(InstanceDataManager* manager, DRE::U64 addressGPU, DRE::U32 id);
 
-        void ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform, glm::uvec4 textureIndices, DRE::U32 globalID, NormalMode normalMode);
+        void ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform, glm::uvec4 textureIndices, DRE::U32 globalID, InstanceFlags instanceFlags);
         void ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform);
         void ScheduleUpdate(glm::uvec4 textureIndicies);
-        void ScheduleUpdate(NormalMode mode);
+        void ScheduleUpdate(InstanceFlags flags, bool addFlags);
+        void ScheduleUpdate(InstanceFlags flags);
 
         glm::mat4 const& GetTransform() const { return m_InstanceDataCPU.world_space; }
 

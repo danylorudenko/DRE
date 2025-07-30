@@ -4,16 +4,16 @@
 #include "common/shaders_defines.h"
 
 #ifdef __cplusplus
-enum NormalMode
+enum InstanceFlags : uint
 {
-    TEXTURE             = 0,
-    TEXTURE_INVERT_Y    = 1,
-    TBN                 = 2
+    TEXTURE             = 1u << 0,
+    TEXTURE_INVERT_Y    = 1u << 1,
+    TBN                 = 1u << 2
 };
 #else
-#define NORMAL_MODE_TEXTURE             0
-#define NORMAL_MODE_TEXTURE_INVERT_Y    1
-#define NORMAL_MODE_TBN                 2
+#define INSTANCE_FLAG_TEXTURE             (1 << 0)
+#define INSTANCE_FLAG_TEXTURE_INVERT_Y    (1 << 1)
+#define INSTANCE_FLAG_TBN                 (1 << 2)
 #endif
 
 DeclareStorageBuffer(S_INSTANCE)
@@ -21,7 +21,7 @@ DeclareStorageBuffer(S_INSTANCE)
     mat4 world_space;
     mat4 inv_world_space;
     uvec4 texture_indicies;
-    uvec4 globalID_normalMode;
+    uvec4 globalID_instanceFlags;
 };
 
 #ifndef __cplusplus
@@ -63,12 +63,12 @@ uint GetRoughnessTextureID(S_INSTANCE_GPURef instance)
 
 uint GetGlobalID(S_INSTANCE_GPURef instance)
 {
-    return instance.globalID_normalMode.x;
+    return instance.globalID_instanceFlags.x;
 }
 
-uint GetNormalMode(S_INSTANCE_GPURef instance)
+uint GetInstanceFlags(S_INSTANCE_GPURef instance)
 {
-    return instance.globalID_normalMode.y;
+    return instance.globalID_instanceFlags.y;
 }
 
 #endif // !__cplusplus

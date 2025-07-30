@@ -10,7 +10,8 @@ namespace GFX
 RenderableObject::RenderableObject(
     WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline, GlobalGeometry::GeometryGPU const& geometryGPU,
     VKW::AccelerationStructureResource* blasResource,
-    TexturesVector&& textures, DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets)
+    TexturesVector&& textures, DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets,
+    InstanceFlags instanceFlags)
     : m_SceneNode{ sceneNode }
     , m_Layer{ layers }
     , m_Pipeline{ pipeline }
@@ -20,13 +21,15 @@ RenderableObject::RenderableObject(
     , m_DescriptorSets{ DRE_MOVE(sets) }
     , m_DescriptorSetsShadow{ DRE_MOVE(shadowSets) }
     , m_Textures{ DRE_MOVE(textures) }
+    , m_InstanceFlags{ instanceFlags }
 {
 }
 
 RenderableObject::RenderableObject(
     WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline, GlobalGeometry::GeometryGPU const& geometryGPU,
     VKW::AccelerationStructureResource* blasResource,
-    DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets)
+    DescriptorSetVector&& sets, DescriptorSetVector&& shadowSets,
+    InstanceFlags instanceFlags)
     : m_SceneNode{ sceneNode }
     , m_Layer{ layers }
     , m_Pipeline{ pipeline }
@@ -36,12 +39,14 @@ RenderableObject::RenderableObject(
     , m_DescriptorSets{ DRE_MOVE(sets) }
     , m_DescriptorSetsShadow{ DRE_MOVE(shadowSets) }
     , m_Textures{}
+    , m_InstanceFlags{ instanceFlags }
 {
 }
 
 RenderableObject::RenderableObject(WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline,
     GlobalGeometry::GeometryGPU const& geometryGPU,
-    VKW::AccelerationStructureResource* blasResource)
+    VKW::AccelerationStructureResource* blasResource,
+    InstanceFlags instanceFlags)
     : m_SceneNode{ sceneNode }
     , m_Layer{ layers }
     , m_Pipeline{ pipeline }
@@ -51,6 +56,7 @@ RenderableObject::RenderableObject(WORLD::SceneNode* sceneNode, InstanceDataMana
     , m_DescriptorSets{}
     , m_DescriptorSetsShadow{}
     , m_Textures{}
+    , m_InstanceFlags{ instanceFlags }
 {
 }
 
@@ -82,9 +88,25 @@ void RenderableObject::SetRoughnessTexture(Texture* texture)
     UpdateGPUInstanceTextures();
 }
 
-void RenderableObject::SetNormalMode(NormalMode mode)
+void RenderableObject::SetInstanceFlags(InstanceFlags flags)
 {
-    m_InstanceGPU.ScheduleUpdate(mode);
+    m_InstanceFlags = flags;
+    m_InstanceGPU.ScheduleUpdate(m_InstanceFlags);
+}
+
+void RenderableObject::EnableTextureNormals(bool enable)
+{
+    SetFlag(InstanceFlags::TEXTURE, enable);
+}
+
+void RenderableObject::EnableInvertNormalY(bool enable)
+{
+    SetFlag(InstanceFlags::TEXTURE_INVERT_Y, enable);
+}
+
+void RenderableObject::EnableTBN(bool enable)
+{
+    SetFlag(InstanceFlags::TBN, enable);
 }
 
 void RenderableObject::UpdateGPUInstanceTextures()
@@ -97,6 +119,16 @@ void RenderableObject::UpdateGPUInstanceTextures()
             GetRoughnessTexture()->GetShaderGlobalDescriptor().id_
         }
     );
+}
+
+void RenderableObject::SetFlag(InstanceFlags flag, bool enable)
+{
+    if (enable)
+        m_InstanceFlags = InstanceFlags(m_InstanceFlags | flag);
+    else
+        m_InstanceFlags = InstanceFlags(m_InstanceFlags & ~flag);
+
+    m_InstanceGPU.ScheduleUpdate(m_InstanceFlags);
 }
 
 }
