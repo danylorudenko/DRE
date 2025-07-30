@@ -35,12 +35,12 @@ InstanceDataManager::InstanceGPU::InstanceGPU(InstanceDataManager* manager, DRE:
 {
 }
 
-void InstanceDataManager::InstanceGPU::ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform, glm::uvec4 textureIndices, DRE::U32 globalID, NormalMode normalMode)
+void InstanceDataManager::InstanceGPU::ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform, glm::uvec4 textureIndices, DRE::U32 globalID, InstanceFlags instanceFlags)
 {
     m_InstanceDataCPU.world_space = transform;
     m_InstanceDataCPU.inv_world_space = invTransform;
     m_InstanceDataCPU.texture_indicies = textureIndices;
-    m_InstanceDataCPU.globalID_normalMode = glm::uvec4{ globalID, DRE::U32(normalMode), 0, 0 };
+    m_InstanceDataCPU.globalID_instanceFlags = glm::uvec4{ globalID, DRE::U32(instanceFlags), 0, 0 };
     Base::Payload::ScheduleUpdate(m_InstanceDataCPU);
 }
 
@@ -58,9 +58,19 @@ void InstanceDataManager::InstanceGPU::ScheduleUpdate(glm::uvec4 textureIndicies
     Base::Payload::ScheduleUpdate(m_InstanceDataCPU);
 }
 
-void InstanceDataManager::InstanceGPU::ScheduleUpdate(NormalMode mode)
+void InstanceDataManager::InstanceGPU::ScheduleUpdate(InstanceFlags flags, bool addFlags)
 {
-    m_InstanceDataCPU.globalID_normalMode.y = DRE::U32(mode);
+    if (addFlags)
+        m_InstanceDataCPU.globalID_instanceFlags.y |= DRE::U32(flags);
+    else
+        m_InstanceDataCPU.globalID_instanceFlags.y &= ~DRE::U32(flags);
+
+    Base::Payload::ScheduleUpdate(m_InstanceDataCPU);
+}
+
+void InstanceDataManager::InstanceGPU::ScheduleUpdate(InstanceFlags flags)
+{
+    m_InstanceDataCPU.globalID_instanceFlags.y = DRE::U32(flags);
     Base::Payload::ScheduleUpdate(m_InstanceDataCPU);
 }
 

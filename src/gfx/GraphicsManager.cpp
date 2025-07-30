@@ -364,11 +364,11 @@ RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* scen
             textures[3]->GetShaderGlobalDescriptor().id_
         },
         sceneNode->GetGlobalID(),
-        material->GetRenderingProperties().GetNormalMode()
+        material->GetRenderingProperties().GetInstanceFlags()
     );
 
     return m_RenderableObjectPool.Alloc(sceneNode, instanceGPU, layers, pipeline, *geometryGPU, m_RayTracingManager.GetGeometryBLAS(geometry)->m_LogicalHandle,
-        DRE_MOVE(textures), DRE_MOVE(descriptors), DRE_MOVE(shadowDescriptors));
+        DRE_MOVE(textures), DRE_MOVE(descriptors), DRE_MOVE(shadowDescriptors), material->GetRenderingProperties().GetInstanceFlags());
 }
 
 void GraphicsManager::FreeRenderableObject(RenderableObject* obj)

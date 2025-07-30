@@ -58,12 +58,28 @@ public:
         inline void SetMaterialType(MaterialType type) { m_Type = type; }
         inline MaterialType GetMaterialType() const { return m_Type; }
 
-        inline void SetNormalMode(NormalMode mode) { m_NormalMode = mode; }
-        inline NormalMode GetNormalMode() const { return m_NormalMode; }
+        inline void SetInstanceFlags(InstanceFlags flags) { m_InstanceFlags = flags; }
+        inline InstanceFlags GetInstanceFlags() const { return m_InstanceFlags; }
+
+        inline void EnableNormalTexture(bool enable)    { SetFlag(InstanceFlags::NORMAL_TEXTURE, enable); }
+        inline void EnableNormalInvertY(bool enable)    { SetFlag(InstanceFlags::NORMAL_TEXTURE_INVERT_Y, enable); }
+        inline void EnableNormalTBN(bool enable)        { SetFlag(InstanceFlags::NORMAL_TBN, enable); }
+
+        inline bool HasNormalTexture() const            { return (m_InstanceFlags & InstanceFlags::NORMAL_TEXTURE) != 0; }
+        inline bool HasNormalTextureInvertY() const     { return (m_InstanceFlags & InstanceFlags::NORMAL_TEXTURE_INVERT_Y) != 0; }
+        inline bool HasNormalTBN() const                { return (m_InstanceFlags & InstanceFlags::NORMAL_TBN) != 0; }
 
     private:
+        inline void SetFlag(InstanceFlags flag, bool enable)
+        {
+            if (enable)
+                m_InstanceFlags = InstanceFlags(m_InstanceFlags | flag);
+            else
+                m_InstanceFlags = InstanceFlags(m_InstanceFlags & ~flag);
+        }
+
         MaterialType m_Type = MATERIAL_TYPE_MAX;
-        NormalMode m_NormalMode = NormalMode::TEXTURE;
+        InstanceFlags m_InstanceFlags = InstanceFlags::NORMAL_TEXTURE;
         DRE::String32 m_Shader;
     };
 

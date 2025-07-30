@@ -149,7 +149,11 @@ void DREApplicationDelegate::start()
         if (nodeUser->GetType() == WORLD::ISceneNodeUser::Type::Entity)
         {
             WORLD::Entity* entity = reinterpret_cast<WORLD::Entity*>(nodeUser);
-            entity->GetRenderableObject()->SetNormalMode(NormalMode::TBN);
+            InstanceFlags flags = entity->GetRenderableObject()->GetInstanceFlags();
+
+            flags = InstanceFlags(flags & ~InstanceFlags::NORMAL_TEXTURE);
+            flags = InstanceFlags(flags | InstanceFlags::NORMAL_TBN);
+            entity->GetRenderableObject()->SetInstanceFlags(flags);
         }
     });
 
@@ -194,6 +198,22 @@ void DREApplicationDelegate::start()
     beachTransform[3][2] -= 6.0f;
     //WORLD::Entity* beachEntity = m_MainScene.CreateOpaqueEntity(m_GraphicsManager.GetMainContext(), &m_WaterGeometry, &m_BeachMaterial); // reuse water geometry
     //beachEntity->SetMatrix(beachTransform);
+    //beachEntity->ForEachChild([this](WORLD::SceneNode* node)
+    //{
+    //    WORLD::ISceneNodeUser* nodeUser = node->GetNodeUser();
+    //    if (nodeUser == nullptr)
+    //        return;
+    //
+    //    if (nodeUser->GetType() == WORLD::ISceneNodeUser::Type::Entity)
+    //    {
+    //        WORLD::Entity* entity = reinterpret_cast<WORLD::Entity*>(nodeUser);
+    //        InstanceFlags flags = entity->GetRenderableObject()->GetInstanceFlags();
+    //
+    //        flags = InstanceFlags(flags & ~InstanceFlags::NORMAL_TEXTURE);
+    //        flags = InstanceFlags(flags | InstanceFlags::NORMAL_TEXTURE_INVERT_Y);
+    //        entity->GetRenderableObject()->SetInstanceFlags(flags);
+    //    }
+    //});
     //beachEntity->GetSceneNode()->SetName("beach_plane");
 
     Data::Texture2D blueNoise256 = m_IOManager.ReadTexture2D("textures\\blue_noise_rgba.png", Data::TEXTURE_VARIATION_RGBA);
