@@ -61,13 +61,13 @@ public:
         inline void SetInstanceFlags(InstanceFlags flags) { m_InstanceFlags = flags; }
         inline InstanceFlags GetInstanceFlags() const { return m_InstanceFlags; }
 
-        inline void EnableTextureNormals(bool enable) { SetFlag(InstanceFlags::TEXTURE, enable); }
-        inline void EnableInvertNormalY(bool enable) { SetFlag(InstanceFlags::TEXTURE_INVERT_Y, enable); }
-        inline void EnableTBN(bool enable) { SetFlag(InstanceFlags::TBN, enable); }
+        inline void EnableNormalTexture(bool enable)    { SetFlag(InstanceFlags::NORMAL_TEXTURE, enable); }
+        inline void EnableNormalInvertY(bool enable)    { SetFlag(InstanceFlags::NORMAL_TEXTURE_INVERT_Y, enable); }
+        inline void EnableNormalTBN(bool enable)        { SetFlag(InstanceFlags::NORMAL_TBN, enable); }
 
-        inline bool HasTextureNormals() const { return (m_InstanceFlags & InstanceFlags::TEXTURE) != InstanceFlags{}; }
-        inline bool HasInvertNormalY() const { return (m_InstanceFlags & InstanceFlags::TEXTURE_INVERT_Y) != InstanceFlags{}; }
-        inline bool HasTBN() const { return (m_InstanceFlags & InstanceFlags::TBN) != InstanceFlags{}; }
+        inline bool HasNormalTexture() const            { return (m_InstanceFlags & InstanceFlags::NORMAL_TEXTURE) != 0; }
+        inline bool HasNormalTextureInvertY() const     { return (m_InstanceFlags & InstanceFlags::NORMAL_TEXTURE_INVERT_Y) != 0; }
+        inline bool HasNormalTBN() const                { return (m_InstanceFlags & InstanceFlags::NORMAL_TBN) != 0; }
 
     private:
         inline void SetFlag(InstanceFlags flag, bool enable)
@@ -79,7 +79,7 @@ public:
         }
 
         MaterialType m_Type = MATERIAL_TYPE_MAX;
-        InstanceFlags m_InstanceFlags = InstanceFlags::TEXTURE;
+        InstanceFlags m_InstanceFlags = InstanceFlags::NORMAL_TEXTURE;
         DRE::String32 m_Shader;
     };
 

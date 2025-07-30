@@ -24,17 +24,23 @@ void main()
     float metalness = SampleGlobalTextureAnisotropic(GetMetalnessTextureID(InstanceRef), in_uv).r;
     float roughness = SampleGlobalTextureAnisotropic(GetRoughnessTextureID(InstanceRef), in_uv).r;
 
-    vec3 n = normalize(in_TBN[2]);
+    vec3 n = vec3(0,0,1);
     uint instanceFlags = GetInstanceFlags(InstanceRef);
 
-    if ((instanceFlags & INSTANCE_FLAG_TEXTURE) != 0)
+    if ((instanceFlags & INSTANCE_FLAG_NORMAL_TEXTURE) != 0)
     {
-        if ((instanceFlags & INSTANCE_FLAG_TEXTURE_INVERT_Y) != 0)
-        {
-            normal = vec3(normal.r, 1 - normal.g, normal.b);
-        }
-
         n = normalize(in_TBN * (normal * 2.0 - 1.0));
+    }
+
+    if ((instanceFlags & INSTANCE_FLAG_NORMAL_TEXTURE_INVERT_Y) != 0)
+    {
+        normal = vec3(normal.r, 1 - normal.g, normal.b);
+        n = normalize(in_TBN * (normal * 2.0 - 1.0));
+    }
+
+    if ((instanceFlags & INSTANCE_FLAG_NORMAL_TBN) != 0)
+    {
+        n = in_TBN[2];
     }
 
     rayQueryEXT rayQuery;

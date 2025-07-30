@@ -4,16 +4,16 @@
 #include "common/shaders_defines.h"
 
 #ifdef __cplusplus
-enum InstanceFlags : uint
+enum InstanceFlags : DRE::U32
 {
-    TEXTURE             = 1u << 0,
-    TEXTURE_INVERT_Y    = 1u << 1,
-    TBN                 = 1u << 2
+    NORMAL_TEXTURE              = 1u << 0,
+    NORMAL_TEXTURE_INVERT_Y     = 1u << 1,
+    NORMAL_TBN                  = 1u << 2
 };
 #else
-#define INSTANCE_FLAG_TEXTURE             (1 << 0)
-#define INSTANCE_FLAG_TEXTURE_INVERT_Y    (1 << 1)
-#define INSTANCE_FLAG_TBN                 (1 << 2)
+#define INSTANCE_FLAG_NORMAL_TEXTURE             (1 << 0)
+#define INSTANCE_FLAG_NORMAL_TEXTURE_INVERT_Y    (1 << 1)
+#define INSTANCE_FLAG_NORMAL_TBN                 (1 << 2)
 #endif
 
 DeclareStorageBuffer(S_INSTANCE)

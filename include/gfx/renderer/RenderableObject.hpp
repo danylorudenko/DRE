@@ -77,6 +77,7 @@ public:
     inline Texture*                             GetNormalTexture() const { return m_Textures[Data::Material::TextureProperty::NORMAL]; }
     inline Texture*                             GetMetalnessTexture() const { return m_Textures[Data::Material::TextureProperty::METALNESS]; }
     inline Texture*                             GetRoughnessTexture() const { return m_Textures[Data::Material::TextureProperty::ROUGHNESS]; }
+    inline InstanceFlags                        GetInstanceFlags() const { return m_InstanceFlags; }
 
     void                                        SetDiffuseTexture(Texture* texture);
     void                                        SetNormalTexture(Texture* texture);
@@ -84,9 +85,9 @@ public:
     void                                        SetRoughnessTexture(Texture* texture);
 
     void                                        SetInstanceFlags(InstanceFlags flags);
-    void                                        EnableTextureNormals(bool enable);
-    void                                        EnableInvertNormalY(bool enable);
-    void                                        EnableTBN(bool enable);
+    void                                        SetNormalTexture(bool enable);
+    void                                        SetNormalTextureInvertY(bool enable);
+    void                                        SetNormalTBN(bool enable);
 
 private:
     void                                        UpdateGPUInstanceTextures();
@@ -103,7 +104,7 @@ private:
 
     TexturesVector                      m_Textures;
 
-    InstanceFlags                       m_InstanceFlags{};
+    InstanceFlags                       m_InstanceFlags;
 
     DescriptorSetVector                 m_DescriptorSets;
     DescriptorSetVector                 m_DescriptorSetsShadow;

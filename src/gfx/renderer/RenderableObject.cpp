@@ -94,19 +94,19 @@ void RenderableObject::SetInstanceFlags(InstanceFlags flags)
     m_InstanceGPU.ScheduleUpdate(m_InstanceFlags);
 }
 
-void RenderableObject::EnableTextureNormals(bool enable)
+void RenderableObject::SetNormalTexture(bool enable)
 {
-    SetFlag(InstanceFlags::TEXTURE, enable);
+    SetFlag(InstanceFlags::NORMAL_TEXTURE, enable);
 }
 
-void RenderableObject::EnableInvertNormalY(bool enable)
+void RenderableObject::SetNormalTextureInvertY(bool enable)
 {
-    SetFlag(InstanceFlags::TEXTURE_INVERT_Y, enable);
+    SetFlag(InstanceFlags::NORMAL_TEXTURE_INVERT_Y, enable);
 }
 
-void RenderableObject::EnableTBN(bool enable)
+void RenderableObject::SetNormalTBN(bool enable)
 {
-    SetFlag(InstanceFlags::TBN, enable);
+    SetFlag(InstanceFlags::NORMAL_TBN, enable);
 }
 
 void RenderableObject::UpdateGPUInstanceTextures()
