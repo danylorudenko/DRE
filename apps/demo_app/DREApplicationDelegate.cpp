@@ -151,8 +151,8 @@ void DREApplicationDelegate::start()
             WORLD::Entity* entity = reinterpret_cast<WORLD::Entity*>(nodeUser);
             InstanceFlags flags = entity->GetRenderableObject()->GetInstanceFlags();
 
-            flags = InstanceFlags(flags & ~InstanceFlags::NORMAL_TEXTURE);
-            flags = InstanceFlags(flags | InstanceFlags::NORMAL_TBN);
+            flags = InstanceFlags(flags & ~(InstanceFlags::NORMAL_TEXTURE | InstanceFlags::MATERIAL_TEXTURES_DEFAULT));
+            flags = InstanceFlags(flags | (InstanceFlags::NORMAL_TBN | InstanceFlags::MATERIAL_TEXTURES_GLTF_SPHERES));
             entity->GetRenderableObject()->SetInstanceFlags(flags);
         }
     });
