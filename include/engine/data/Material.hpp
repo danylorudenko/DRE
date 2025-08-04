@@ -65,9 +65,14 @@ public:
         inline void EnableNormalInvertY(bool enable)    { SetFlag(InstanceFlags::NORMAL_TEXTURE_INVERT_Y, enable); }
         inline void EnableNormalTBN(bool enable)        { SetFlag(InstanceFlags::NORMAL_TBN, enable); }
 
+        inline void EnableMaterialTexturesDefault(bool enable)      { SetFlag(InstanceFlags::MATERIAL_TEXTURES_DEFAULT, enable); }
+        inline void EnableMaterialTexturesGLTFSpheres(bool enable)  { SetFlag(InstanceFlags::MATERIAL_TEXTURES_GLTF_SPHERES, enable); }
+
         inline bool HasNormalTexture() const            { return (m_InstanceFlags & InstanceFlags::NORMAL_TEXTURE) != 0; }
         inline bool HasNormalTextureInvertY() const     { return (m_InstanceFlags & InstanceFlags::NORMAL_TEXTURE_INVERT_Y) != 0; }
         inline bool HasNormalTBN() const                { return (m_InstanceFlags & InstanceFlags::NORMAL_TBN) != 0; }
+        inline bool HasMaterialTexturesDefault() const      { return (m_InstanceFlags & InstanceFlags::MATERIAL_TEXTURES_DEFAULT) != 0; }
+        inline bool HasMaterialTexturesGLTFSpheres() const  { return (m_InstanceFlags & InstanceFlags::MATERIAL_TEXTURES_GLTF_SPHERES) != 0; }
 
     private:
         inline void SetFlag(InstanceFlags flag, bool enable)

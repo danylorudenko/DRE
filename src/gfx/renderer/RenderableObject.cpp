@@ -109,6 +109,16 @@ void RenderableObject::SetNormalTBN(bool enable)
     SetFlag(InstanceFlags::NORMAL_TBN, enable);
 }
 
+void RenderableObject::SetMaterialTexturesDefault(bool enable)
+{
+    SetFlag(InstanceFlags::MATERIAL_TEXTURES_DEFAULT, enable);
+}
+
+void RenderableObject::SetMaterialTexturesGLTFSpheres(bool enable)
+{
+    SetFlag(InstanceFlags::MATERIAL_TEXTURES_GLTF_SPHERES, enable);
+}
+
 void RenderableObject::UpdateGPUInstanceTextures()
 {
     m_InstanceGPU.ScheduleUpdate(

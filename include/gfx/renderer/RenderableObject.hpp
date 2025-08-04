@@ -88,6 +88,8 @@ public:
     void                                        SetNormalTexture(bool enable);
     void                                        SetNormalTextureInvertY(bool enable);
     void                                        SetNormalTBN(bool enable);
+    void                                        SetMaterialTexturesDefault(bool enable);
+    void                                        SetMaterialTexturesGLTFSpheres(bool enable);
 
 private:
     void                                        UpdateGPUInstanceTextures();
