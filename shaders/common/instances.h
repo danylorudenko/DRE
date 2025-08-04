@@ -6,16 +6,16 @@
 #ifdef __cplusplus
 enum InstanceFlags : DRE::U32
 {
-    NORMAL_TEXTURE              = 1u << 0,
-    NORMAL_TEXTURE_INVERT_Y     = 1u << 1,
-    NORMAL_TBN                  = 1u << 2,
-    MATERIAL_TEXTURES_DEFAULT      = 1u << 3,
-    MATERIAL_TEXTURES_GLTF_SPHERES = 1u << 4
+    NORMAL_TEXTURE                     = 1u << 0,
+    NORMAL_TEXTURE_INVERT_Y            = 1u << 1,
+    NORMAL_TBN                         = 1u << 2,
+    MATERIAL_TEXTURES_DEFAULT          = 1u << 3,
+    MATERIAL_TEXTURES_GLTF_SPHERES     = 1u << 4
 };
 #else
-#define INSTANCE_FLAG_NORMAL_TEXTURE             (1 << 0)
-#define INSTANCE_FLAG_NORMAL_TEXTURE_INVERT_Y    (1 << 1)
-#define INSTANCE_FLAG_NORMAL_TBN                 (1 << 2)
+#define INSTANCE_FLAG_NORMAL_TEXTURE                 (1 << 0)
+#define INSTANCE_FLAG_NORMAL_TEXTURE_INVERT_Y        (1 << 1)
+#define INSTANCE_FLAG_NORMAL_TBN                     (1 << 2)
 #define INSTANCE_FLAG_MATERIAL_TEXTURES_DEFAULT      (1 << 3)
 #define INSTANCE_FLAG_MATERIAL_TEXTURES_GLTF_SPHERES (1 << 4)
 #endif
