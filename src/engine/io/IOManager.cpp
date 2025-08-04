@@ -180,24 +180,33 @@ DRE::ByteBuffer IOManager::CompileGLSL(char const* path)
 
     shaderc_shader_kind kind = (shaderc_shader_kind)0;
 
+    shaderc::Compiler compiler;
+    shaderc::CompileOptions options;
+    options.SetTargetEnvironment(shaderc_target_env::shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
+    options.SetIncluder(std::make_unique<DREIncluder>(this));
+
     auto extension = filePath.extension();
     if (extension == ".vert")
+    {
         kind = shaderc_glsl_vertex_shader;
+        options.AddMacroDefinition("DRE_VERTEX_SHADER", "1");
+    }
     else if (extension == ".frag")
+    {
         kind = shaderc_glsl_fragment_shader;
+        options.AddMacroDefinition("DRE_FRAGMENT_SHADER", "1");
+    }
     else if (extension == ".comp")
+    {
         kind = shaderc_glsl_compute_shader;
+        options.AddMacroDefinition("DRE_COMPUTE_SHADER", "1");
+    }
     else
         DRE_ASSERT(false, "Attempt to compile unsupported shader type. See file extension.");
 
     DRE::ByteBuffer sourceBlob{};
     std::uint64_t const bytesRead = ReadFileToBuffer(path, &sourceBlob);
     DRE_ASSERT(bytesRead != 0, "Failed to read GLSL source.");
-
-    shaderc::Compiler compiler;
-    shaderc::CompileOptions options;
-    options.SetTargetEnvironment(shaderc_target_env::shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
-    options.SetIncluder(std::make_unique<DREIncluder>(this));
 
     shaderc::PreprocessedSourceCompilationResult preprocess = compiler.PreprocessGlsl(sourceBlob.As<char*>(), sourceBlob.Size(), kind, path, options);
     if (preprocess.GetCompilationStatus() != shaderc_compilation_status_success)

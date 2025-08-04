@@ -12,7 +12,6 @@
 #include <engine\ApplicationContext.hpp>
 
 #include <common\forward.h>
-#include <common\forward_output.h>
 
 namespace GFX
 {
