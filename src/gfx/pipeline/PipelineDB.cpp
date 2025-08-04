@@ -33,9 +33,9 @@ void PipelineDB::CreateDefaultPipelines()
     // default plane material shader
     {
         CreateGraphicsForwardPipeline("default_pbr");
-        CreateGraphicsForwardPipeline("gltf_spheres");
-        CreateGraphicsForwardPipeline("sand_beach");
-        CreateGraphicsForwardWaterPipeline("water");
+        //CreateGraphicsForwardPipeline("gltf_spheres");
+        //CreateGraphicsForwardPipeline("sand_beach");
+        //CreateGraphicsForwardWaterPipeline("water");
 
         CreateGraphicsGizmoPipeline("gizmo_3D");
 

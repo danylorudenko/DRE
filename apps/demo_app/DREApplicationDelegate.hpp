@@ -63,8 +63,8 @@ private:
     IO::IOManager                       m_IOManager;
 
     Data::Geometry                      m_WaterGeometry;
-    Data::Material                      m_WaterMaterial;
-    Data::Material                      m_BeachMaterial;
+    //Data::Material                      m_WaterMaterial;
+    //Data::Material                      m_BeachMaterial;
 
     GFX::GraphicsManager                m_GraphicsManager;
 

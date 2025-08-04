@@ -46,8 +46,8 @@ DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* t
     , m_MainScene{ &DRE::g_MainAllocator }
     , m_RootEditor{ &m_MainScene }
     , m_WaterGeometry{ sizeof(Data::DREVertex), 4 }
-    , m_WaterMaterial{ "water_mat" }
-    , m_BeachMaterial{ "beach_mat" }
+    //, m_WaterMaterial{ "water_mat" }
+    //, m_BeachMaterial{ "beach_mat" }
     , m_ViewportInput{ &m_MainScene }
 {
     WORLD::g_MainScene = &m_MainScene;
@@ -161,41 +161,41 @@ void DREApplicationDelegate::start()
 
 
     ////////////
-    DRE::ByteBuffer planeVertices;
-    DRE::ByteBuffer planeIndicies;
-    GeneratePlaneMesh(C_WATER_VERTEX_X, C_WATER_VERTEX_Z, planeVertices, planeIndicies);
+    //DRE::ByteBuffer planeVertices;
+    //DRE::ByteBuffer planeIndicies;
+    //GeneratePlaneMesh(C_WATER_VERTEX_X, C_WATER_VERTEX_Z, planeVertices, planeIndicies);
+    //
+    //m_WaterGeometry.SetVertexData(DRE_MOVE(planeVertices));
+    //m_WaterGeometry.SetIndexData(DRE_MOVE(planeIndicies));
+    //Data::Texture2D waterNormalMap = m_IOManager.ReadTexture2D("textures\\water_normal0.jpg", Data::TEXTURE_VARIATION_RGBA);
+    //
+    //m_WaterMaterial.AssignTextureToSlot(Data::Material::TextureProperty::NORMAL, DRE_MOVE(waterNormalMap));
+    //m_WaterMaterial.GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_WATER);
+    //m_WaterMaterial.GetRenderingProperties().SetShader("water");
 
-    m_WaterGeometry.SetVertexData(DRE_MOVE(planeVertices));
-    m_WaterGeometry.SetIndexData(DRE_MOVE(planeIndicies));
-    Data::Texture2D waterNormalMap = m_IOManager.ReadTexture2D("textures\\water_normal0.jpg", Data::TEXTURE_VARIATION_RGBA);
-    
-    m_WaterMaterial.AssignTextureToSlot(Data::Material::TextureProperty::NORMAL, DRE_MOVE(waterNormalMap));
-    m_WaterMaterial.GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_WATER);
-    m_WaterMaterial.GetRenderingProperties().SetShader("water");
 
 
-
-    glm::mat4 waterTransform = glm::identity<glm::mat4>();
+    //glm::mat4 waterTransform = glm::identity<glm::mat4>();
     //wTrans.model = glm::rotate(wTrans.model, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    waterTransform[3][1] += 1.5f;
+    //waterTransform[3][1] += 1.5f;
     //wTrans.model[3][2] -= 0.4f;
-    waterTransform = glm::scale(waterTransform, glm::vec3{ 0.1f });
+    //waterTransform = glm::scale(waterTransform, glm::vec3{ 0.1f });
     //WORLD::Entity* waterEntity = m_MainScene.CreateOpaqueEntity(m_GraphicsManager.GetMainContext(), &m_WaterGeometry, &m_WaterMaterial);
     //waterEntity->SetMatrix(waterTransform);
     //waterEntity->GetSceneNode()->SetName("water");
 
     ////////////
-    m_BeachMaterial.GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE);
-    m_BeachMaterial.GetRenderingProperties().SetShader("sand_beach");
-    m_BeachMaterial.AssignTextureToSlot(Data::Material::TextureProperty::DIFFUSE, m_IOManager.ReadTexture2D("textures\\wavy-sand_albedo.png", Data::TEXTURE_VARIATION_RGBA));
-    m_BeachMaterial.AssignTextureToSlot(Data::Material::TextureProperty::NORMAL, m_IOManager.ReadTexture2D("textures\\wavy-sand_normal-dx.png", Data::TEXTURE_VARIATION_RGBA));
-    m_BeachMaterial.AssignTextureToSlot(Data::Material::TextureProperty::METALNESS, m_IOManager.ReadTexture2D("textures\\wavy-sand_metallic.png", Data::TEXTURE_VARIATION_GRAY));
-    m_BeachMaterial.AssignTextureToSlot(Data::Material::TextureProperty::ROUGHNESS, m_IOManager.ReadTexture2D("textures\\wavy-sand_roughness.png", Data::TEXTURE_VARIATION_GRAY));
+    //m_BeachMaterial.GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE);
+    //m_BeachMaterial.GetRenderingProperties().SetShader("sand_beach");
+    //m_BeachMaterial.AssignTextureToSlot(Data::Material::TextureProperty::DIFFUSE, m_IOManager.ReadTexture2D("textures\\wavy-sand_albedo.png", Data::TEXTURE_VARIATION_RGBA));
+    //m_BeachMaterial.AssignTextureToSlot(Data::Material::TextureProperty::NORMAL, m_IOManager.ReadTexture2D("textures\\wavy-sand_normal-dx.png", Data::TEXTURE_VARIATION_RGBA));
+    //m_BeachMaterial.AssignTextureToSlot(Data::Material::TextureProperty::METALNESS, m_IOManager.ReadTexture2D("textures\\wavy-sand_metallic.png", Data::TEXTURE_VARIATION_GRAY));
+    //m_BeachMaterial.AssignTextureToSlot(Data::Material::TextureProperty::ROUGHNESS, m_IOManager.ReadTexture2D("textures\\wavy-sand_roughness.png", Data::TEXTURE_VARIATION_GRAY));
 
-    glm::mat4 beachTransform = waterTransform; // beach transform
+    //glm::mat4 beachTransform = waterTransform; // beach transform
     //bTrans.model = glm::scale(bTrans.model, glm::vec3(1.5f));
-    beachTransform = glm::rotate(beachTransform, glm::radians(20.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    beachTransform[3][2] -= 6.0f;
+    //beachTransform = glm::rotate(beachTransform, glm::radians(20.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    //beachTransform[3][2] -= 6.0f;
     //WORLD::Entity* beachEntity = m_MainScene.CreateOpaqueEntity(m_GraphicsManager.GetMainContext(), &m_WaterGeometry, &m_BeachMaterial); // reuse water geometry
     //beachEntity->SetMatrix(beachTransform);
     //beachEntity->ForEachChild([this](WORLD::SceneNode* node)
