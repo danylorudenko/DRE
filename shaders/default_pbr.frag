@@ -18,14 +18,26 @@ layout(location = 3) in mat3 in_TBN;
 void main()
 {
     S_INSTANCE_GPURef InstanceRef = GetInstance();
+    uint instanceFlags = GetInstanceFlags(InstanceRef);
 
     vec3 diffuse    = SampleGlobalTextureAnisotropic(GetDiffuseTextureID(InstanceRef), in_uv).rgb;
     vec3 normal     = SampleGlobalTextureAnisotropic(GetNormalTextureID(InstanceRef), in_uv).rgb;
-    float metalness = SampleGlobalTextureAnisotropic(GetMetalnessTextureID(InstanceRef), in_uv).r;
-    float roughness = SampleGlobalTextureAnisotropic(GetRoughnessTextureID(InstanceRef), in_uv).r;
+    float metalness = 0.0;
+    float roughness  = 0.0;
+
+    if ((instanceFlags & INSTANCE_FLAG_MATERIAL_TEXTURES_DEFAULT) != 0)
+    {
+        metalness = SampleGlobalTextureAnisotropic(GetMetalnessTextureID(InstanceRef), in_uv).r;
+        roughness = SampleGlobalTextureAnisotropic(GetRoughnessTextureID(InstanceRef), in_uv).r;
+    }
+    if ((instanceFlags & INSTANCE_FLAG_MATERIAL_TEXTURES_GLTF_SPHERES) != 0)
+    {
+        vec2 metalness_roughness = SampleGlobalTextureAnisotropic(GetMetalnessTextureID(InstanceRef), in_uv).bg;
+        metalness = metalness_roughness.x;
+        roughness = metalness_roughness.y;
+    }
 
     vec3 n = vec3(0,0,1);
-    uint instanceFlags = GetInstanceFlags(InstanceRef);
 
     if ((instanceFlags & INSTANCE_FLAG_NORMAL_TEXTURE) != 0)
     {
