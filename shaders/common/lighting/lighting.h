@@ -1,7 +1,7 @@
 #ifndef _LIGHTING_H_
 #define _LIGHTING_H_
 
-#include "common/global_uniform.h"
+#include "common/shaders_common.h"
 #include "common/lighting/lighting_model.h"
 #include "common/lighting/lights.h"
 #include "common/shadows/shadows.h"
@@ -26,8 +26,6 @@ S_LIGHTING_RESULT CalculateLighting(S_SURFACE surface)
     S_LIGHTING_RESULT Result;
     Result.finalRadiance = vec3(0.0, 0.0, 0.0);
 
-    vec2 shadowUV = CalculateShadowUV(surface.wpos, GetSunShadowVP());
-
     vec3 n = surface.normal;
     vec3 v = normalize(GetCameraPos() - surface.wpos);
     float NdotV = max(0.0, dot(n, v));
@@ -40,13 +38,18 @@ S_LIGHTING_RESULT CalculateLighting(S_SURFACE surface)
         {
             case DRE_LIGHT_TYPE_SUN:
             {
-                float shadow = CalculateShadow(surface.wpos, GetSunShadowVP(), GetSunShadowSize(), GetGlobalTexture(GetShadowMapID()));
-                shadow = 1.0f;
+                //float shadow = ShadowMapSample(surface.wpos, GetSunShadowVP(), GetSunShadowSize(), GetGlobalTexture(GetShadowMapID()));
                 vec3 L = GetDirection(light);
                 vec3 h = normalize(v + L);
                 float NdotH = max(0.0, dot(n, h));
                 float NdotL = max(0.0, dot(n, L));
                 vec3 brdf = CookTorranceBRDF(NdotH, NdotV, NdotL, surface.diffuseSpectrum, surface.roughness, surface.metalness);
+
+                #ifndef DRE_VERTEX_SHADER
+                float shadow = ShadowVisibilityTrace(surface.wpos, L);
+                #else
+                float shadow = 1.0;
+                #endif // DRE_VERTEX_SHADER
 
                 Result.finalRadiance += brdf * GetFlux(light) * shadow;
                 break;

@@ -1,3 +1,4 @@
+#include "common/shaders_common.h"
 #include "common/utils/poisson.h"
 
 #ifndef _SHADOWS_H_
@@ -10,7 +11,7 @@ vec2 CalculateShadowUV(in vec3 wpos, in mat4 shadowViewProj)
     return shadowUV;
 }
 
-float CalculateShadow(in vec3 wpos, in mat4 shadowViewProj, vec2 shadowMapDims, in texture2D shadowMap)
+float ShadowMapSample(in vec3 wpos, in mat4 shadowViewProj, vec2 shadowMapDims, in texture2D shadowMap)
 {
     vec3 lightspaceCoord = (shadowViewProj * vec4(wpos, 1.0)).xyz;
     vec2 shadowUV = lightspaceCoord.xy * 0.5 + 0.5;
@@ -48,5 +49,31 @@ float CalculateShadow(in vec3 wpos, in mat4 shadowViewProj, vec2 shadowMapDims, 
 
     return result;
 }
+
+#ifndef DRE_VERTEX_SHADER
+float ShadowVisibilityTrace(in vec3 wpos, in vec3 shadowDir)
+{
+    rayQueryEXT rayQuery;
+    rayQueryInitializeEXT(
+        rayQuery,
+        g_TLAS,
+        gl_RayFlagsTerminateOnFirstHitEXT,
+        0xFFFFFFFF,
+        wpos,
+        0.1f, // tMin
+        shadowDir,
+        10000); // tMax
+
+    rayQueryProceedEXT(rayQuery);
+
+    float result = 1.0;
+    if (rayQueryGetIntersectionTypeEXT(rayQuery, true) == gl_RayQueryCommittedIntersectionTriangleEXT)
+    {
+        result = 0.0;
+    }
+
+    return result;
+}
+#endif // DRE_VERTEX_SHADER
 
 #endif // _SHADOWS_H_

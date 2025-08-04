@@ -37,7 +37,6 @@ void main()
     }
 
     vec3 n = vec3(0,0,1);
-
     if ((instanceFlags & INSTANCE_FLAG_NORMAL_TEXTURE) != 0)
     {
         n = normalize(in_TBN * (normal * 2.0 - 1.0));
@@ -52,24 +51,6 @@ void main()
     if ((instanceFlags & INSTANCE_FLAG_NORMAL_TBN) != 0)
     {
         n = in_TBN[2];
-    }
-
-    rayQueryEXT rayQuery;
-    rayQueryInitializeEXT(
-        rayQuery,
-        g_TLAS,
-        gl_RayFlagsTerminateOnFirstHitEXT,
-        0xFFFFFFFF,
-        in_wpos,
-        0.1f, // tMin
-        normalize(vec3(1.0f,  10.0f, 1.0f)),
-        10000); // tMax
-
-    rayQueryProceedEXT(rayQuery);
-
-    if (rayQueryGetIntersectionTypeEXT(rayQuery, true) == gl_RayQueryCommittedIntersectionTriangleEXT)
-    {
-        diffuse *= vec3(0.1f, 0.1f, 0.1f);
     }
 
     S_SURFACE surface;
