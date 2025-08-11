@@ -10,12 +10,12 @@ find_package(Git REQUIRED)
 include(CMakeDREHelpers.txt)
 update_git_submodule(assimp)
 update_git_submodule(glm)
-update_git_submodule(shaderc)
 update_git_submodule(glTF-Sample-Models)
 update_git_submodule(imgui)
 update_git_submodule(SPIRV-Cross)
 update_git_submodule(stb)
 update_git_submodule(Vulkan-Headers)
+update_git_submodule(directxshadercompiler)
 
 
 #override some assimp defaults
@@ -25,21 +25,16 @@ option(BUILD_STATIC_LIBS "Build package with shared libraries." ON) # this one i
 option(ASSIMP_BUILD_ZLIB "Build your own zlib" ON)
 option(ASSIMP_BUILD_TESTS "If the test suite for Assimp is built in addition to the library." OFF)
 option(ASSIMP_INSTALL "Disable this if you want to use assimp as a submodule." ON)
-option(SHADERC_ENABLE_SHARED_CRT "Use the shared CRT instead of the static CRT" ON)
 #==========
 add_subdirectory(extern/assimp)
 
-
-#override shaderc defaults
+#override DirectXShaderCompiler defaults
 #==========
-option(SHADERC_SKIP_INSTALL ON)
-option(SHADERC_SKIP_TESTS "Skip building tests" ON)
-option(SHADERC_SKIP_EXAMPLES "Skip building examples" ON)
-option(SHADERC_SKIP_COPYRIGHT_CHECK "Skip copyright check" ON)
-find_package(Python3 COMPONENTS Interpreter REQUIRED)
-execute_process(COMMAND python extern/shaderc/utils/git-sync-deps)
+option(ENABLE_SPIRV_CODEGEN "Enable SPIR-V code generation" ON)
+option(SPIRV_SKIP_TESTS "Skip building tests" ON)
+option(SPIRV_SKIP_EXECUTABLES "Skip building tools" ON)
 #==========
-add_subdirectory(extern/shaderc)
+add_subdirectory(extern/dxc)
 
 
 add_subdirectory(extern/glm)

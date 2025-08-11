@@ -105,8 +105,7 @@ public:
     static std::uint64_t    ReadFileStringToBuffer(char const* path, DRE::ByteBuffer* buffer);
     static void             WriteNewFile(char const* path, DRE::ByteBuffer const& buffer);
 
-    DRE::ByteBuffer         CompileGLSL(char const* file);
-    std::mutex&             GetShaderIncluderMutex() { return m_ShaderIncluderMutex; }
+      DRE::ByteBuffer         CompileGLSL(char const* file);
 
     inline bool                             NewShadersPending() { return IOManager::m_PendingChangesFlag.load(std::memory_order::acquire); }
     DRE::InplaceVector<DRE::String64, 12>   GetPendingShaders();
@@ -139,7 +138,6 @@ private:
 
     DRE::HashTable<DRE::String64, ShaderData, DRE::AllocatorLinear> m_ShaderData;
 
-    std::mutex  m_ShaderIncluderMutex;
 
     DRE::InplaceVector<DRE::String64, 12> m_PendingShaders;
     std::mutex  m_PendingShadersMutex;

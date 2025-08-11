@@ -27,7 +27,9 @@
 #include <engine\scene\Scene.hpp>
 
 #include <spirv_cross.hpp>
-#include <shaderc\shaderc.hpp>
+#include <dxc/dxcapi.h>
+#include <wrl/client.h>
+#include <vector>
 
 namespace IO
 {
@@ -116,61 +118,6 @@ void IOManager::WriteNewFile(char const* path, DRE::ByteBuffer const& buffer)
     ostream.close();
 }
 
-struct DREIncludeData
-{
-    DRE::ByteBuffer content;
-    DRE::String64 contentName;
-    DRE::String64 targetName;
-};
-
-class DREIncluder : public shaderc::CompileOptions::IncluderInterface
-{
-public:
-    DREIncluder(IOManager* manager)
-        : m_IOManager{ manager }
-    {}
-
-    virtual shaderc_include_result* GetInclude(const char* requested_source,
-        shaderc_include_type type,
-        const char* requesting_source,
-        size_t include_depth) override
-    {
-        std::mutex& m = m_IOManager->GetShaderIncluderMutex();
-        m.lock();
-        shaderc_include_result* result = DRE::g_FrameScratchAllocator.Alloc<shaderc_include_result>();
-        DREIncludeData* data = DRE::g_FrameScratchAllocator.Alloc<DREIncludeData>();
-        m.unlock();
-
-        data->contentName = "shaders\\";
-        data->contentName.Append(requested_source);
-
-        data->targetName = requesting_source;
-        
-        std::uint64_t const bytesRead = IOManager::ReadFileToBuffer(data->contentName.GetData(), &data->content);
-        DRE_ASSERT(bytesRead != 0, "Failed to read requested include for GLSL.");
-
-        result->source_name = data->contentName.GetData();
-        result->content_length = data->content.Size();
-        result->content = data->content.As<char*>();
-        result->source_name = data->targetName.GetData();
-        result->source_name_length = data->targetName.GetSize();
-        result->user_data = data;
-
-        return result;
-    }
-
-    // Handles shaderc_include_result_release_fn callbacks.
-    virtual void ReleaseInclude(shaderc_include_result* result) override
-    {
-        DREIncludeData* data = (DREIncludeData*)result->user_data;
-        data->~DREIncludeData();
-    }
-
-    virtual ~DREIncluder() = default;
-
-private:
-    IOManager* m_IOManager;
-};
 
 DRE::ByteBuffer IOManager::CompileGLSL(char const* path)
 {
@@ -178,60 +125,93 @@ DRE::ByteBuffer IOManager::CompileGLSL(char const* path)
 
     std::cout << "Compiling shader " << path << std::endl;
 
-    shaderc_shader_kind kind = (shaderc_shader_kind)0;
-
-    shaderc::Compiler compiler;
-    shaderc::CompileOptions options;
-    options.SetTargetEnvironment(shaderc_target_env::shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
-    options.SetIncluder(std::make_unique<DREIncluder>(this));
+    LPCWSTR targetProfile = nullptr;
+    std::vector<LPCWSTR> arguments{
+        L"-E", L"main",
+        L"-spirv",
+        L"-fspv-target-env=vulkan1.3",
+        L"-fvk-use-dx-layout",
+        L"-Ishaders"
+    };
 
     auto extension = filePath.extension();
     if (extension == ".vert")
     {
-        kind = shaderc_glsl_vertex_shader;
-        options.AddMacroDefinition("DRE_VERTEX_SHADER", "1");
+        targetProfile = L"vs_6_0";
+        arguments.push_back(L"-DDRE_VERTEX_SHADER=1");
     }
     else if (extension == ".frag")
     {
-        kind = shaderc_glsl_fragment_shader;
-        options.AddMacroDefinition("DRE_FRAGMENT_SHADER", "1");
+        targetProfile = L"ps_6_0";
+        arguments.push_back(L"-DDRE_FRAGMENT_SHADER=1");
     }
     else if (extension == ".comp")
     {
-        kind = shaderc_glsl_compute_shader;
-        options.AddMacroDefinition("DRE_COMPUTE_SHADER", "1");
+        targetProfile = L"cs_6_0";
+        arguments.push_back(L"-DDRE_COMPUTE_SHADER=1");
     }
     else
+    {
         DRE_ASSERT(false, "Attempt to compile unsupported shader type. See file extension.");
+    }
+
+    arguments.push_back(L"-T");
+    arguments.push_back(targetProfile);
 
     DRE::ByteBuffer sourceBlob{};
     std::uint64_t const bytesRead = ReadFileToBuffer(path, &sourceBlob);
-    DRE_ASSERT(bytesRead != 0, "Failed to read GLSL source.");
+    DRE_ASSERT(bytesRead != 0, "Failed to read HLSL source.");
 
-    shaderc::PreprocessedSourceCompilationResult preprocess = compiler.PreprocessGlsl(sourceBlob.As<char*>(), sourceBlob.Size(), kind, path, options);
-    if (preprocess.GetCompilationStatus() != shaderc_compilation_status_success)
+    Microsoft::WRL::ComPtr<IDxcUtils> utils;
+    Microsoft::WRL::ComPtr<IDxcCompiler3> compiler;
+    DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&utils));
+    DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler));
+
+    Microsoft::WRL::ComPtr<IDxcIncludeHandler> includer;
+    utils->CreateDefaultIncludeHandler(&includer);
+
+    Microsoft::WRL::ComPtr<IDxcBlobEncoding> source;
+    utils->CreateBlob(sourceBlob.As<char*>(), sourceBlob.Size(), CP_UTF8, &source);
+
+    DxcBuffer buffer;
+    buffer.Ptr = source->GetBufferPointer();
+    buffer.Size = source->GetBufferSize();
+    buffer.Encoding = DXC_CP_UTF8;
+
+    Microsoft::WRL::ComPtr<IDxcResult> result;
+    HRESULT hr = compiler->Compile(&buffer, arguments.data(), arguments.size(), includer.Get(), IID_PPV_ARGS(&result));
+    if (FAILED(hr))
     {
-        std::cout << preprocess.GetErrorMessage();
+        std::cout << "DXC invocation failed for " << path << std::endl;
         return DRE::ByteBuffer{};
     }
 
-    DRE::U64 const preprocessedSize = DRE::PtrDifference(preprocess.end(), preprocess.begin());
-    shaderc::SpvCompilationResult compile = compiler.CompileGlslToSpv(preprocess.begin(), preprocessedSize, kind, path, "main", options);
+    Microsoft::WRL::ComPtr<IDxcBlobUtf8> errors;
+    result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr);
 
-    if (compile.GetCompilationStatus() != shaderc_compilation_status_success) 
+    HRESULT status;
+    result->GetStatus(&status);
+    if (FAILED(status))
     {
 #ifdef DEBUG_SHADER_COMPILATION
         std::lock_guard<std::mutex> lock{ m_DebugShaderCompilationMutex };
-        std::cout << "FAILED COMPILING SHADER " << filePath << std::endl << "SOURCE: " << std::endl;
-        std::cout << preprocess.begin();
 #endif
-        std::cout << compile.GetErrorMessage();
-
+        if (errors && errors->GetStringLength() > 0)
+            std::cout << errors->GetStringPointer();
         return DRE::ByteBuffer{};
     }
 
-    DRE::U64 const moduleSize = DRE::PtrDifference(compile.end(), compile.begin());
-    return DRE::ByteBuffer{ (void*)compile.begin(), moduleSize };
+    if (errors && errors->GetStringLength() > 0)
+    {
+        std::cout << errors->GetStringPointer();
+    }
+
+    Microsoft::WRL::ComPtr<IDxcBlob> code;
+    result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&code), nullptr);
+    if (!code)
+        return DRE::ByteBuffer{};
+
+    return DRE::ByteBuffer{ code->GetBufferPointer(), static_cast<DRE::U64>(code->GetBufferSize()) };
 }
 
 DRE::InplaceVector<DRE::String64, 12> IOManager::GetPendingShaders()
