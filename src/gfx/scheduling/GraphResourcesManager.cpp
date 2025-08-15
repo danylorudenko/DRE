@@ -80,9 +80,6 @@ void GraphResourcesManager::InitResources()
                 usage = VKW::ImageUsage::DEPTH_SAMPLED;
             imageAspect = VK_IMAGE_ASPECT_DEPTH_BIT;
         }
- 
-        //if (*pair.key == TextureID::FFTHxt)
-        //    DebugBreak();
 
         VKW::ImageResource* image    = m_Device->GetResourcesController()->CreateImage(info.size0, info.size1, info.format, usage, *pair.key);
 

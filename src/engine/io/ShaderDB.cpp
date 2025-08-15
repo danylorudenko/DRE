@@ -29,7 +29,7 @@ DXCArgsBuilder::DXCArgsBuilder()
     m_CompilationArgs.EmplaceBack(L"-fspv-preserve-bindings");
     m_CompilationArgs.EmplaceBack(L"-fspv-preserve-interface");
     m_CompilationArgs.EmplaceBack(L"-fspv-reflect");
-    m_CompilationArgs.EmplaceBack(L"-fspv-reflect");
+    m_CompilationArgs.EmplaceBack(L"-Ishaders");
     m_CompilationArgs.EmplaceBack(m_GenericArgsBuffer); // filled later
 
     //m_CompilationArgs.EmplaceBack(L"-fvk-use-dx-position-w");
