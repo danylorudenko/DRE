@@ -20,59 +20,60 @@ enum InstanceFlags : DRE::U32
 #define INSTANCE_FLAG_MATERIAL_TEXTURES_GLTF_SPHERES (1 << 4)
 #endif
 
-DeclareStorageBuffer(S_INSTANCE)
+struct S_INSTANCE
 {
-    mat4 world_space;
-    mat4 inv_world_space;
-    uvec4 texture_indicies;
-    uvec4 globalID_instanceFlags;
+    float4x4 world_space;
+    float4x4 inv_world_space;
+    uint4    texture_indicies;
+    uint4    globalID_instanceFlags;
 };
+DeclareStorageBuffer(S_INSTANCE);
 
 #ifndef __cplusplus
 
-mat4 GetWorldTransform(S_INSTANCE_GPURef instance)
+float4x4 GetWorldTransform(S_INSTANCE_GPU_PTR instance)
 {
-    return instance.world_space;
+    return instance.Get().world_space;
 }
 
-mat4 GetInvWorldTransform(S_INSTANCE_GPURef instance)
+float4x4 GetInvWorldTransform(S_INSTANCE_GPU_PTR instance)
 {
-    return instance.inv_world_space;
+    return instance.Get().inv_world_space;
 }
 
-vec3 GetInstanceWorldPos(S_INSTANCE_GPURef instance)
+float3 GetInstanceWorldPos(S_INSTANCE_GPU_PTR instance)
 {
-    return instance.world_space[3].xyz;
+    return instance.Get().world_space[3].xyz;
 }
 
-uint GetDiffuseTextureID(S_INSTANCE_GPURef instance)
+uint GetDiffuseTextureID(S_INSTANCE_GPU_PTR instance)
 {
-    return instance.texture_indicies.x;
+    return instance.Get().texture_indicies.x;
 }
 
-uint GetNormalTextureID(S_INSTANCE_GPURef instance)
+uint GetNormalTextureID(S_INSTANCE_GPU_PTR instance)
 {
-    return instance.texture_indicies.y;
+    return instance.Get().texture_indicies.y;
 }
 
-uint GetMetalnessTextureID(S_INSTANCE_GPURef instance)
+uint GetMetalnessTextureID(S_INSTANCE_GPU_PTR instance)
 {
-    return instance.texture_indicies.z;
+    return instance.Get().texture_indicies.z;
 }
 
-uint GetRoughnessTextureID(S_INSTANCE_GPURef instance)
+uint GetRoughnessTextureID(S_INSTANCE_GPU_PTR instance)
 {
-    return instance.texture_indicies.w;
+    return instance.Get().texture_indicies.w;
 }
 
-uint GetGlobalID(S_INSTANCE_GPURef instance)
+uint GetGlobalID(S_INSTANCE_GPU_PTR instance)
 {
-    return instance.globalID_instanceFlags.x;
+    return instance.Get().globalID_instanceFlags.x;
 }
 
-uint GetInstanceFlags(S_INSTANCE_GPURef instance)
+uint GetInstanceFlags(S_INSTANCE_GPU_PTR instance)
 {
-    return instance.globalID_instanceFlags.y;
+    return instance.Get().globalID_instanceFlags.y;
 }
 
 #endif // !__cplusplus

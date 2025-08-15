@@ -1,10 +1,13 @@
 #ifndef __DRE_VERTEX_LAYOUT_H__
 #define __DRE_VERTEX_LAYOUT_H__
 
-layout(location = 0) in vec3 in_pos;
-layout(location = 1) in vec3 in_norm;
-layout(location = 2) in vec3 in_tan;
-layout(location = 3) in vec3 in_btan;
-layout(location = 4) in vec2 in_uv;
+struct VSInput
+{
+    [[vk::location(0)]] float3 in_pos  : POSITION;
+    [[vk::location(1)]] float3 in_norm : NORMAL;
+    [[vk::location(2)]] float3 in_tan  : TANGENT;
+    [[vk::location(3)]] float3 in_btan : BINORMAL;
+    [[vk::location(4)]] float2 in_uv   : TEXCOORD0;
+};
 
 #endif // __DRE_VERTEX_LAYOUT_H__

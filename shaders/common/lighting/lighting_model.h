@@ -31,27 +31,27 @@ float SmithGGX(float NdotV, float NdotL, float a)
 }
 
 
-vec3 FresnelShlick(float NdotH, vec3 color, float metalness)
+float3 FresnelShlick(float NdotH, float3 color, float metalness)
 {
-    vec3 F0 = mix(vec3(0.04), color, metalness);
-    return F0 + (vec3(1.0) - F0) * pow(1.0 - NdotH, 5.0);
+    float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), color, metalness);
+    return F0 + (float3(1.0f, 1.0f, 1.0f) - F0) * pow(1.0f - NdotH, 5.0f);
 }
 
-vec3 CookTorranceBRDF(float NdotH, float NdotV, float NdotL, vec3 diffuse, float roughness, float metalness)
+float3 CookTorranceBRDF(float NdotH, float NdotV, float NdotL, float3 diffuse, float roughness, float metalness)
 {
     float NDF = GGX_NDF(NdotH, roughness);
     float G = SmithGGX(NdotV, NdotL, roughness);
-    vec3 F = FresnelShlick(NdotH, diffuse, metalness);
+    float3 F = FresnelShlick(NdotH, diffuse, metalness);
 
-    vec3 kS = F;
-    vec3 kD = vec3(1.0) - kS;
+    float3 kS = F;
+    float3 kD = float3(1.0f, 1.0f, 1.0f) - kS;
 
-    vec3 numerator = NDF * G * F;
-    float denum = 4.0 * NdotV * NdotL + 0.001;
+    float3 numerator = NDF * G * F;
+    float denum = 4.0f * NdotV * NdotL + 0.001f;
 
-    vec3 specular = numerator / denum;
+    float3 specular = numerator / denum;
 
-    return (kD * diffuse+ specular) * NdotL;
+    return (kD * diffuse + specular) * NdotL;
 }
 
 

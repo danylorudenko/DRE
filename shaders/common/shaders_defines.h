@@ -8,26 +8,28 @@
 #include <glm\vec4.hpp>
 #include <glm\mat4x4.hpp>
 
-using uint = std::uint32_t;
-using vec4 = glm::vec4;
-using ivec4 = glm::ivec4;
-using uvec4 = glm::uvec4;
-using mat4 = glm::mat4;
+using uint      = std::uint32_t;
+using int4      = glm::ivec4;
+using uint4     = glm::uvec4;
+
+using float4    = glm::vec4;
+using float4x4  = glm::mat4;
+
 #endif // __cplusplus
 
 #define PI 3.14159
 
 // Type_GPURef CPP
 #ifdef __cplusplus
-    struct GPUPointer
+    struct GPU_PTR
     {
         std::uint64_t pointer;
 
-        GPUPointer(std::uint64_t ptr = 0)
+        GPU_PTR(std::uint64_t ptr = 0)
             : pointer{ ptr }
         {}
 
-        GPUPointer& operator=(std::uint64_t ptr)
+        GPU_PTR& operator=(std::uint64_t ptr)
         {
             pointer = ptr;
             return *this;
@@ -35,24 +37,18 @@ using mat4 = glm::mat4;
 
         operator std::uint64_t&() { return pointer; }
     };
-    #define DeclareStorageBuffer(Type) using Type ## _GPURef = GPUPointer; struct Type
+    #define DeclareStorageBuffer(Type) using Type ## _GPU_PTR = GPU_PTR;
 
-#else // Type_GPURef GLSL
-    #define DeclareStorageBuffer(Type) layout(buffer_reference, std430, buffer_reference_align = 16) buffer Type ## _GPURef
+#else // Type_GPU_PTR HLSL
+    #define DeclareStorageBuffer(Type) typedef vk::BufferPointer<Type> Type ## _GPU_PTR
 #endif // __cplusplus
 
 
 // Constant Buffers
 #ifdef __cplusplus
-#define BEGIN_CONSTANT_BUFFER(Type, Name, Set, Binding) struct Type
+#define DeclareConstantBuffer(Type, Name, Set, Binding)
 #else
-#define BEGIN_CONSTANT_BUFFER(Type, Name, Set, Binding) layout(set = Set, binding = Binding, std140) uniform Type
-#endif // __cplusplus
-
-#ifdef __cplusplus
-#define END_CONSTANT_BUFFER(Type, Name, Set, Binding) ;
-#else
-#define END_CONSTANT_BUFFER(Type, Name, Set, Binding) Name;
+#define DeclareConstantBuffer(Type, Name, Set, Binding) [[vk::binding(Binding, Set)]] ConstantBuffer<Type> Name;
 #endif // __cplusplus
 
 #endif // _SHADER_DEFINES_H_

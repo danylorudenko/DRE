@@ -8,31 +8,32 @@
 #define DRE_LIGHT_TYPE_POINT        2
 #define DRE_LIGHT_TYPE_MAX          3
 
-DeclareStorageBuffer(S_LIGHT)
+struct S_LIGHT
 {
-    vec4 world_pos;
-    vec4 direction_type;
-    vec4 spectrum_flux;
+    float4 world_pos;
+    float4 direction_type;
+    float4 spectrum_flux;
 };
+DeclareStorageBuffer(S_LIGHT);
 
 #ifndef __cplusplus
 
-vec3 GetWorldPos(S_LIGHT_GPURef light)
+float3 GetWorldPos(S_LIGHT_GPURef light)
 {
     return light.world_pos.xyz;
 }
 
-vec3 GetDirection(S_LIGHT_GPURef light)
+float3 GetDirection(S_LIGHT_GPURef light)
 {
     return light.direction_type.xyz;
 }
 
 uint GetType(S_LIGHT_GPURef light)
 {
-    return floatBitsToUint(light.direction_type.w);
+    return asuint(light.direction_type.w);
 }
 
-vec3 GetSpectrum(S_LIGHT_GPURef light)
+float3 GetSpectrum(S_LIGHT_GPURef light)
 {
     return light.spectrum_flux.rgb;
 }

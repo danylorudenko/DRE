@@ -4,72 +4,71 @@
 #ifndef _SHADOWS_H_
 #define _SHADOWS_H_
 
-vec2 CalculateShadowUV(in vec3 wpos, in mat4 shadowViewProj)
+float2 CalculateShadowUV(float3 wpos, float4x4 shadowViewProj)
 {
-    vec3 lightspaceCoord = (shadowViewProj * vec4(wpos, 1.0)).xyz;
-    vec2 shadowUV = lightspaceCoord.xy * 0.5 + 0.5;
+    float3 lightspaceCoord = mul(shadowViewProj, float4(wpos, 1.0f)).xyz;
+    float2 shadowUV = lightspaceCoord.xy * 0.5f + 0.5f;
     return shadowUV;
 }
 
-float ShadowMapSample(in vec3 wpos, in mat4 shadowViewProj, vec2 shadowMapDims, in texture2D shadowMap)
+float ShadowMapSample(float3 wpos, float4x4 shadowViewProj, float2 shadowMapDims, Texture2D<float> shadowMap)
 {
-    vec3 lightspaceCoord = (shadowViewProj * vec4(wpos, 1.0)).xyz;
-    vec2 shadowUV = lightspaceCoord.xy * 0.5 + 0.5;
+    float3 lightspaceCoord = mul(shadowViewProj, float4(wpos, 1.0f)).xyz;
+    float2 shadowUV = lightspaceCoord.xy * 0.5f + 0.5f;
 
 #ifdef ENABLE_PCF
 #ifdef ENABLE_PCF_POISSON
-    float result = 0.0;
-    float sampleCount = 16;
+    float result = 0.0f;
+    int sampleCount = 16;
     for(int i = 0; i < sampleCount; i++)
     {
-        float val = texture(sampler2D(shadowMap, GetSamplerLinear()), shadowUV + (poisson16[i] * 1) / shadowMapDims).r;
-        result += val - 0.01 > lightspaceCoord.z ? 0.0 : 1.0;
+        float val = shadowMap.Sample(GetSamplerLinear(), shadowUV + (poisson16[i] * 1) / shadowMapDims).r;
+        result += val - 0.01f > lightspaceCoord.z ? 0.0f : 1.0f;
     }
 #else
-    const int C_FILTER_SIZE = 2;
-    vec2 start = floor(shadowUV * shadowMapDims);
+      const int C_FILTER_SIZE = 2;
+      float2 start = floor(shadowUV * shadowMapDims);
 
-    float result = 0.0;
-    float sampleCount = C_FILTER_SIZE * C_FILTER_SIZE;
-    for(int i = 0; i < C_FILTER_SIZE; i++)
-    {
-        for(int j = 0; j < C_FILTER_SIZE; j++)
-        {
-            float val = texture(sampler2D(shadowMap, GetSamplerNearest()), (start + vec2(i, j)) / shadowMapDims).r;
-            result += val - 0.01 > lightspaceCoord.z ? 0.0 : 1.0;
-        }
-    }
+      float result = 0.0f;
+      int sampleCount = C_FILTER_SIZE * C_FILTER_SIZE;
+      for(int i = 0; i < C_FILTER_SIZE; i++)
+      {
+          for(int j = 0; j < C_FILTER_SIZE; j++)
+          {
+              float val = shadowMap.Sample(GetSamplerNearest(), (start + float2(i, j)) / shadowMapDims).r;
+              result += val - 0.01f > lightspaceCoord.z ? 0.0f : 1.0f;
+          }
+      }
 #endif
     result /= sampleCount;
 
 #else
-    float shadowValue = texture(sampler2D(shadowMap, GetSamplerNearest()), shadowUV).r;
-    float result = shadowValue - 0.01 > lightspaceCoord.z ? 0.0 : 1.0;
+      float shadowValue = shadowMap.Sample(GetSamplerNearest(), shadowUV).r;
+      float result = shadowValue - 0.01f > lightspaceCoord.z ? 0.0f : 1.0f;
 #endif
 
     return result;
 }
 
 #ifndef DRE_VERTEX_SHADER
-float ShadowVisibilityTrace(in vec3 wpos, in vec3 shadowDir)
+float ShadowVisibilityTrace(float3 wpos, float3 shadowDir)
 {
-    rayQueryEXT rayQuery;
-    rayQueryInitializeEXT(
-        rayQuery,
+    RayQuery<RAY_FLAG_NONE> rayQuery;
+    rayQuery.TraceRayInline(
         g_TLAS,
-        gl_RayFlagsTerminateOnFirstHitEXT,
+        RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH,
         0xFFFFFFFF,
         wpos,
-        0.1f, // tMin
+        0.1f,
         shadowDir,
-        10000); // tMax
+        10000.0f);
 
-    rayQueryProceedEXT(rayQuery);
+    rayQuery.Proceed();
 
-    float result = 1.0;
-    if (rayQueryGetIntersectionTypeEXT(rayQuery, true) == gl_RayQueryCommittedIntersectionTriangleEXT)
+    float result = 1.0f;
+    if (rayQuery.CommittedStatus() == RAY_QUERY_COMMITTED_TRIANGLE_HIT)
     {
-        result = 0.0;
+        result = 0.0f;
     }
 
     return result;
@@ -77,3 +76,4 @@ float ShadowVisibilityTrace(in vec3 wpos, in vec3 shadowDir)
 #endif // DRE_VERTEX_SHADER
 
 #endif // _SHADOWS_H_
+

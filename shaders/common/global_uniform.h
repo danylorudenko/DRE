@@ -5,82 +5,82 @@
 #include "common/lighting/lights.h"
 #include "common/instances.h"
 
-
-BEGIN_CONSTANT_BUFFER(GlobalUniforms, g_GlobalUniforms, 2, 0)
+struct GlobalUniforms
 {
     // uniform buffer layout
-    vec4 viewportSize_deltaMS_timeS;
-    vec4 main_CameraPos_GenericScalar;
-    vec4 main_CameraDir;
-    vec4 main_Jitter;
+    float4 viewportSize_deltaMS_timeS;
+    float4 main_CameraPos_GenericScalar;
+    float4 main_CameraDir;
+    float4 main_Jitter;
 
-    mat4 main_ViewM;
-    mat4 main_iViewM;
-    mat4 main_ProjM;
-    mat4 main_iProjM;
-    mat4 main_ViewProjM;
-    mat4 main_iViewProjM;
+    float4x4 main_ViewM;
+    float4x4 main_iViewM;
+    float4x4 main_ProjM;
+    float4x4 main_iProjM;
+    float4x4 main_ViewProjM;
+    float4x4 main_iViewProjM;
 
-    mat4 main_PrevViewM;
-    mat4 main_PreviViewM;
-    mat4 main_PrevProjM;
-    mat4 main_PreviProjM;
-    mat4 main_PrevProjJittM;
-    mat4 main_PreviProjJittM;
-    mat4 main_PrevViewProjM;
-    mat4 main_PreviViewProjM;
+    float4x4 main_PrevViewM;
+    float4x4 main_PreviViewM;
+    float4x4 main_PrevProjM;
+    float4x4 main_PreviProjM;
+    float4x4 main_PrevProjJittM;
+    float4x4 main_PreviProjJittM;
+    float4x4 main_PrevViewProjM;
+    float4x4 main_PreviViewProjM;
 
-    vec4 main_SunLightDir;
+    float4 main_SunLightDir;
 
-    mat4 main_ShadowVP;
-    vec4 main_ShadowSize;
+    float4x4 main_ShadowVP;
+    float4 main_ShadowSize;
 
-    uvec4 TEX_ID_shadow;
+    // wtf?
+    uint4 TEX_ID_shadow;
 
-    uvec4 lightsCount;
-    S_LIGHT_GPURef LightBuffer;
-    S_INSTANCE_GPURef InstanceBuffer;
-    // end
-}
-END_CONSTANT_BUFFER(GlobalUniforms, g_GlobalUniforms, 2, 0)
+    uint4               lightsCount;
+    S_LIGHT_GPU_PTR     LightBuffer;
+
+    S_INSTANCE_GPU_PTR  InstanceBuffer;
+};
+DeclareConstantBuffer(GlobalUniforms, g_GlobalUniforms, 2, 0);
 
 
 #ifndef __cplusplus
 
 // Global uniform values
-vec2    GetViewportSize() { return g_GlobalUniforms.viewportSize_deltaMS_timeS.xy; }
-float   GetDeltaTime() { return g_GlobalUniforms.viewportSize_deltaMS_timeS.z; }
-float   GetTimeS() { return g_GlobalUniforms.viewportSize_deltaMS_timeS.w; }
-vec3    GetCameraPos() { return g_GlobalUniforms.main_CameraPos_GenericScalar.xyz; }
-float   GetGenericScalar() { return g_GlobalUniforms.main_CameraPos_GenericScalar.w; }
-vec3    GetCameraDir() { return g_GlobalUniforms.main_CameraDir.xyz; }
-vec2    GetJitter() { return g_GlobalUniforms.main_Jitter.xy; }
+float2    GetViewportSize() { return g_GlobalUniforms.viewportSize_deltaMS_timeS.xy; }
+float     GetDeltaTime() { return g_GlobalUniforms.viewportSize_deltaMS_timeS.z; }
+float     GetTimeS() { return g_GlobalUniforms.viewportSize_deltaMS_timeS.w; }
+float3    GetCameraPos() { return g_GlobalUniforms.main_CameraPos_GenericScalar.xyz; }
+float     GetGenericScalar() { return g_GlobalUniforms.main_CameraPos_GenericScalar.w; }
+float3    GetCameraDir() { return g_GlobalUniforms.main_CameraDir.xyz; }
+float2    GetJitter() { return g_GlobalUniforms.main_Jitter.xy; }
 
-mat4    GetCameraViewM() { return g_GlobalUniforms.main_ViewM; }
-mat4    GetCameraiViewM() { return g_GlobalUniforms.main_iViewM; }
-mat4    GetCameraProjM() { return g_GlobalUniforms.main_ProjM; }
-mat4    GetCameraiProjM() { return g_GlobalUniforms.main_iProjM; }
-mat4	GetCameraViewProjM() { return g_GlobalUniforms.main_ViewProjM; }
-mat4	GetCameraiViewProjM() { return g_GlobalUniforms.main_iViewProjM; }
+float4x4  GetCameraViewM() { return g_GlobalUniforms.main_ViewM; }
+float4x4  GetCameraiViewM() { return g_GlobalUniforms.main_iViewM; }
+float4x4  GetCameraProjM() { return g_GlobalUniforms.main_ProjM; }
+float4x4  GetCameraiProjM() { return g_GlobalUniforms.main_iProjM; }
+float4x4	GetCameraViewProjM() { return g_GlobalUniforms.main_ViewProjM; }
+float4x4	GetCameraiViewProjM() { return g_GlobalUniforms.main_iViewProjM; }
 
-mat4    GetPrevCameraViewM() { return g_GlobalUniforms.main_PrevViewM; }
-mat4    GetPrevCameraiViewM() { return g_GlobalUniforms.main_PreviViewM; }
-mat4    GetPrevCameraProjM() { return g_GlobalUniforms.main_PrevProjM; }
-mat4    GetPrevCameraiProjM() { return g_GlobalUniforms.main_PreviProjM; }
-mat4    GetPrevCameraViewProjM() { return g_GlobalUniforms.main_PrevViewProjM; }
-mat4    GetPrevCameraiViewProjM() { return g_GlobalUniforms.main_PreviViewProjM; }
+float4x4  GetPrevCameraViewM() { return g_GlobalUniforms.main_PrevViewM; }
+float4x4  GetPrevCameraiViewM() { return g_GlobalUniforms.main_PreviViewM; }
+float4x4  GetPrevCameraProjM() { return g_GlobalUniforms.main_PrevProjM; }
+float4x4  GetPrevCameraiProjM() { return g_GlobalUniforms.main_PreviProjM; }
+float4x4  GetPrevCameraViewProjM() { return g_GlobalUniforms.main_PrevViewProjM; }
+float4x4  GetPrevCameraiViewProjM() { return g_GlobalUniforms.main_PreviViewProjM; }
 
-vec3    GetSunLightDir() { return g_GlobalUniforms.main_SunLightDir.xyz; }
+float3    GetSunLightDir() { return g_GlobalUniforms.main_SunLightDir.xyz; }
 
-mat4    GetSunShadowVP() { return g_GlobalUniforms.main_ShadowVP; }
-vec2    GetSunShadowSize() { return g_GlobalUniforms.main_ShadowSize.xy; }
+float4x4  GetSunShadowVP() { return g_GlobalUniforms.main_ShadowVP; }
+float2    GetSunShadowSize() { return g_GlobalUniforms.main_ShadowSize.xy; }
 
-uint    GetShadowMapID() { return g_GlobalUniforms.TEX_ID_shadow.x; }
+uint      GetShadowMapID() { return g_GlobalUniforms.TEX_ID_shadow.x; }
 
-uint    GetLightsCount() { return g_GlobalUniforms.lightsCount.x; }
-S_LIGHT_GPURef GetLight(uint i) { return g_GlobalUniforms.LightBuffer[i]; }
+uint            GetLightsCount() { return g_GlobalUniforms.lightsCount.x; }
+S_LIGHT_GPU_PTR GetLight(uint i) { return g_GlobalUniforms.LightBuffer.Element(i); }
 
-S_INSTANCE_GPURef GetInstance(uint i) { return g_GlobalUniforms.InstanceBuffer[i]; }
+S_INSTANCE_GPU_PTR GetInstance(uint i) { return g_GlobalUniforms.InstanceBuffer.Element(i); }
 
 #endif // !__cplusplus
 

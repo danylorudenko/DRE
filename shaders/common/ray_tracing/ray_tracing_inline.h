@@ -3,46 +3,40 @@
 
 struct S_RAY
 {
-    vec3 origin;
-    vec3 dir;
+    float3 origin;
+    float3 dir;
 };
 
 struct S_RAY_TRACING_RESULT
 {
-    vec3 wpos;
-    vec3 normal;
-    vec3 diffuse;
-    float roughness;
-    float metalness;
+    float3 wpos;
+    float3 normal;
+    float3 diffuse;
+    float  roughness;
+    float  metalness;
 };
 
-bool TraceRayOpaue(accelerationStructureEXT TLAS, S_RAY initialRay, out S_RAY_TRACING_RESULT result)
+bool TraceRayOpaue(RaytracingAccelerationStructure TLAS, S_RAY initialRay, out S_RAY_TRACING_RESULT result)
 {
-    rayQueryEXT rayQuery;
-    rayQueryInitializeEXT(
-        rayQuery,
+    RayQuery<RAY_FLAG_NONE> rayQuery;
+    rayQuery.TraceRayInline(
         TLAS,
-        gl_RayFlagsNoneEXT,
+        RAY_FLAG_NONE,
         0xFFFFFFFF,
         initialRay.origin,
-        0.1f, // tMin
+        0.1f,
         initialRay.dir,
-        10000); // tMax
+        10000.0f);
 
-    while(rayQueryProceedEXT(rayQuery))
+    while(rayQuery.Proceed()) {}
+
+    if (rayQuery.CommittedStatus() == RAY_QUERY_COMMITTED_TRIANGLE_HIT)
     {
-    }
+        float tHit = rayQuery.CommittedRayT();
 
-    if (rayQueryGetIntersectionTypeEXT(rayQuery, true) == gl_RayQueryCommittedIntersectionTriangleEXT)
-    {
-        float tHit = rayQueryGetIntersectionTMinEXT(rayQuery);
-
-        // rayQueryGetIntersectionGeometryIndex(rayQuery); - geometry id
-        // rayQueryGetIntersectionPrimitiveIndex(rayQuery); - triangle id
-
-        result.wpos = vec3(0.0f, 0.0f, 0.0f);
-        result.diffuse = vec3(0.0f, 0.0f, 0.0f);
-        result.normal = vec3(0.0f, 0.0f, 0.0f);
+        result.wpos = float3(0.0f, 0.0f, 0.0f);
+        result.diffuse = float3(0.0f, 0.0f, 0.0f);
+        result.normal = float3(0.0f, 0.0f, 0.0f);
         result.roughness = 0.0f;
         result.metalness = 0.0f;
 
@@ -50,9 +44,9 @@ bool TraceRayOpaue(accelerationStructureEXT TLAS, S_RAY initialRay, out S_RAY_TR
     }
     else
     {
-        result.wpos = vec3(0.0f, 0.0f, 0.0f);
-        result.diffuse = vec3(0.0f, 0.0f, 0.0f);
-        result.normal = vec3(0.0f, 0.0f, 0.0f);
+        result.wpos = float3(0.0f, 0.0f, 0.0f);
+        result.diffuse = float3(0.0f, 0.0f, 0.0f);
+        result.normal = float3(0.0f, 0.0f, 0.0f);
         result.roughness = 0.0f;
         result.metalness = 0.0f;
 
