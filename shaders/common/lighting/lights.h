@@ -8,12 +8,13 @@
 #define DRE_LIGHT_TYPE_POINT        2
 #define DRE_LIGHT_TYPE_MAX          3
 
-DeclareStorageBuffer(S_LIGHT)
+struct S_LIGHT
 {
     float4 world_pos;
     float4 direction_type;
     float4 spectrum_flux;
 };
+DeclareStorageBuffer(S_LIGHT);
 
 #ifndef __cplusplus
 

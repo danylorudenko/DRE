@@ -6,28 +6,20 @@
 
 //////////////
 #ifndef __cplusplus
-uint GetInstanceID() { return globalPushConstant.value_int1; }
-S_INSTANCE_GPURef GetInstance() { return GetInstance(GetInstanceID()); }
+[[vk::binding(0, 3)]] Texture2D<float> shadowMap;
 #endif
 
 //////////////
-#ifndef __cplusplus
-[[vk::binding(0, 3)]]
-Texture2D<float> shadowMap;
-#endif
-
-//////////////
-BEGIN_CONSTANT_BUFFER(ForwardUniform, passUniform, 3, 1)
+struct ForwardUniform
 {
     float4x4  shadow_VP;
     float4    shadow_size;
-}
-END_CONSTANT_BUFFER(ForwardUniform, passUniform, 3, 1)
+};
+DeclareConstantBuffer(ForwardUniform, passUniform, 3, 1)
 
 //////////////
 #ifndef __cplusplus
-[[vk::binding(2, 3)]]
-Texture2D<float4> causticMap;
+[[vk::binding(2, 3)]] Texture2D<float4> causticMap;
 #endif
 
 ///////////////////////////////////////

@@ -3,11 +3,11 @@
 
 #include "common/shaders_common.h"
 
-BEGIN_CONSTANT_BUFFER(GizmoPassBuffer, cb, 3, 0)
+struct GizmoPassBuffer
 {
     float4x4 m_Model;
-}
-END_CONSTANT_BUFFER(GizmoPassBuffer, cb, 3, 0)
+};
+DeclareConstantBuffer(GizmoPassBuffer, cb, 3, 0);
 
 #ifndef __cplusplus
 //float GetCameraDistance() { return cb.m_CameraDistance.x; }

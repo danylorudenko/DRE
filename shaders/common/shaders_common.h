@@ -6,22 +6,20 @@
 
 #include "common/shaders_defines.h"
 
+/////////////////////////////
 // Global push constants
-[[vk::push_constant]]
-cbuffer GlobalPushConstant
+struct GlobalPushConstant
 {
     uint value_int1;
-} globalPushConstant;
+};
+[[vk::push_constant]] GlobalPushConstant globalPushConstant;
 
+//////////////////////////////
 // Global resources
-[[vk::binding(0, 0)]]
-SamplerState g_GlobalSamplers[4];
+[[vk::binding(0, 0)]] SamplerState g_GlobalSamplers[];
+[[vk::binding(1, 0)]] RaytracingAccelerationStructure g_TLAS;
 
-[[vk::binding(1, 0)]]
-RaytracingAccelerationStructure g_TLAS;
-
-[[vk::binding(0, 1)]]
-Texture2D<float4> g_GlobalTextures[];
+[[vk::binding(0, 1)]] Texture2D<float4> g_GlobalTextures[];
 
 // Global textures
 #define GetGlobalTexture(id) g_GlobalTextures[id]
@@ -33,9 +31,9 @@ Texture2D<float4> g_GlobalTextures[];
 #define GetSamplerAnisotropic()  g_GlobalSamplers[3]
 
 // Texture sampling helpers
-#define SampleTexture(texObj, sampObj, uv) texObj.Sample(sampObj, uv)
-#define TexelFetchLvl(texObj, pos, lvl)    texObj.Load(int3(pos, lvl))
-#define TexelFetch(texObj, pos)           texObj.Load(int3(pos, 0))
+//#define SampleTexture(texObj, sampObj, uv)  texObj.Sample(sampObj, uv)
+//#define TexelFetchLvl(texObj, pos, lvl)     texObj.Load(int3(pos, lvl))
+//#define TexelFetch(texObj, pos)             texObj.Load(int3(pos, 0))
 
 float sRGB2Linear(float x)
 {
