@@ -10,7 +10,7 @@ find_package(Git REQUIRED)
 include(CMakeDREHelpers.txt)
 update_git_submodule(assimp)
 update_git_submodule(glm)
-update_git_submodule(shaderc)
+update_git_submodule(DirectXShaderCompiler)
 update_git_submodule(glTF-Sample-Models)
 update_git_submodule(imgui)
 update_git_submodule(SPIRV-Cross)
@@ -30,16 +30,20 @@ option(SHADERC_ENABLE_SHARED_CRT "Use the shared CRT instead of the static CRT" 
 add_subdirectory(extern/assimp)
 
 
-#override shaderc defaults
+#add dxc
 #==========
-option(SHADERC_SKIP_INSTALL ON)
-option(SHADERC_SKIP_TESTS "Skip building tests" ON)
-option(SHADERC_SKIP_EXAMPLES "Skip building examples" ON)
-option(SHADERC_SKIP_COPYRIGHT_CHECK "Skip copyright check" ON)
-find_package(Python3 COMPONENTS Interpreter REQUIRED)
-execute_process(COMMAND python extern/shaderc/utils/git-sync-deps)
+add_library(DXC::compiler SHARED IMPORTED GLOBAL)
+set_target_properties(DXC::compiler PROPERTIES
+	IMPORTED_IMPLIB "${DRE_SOURCE_DIR}/dxc/lib/x64/dxcompiler.lib"
+	IMPORTED_LOCATION "${DRE_SOURCE_DIR}/dxc/bin/x64/dxcompiler.dll"
+	INTERFACE_INCLUDE_DIRECTORIES "${DRE_SOURCE_DIR}/dxc/inc")
+	
+add_library(DXC::dxil SHARED IMPORTED GLOBAL)
+set_target_properties(DXC::dxil PROPERTIES
+	IMPORTED_IMPLIB "${DRE_SOURCE_DIR}/dxc/lib/x64/dxil.lib"
+    IMPORTED_LOCATION "${DRE_SOURCE_DIR}/dxc/bin/x64/dxil.dll")
+# demo_app symlinks binaries
 #==========
-add_subdirectory(extern/shaderc)
 
 
 add_subdirectory(extern/glm)

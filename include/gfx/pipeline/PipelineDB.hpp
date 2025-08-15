@@ -3,6 +3,7 @@
 #include <foundation\class_features\NonMovable.hpp>
 #include <foundation\class_features\NonCopyable.hpp>
 
+#include <foundation\memory\ByteBuffer.hpp>
 #include <foundation\Container\InplaceHashTable.hpp>
 #include <foundation\String\InplaceString.hpp>
 
@@ -21,6 +22,8 @@ class IOManager;
 
 namespace GFX
 {
+
+class ShaderDBImpl;
 
 class PipelineDB
     : public NonCopyable

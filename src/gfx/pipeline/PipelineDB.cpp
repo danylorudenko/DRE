@@ -11,9 +11,12 @@
 
 #include <common\forward.h>
 
+
 namespace GFX
 {
 
+/////////////////////////////////
+// PipelineDB
 PipelineDB::PipelineDB(VKW::Device* device, IO::IOManager* ioManager)
     : m_Device(device)
     , m_IOManager{ ioManager }
@@ -260,7 +263,7 @@ void PipelineDB::ReloadPipeline(char const* name)
     if (vertData != nullptr)
     {
         DRE::String64 vertPath{ "shaders\\" }; vertPath.Append(vertName.GetData());
-        DRE::ByteBuffer compiledBinary = m_IOManager->CompileGLSL(vertPath.GetData());
+        DRE::ByteBuffer compiledBinary = m_IOManager->CompileHLSL(vertPath.GetData(), VKW::SHADER_MODULE_TYPE_VERTEX);
         if (compiledBinary.Size() == 0)
         {
             std::cout << "Failed to recompile shader " << vertPath.GetData() << ". Pipeline was not cecreated." << std::endl;
@@ -279,7 +282,7 @@ void PipelineDB::ReloadPipeline(char const* name)
     if (fragData != nullptr)
     {
         DRE::String64 fragPath{ "shaders\\" }; fragPath.Append(fragName.GetData());
-        DRE::ByteBuffer compiledBinary = m_IOManager->CompileGLSL(fragPath.GetData());
+        DRE::ByteBuffer compiledBinary = m_IOManager->CompileHLSL(fragPath.GetData(), VKW::SHADER_MODULE_TYPE_FRAGMENT);
         if (compiledBinary.Size() == 0)
         {
             std::cout << "Failed to recompile shader " << fragPath.GetData() << ". Pipeline was not cecreated." << std::endl;
@@ -298,7 +301,7 @@ void PipelineDB::ReloadPipeline(char const* name)
     if (compData != nullptr)
     {
         DRE::String64 compPath{ "shaders\\" }; compPath.Append(compName.GetData());
-        DRE::ByteBuffer compiledBinary = m_IOManager->CompileGLSL(compPath.GetData());
+        DRE::ByteBuffer compiledBinary = m_IOManager->CompileHLSL(compPath.GetData(), VKW::SHADER_MODULE_TYPE_COMPUTE);
         if (compiledBinary.Size() == 0)
         {
             std::cout << "Failed to recompile shader " << compPath.GetData() << ". Pipeline was not cecreated." << std::endl;

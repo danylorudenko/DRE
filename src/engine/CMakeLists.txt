@@ -6,6 +6,7 @@ set(ENGINE_HEADER_LIST
 	"${DRE_SOURCE_DIR}/include/engine/data/Texture2D.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/io/DRFX.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/io/IOManager.hpp"
+	"${DRE_SOURCE_DIR}/include/engine/io/ShaderDB.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/scene/Camera.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/scene/Entity.hpp"
 	"${DRE_SOURCE_DIR}/include/engine/scene/Light.hpp"
@@ -23,6 +24,7 @@ set(ENGINE_SOURCE_LIST
 	"${DRE_SOURCE_DIR}/src/engine/data/Texture2D.cpp"
 	"${DRE_SOURCE_DIR}/src/engine/io/DRFX.cpp"
 	"${DRE_SOURCE_DIR}/src/engine/io/IOManager.cpp"
+	"${DRE_SOURCE_DIR}/src/engine/io/ShaderDB.cpp"
 	"${DRE_SOURCE_DIR}/src/engine/scene/Camera.cpp"
 	"${DRE_SOURCE_DIR}/src/engine/scene/Entity.cpp"
 	"${DRE_SOURCE_DIR}/src/engine/scene/Light.cpp"
@@ -41,7 +43,7 @@ target_include_directories(engine PUBLIC
 target_compile_features(engine PUBLIC cxx_std_20)
 target_compile_definitions(engine PUBLIC WIN32_LEAN_AND_MEAN NOMINMAX)
 
-target_link_libraries(engine PUBLIC foundation vk_wrapper assimp glm_static imgui stb_image spirv-cross-cpp spirv-cross-reflect shaderc)
+target_link_libraries(engine PUBLIC foundation vk_wrapper assimp glm_static imgui stb_image spirv-cross-cpp spirv-cross-reflect DXC::compiler)
 
 source_group(
 	TREE "${DRE_SOURCE_DIR}/include/engine"

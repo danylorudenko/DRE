@@ -23,8 +23,8 @@
 
 
 ////////////////
-constexpr bool C_COMPILE_GLSL_SOURCES_ON_START = true;
-constexpr bool C_COMPILE_GLSL_PARALLEL = true;
+constexpr bool C_COMPILE_HLSL_SOURCES_ON_START = true;
+constexpr bool C_COMPILE_HLSL_PARALLEL = false; // don't turn on while HLSL infrastructure is finished
 ////////////////
 
 //////////////////////////////////////////
@@ -102,9 +102,9 @@ WORLD::Scene& DREApplicationDelegate::GetMainScene()
 
 void DREApplicationDelegate::start()
 {
-    if (C_COMPILE_GLSL_SOURCES_ON_START)
+    if (C_COMPILE_HLSL_SOURCES_ON_START)
     {  
-        m_IOManager.CompileGLSLSources(C_COMPILE_GLSL_PARALLEL);
+        m_IOManager.CompileHLSLSources(C_COMPILE_HLSL_PARALLEL);
     }
     m_IOManager.LoadShaderBinaries();
 

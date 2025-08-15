@@ -45,7 +45,6 @@ add_custom_command(TARGET demo_app POST_BUILD
 	COMMENT "Creating symlink to shaders in binary directory"
 )
 
-
 add_custom_command(TARGET demo_app POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E create_symlink
 	"${DRE_SOURCE_DIR}/textures"
@@ -58,4 +57,18 @@ add_custom_command(TARGET demo_app POST_BUILD
 	"${DRE_SOURCE_DIR}/extern/glTF-Sample-Models/2.0"
 	"$<TARGET_FILE_DIR:demo_app>/data"
 	COMMENT "Creating symlink to data in binary directory"
+)
+
+add_custom_command(TARGET demo_app POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E create_symlink
+	"${DRE_SOURCE_DIR}/dxc/bin/x64/dxcompiler.dll"
+	"$<TARGET_FILE_DIR:demo_app>/dxcompiler.dll"
+	COMMENT "Creating symlink to dxcompiler binary"
+)
+
+add_custom_command(TARGET demo_app POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E create_symlink
+	"${DRE_SOURCE_DIR}/dxc/bin/x64/dxil.dll"
+	"$<TARGET_FILE_DIR:demo_app>/dxil.dll"
+	COMMENT "Creating symlink to dxil binary"
 )

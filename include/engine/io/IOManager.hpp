@@ -41,6 +41,11 @@ class MaterialLibrary;
 class GeometryLibrary;
 }
 
+namespace GFX
+{
+class PipelineDB;
+}
+
 namespace WORLD
 {
 class SceneNode;
@@ -53,6 +58,8 @@ struct aiMaterial;
 
 namespace IO
 {
+
+class ShaderDBImpl;
 
 class IOManager
     : public NonCopyable
@@ -92,8 +99,11 @@ public:
     IOManager(Data::MaterialLibrary* materialLibrary, Data::GeometryLibrary* geometryLibrary);
     ~IOManager();
 
-    void LoadShaderBinaries();
-    void CompileGLSLSources(bool parallel);
+    void                    LoadShaderBinaries();
+    void                    CompileHLSLSources(bool parallel);
+    bool                    CompileShader(DRE::String64 const& name, DRE::ByteBuffer const& source, VKW::ShaderModuleType type);
+    DRE::ByteBuffer const&  GetShaderSpirv(DRE::String64 const& name);
+
     ShaderData* GetShaderData(char const* name) { return m_ShaderData.Find(name).value; }
 
     Data::Texture2D ReadTexture2D(char const* path, Data::TextureChannelVariations channels);
@@ -105,8 +115,7 @@ public:
     static std::uint64_t    ReadFileStringToBuffer(char const* path, DRE::ByteBuffer* buffer);
     static void             WriteNewFile(char const* path, DRE::ByteBuffer const& buffer);
 
-    DRE::ByteBuffer         CompileGLSL(char const* file);
-    std::mutex&             GetShaderIncluderMutex() { return m_ShaderIncluderMutex; }
+    DRE::ByteBuffer         CompileHLSL(char const* file, VKW::ShaderModuleType type);
 
     inline bool                             NewShadersPending() { return IOManager::m_PendingChangesFlag.load(std::memory_order::acquire); }
     DRE::InplaceVector<DRE::String64, 12>   GetPendingShaders();
@@ -134,12 +143,15 @@ private:
     void ShaderObserver();
 
 private:
+    GFX::PipelineDB*        m_PipelineDB;
     Data::MaterialLibrary*  m_MaterialLibrary;
     Data::GeometryLibrary*  m_GeometryLibrary;
 
     DRE::HashTable<DRE::String64, ShaderData, DRE::AllocatorLinear> m_ShaderData;
 
-    std::mutex  m_ShaderIncluderMutex;
+    // Shader Compiler Section (dxc)
+private:
+    ShaderDBImpl* m_ShaderModuleDBImpl;
 
     DRE::InplaceVector<DRE::String64, 12> m_PendingShaders;
     std::mutex  m_PendingShadersMutex;
