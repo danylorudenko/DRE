@@ -5,7 +5,7 @@
 
 BEGIN_CONSTANT_BUFFER(GizmoPassBuffer, cb, 3, 0)
 {
-    mat4 m_Model;
+    float4x4 m_Model;
 }
 END_CONSTANT_BUFFER(GizmoPassBuffer, cb, 3, 0)
 

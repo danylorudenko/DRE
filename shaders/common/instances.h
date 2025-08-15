@@ -22,25 +22,25 @@ enum InstanceFlags : DRE::U32
 
 DeclareStorageBuffer(S_INSTANCE)
 {
-    mat4 world_space;
-    mat4 inv_world_space;
-    uvec4 texture_indicies;
-    uvec4 globalID_instanceFlags;
+    float4x4 world_space;
+    float4x4 inv_world_space;
+    uint4    texture_indicies;
+    uint4    globalID_instanceFlags;
 };
 
 #ifndef __cplusplus
 
-mat4 GetWorldTransform(S_INSTANCE_GPURef instance)
+float4x4 GetWorldTransform(S_INSTANCE_GPURef instance)
 {
     return instance.world_space;
 }
 
-mat4 GetInvWorldTransform(S_INSTANCE_GPURef instance)
+float4x4 GetInvWorldTransform(S_INSTANCE_GPURef instance)
 {
     return instance.inv_world_space;
 }
 
-vec3 GetInstanceWorldPos(S_INSTANCE_GPURef instance)
+float3 GetInstanceWorldPos(S_INSTANCE_GPURef instance)
 {
     return instance.world_space[3].xyz;
 }

@@ -4,47 +4,47 @@
 
 #ifndef __cplusplus
 
-#extension GL_EXT_nonuniform_qualifier  : enable
-#extension GL_EXT_buffer_reference2     : enable
-#extension GL_EXT_ray_tracing           : enable
-#extension GL_EXT_ray_query             : enable
-
 #include "common/shaders_defines.h"
 
-layout(push_constant) uniform GlobalPushConstant
+// Global push constants
+[[vk::push_constant]]
+cbuffer GlobalPushConstant
 {
     uint value_int1;
 } globalPushConstant;
 
-layout(set = 0, binding = 0) uniform sampler                    g_GlobalSamplers[];
-layout(set = 0, binding = 1) uniform accelerationStructureEXT   g_TLAS;
-//layout(set = 0, binding = 2) uniform PersistentStorage          g_PersistentStorage; it's usually used by direct pointer from global uniform
-layout(set = 1, binding = 0) uniform texture2D                  g_GlobalTextures[];
-#include "common/global_uniform.h" // layout(set = 2, binding = 0)
+// Global resources
+[[vk::binding(0, 0)]]
+SamplerState g_GlobalSamplers[4];
 
+[[vk::binding(1, 0)]]
+RaytracingAccelerationStructure g_TLAS;
+
+[[vk::binding(0, 1)]]
+Texture2D<float4> g_GlobalTextures[];
 
 // Global textures
-#define GetGlobalTexture(id) g_GlobalTextures[nonuniformEXT(id)]
+#define GetGlobalTexture(id) g_GlobalTextures[id]
 
 // Default samplers
-#define GetSamplerNearest() g_GlobalSamplers[0]
-#define GetSamplerLinear() g_GlobalSamplers[1]
-#define GetSamplerLinearClamp() g_GlobalSamplers[2]
-#define GetSamplerAnisotropic() g_GlobalSamplers[3]
+#define GetSamplerNearest()      g_GlobalSamplers[0]
+#define GetSamplerLinear()       g_GlobalSamplers[1]
+#define GetSamplerLinearClamp()  g_GlobalSamplers[2]
+#define GetSamplerAnisotropic()  g_GlobalSamplers[3]
 
-// Texture sampling
-#define SampleTexture(textureObj, samplerObj, uv_coords) texture(sampler2D(textureObj, samplerObj), uv_coords)
-#define TexelFetchLvl(textureObj, pos, lvl) texelFetch(sampler2D(textureObj, GetSamplerNearest(), pos, lvl)
-#define TexelFetch(textureObj, pos) texelFetch(sampler2D(textureObj, GetSamplerNearest()), pos, 0)
+// Texture sampling helpers
+#define SampleTexture(texObj, sampObj, uv) texObj.Sample(sampObj, uv)
+#define TexelFetchLvl(texObj, pos, lvl)    texObj.Load(int3(pos, lvl))
+#define TexelFetch(texObj, pos)           texObj.Load(int3(pos, 0))
 
 float sRGB2Linear(float x)
 {
     return pow(x, 1.0 / 2.2);
 }
 
-vec3 sRGB2Linear(vec3 x)
+float3 sRGB2Linear(float3 x)
 {
-    return pow(x, vec3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
+    return pow(x, 1.0 / 2.2);
 }
 
 float Linear2sRGB(float x)
@@ -52,22 +52,12 @@ float Linear2sRGB(float x)
     return pow(x, 2.2);
 }
 
-vec3 Linear2sRGB(vec3 x)
+float3 Linear2sRGB(float3 x)
 {
-    return pow(x, vec3(2.2, 2.2, 2.2));
-}
-
-// Global Texture sampling
-vec4 SampleGlobalTextureLinear(uint id, vec2 uv)
-{
-    return SampleTexture(GetGlobalTexture(id), GetSamplerLinear(), uv);
-}
-
-vec4 SampleGlobalTextureAnisotropic(uint id, vec2 uv)
-{
-    return SampleTexture(GetGlobalTexture(id), GetSamplerAnisotropic(), uv);
+    return pow(x, 2.2);
 }
 
 #endif // !__cplusplus
 
 #endif // _SHADERS_COMMON_H_
+

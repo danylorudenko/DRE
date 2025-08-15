@@ -12,20 +12,22 @@ S_INSTANCE_GPURef GetInstance() { return GetInstance(GetInstanceID()); }
 
 //////////////
 #ifndef __cplusplus
-layout(set = 3, binding = 0) uniform texture2D shadowMap;
+[[vk::binding(0, 3)]]
+Texture2D<float> shadowMap;
 #endif
 
 //////////////
 BEGIN_CONSTANT_BUFFER(ForwardUniform, passUniform, 3, 1)
 {
-    mat4  shadow_VP;
-    vec4  shadow_size;
+    float4x4  shadow_VP;
+    float4    shadow_size;
 }
 END_CONSTANT_BUFFER(ForwardUniform, passUniform, 3, 1)
 
 //////////////
 #ifndef __cplusplus
-layout(set = 3, binding = 2) uniform texture2D causticMap;
+[[vk::binding(2, 3)]]
+Texture2D<float4> causticMap;
 #endif
 
 ///////////////////////////////////////
@@ -35,7 +37,7 @@ layout(set = 3, binding = 2) uniform texture2D causticMap;
 /////////////
 // Object ID
 #ifndef __cplusplus
-vec4 GlobalID2Color()
+float4 GlobalID2Color()
 {
     S_INSTANCE_GPURef Instance = GetInstance();
 
@@ -43,37 +45,40 @@ vec4 GlobalID2Color()
     float g = (GetGlobalID(Instance) & 0x00FF0000) >> 16;
     float b = (GetGlobalID(Instance) & 0x0000FF00) >> 8;
     float a = (GetGlobalID(Instance) & 0x000000FF) >> 0;
-    return vec4(r,g,b,a) / 255.0;
+    return float4(r,g,b,a) / 255.0f;
 }
 #endif // __cplusplus
 
 /////////////
 // Output
 #ifdef DRE_FRAGMENT_SHADER
-layout(location = 0) out vec4 finalColor;
-layout(location = 1) out vec2 velocity;
-layout(location = 2) out vec4 id;
+struct ForwardPassOutput
+{
+    float4 finalColor : SV_Target0;
+    float2 velocity   : SV_Target1;
+    float4 id         : SV_Target2;
+};
 #endif // DRE_FRAGMENT_SHADER
 #define FORWARD_PASS_OUTPUT_COUNT 3 // DON'T FORGET
 
 /////////////
 // Reusable outputs
 #ifdef DRE_FRAGMENT_SHADER
-void OutputForwardPass(in S_LIGHTING_RESULT Result, in S_SURFACE Surface)
+void OutputForwardPass(in S_LIGHTING_RESULT Result, in S_SURFACE Surface, float4 fragCoord, out ForwardPassOutput outp)
 {
-    finalColor = vec4(Result.finalRadiance, 1.0);
+    outp.finalColor = float4(Result.finalRadiance, 1.0f);
 
-    vec4 prev_ndc = GetPrevCameraViewProjM() * Surface.prevWpos;
+    float4 prev_ndc = mul(GetPrevCameraViewProjM(), Surface.prevWpos);
     prev_ndc /= prev_ndc.w;
 
-    vec2 pixel_pos_uv = gl_FragCoord.xy / GetViewportSize();
-    vec2 pixel_pos_ndc = pixel_pos_uv * 2.0 - 1.0;
+    float2 pixel_pos_uv = fragCoord.xy / GetViewportSize();
+    float2 pixel_pos_ndc = pixel_pos_uv * 2.0f - 1.0f;
 
-    vec2 vel = (pixel_pos_ndc - prev_ndc.xy);
-    vec2 vel_uv = vel * 0.5;
+    float2 vel = (pixel_pos_ndc - prev_ndc.xy);
+    float2 vel_uv = vel * 0.5f;
 
-    velocity = vec2(vel_uv);
-    id = GlobalID2Color();
+    outp.velocity = vel_uv;
+    outp.id = GlobalID2Color();
 }
 #endif // DRE_FRAGMENT_SHADER
 

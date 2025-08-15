@@ -10,29 +10,29 @@
 
 DeclareStorageBuffer(S_LIGHT)
 {
-    vec4 world_pos;
-    vec4 direction_type;
-    vec4 spectrum_flux;
+    float4 world_pos;
+    float4 direction_type;
+    float4 spectrum_flux;
 };
 
 #ifndef __cplusplus
 
-vec3 GetWorldPos(S_LIGHT_GPURef light)
+float3 GetWorldPos(S_LIGHT_GPURef light)
 {
     return light.world_pos.xyz;
 }
 
-vec3 GetDirection(S_LIGHT_GPURef light)
+float3 GetDirection(S_LIGHT_GPURef light)
 {
     return light.direction_type.xyz;
 }
 
 uint GetType(S_LIGHT_GPURef light)
 {
-    return floatBitsToUint(light.direction_type.w);
+    return asuint(light.direction_type.w);
 }
 
-vec3 GetSpectrum(S_LIGHT_GPURef light)
+float3 GetSpectrum(S_LIGHT_GPURef light)
 {
     return light.spectrum_flux.rgb;
 }
