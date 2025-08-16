@@ -135,7 +135,7 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& name, DRE::ByteBuffer cons
 {
     DXCArgsBuilder args;
     args.AddDebugArgs();
-    args.AddEntryPoint("mainCS", VKW::SHADER_MODULE_TYPE_COMPUTE);
+    args.AddEntryPoint("main", type);
 
     DxcBuffer sourceBuffer;
     sourceBuffer.Ptr = source.Data();

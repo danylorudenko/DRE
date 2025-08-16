@@ -5,7 +5,7 @@
 
 struct PassUniform
 {
-    vec4 useEncoded_exposure;
+    float4 useEncoded_exposure;
 };
 DeclareConstantBuffer(PassUniform, passUniform, 3, 2);
 
@@ -13,7 +13,7 @@ float GetUseEncoded() { return passUniform.useEncoded_exposure.x; }
 float GetExposure() { return passUniform.useEncoded_exposure.y; }
 
 
-float3 ACESFilm(vec3 x)
+float3 ACESFilm(float3 x)
 {
     float a = 2.51f;
     float b = 0.03f;
@@ -24,14 +24,14 @@ float3 ACESFilm(vec3 x)
 }
 
 [numthreads(8, 8, 1)]
-void main()
+void main(uint3 DTid : SV_DispatchThreadID)
 {
-    int2 coords = ivec2(gl_GlobalInvocationID.xy);
+    int2 coords = int2(DTid.xy);
 
-    float3 linearColor = linearRT.Load(coords).rgb;
+    float3 linearColor = linearRT.Load(int3(coords, 0)).rgb;
     float3 encoded = ACESFilm(linearColor * GetExposure());
 
-    vec3 result = lerp(linearColor, encoded, GetUseEncoded());
+    float3 result = lerp(linearColor, encoded, GetUseEncoded());
 
-    encodedOutput[coords] = float4(result, 1.0));
+    encodedOutput[coords] = float4(result, 1.0);
 }
