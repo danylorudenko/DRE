@@ -78,9 +78,9 @@ float2    GetSunShadowSize() { return g_GlobalUniforms.main_ShadowSize.xy; }
 uint      GetShadowMapID() { return g_GlobalUniforms.TEX_ID_shadow.x; }
 
 uint            GetLightsCount() { return g_GlobalUniforms.lightsCount.x; }
-S_LIGHT_GPU_PTR GetLight(uint i) { return g_GlobalUniforms.LightBuffer.Element(i); }
+S_LIGHT_GPU_PTR GetLight(uint i) { return g_GlobalUniforms.LightBuffer.Get()[i]; }
 
-S_INSTANCE_GPU_PTR GetInstance(uint i) { return g_GlobalUniforms.InstanceBuffer.Element(i); }
+S_INSTANCE_GPU_PTR GetInstance(uint i) { return g_GlobalUniforms.InstanceBuffer.Get()[i]; }
 
 #endif // !__cplusplus
 

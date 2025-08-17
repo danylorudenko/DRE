@@ -18,29 +18,29 @@ DeclareStorageBuffer(S_LIGHT);
 
 #ifndef __cplusplus
 
-float3 GetWorldPos(S_LIGHT_GPURef light)
+float3 GetWorldPos(S_LIGHT_GPU_PTR light)
 {
-    return light.world_pos.xyz;
+    return light.Get().world_pos.xyz;
 }
 
-float3 GetDirection(S_LIGHT_GPURef light)
+float3 GetDirection(S_LIGHT_GPU_PTR light)
 {
-    return light.direction_type.xyz;
+    return light.Get().direction_type.xyz;
 }
 
-uint GetType(S_LIGHT_GPURef light)
+uint GetType(S_LIGHT_GPU_PTR light)
 {
-    return asuint(light.direction_type.w);
+    return asuint(light.Get().direction_type.w);
 }
 
-float3 GetSpectrum(S_LIGHT_GPURef light)
+float3 GetSpectrum(S_LIGHT_GPU_PTR light)
 {
-    return light.spectrum_flux.rgb;
+    return light.Get().spectrum_flux.rgb;
 }
 
-float GetFlux(S_LIGHT_GPURef light)
+float GetFlux(S_LIGHT_GPU_PTR light)
 {
-    return light.spectrum_flux.w;
+    return light.Get().spectrum_flux.w;
 }
 
 #endif // !__cplusplus

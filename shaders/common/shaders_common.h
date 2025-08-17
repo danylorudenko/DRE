@@ -35,6 +35,16 @@ struct GlobalPushConstant
 //#define TexelFetchLvl(texObj, pos, lvl)     texObj.Load(int3(pos, lvl))
 //#define TexelFetch(texObj, pos)             texObj.Load(int3(pos, 0))
 
+float4 SampleGlobalTextureLinear(uint id, float2 uv)
+{
+    return g_GlobalTextures[id].Sample(GetSamplerLinear(), uv);
+}
+
+float4 SampleGlobalTextureAnisotropic(uint id, float2 uv)
+{
+    return g_GlobalTextures[id].Sample(GetSamplerAnisotropic(), uv);
+}
+
 float sRGB2Linear(float x)
 {
     return pow(x, 1.0 / 2.2);

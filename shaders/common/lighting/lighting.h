@@ -2,6 +2,7 @@
 #define _LIGHTING_H_
 
 #include "common/shaders_common.h"
+#include "common/global_uniform.h"
 #include "common/lighting/lighting_model.h"
 #include "common/lighting/lights.h"
 #include "common/shadows/shadows.h"
@@ -33,7 +34,7 @@ S_LIGHTING_RESULT CalculateLighting(S_SURFACE surface)
     uint lightsCount = GetLightsCount();
     for(uint i = 0; i < lightsCount; i++)
     {
-        S_LIGHT_GPURef light = GetLight(i);
+        S_LIGHT_GPU_PTR light = GetLight(i);
         switch(GetType(light))
         {
             case DRE_LIGHT_TYPE_SUN:
