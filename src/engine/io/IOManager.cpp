@@ -127,7 +127,7 @@ DRE::ByteBuffer IOManager::CompileHLSL(char const* path, VKW::ShaderModuleType t
     std::cout << "Compiling shader " << path << std::endl;
 
     DRE::ByteBuffer sourceBlob{};
-    std::uint64_t const bytesRead = ReadFileToBuffer(path, &sourceBlob);
+    std::uint64_t const bytesRead = ReadFileStringToBuffer(path, &sourceBlob);
     DRE_ASSERT(bytesRead != 0, "Failed to read GLSL source.");
 
     bool status = CompileShader(path, sourceBlob, type);

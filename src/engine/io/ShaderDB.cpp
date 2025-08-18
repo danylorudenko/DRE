@@ -8,6 +8,10 @@
 #include <wrl/client.h>
 #include <dxcapi.h>
 
+#include <slang.h>
+#include <slang-com-ptr.h>
+#include <slang-com-helper.h>
+
 #include <iostream>
 
 namespace IO
@@ -124,15 +128,121 @@ ShaderDBImpl::ShaderDBImpl(IO::IOManager* io)
 {
     //CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 
-    COM_CHECK(DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&m_Utils)));
-    COM_CHECK(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&m_Compiler)));
-    COM_CHECK(m_Utils->CreateDefaultIncludeHandler(&m_IncludeHandler));
+    {
+        COM_CHECK(DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&m_Utils)));
+        COM_CHECK(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&m_Compiler)));
+        COM_CHECK(m_Utils->CreateDefaultIncludeHandler(&m_IncludeHandler));
+    }
+
+    {
+        SlangGlobalSessionDesc globalSessionDesc = {};
+        slang::createGlobalSession(&globalSessionDesc, m_SlangGlobalSession.writeRef());
+        DRE_ASSERT(m_SlangGlobalSession.get() != nullptr, "Failed to create Slang Global Session");
+    }
+    
 }
 
 ShaderDBImpl::~ShaderDBImpl() = default;
 
 bool ShaderDBImpl::CompileShader(DRE::String64 const& name, DRE::ByteBuffer const& source, VKW::ShaderModuleType type)
 {
+    slang::TargetDesc targetDesc;
+    targetDesc.format = SlangCompileTarget::SLANG_SPIRV;
+    targetDesc.flags = SLANG_TARGET_FLAG_GENERATE_SPIRV_DIRECTLY; // set by default and will be deprecated, use CompilerOption instead.
+
+    // from slangc --help: Accepted profiles are:
+    //      *sm_{ 4_0,4_1,5_0,5_1,6_0,6_1,6_2,6_3,6_4,6_5,6_6 }
+    //      *glsl_{ 110,120,130,140,150,330,400,410,420,430,440,450,460 }
+    // But here we see spirv
+    // https://github.com/shader-slang/slang/blob/master/examples/hello-world/main.cpp
+    targetDesc.profile = m_SlangGlobalSession->findProfile("spirv_1_5");
+
+    char const* paths = "shaders/";
+    slang::SessionDesc sessionDesc;
+    sessionDesc.targetCount = 1;
+    sessionDesc.targets = &targetDesc;
+    sessionDesc.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_ROW_MAJOR;
+    sessionDesc.searchPathCount = 1;
+    sessionDesc.searchPaths = &paths;
+    //sessionDesc.preprocessorMacroCount = 1;
+    //sessionDesc.preprocessorMacros = PreprocessMacroDesc;
+    //sessionDesc.structureSize // not needed
+    Slang::ComPtr<slang::ISession> slangCurrentSession;
+    m_SlangGlobalSession->createSession(sessionDesc, slangCurrentSession.writeRef());
+
+    slang::IModule* slangModule = nullptr;
+    {
+        Slang::ComPtr<slang::IBlob> diagnosticBlob;
+        
+        slangModule = slangCurrentSession->loadModuleFromSourceString(name.GetData(), nullptr, source.As<char const*>(), diagnosticBlob.writeRef());
+        if (diagnosticBlob != nullptr)
+        {
+            std::cout << (const char*)diagnosticBlob->getBufferPointer() << std::endl;
+        }
+        DRE_ASSERT(slangModule != nullptr, "Failed to load a slang module");
+    }
+
+    Slang::ComPtr<slang::IEntryPoint> entryPoint;
+    slangModule->findEntryPointByName("main", entryPoint.writeRef());
+
+    DRE_ASSERT(entryPoint != nullptr, "Failed to find slang entry point \"main\"");
+
+    DRE::InplaceVector<slang::IComponentType*, 2> slangComponents;
+    slangComponents.EmplaceBack(slangModule);
+    slangComponents.EmplaceBack(entryPoint.get());
+
+    Slang::ComPtr<slang::IComponentType> composedProgram;
+    {
+        Slang::ComPtr<slang::IBlob> diagnosticBlob;
+        slangCurrentSession->createCompositeComponentType(
+            slangComponents.Data(),
+            slangComponents.Size(),
+            composedProgram.writeRef(),
+            diagnosticBlob.writeRef()
+        );
+
+        if (diagnosticBlob != nullptr)
+        {
+            std::cout << (const char*)diagnosticBlob->getBufferPointer() << std::endl;
+        }
+    }
+
+    Slang::ComPtr<slang::IBlob> slangSpirv;
+    {
+        Slang::ComPtr<slang::IBlob> diagnosticBlob;
+        SlangResult result = composedProgram->getEntryPointCode(0, 0, slangSpirv.writeRef(), diagnosticBlob.writeRef());
+
+        if (diagnosticBlob != nullptr)
+        {
+            std::cout << (const char*)diagnosticBlob->getBufferPointer() << std::endl;
+        }
+        DRE_ASSERT(result == 0, "slang unknown error when compiling spirv");
+
+    }
+
+    if (slangSpirv != nullptr && slangSpirv->getBufferSize() != 0)
+    {
+        DRE::ByteBuffer spvBuffer{ slangSpirv->getBufferSize() };
+        DRE::MemCpy(spvBuffer.Data(), slangSpirv->getBufferPointer(), spvBuffer.Size());
+
+        m_ShaderMap.Emplace(name, ShaderEntry{
+            .name = name,
+            .type = type,
+            .spirv = DRE_MOVE(spvBuffer),
+            .source = source
+        });
+
+        return true;
+    }
+    else
+    {
+        DRE_ASSERT(false, "slang failed to extract compilation result object");
+        return false;
+    }
+
+
+
+    // legacy_dxc
     DXCArgsBuilder args;
     args.AddDebugArgs();
     args.AddEntryPoint("main", type);

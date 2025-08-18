@@ -40,6 +40,9 @@ void ImportTable::GetInstanceProcAddresses(VkInstance instance)
     VKW_IMPORT_VULKAN_INSTANCE_FUNCTION(vkGetPhysicalDeviceMemoryProperties2);
     VKW_IMPORT_VULKAN_INSTANCE_FUNCTION(vkGetPhysicalDeviceQueueFamilyProperties);
 
+    VKW_IMPORT_VULKAN_INSTANCE_FUNCTION(vkGetPhysicalDeviceFormatProperties);
+    VKW_IMPORT_VULKAN_INSTANCE_FUNCTION(vkGetPhysicalDeviceImageFormatProperties);
+
 #ifdef _WIN32
     VKW_IMPORT_VULKAN_INSTANCE_FUNCTION(vkGetPhysicalDeviceWin32PresentationSupportKHR);
     VKW_IMPORT_VULKAN_INSTANCE_FUNCTION(vkCreateWin32SurfaceKHR);
@@ -82,9 +85,6 @@ void ImportTable::GetDeviceProcAddresses(VkDevice device)
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkDestroyBuffer);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCreateImage);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkDestroyImage);
-
-    VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkGetPhysicalDeviceFormatProperties);
-    VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkGetPhysicalDeviceImageFormatProperties);
 
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkGetBufferMemoryRequirements);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkGetImageMemoryRequirements);

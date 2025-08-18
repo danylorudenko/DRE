@@ -15,6 +15,9 @@
 #include <wrl/client.h>
 #include <dxcapi.h>
 
+#include <slang.h>
+#include <slang-com-ptr.h>
+
 namespace IO
 {
 
@@ -74,6 +77,12 @@ private:
     Microsoft::WRL::ComPtr<IDxcUtils>       m_Utils;
     Microsoft::WRL::ComPtr<IDxcCompiler3>   m_Compiler;
     IDxcIncludeHandler*                     m_IncludeHandler;
+
+
+
+    Slang::ComPtr<slang::IGlobalSession>    m_SlangGlobalSession;
+
+
 
     DRE::InplaceVector<LPCWSTR, 64>         m_DefaultCompilationArgs;
 

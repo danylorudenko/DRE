@@ -72,3 +72,14 @@ add_custom_command(TARGET demo_app POST_BUILD
 	"$<TARGET_FILE_DIR:demo_app>/dxil.dll"
 	COMMENT "Creating symlink to dxil binary"
 )
+
+file(GLOB SLANG_LIBS "${DRE_SOURCE_DIR}/slang-2025.14.3-windows-x86_64/bin/*")
+foreach(src_file ${SLANG_LIBS})
+	get_filename_component(file_name ${src_file} NAME)
+
+	add_custom_command(TARGET demo_app POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E create_symlink
+		"${src_file}"
+		"$<TARGET_FILE_DIR:demo_app>/${file_name}")
+	
+endforeach()

@@ -45,6 +45,16 @@ set_target_properties(DXC::dxil PROPERTIES
 # demo_app symlinks binaries
 #==========
 
+#add slang
+#==========
+add_library(slang SHARED IMPORTED GLOBAL)
+set_target_properties(slang PROPERTIES
+	IMPORTED_IMPLIB "${DRE_SOURCE_DIR}/slang-2025.14.3-windows-x86_64/lib/slang.lib"
+	IMPORTED_LOCATION "${DRE_SOURCE_DIR}/slang-2025.14.3-windows-x86_64/bin/slang.dll"
+	INTERFACE_INCLUDE_DIRECTORIES "${DRE_SOURCE_DIR}/slang-2025.14.3-windows-x86_64/include/")
+# demo_app symlinks binaries
+#==========
+
 
 add_subdirectory(extern/glm)
 add_subdirectory(extern/Vulkan-Headers)
