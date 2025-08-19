@@ -53,20 +53,26 @@ float ShadowMapSample(float3 wpos, float4x4 shadowViewProj, float2 shadowMapDims
 #ifndef DRE_VERTEX_SHADER
 float ShadowVisibilityTrace(float3 wpos, float3 shadowDir)
 {
-    RayQuery<RAY_FLAG_NONE> rayQuery;
+    RayDesc rayDesc;
+    rayDesc.Origin = wpos;
+    rayDesc.TMin = 0.1;
+    rayDesc.Direction = shadowDir;
+    rayDesc.TMax = 10000;
+
+    RayQuery<RAY_FLAG_CULL_NON_OPAQUE | 
+        RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | 
+        RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> rayQuery;
+
     rayQuery.TraceRayInline(
         g_TLAS,
-        RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH,
+        RAY_FLAG_NONE, // or'ed with RayQuery<..>
         0xFFFFFFFF,
-        wpos,
-        0.1f,
-        shadowDir,
-        10000.0f);
+        rayDesc);
 
     rayQuery.Proceed();
 
     float result = 1.0f;
-    if (rayQuery.CommittedStatus() == RAY_QUERY_COMMITTED_TRIANGLE_HIT)
+    if (rayQuery.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
     {
         result = 0.0f;
     }

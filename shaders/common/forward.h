@@ -15,7 +15,10 @@ struct ForwardUniform
     float4x4  shadow_VP;
     float4    shadow_size;
 };
-DeclareConstantBuffer(ForwardUniform, passUniform, 3, 1)
+
+#ifndef __cplusplus
+[[vk::binding(1, 3)]] ConstantBuffer<ForwardUniform> passUniform;
+#endif
 
 //////////////
 #ifndef __cplusplus
@@ -31,7 +34,7 @@ DeclareConstantBuffer(ForwardUniform, passUniform, 3, 1)
 #ifndef __cplusplus
 float4 GlobalID2Color()
 {
-    S_INSTANCE_GPURef Instance = GetInstance();
+    S_INSTANCE* Instance = GetInstance();
 
     float r = (GetGlobalID(Instance) & 0xFF000000) >> 24;
     float g = (GetGlobalID(Instance) & 0x00FF0000) >> 16;
@@ -43,7 +46,7 @@ float4 GlobalID2Color()
 
 /////////////
 // Output
-#ifdef DRE_FRAGMENT_SHADER
+#ifdef DRE_PIXEL_SHADER
 struct ForwardPassOutput
 {
     float4 finalColor : SV_Target0;
@@ -55,9 +58,10 @@ struct ForwardPassOutput
 
 /////////////
 // Reusable outputs
-#ifdef DRE_FRAGMENT_SHADER
-void OutputForwardPass(in S_LIGHTING_RESULT Result, in S_SURFACE Surface, float4 fragCoord, out ForwardPassOutput outp)
+#ifdef DRE_PIXEL_SHADER
+ForwardPassOutput OutputForwardPass(in S_LIGHTING_RESULT Result, in S_SURFACE Surface, float4 fragCoord)
 {
+    ForwardPassOutput outp;
     outp.finalColor = float4(Result.finalRadiance, 1.0f);
 
     float4 prev_ndc = mul(GetPrevCameraViewProjM(), Surface.prevWpos);
@@ -71,6 +75,8 @@ void OutputForwardPass(in S_LIGHTING_RESULT Result, in S_SURFACE Surface, float4
 
     outp.velocity = vel_uv;
     outp.id = GlobalID2Color();
+
+    return outp;
 }
 #endif // DRE_FRAGMENT_SHADER
 

@@ -34,7 +34,7 @@ S_LIGHTING_RESULT CalculateLighting(S_SURFACE surface)
     uint lightsCount = GetLightsCount();
     for(uint i = 0; i < lightsCount; i++)
     {
-        S_LIGHT_GPU_PTR light = GetLight(i);
+        S_LIGHT* light = GetLight(i);
         switch(GetType(light))
         {
             case DRE_LIGHT_TYPE_SUN:

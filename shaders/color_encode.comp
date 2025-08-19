@@ -7,7 +7,7 @@ struct PassUniform
 {
     float4 useEncoded_exposure;
 };
-DeclareConstantBuffer(PassUniform, passUniform, 3, 2);
+[[vk::binding(2, 3)]] ConstantBuffer<PassUniform> passUniform;
 
 float GetUseEncoded() { return passUniform.useEncoded_exposure.x; }
 float GetExposure() { return passUniform.useEncoded_exposure.y; }

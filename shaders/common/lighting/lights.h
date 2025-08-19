@@ -14,33 +14,32 @@ struct S_LIGHT
     float4 direction_type;
     float4 spectrum_flux;
 };
-DeclareStorageBuffer(S_LIGHT);
 
 #ifndef __cplusplus
 
-float3 GetWorldPos(S_LIGHT_GPU_PTR light)
+float3 GetWorldPos(S_LIGHT* light)
 {
-    return light.Get().world_pos.xyz;
+    return light.world_pos.xyz;
 }
 
-float3 GetDirection(S_LIGHT_GPU_PTR light)
+float3 GetDirection(S_LIGHT* light)
 {
-    return light.Get().direction_type.xyz;
+    return light.direction_type.xyz;
 }
 
-uint GetType(S_LIGHT_GPU_PTR light)
+uint GetType(S_LIGHT* light)
 {
-    return asuint(light.Get().direction_type.w);
+    return asuint(light.direction_type.w);
 }
 
-float3 GetSpectrum(S_LIGHT_GPU_PTR light)
+float3 GetSpectrum(S_LIGHT* light)
 {
-    return light.Get().spectrum_flux.rgb;
+    return light.spectrum_flux.rgb;
 }
 
-float GetFlux(S_LIGHT_GPU_PTR light)
+float GetFlux(S_LIGHT* light)
 {
-    return light.Get().spectrum_flux.w;
+    return light.spectrum_flux.w;
 }
 
 #endif // !__cplusplus

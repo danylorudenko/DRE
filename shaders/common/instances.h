@@ -27,53 +27,52 @@ struct S_INSTANCE
     uint4    texture_indicies;
     uint4    globalID_instanceFlags;
 };
-DeclareStorageBuffer(S_INSTANCE);
 
 #ifndef __cplusplus
 
-float4x4 GetWorldTransform(S_INSTANCE_GPU_PTR instance)
+float4x4 GetWorldTransform(S_INSTANCE* instance)
 {
-    return instance.Get().world_space;
+    return instance.world_space;
 }
 
-float4x4 GetInvWorldTransform(S_INSTANCE_GPU_PTR instance)
+float4x4 GetInvWorldTransform(S_INSTANCE* instance)
 {
-    return instance.Get().inv_world_space;
+    return instance.inv_world_space;
 }
 
-float3 GetInstanceWorldPos(S_INSTANCE_GPU_PTR instance)
+float3 GetInstanceWorldPos(S_INSTANCE* instance)
 {
-    return instance.Get().world_space[3].xyz;
+    return instance.world_space[3].xyz;
 }
 
-uint GetDiffuseTextureID(S_INSTANCE_GPU_PTR instance)
+uint GetDiffuseTextureID(S_INSTANCE* instance)
 {
-    return instance.Get().texture_indicies.x;
+    return instance.texture_indicies.x;
 }
 
-uint GetNormalTextureID(S_INSTANCE_GPU_PTR instance)
+uint GetNormalTextureID(S_INSTANCE* instance)
 {
-    return instance.Get().texture_indicies.y;
+    return instance.texture_indicies.y;
 }
 
-uint GetMetalnessTextureID(S_INSTANCE_GPU_PTR instance)
+uint GetMetalnessTextureID(S_INSTANCE* instance)
 {
-    return instance.Get().texture_indicies.z;
+    return instance.texture_indicies.z;
 }
 
-uint GetRoughnessTextureID(S_INSTANCE_GPU_PTR instance)
+uint GetRoughnessTextureID(S_INSTANCE* instance)
 {
-    return instance.Get().texture_indicies.w;
+    return instance.texture_indicies.w;
 }
 
-uint GetGlobalID(S_INSTANCE_GPU_PTR instance)
+uint GetGlobalID(S_INSTANCE* instance)
 {
-    return instance.Get().globalID_instanceFlags.x;
+    return instance.globalID_instanceFlags.x;
 }
 
-uint GetInstanceFlags(S_INSTANCE_GPU_PTR instance)
+uint GetInstanceFlags(S_INSTANCE* instance)
 {
-    return instance.Get().globalID_instanceFlags.y;
+    return instance.globalID_instanceFlags.y;
 }
 
 #endif // !__cplusplus

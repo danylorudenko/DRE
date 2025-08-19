@@ -180,8 +180,8 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     globalUniform.main_SunLightDir      = glm::vec4{ sunLight.GetForward(), 0.0f };
 
     globalUniform.lightsCount           = glm::uvec4{ m_LightsManager.GetCount(), 0u, 0u, 0u};
-    globalUniform.LightBuffer           = m_LightsManager.GetBufferAddress();
-    globalUniform.InstanceBuffer        = m_InstanceDataManager.GetBufferAddress();
+    globalUniform.LightBuffer           = reinterpret_cast<S_LIGHT*>(m_LightsManager.GetBufferAddress());
+    globalUniform.InstanceBuffer        = reinterpret_cast<S_INSTANCE*>(m_InstanceDataManager.GetBufferAddress());
 
     std::memcpy(dst, &globalUniform, sizeof(globalUniform));
 

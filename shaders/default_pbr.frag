@@ -7,21 +7,24 @@
 
 struct PSInput
 {
+    float4                          ndc_pos      : SV_Position;
     [[vk::location(0)]] float3      wpos         : POSITION;
-    [[vk::location(1)]] float3      uv           : TEXCOORD0;
+    [[vk::location(1)]] float2      uv           : TEXCOORD0;
     [[vk::location(2)]] float3      prev_wpos    : TEXCOORD1;
     [[vk::location(3)]] float3x3    TBN          : TEXCOORD2;
-}
+};
 
-void main(PSInput input)
+[require(spvRayQueryKHR)]
+[shader("pixel")]
+ForwardPassOutput main(PSInput input)
 {
-    S_INSTANCE_GPU_PTR InstancePtr = GetInstance();
+    S_INSTANCE* InstancePtr = GetInstance();
     uint instanceFlags = GetInstanceFlags(InstancePtr);
 
     float3 diffuse    = SampleGlobalTextureAnisotropic(GetDiffuseTextureID(InstancePtr), input.uv).rgb;
     float3 normal     = SampleGlobalTextureAnisotropic(GetNormalTextureID(InstancePtr), input.uv).rgb;
-    float metalness = 0.0;
-    float roughness  = 0.0;
+    float metalness   = 0.0;
+    float roughness   = 0.0;
 
     if ((instanceFlags & INSTANCE_FLAG_MATERIAL_TEXTURES_DEFAULT) != 0)
     {
@@ -58,9 +61,9 @@ void main(PSInput input)
     surface.diffuseSpectrum = diffuse;
     surface.roughness = roughness;
     surface.metalness = metalness;
-    surface.prevWpos = input.prev_wpos;
+    surface.prevWpos = float4(input.prev_wpos, 1.0);
 
     S_LIGHTING_RESULT lighting = CalculateLighting(surface);
 
-    OutputForwardPass(lighting, surface);
+    return OutputForwardPass(lighting, surface, input.ndc_pos);
 }

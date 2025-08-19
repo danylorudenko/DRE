@@ -7,10 +7,9 @@ struct GizmoPassBuffer
 {
     float4x4 m_Model;
 };
-DeclareConstantBuffer(GizmoPassBuffer, cb, 3, 0);
 
 #ifndef __cplusplus
-//float GetCameraDistance() { return cb.m_CameraDistance.x; }
+[[vk::binding(0, 3)]] ConstantBuffer<GizmoPassBuffer> cb;
 #endif
 
 #endif // _GIZMO_3D_H_

@@ -11,6 +11,7 @@
 #include <slang.h>
 #include <slang-com-ptr.h>
 #include <slang-com-helper.h>
+#include <slang-gfx.h>
 
 #include <iostream>
 
@@ -139,16 +140,41 @@ ShaderDBImpl::ShaderDBImpl(IO::IOManager* io)
         slang::createGlobalSession(&globalSessionDesc, m_SlangGlobalSession.writeRef());
         DRE_ASSERT(m_SlangGlobalSession.get() != nullptr, "Failed to create Slang Global Session");
     }
-    
 }
 
 ShaderDBImpl::~ShaderDBImpl() = default;
 
+char const* GetShaderTypeDefineString(VKW::ShaderModuleType type)
+{
+    switch (type)
+    {
+    case VKW::SHADER_MODULE_TYPE_VERTEX:
+        return "DRE_VERTEX_SHADER";
+    case VKW::SHADER_MODULE_TYPE_FRAGMENT:
+        return "DRE_PIXEL_SHADER";
+    case VKW::SHADER_MODULE_TYPE_COMPUTE:
+        return "DRE_COMPUTE_SHADER";
+    default:
+        DRE_ASSERT(false, "DXCArgsBuilder: shader type not supported");
+        return "";
+    };
+}
+
 bool ShaderDBImpl::CompileShader(DRE::String64 const& name, DRE::ByteBuffer const& source, VKW::ShaderModuleType type)
 {
+    slang::PreprocessorMacroDesc shaderTypeMacro;
+    shaderTypeMacro.name = GetShaderTypeDefineString(type);
+    shaderTypeMacro.value = "1";
+
+    slang::CompilerOptionEntry rtOptionEntry;
+    rtOptionEntry.name = slang::CompilerOptionName::Capability;
+    //rtOptionEntry.value.intValue0 = slang::spvRayQuery
+
     slang::TargetDesc targetDesc;
     targetDesc.format = SlangCompileTarget::SLANG_SPIRV;
     targetDesc.flags = SLANG_TARGET_FLAG_GENERATE_SPIRV_DIRECTLY; // set by default and will be deprecated, use CompilerOption instead.
+    targetDesc.compilerOptionEntryCount = 0;
+    targetDesc.compilerOptionEntries = &rtOptionEntry;
 
     // from slangc --help: Accepted profiles are:
     //      *sm_{ 4_0,4_1,5_0,5_1,6_0,6_1,6_2,6_3,6_4,6_5,6_6 }
@@ -164,8 +190,8 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& name, DRE::ByteBuffer cons
     sessionDesc.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_ROW_MAJOR;
     sessionDesc.searchPathCount = 1;
     sessionDesc.searchPaths = &paths;
-    //sessionDesc.preprocessorMacroCount = 1;
-    //sessionDesc.preprocessorMacros = PreprocessMacroDesc;
+    sessionDesc.preprocessorMacroCount = 1;
+    sessionDesc.preprocessorMacros = &shaderTypeMacro;
     //sessionDesc.structureSize // not needed
     Slang::ComPtr<slang::ISession> slangCurrentSession;
     m_SlangGlobalSession->createSession(sessionDesc, slangCurrentSession.writeRef());
