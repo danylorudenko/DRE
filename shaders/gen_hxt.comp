@@ -1,19 +1,15 @@
-#version 450 core
-
-#extension GL_GOOGLE_include_directive : enable
-
 #include "common/shaders_common.h"
-
-layout(set = 3, binding = 0, rg32f) uniform image2D timedSpectumTexture;
-layout(set = 3, binding = 1, rgba32f) uniform image2D spectrumTexture;
-
-layout(set = 3, binding = 2, std140) uniform Data
+#include "common/global_uniform.h"
 #include "fft_water_uniform.h"
+
+[[vk::binding(0, 3)]] RWTexture2D<float2> timedSpectumTexture;
+[[vk::binding(1, 3)]] Texture2D<float4> spectrumTexture;
+[[vk::binding(2, 3)]] ConstantBuffer<FFTWaterUniform> data;
 
 struct complex
 {
-	float r;
-	float i;
+    float r;
+    float i;
 };
 
 complex add(complex lhs, complex rhs)
@@ -36,37 +32,37 @@ complex exp_complex(float x)
 	return complex(cos(x), sin(x));
 }
 
-layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
-void main()
+[numthreads(8, 8, 1)]
+void main(int2 DTid : SV_DispatchThreadID)
 {
-    float N = GetFFTSize();
-	vec2 windDir = GetWindDir();
-	
-	ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
-	
-	//vec2 x = coords - N.rr / 2;
-	//vec2 k = 2 * PI * x/
-	
-	vec2 k = ((vec2(coords) - N / 2) * 2 * PI) / GetWaterPatchSize(); // 10 is patch size in meters;
-	
-	vec4 spectrum = imageLoad(spectrumTexture, coords);
-	complex h0k = complex(spectrum.x, spectrum.y);
-	complex h0_minK = complex(spectrum.z, spectrum.w);
-	
-	complex hK = complex(spectrum.x, spectrum.y);
-	complex hMinusK = complex(spectrum.z, spectrum.w);
-	
-	float w = sqrt(9.8 * length(k));
-	float t = GetTimeS() + 1000;
-	
-	float wt = w * t * GetWaterSimSpeed();
-	//wt = 0.0;
-	
-	complex eiwt = exp_complex(wt);
-	complex e_minus_iwt = exp_complex(-wt);
-	
-	complex hkt = add(multiply(h0k, eiwt), multiply(h0_minK, e_minus_iwt));
-	
-	imageStore(timedSpectumTexture, coords, vec4(hkt.r, hkt.i, 0.0, 0.0));
-	
+    float N = GetFFTSize(data);
+    float2 windDir = GetWindDir(data);
+
+    int2 coords = DTid;
+
+    //vec2 x = coords - N.rr / 2;
+    //vec2 k = 2 * PI * x/
+
+    float2 k = ((float2(coords) - N / 2) * 2 * PI) / GetWaterPatchSize(data); // 10 is patch size in meters;
+
+    float4 spectrum = spectrumTexture[coords];
+    complex h0k = complex(spectrum.x, spectrum.y);
+    complex h0_minK = complex(spectrum.z, spectrum.w);
+
+    complex hK = complex(spectrum.x, spectrum.y);
+    complex hMinusK = complex(spectrum.z, spectrum.w);
+
+    float w = sqrt(9.8 * length(k));
+    float t = GetTimeS() + 1000;
+
+    float wt = w * t * GetWaterSimSpeed(data);
+    //wt = 0.0;
+
+    complex eiwt = exp_complex(wt);
+    complex e_minus_iwt = exp_complex(-wt);
+
+    complex hkt = add(multiply(h0k, eiwt), multiply(h0_minK, e_minus_iwt));
+
+    timedSpectumTexture[coords] = float2(hkt.r, hkt.i);
+
 }
