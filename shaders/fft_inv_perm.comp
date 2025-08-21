@@ -1,27 +1,20 @@
-#version 450 core
-
-#extension GL_GOOGLE_include_directive : enable
-
 #include "common/shaders_common.h"
-
-layout(set = 3, binding = 0, rg32f) uniform image2D fftIntermediate;
-layout(set = 3, binding = 1, r32f) uniform image2D heightMap;
-
-layout(set = 3, binding = 2, std140) uniform Data
 #include "fft_water_uniform.h"
 
-layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
-void main()
+[[vk::binding(0, 3)]] Texture2D<float2> fftIntermediate;
+[[vk::binding(1, 3)]] RWTexture2D<float> heightMap;
+[[vk::binding(2, 3)]] ConstantBuffer<FFTWaterUniform> data;
+
+[numthreads(8, 8, 1)]
+void main(int2 DTid : SV_DispatchThreadID)
 {
-    float N = GetFFTSize();
-	
-	ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
-	
-	float perms[] = { 1.0, -1.0 };
-	int index = int(mod(int(coords.x + coords.y), 2));
-	float perm = perms[index];
-	//float perm = perms[0];
-	
-	float h = imageLoad(fftIntermediate, coords).r;
-	imageStore(heightMap, coords, vec4(perm * (h/ (N*N)), 0.0, 0.0, 0.0));
+    float N = GetFFTSize(data);
+
+    float perms[] = { 1.0, -1.0 };
+    int index = int(DTid.x + DTid.y) % 2;
+    float perm = perms[index];
+
+
+    float h = fftIntermediate[DTid].r;
+    heightMap[DTid] = perm * (h / (N*N));
 }
