@@ -1,28 +1,26 @@
-#version 450 core
-
-#extension GL_GOOGLE_include_directive : enable
-
 #include "common/shaders_common.h"
+#include "common/vertex/dre_vertex_layout.h"
 
-layout(location = 0) in vec3 in_pos;
-layout(location = 1) in vec3 in_norm;
-layout(location = 2) in vec3 in_tan;
-layout(location = 3) in vec3 in_btan;
-layout(location = 4) in vec2 in_uv;
-
-layout(location = 0) out vec4 out_wpos;
-
-
-layout(set = 3, binding = 0, std140) uniform InstanceUniform
+struct PSInput
 {
-	mat4  mvp_mat;
-	mat4  model_mat;
-} instanceUniform;
+    [[vk::location(0)]] float3  wpos : POSITION;
+    float4                      ndc_pos : SV_Position;
+};
 
-void main()
-{	
-	vec4 pos = instanceUniform.mvp_mat * vec4(in_pos, 1.0);
-	gl_Position = pos;
-	out_wpos = instanceUniform.model_mat * vec4(in_pos, 1.0);
-	
+struct InstanceUniform
+{
+    float4x4  mvp_mat;
+    float4x4  model_mat;
+};
+[[vk::binding(0, 3)]] ConstantBuffer<InstanceUniform> instanceUniform;
+
+[shader("vertex")]
+PSInput main(VSInput input)
+{
+    PSInput out;
+    float4 pos = mul(instanceUniform.mvp_mat, float4(input.pos, 1.0));
+    out.ndc_pos = pos;
+    out.wpos = mul(instanceUniform.model_mat, float4(input.pos, 1.0)).xyz;
+
+    return out;
 }

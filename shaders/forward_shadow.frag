@@ -1,13 +1,21 @@
-#version 450 core
-
-#extension GL_GOOGLE_include_directive : enable
-
 #include "common/shaders_common.h"
 
-layout(location = 0) in vec4 in_wpos;
-layout(location = 0) out vec4 out_wpos;
-
-void main()
+struct PSInput
 {
-    out_wpos = vec4(in_wpos.xyz, 1.0);
+    [[vk::location(0)]] float3  wpos : POSITION;
+    float4                      ndc_pos : SV_Position;
+};
+
+struct PSOutput
+{
+    float4 wpos : SV_Target0;
+};
+
+[shader("pixel")]
+PSOutput main(PSInput input)
+{
+    PSOutput out;
+    out.wpos = float4(input.wpos.xyz, 1.0);
+
+    return out;
 }

@@ -61,8 +61,8 @@ void main(int2 DTid : SV_DispatchThreadID)
         int2 paramsCoords = int2(butterflyData.zw);
         complex w = complex(butterflyData.x, butterflyData.y);
 
-        vec2 inp0 = fftInput[int2(paramsCoords.x, coords.y)];
-        vec2 inp1 = fftInput[int2(paramsCoords.y, coords.y)];
+        float2 inp0 = fftInput[int2(paramsCoords.x, coords.y)];
+        float2 inp1 = fftInput[int2(paramsCoords.y, coords.y)];
     
         complex G = complex(inp0.x, inp0.y);
         complex H = complex(inp1.x, inp1.y);
