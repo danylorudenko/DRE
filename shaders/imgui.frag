@@ -1,23 +1,21 @@
-#version 450 core
-
-#extension GL_GOOGLE_include_directive : enable
-
 #include "common/shaders_common.h"
 
-layout(location = 0) in vec2 in_uv;
-layout(location = 1) in vec4 in_color;
-
-layout(location = 0) out vec4 finalColor;
-
-layout(set = 3, binding = 0) uniform ImGuiData
+struct ImGuiData
 {
-	vec4 pos_screenSize;
-	uint textureID;
-} imGuiData;
+    float4 pos_screenSize;
+    uint textureID;
+};
+[[vk::binding(0, 3)]] ConstantBuffer<ImGuiData> imGuiData;
 
-
-void main()
+struct PSIn
 {
-	float textureValue = SampleGlobalTextureLinear(imGuiData.textureID, in_uv).x;
-	finalColor = vec4(in_color.rgba * textureValue);
+    [[vk::location(0)]] float2 uv : TEXCOORD0;
+    [[vk::location(1)]] float4 color : TEXCOORD1;
+};
+
+[shader("pixel")]
+float4 main(PSIn in) : SV_Target0
+{
+	float textureValue = SampleGlobalTextureLinear(imGuiData.textureID, in.uv).x;
+    return float4(in.color.rgba * textureValue);
 }

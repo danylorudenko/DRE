@@ -5,6 +5,7 @@
 #ifndef __cplusplus
 
 #include "common/shaders_defines.h"
+#include "common/global_uniform.h"
 
 /////////////////////////////
 // Global push constants
