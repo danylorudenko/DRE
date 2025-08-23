@@ -1,69 +1,65 @@
-#version 450 core
-
-#extension GL_GOOGLE_include_directive : enable
-
 #include "common/shaders_common.h"
 
-layout (set=3, binding=1)        uniform texture2D   velocity;
-layout (set=3, binding=2)        uniform texture2D   color_buffer;
-layout (set=3, binding=3)        uniform texture2D   history;
-layout (set=3, binding=4, rgba8) uniform image2D     taa_output;
-layout (set=3, binding=5)  		 uniform texture2D   main_depth;
+[[vk::binding(1, 3)]] Texture2D<float2>         velocity;
+[[vk::binding(2, 3)]] Texture2D<float3>         color_buffer;
+[[vk::binding(3, 3)]] Texture2D<float3>         history;
+[[vk::binding(4, 3)]] RWTexture2D<float4>       taa_output;
+[[vk::binding(5, 3)]] Texture2D<float>          main_depth;
 
-layout (set=3, binding=0, std140) uniform PassUniform
+
+struct PassUniform
 {
-    vec4 alpha_varianceGamma;
-} passUniform;
+    float4 alpha_varianceGamma;
+};
+[[vk::binding(0, 3)]] ConstantBuffer<PassUniform> passUniform;
 
-layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
-void main()
+[numthreads(8, 8, 1)]
+void main(int2 DTid : SV_DispatchThreadID)
 {
-    ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
-    vec2 uv = (vec2(coords) + 0.5) / GetViewportSize();
-	float center_depth = SampleTexture(main_depth, GetSamplerNearest(), uv).x;
-	
-	vec2 uv_delta = vec2(1, 1) / GetViewportSize();
-	vec3 rgb_aabb[2];
-	
-	vec3 m1 = vec3(0.0);
-	vec3 m2 = vec3(0.0);
-	
-	vec3 velocityUV_depth = vec3(uv, center_depth);
-	for(int x = -1; x < 2; x++) {
-		for(int y = -1; y < 2; y++) {
-			vec2 neighborhood_uv = uv + uv_delta * vec2(x, y);
-			vec3 neighborhood = SampleTexture(color_buffer, GetSamplerNearest(), neighborhood_uv).rgb;
-			
-			m1 += neighborhood;
-			m2 += neighborhood * neighborhood;
-			
-			//rgb_aabb[0] = min(rgb_aabb[0], neighborhood);
-			//rgb_aabb[1] = max(rgb_aabb[1], neighborhood);
-			
-			float depth = SampleTexture(main_depth, GetSamplerNearest(), neighborhood_uv).x;
-			if(depth > velocityUV_depth.z)
-				velocityUV_depth = vec3(neighborhood_uv, depth);
-		}
-	}
-	
-	const float N = 9;
-	vec3 mu = m1 / N;
-	vec3 sigma = sqrt(m2 / N - mu * mu);
-	
-	float gamma = passUniform.alpha_varianceGamma.y;
-	rgb_aabb[0] = mu - sigma * gamma;
-	rgb_aabb[1] = mu + sigma * gamma;
-	
-	vec2 vel = SampleTexture(velocity, GetSamplerNearest(), velocityUV_depth.xy).xy;
-	vec2 uv_prev = uv - vel;
+    int2 coords = DTid;
+    float2 uv = (float2(coords) + 0.5) / GetViewportSize();
+    float center_depth = main_depth.Sample(GetSamplerNearest(), uv);
 
-    vec3 hist_sample = SampleTexture(history, GetSamplerLinear(), uv_prev).rgb;
-    vec3 current = SampleTexture(color_buffer, GetSamplerNearest(), uv).rgb;
-	
-	vec3 rectified_history = clamp(hist_sample, rgb_aabb[0], rgb_aabb[1]);
-	
-	float alpha = passUniform.alpha_varianceGamma.x;
-    vec3 result = mix(current, rectified_history, alpha);
+    float2 uv_delta = rcp(GetViewportSize());
+    float3 rgb_aabb[2];
 
-    imageStore(taa_output, coords, vec4(result, 1.0));
+    float3 m1 = float3(0.0);
+    float3 m2 = float3(0.0);
+
+    float3 velocityUV_depth = float3(uv, center_depth);
+    for(int x = -1; x < 2; x++) {
+        for(int y = -1; y < 2; y++) {
+            float2 neighborhood_uv = uv + uv_delta * float2(x, y);
+            float3 neighborhood = color_buffer.Sample(GetSamplerNearest(), neighborhood_uv);
+
+            m1 += neighborhood;
+            m2 += neighborhood * neighborhood;
+
+            //rgb_aabb[0] = min(rgb_aabb[0], neighborhood);
+            //rgb_aabb[1] = max(rgb_aabb[1], neighborhood);
+
+            float depth = main_depth.Sample(GetSamplerNearest(), neighborhood_uv);
+            if(depth > velocityUV_depth.z)
+                velocityUV_depth = float3(neighborhood_uv, depth);
+        }
+    }
+
+    const float N = 9;
+    float3 mu = m1 / N;
+    float3 sigma = sqrt(m2 / N - mu * mu);
+
+    float gamma = passUniform.alpha_varianceGamma.y;
+    rgb_aabb[0] = mu - sigma * gamma;
+    rgb_aabb[1] = mu + sigma * gamma;
+
+    float2 vel = velocity.Sample(GetSamplerNearest(), velocityUV_depth.xy);
+    float2 uv_prev = uv - vel;    
+    float3 hist_sample = history.Sample(GetSamplerLinear(), uv_prev);
+    float3 current = color_buffer.Sample(GetSamplerNearest(), uv);
+
+    float3 rectified_history = clamp(hist_sample, rgb_aabb[0], rgb_aabb[1]);
+
+    float alpha = passUniform.alpha_varianceGamma.x;
+    float3 result = lerp(current, rectified_history, alpha);   
+    taa_output[coords] = float4(result, 1.0);
 }
