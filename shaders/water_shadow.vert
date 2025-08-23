@@ -1,17 +1,15 @@
-#version 450 core
-
-#extension GL_GOOGLE_include_directive : enable
-
 #include "common/shaders_common.h"
+#include "common/vertex/dre_vertex_layout.h"
 
-layout(location = 0) in vec3 in_pos;
-
-layout(set = 3, binding = 0, std140) uniform InstanceUniform
+struct InstanceUniform
 {
-	mat4  mvp_mat;
-} instanceUniform;
+    float4x4  mvp_mat;
+};
 
-void main()
+[[vk::binding(0, 3)]] ConstantBuffer<InstanceUniform> instanceUniform;
+
+[shader("vertex")]
+float4 main(VSInput input) : SV_Position
 {
-	gl_Position = instanceUniform.mvp_mat * vec4(in_pos, 1.0);
+    return mul(instanceUniform.mvp_mat, float4(input.pos, 1.0));
 }

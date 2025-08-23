@@ -96,10 +96,7 @@ ImGuiHelper::ImGuiHelper(SYS::Window* window, SYS::InputSystem* input, VKW::Inst
             if (std::strcmp(function_name, "vkCmdEndRenderingKHR") == 0)
                 function_name = "vkCmdEndRendering";
 
-            auto* func = UD->table->vkGetDeviceProcAddr(UD->device->GetLogicalDevice()->Handle(), function_name);
-
-            if(func == nullptr)
-                func = UD->table->vkGetInstanceProcAddr(UD->instance->Handle(), function_name);
+            auto* func = UD->table->vkGetInstanceProcAddr(UD->instance->Handle(), function_name);
 
             DRE_ASSERT(func != nullptr, "ImGui failed to obtain necessary function pointers!");
 
