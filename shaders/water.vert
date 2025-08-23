@@ -89,12 +89,12 @@ PSInput main(VSInput input)
 
     float2 custom_uv = CalculateWaterHeightUV(input.pos);
 
-    if(IsFFT())
+    if (IsFFT())
     {
         float2 offset_uv = CalculateWaterHeightUV(offset_inpos);
 
-        float height = SampleTexture(heightMap, GetSamplerLinear(), custom_uv).r;
-        float offset_height = SampleTexture(heightMap, GetSamplerLinear(), offset_uv).r;
+        float height = heightMap.Sample(GetSamplerLinear(), custom_uv);
+        float offset_height = heightMap.Sample(GetSamplerLinear(), offset_uv);
 
         wave_pos = input.pos;
         wave_pos.y += height;

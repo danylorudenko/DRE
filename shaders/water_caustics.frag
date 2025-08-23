@@ -4,7 +4,7 @@
 
 struct PSInput
 {
-    float4                       ndc_pos   : SV_Position;
+    float4                      ndc_pos   : SV_Position;
     [[vk::location(0)]] float3  ray_start : TEXCOORD0;
     [[vk::location(1)]] float3  ray_end   : TEXCOORD1;
 };

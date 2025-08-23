@@ -3,7 +3,7 @@
 
 struct PSInput
 {
-    float4                       ndc_pos   : SV_Position;
+    float4                      ndc_pos   : SV_Position;
     [[vk::location(0)]] float3  ray_start : TEXCOORD0;
     [[vk::location(1)]] float3  ray_end   : TEXCOORD1;
 };
@@ -83,14 +83,14 @@ PSInput main(VSInput input)
     output.ndc_pos = ndc_pos;
 
     float2 uv = ndc_pos.xy * 0.5 + 0.5;
-    float4 env_map_sample = SampleTexture(envMap, GetSamplerLinear(), uv);
+    float4 env_map_sample = envMap.Sample(GetSamplerLinear(), uv);
 
     float3 world_norm = mul(instanceUniform.model_mat, float4(norm, 0.0)).xyz;
     float3 refracted_light = refract(GetSunLightDir(), world_norm, REF_INDEX);
     float2 uv_refract_dir = (mul(passUniform.light_ViewProjM, float4(refracted_light, 0.0)).xy) / GetViewportSize();
     float3 ray_pos = env_map_sample.xyz;
     float2 sample_uv = uv;
-    for(int i = 0; i < 3; i++)
+    for (int i = 0; i < 3; i++)
     {
         if(ray_pos.y < env_map_sample.y || (length(env_map_sample.xyz) < 0.001))
         {
@@ -100,7 +100,7 @@ PSInput main(VSInput input)
         {
             ray_pos = env_map_sample.xyz;
             sample_uv += uv_refract_dir;
-            env_map_sample = SampleTexture(envMap, GetSamplerLinear(), sample_uv);
+            env_map_sample = envMap.Sample(GetSamplerLinear(), sample_uv);
         }
     }
 

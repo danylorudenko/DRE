@@ -72,13 +72,13 @@ float RaymarchWaterDepth(float3 wpos, float currentDepth)
 
     float prev_depth_sample = 0.0;
     float3 prev_test_wpos = float3(0.0, 0.0, 0.0);
-    for(int i = step_count - 1; i >= 0; i--)
+    for (int i = step_count - 1; i >= 0; i--)
     {
         float3 test_wpos = wpos - float3(0.0, step * i, 0.0);
         float4 test_viewpos = mul(GetCameraViewProjM(), float4(test_wpos, 1.0));
         float3 test_ndc = test_viewpos.xyz / test_viewpos.w;
         float2 test_uv = test_ndc.xy * 0.5 + 0.5;
-        float depth_sample = SampleTexture(depthMap, GetSamplerLinearClamp(), test_uv).r;
+        float depth_sample = depthMap.Sample(GetSamplerLinearClamp(), test_uv);
         if(depth_sample < currentDepth)
         {
             float delta = (currentDepth - depth_sample);
@@ -152,21 +152,21 @@ PSOutput main(PSInput input)
 
     float3 specular = WaterSpecular(NdotH, NdotV, NdotL, F0, 0.05);
 
-    float sampledDepthLinear = LinearizeDepth(SampleTexture(depthMap, GetSamplerLinearClamp(), pixel_pos_uv).r, 0.1, 100.0);
+    float sampledDepthLinear = LinearizeDepth(depthMap.Sample(GetSamplerLinearClamp(), pixel_pos_uv), 0.1, 100.0);
     float currentDepthLinear = LinearizeDepth(input.ndc_pos.z, 0.1, 100.0);
     float waterEyeDepth = SimpleWaterDepth(currentDepthLinear, sampledDepthLinear);
 
     float2 refracted_sample_pos = pixel_pos_uv;
     refracted_sample_pos += normalMap.xy * 0.1 * clamp(waterEyeDepth * 50.0, 0.0, 1.5);
 
-    float depthSampleRefractedLinear = LinearizeDepth(SampleTexture(depthMap, GetSamplerLinear(), refracted_sample_pos).r, 0.1, 100.0);
+    float depthSampleRefractedLinear = LinearizeDepth(depthMap.Sample(GetSamplerLinear(), refracted_sample_pos), 0.1, 100.0);
     if((currentDepthLinear - depthSampleRefractedLinear) > 0.0)
     {
         refracted_sample_pos = pixel_pos_uv;
         depthSampleRefractedLinear = sampledDepthLinear;
     }
 
-    float3 worldSampleRefracted = SampleTexture(forwardColorMap, GetSamplerLinear(), refracted_sample_pos).rgb;
+    float3 worldSampleRefracted = forwardColorMap.Sample(GetSamplerLinear(), refracted_sample_pos).rgb;
     float3 worldSample = worldSampleRefracted;
 
     float refractedWaterDepth = SimpleWaterDepth(currentDepthLinear, depthSampleRefractedLinear);
@@ -181,7 +181,7 @@ PSOutput main(PSInput input)
     prev_ndc /= prev_ndc.w;
 
     float2 pixel_pos_ndc = pixel_pos_uv * 2.0 - 1.0;
-    float2 vel = (pixel_pos_ndc - prev_ndc.xy);
+    float2 vel = pixel_pos_ndc - prev_ndc.xy;
     float2 vel_uv = vel * 0.5;
 
     output.velocity = vel_uv;
