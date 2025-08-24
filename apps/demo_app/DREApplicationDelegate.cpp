@@ -41,7 +41,8 @@ DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* t
     , m_MaterialLibrary{ &DRE::g_MainAllocator }
     , m_GeometryLibrary{ &DRE::g_MainAllocator }
     , m_IOManager{ &m_MaterialLibrary, &m_GeometryLibrary }
-    , m_GraphicsManager{ instance, &m_MainWindow, &m_IOManager, vkDebug }
+    , m_ShaderModuleDB{ &m_IOManager }
+    , m_GraphicsManager{ instance, &m_MainWindow, &m_IOManager, &m_ShaderModuleDB, vkDebug }
     , m_ImGuiEnabled{ imguiEnabled }
     , m_MainScene{ &DRE::g_MainAllocator }
     , m_RootEditor{ &m_MainScene }
@@ -104,9 +105,9 @@ void DREApplicationDelegate::start()
 {
     if (C_COMPILE_HLSL_SOURCES_ON_START)
     {  
-        m_IOManager.CompileHLSLSources(C_COMPILE_HLSL_PARALLEL);
+        m_ShaderModuleDB.CompileSources(C_COMPILE_HLSL_PARALLEL);
     }
-    m_IOManager.LoadShaderBinaries();
+    //m_IOManager.LoadShaderBinaries();
 
     m_MainScene.GetMainCamera().SetFOV(60.0f);
     //m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 7.28f, 5.57f, -1.07f });
@@ -256,9 +257,9 @@ void DREApplicationDelegate::update()
     // Reload shaders
     if (m_InputSystem.GetKeyboardButtonJustReleased(Keys::R))
     {
-        if (m_IOManager.NewShadersPending())
+        //if (m_IOManager.NewShadersPending())
         {
-            m_GraphicsManager.WaitIdle();
+            //m_GraphicsManager.WaitIdle();
             m_GraphicsManager.ReloadShaders();
         }
     }

@@ -6,7 +6,6 @@
 #include <utility>
 #include <charconv>
 #include <filesystem>
-#include <future>
 
 #include <foundation\Common.hpp>
 #include <foundation\memory\Memory.hpp>
@@ -36,18 +35,12 @@ namespace IO
 IOManager::IOManager(Data::MaterialLibrary* materialLibrary, Data::GeometryLibrary* geometryLibrary)
     : m_MaterialLibrary{ materialLibrary }
     , m_GeometryLibrary{ geometryLibrary }
-    , m_ShaderData{ &DRE::g_PersistentDataAllocator }
-    , m_PendingChangesFlag{ false }
-    , m_ShaderModuleDBImpl{ nullptr }
+    //, m_ShaderData{ &DRE::g_PersistentDataAllocator }
 {
-    m_ShaderModuleDBImpl = DRE::g_PersistentDataAllocator.Alloc<ShaderDBImpl>(this);
 }
 
 IOManager::~IOManager() 
 {
-    // if we detach frie
-    m_ShaderObserverThread.detach();
-    DRE::g_PersistentDataAllocator.FreeObject(m_ShaderModuleDBImpl);
 }
 
 std::uint64_t IOManager::ReadFileToBuffer(char const* path, DRE::ByteBuffer* buffer)
@@ -118,38 +111,6 @@ void IOManager::WriteNewFile(char const* path, DRE::ByteBuffer const& buffer)
     }
 
     ostream.close();
-}
-
-DRE::ByteBuffer IOManager::CompileHLSL(char const* path, VKW::ShaderModuleType type)
-{
-    std::filesystem::path filePath{ path };
-
-    std::cout << "Compiling shader " << path << std::endl;
-
-    DRE::ByteBuffer sourceBlob{};
-    std::uint64_t const bytesRead = ReadFileStringToBuffer(path, &sourceBlob);
-    DRE_ASSERT(bytesRead != 0, "Failed to read GLSL source.");
-
-    bool status = CompileShader(path, sourceBlob, type);
-    if (!status) 
-    {
-#ifdef DEBUG_SHADER_COMPILATION
-        std::lock_guard<std::mutex> lock{ m_DebugShaderCompilationMutex };
-        std::cout << "FAILED COMPILING SHADER " << filePath << std::endl << "SOURCE: " << std::endl;
-        //std::cout << preprocess.begin();
-#endif
-        return DRE::ByteBuffer{};
-    }
-
-    DRE::ByteBuffer const& spv = GetShaderSpirv(path);
-    return DRE::ByteBuffer{ spv };
-}
-
-DRE::InplaceVector<DRE::String64, 12> IOManager::GetPendingShaders()
-{
-    std::lock_guard guard{ m_PendingShadersMutex };
-    IOManager::m_PendingChangesFlag.store(false, std::memory_order::relaxed);
-    return DRE_MOVE(m_PendingShaders);
 }
 
 Data::Texture2D IOManager::ReadTexture2D(char const* path, Data::TextureChannelVariations channelVariations)
@@ -359,276 +320,23 @@ void IOManager::ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene
     }
 }
 
-void IOManager::ShaderInterface::Merge(IOManager::ShaderInterface const& rhs)
-{
-    for (std::uint32_t i = 0, size = rhs.m_Members.Size(); i < size; i++)
-    {
-        std::uint32_t result = m_Members.Find(rhs.m_Members[i]);
-        if (result != m_Members.Size()) // similar member found
-        {
-            m_Members[result].stage = VKW::DescriptorStage(m_Members[result].stage | std::uint16_t(rhs.m_Members[i].stage));
-            continue;
-        }
-
-        m_Members.EmplaceBack(rhs.m_Members[i]);
-    }
-
-    m_PushConstantPresent |= rhs.m_PushConstantPresent;
-    m_PushConstantSize = rhs.m_PushConstantSize > m_PushConstantSize ? rhs.m_PushConstantSize : m_PushConstantSize;
-    m_PushConstantStages = static_cast<VKW::DescriptorStage>(static_cast<std::uint16_t>(rhs.m_PushConstantStages) | m_PushConstantStages);
-}
-
-bool IOManager::ShaderInterface::Member::operator==(IOManager::ShaderInterface::Member const& rhs) const
-{
-    return 
-        (type == rhs.type) &&
-        //(stage == rhs.stage) && this will differ, because we're merging different stages
-        (set == rhs.set) &&
-        (binding == rhs.binding) &&
-        (arraySize == rhs.arraySize);
-}
-
-bool IOManager::ShaderInterface::Member::operator!=(IOManager::ShaderInterface::Member const& rhs) const
-{
-    return !operator==(rhs);
-}
-
-VKW::ShaderModuleType SPVExecutionModelToVKWModuleType(spv::ExecutionModel executionModel)
-{
-    switch (executionModel)
-    {
-    case spv::ExecutionModelVertex:
-        return VKW::SHADER_MODULE_TYPE_VERTEX;
-    case spv::ExecutionModelFragment:
-        return VKW::SHADER_MODULE_TYPE_FRAGMENT;
-    case spv::ExecutionModelGLCompute:
-        return VKW::SHADER_MODULE_TYPE_COMPUTE;
-    default:
-        return VKW::SHADER_MODULE_TYPE_NONE;
-    }
-}
-
-VKW::DescriptorStage SPVExecutionModelToVKWStage(spv::ExecutionModel executionModel)
-{
-    switch (executionModel)
-    {
-    case spv::ExecutionModelVertex:
-        return VKW::DESCRIPTOR_STAGE_VERTEX;
-    case spv::ExecutionModelFragment:
-        return VKW::DESCRIPTOR_STAGE_FRAGMENT;
-    case spv::ExecutionModelGLCompute:
-        return VKW::DESCRIPTOR_STAGE_COMPUTE;
-    default:
-        return VKW::DESCRIPTOR_STAGE_NONE;
-    }
-}
-
-template<typename TResourceArray>
-void ParseShaderInterfaceType(spirv_cross::Compiler& compiler, TResourceArray const& resources, VKW::DescriptorType type, IOManager::ShaderInterface& resultInterface)
-{
-    for (spirv_cross::Resource const& res : resources)
-    {
-        auto& member        = resultInterface.m_Members.EmplaceBack();
-        member.type         = type;
-        member.stage        = SPVExecutionModelToVKWStage(compiler.get_execution_model());
-        member.set          = compiler.get_decoration(res.id, spv::DecorationDescriptorSet);
-        member.binding      = compiler.get_decoration(res.id, spv::DecorationBinding);
-
-        spirv_cross::SPIRType const& spvType = compiler.get_type(res.type_id);
-        member.arraySize    = 1;
-
-        if (!spvType.array.empty())
-        {
-            DRE_ASSERT(spvType.array.size() <= 1, "Don't support multidimentional array relfection yet.");
-            DRE_ASSERT(spvType.array_size_literal[0] == true, "Arrays of size from specialization constants are not supported yet.");
-            std::uint8_t const arraySize = spvType.array[0];
-            member.arraySize = arraySize == 0 ? DRE_U8_MAX : arraySize; // if array size 0 -> variable size
-        }
-    }
-}
-
-void ParseShaderInterface(spirv_cross::Compiler& compiler, IOManager::ShaderInterface& resultInterface)
-{
-    spirv_cross::ShaderResources resources = compiler.get_shader_resources();
-
-    ParseShaderInterfaceType(compiler, resources.storage_images,    VKW::DESCRIPTOR_TYPE_STORAGE_IMAGE, resultInterface);
-    ParseShaderInterfaceType(compiler, resources.separate_images,   VKW::DESCRIPTOR_TYPE_TEXTURE, resultInterface);
-    ParseShaderInterfaceType(compiler, resources.separate_samplers, VKW::DESCRIPTOR_TYPE_SAMPLER, resultInterface);
-    ParseShaderInterfaceType(compiler, resources.uniform_buffers,   VKW::DESCRIPTOR_TYPE_UNIFORM_BUFFER, resultInterface);
-
-    DRE_ASSERT(resources.push_constant_buffers.size() <= 1, "Don't support multiple push buffers in reflection yet.");
-
-    if (!resources.push_constant_buffers.empty())
-    {
-        spirv_cross::Resource const& res = resources.push_constant_buffers[0];
-        const spirv_cross::SPIRType& type = compiler.get_type(res.base_type_id);
-        resultInterface.m_PushConstantSize = compiler.get_declared_struct_size(type);
-        resultInterface.m_PushConstantPresent = 1;
-        resultInterface.m_PushConstantStages = SPVExecutionModelToVKWStage(compiler.get_execution_model());
-    }
-}
-
-void IOManager::CompileHLSLSources(bool parallel)
-{
-    struct ShaderFile
-    {
-        DRE::String64 name; VKW::ShaderModuleType type;
-    };
-
-    std::filesystem::recursive_directory_iterator dir_iterator{ "shaders", std::filesystem::directory_options::follow_directory_symlink };
-    DRE::Vector<ShaderFile, DRE::AllocatorLinear> fileNames{ &DRE::g_FrameScratchAllocator };
-    
-    for (auto const& entry : dir_iterator)
-    {
-        if (entry.path().has_extension())
-        {
-
-            if (entry.path().extension() == ".vert")
-            {
-                fileNames.EmplaceBack(entry.path().generic_string().c_str(), VKW::SHADER_MODULE_TYPE_VERTEX);
-            }
-            else if (entry.path().extension() == ".frag")
-            {
-                fileNames.EmplaceBack(entry.path().generic_string().c_str(), VKW::SHADER_MODULE_TYPE_FRAGMENT);
-            }
-            else if (entry.path().extension() == ".comp")
-            {
-                fileNames.EmplaceBack(entry.path().generic_string().c_str(), VKW::SHADER_MODULE_TYPE_COMPUTE);
-            }
-        }
-    }
-
-    std::uint32_t constexpr MAX_PARALLEL_FACTOR = 8;
-    std::uint32_t const parallelFactor = parallel ? MAX_PARALLEL_FACTOR : 1;
-    std::uint32_t const parallelChunkSize = fileNames.Size() / parallelFactor + 1;
-
-    DRE::InplaceVector<std::future<void>, MAX_PARALLEL_FACTOR> parallelCompilations;
-    for (std::uint32_t i = 0; i < parallelFactor; i++)
-    {
-        parallelCompilations.EmplaceBack(std::async(std::launch::async, [parallelChunkSize, &parallelCompilations, &fileNames, this](std::uint32_t chunkID) 
-            {
-                std::uint32_t chunkStart = chunkID * parallelChunkSize;
-                std::uint32_t chunkEnd = DRE::Min((chunkID + 1) * parallelChunkSize, fileNames.Size());
-
-                for (std::uint32_t j = chunkStart; j < chunkEnd; j++)
-                {
-                    DRE::String64& name = fileNames[j].name;
-                    DRE::ByteBuffer spirv = CompileHLSL(name.GetData(), fileNames[j].type);
-                    DRE_ASSERT(spirv.Size() > 0, "Can't run with invalid shader.");
-                    name.Append(".spv");
-                    WriteNewFile(name.GetData(), spirv);
-                }
-            }, i));
-    }
-
-    // std::wait_all not available yet/experimental. Though we should be fine
-    for (std::uint32_t i = 0; i < parallelFactor; i++)
-    {
-        parallelCompilations[i].wait();
-    }
-}
-
-bool IOManager::CompileShader(DRE::String64 const& name, DRE::ByteBuffer const& source, VKW::ShaderModuleType type)
-{
-    return m_ShaderModuleDBImpl->CompileShader(name, source, type);
-}
-
-DRE::ByteBuffer const& IOManager::GetShaderSpirv(DRE::String64 const& name)
-{
-    return m_ShaderModuleDBImpl->GetShaderSpv(name);
-}
-
-void IOManager::LoadShaderBinaries()
-{
-    std::filesystem::recursive_directory_iterator dir_iterator{ "shaders", std::filesystem::directory_options::follow_directory_symlink };
-
-    for (auto const& entry : dir_iterator)
-    {
-        if (entry.path().has_extension() && entry.path().extension() == ".spv")
-        {
-            // .stem() is a filename without extension
-            ShaderData& shaderData = m_ShaderData.Emplace(entry.path().stem().generic_string().c_str());
-
-            DRE::ByteBuffer moduleBuffer{ static_cast<std::uint64_t>(entry.file_size()) };
-            ReadFileToBuffer(entry.path().generic_string().c_str(), &moduleBuffer);
-            shaderData.m_Binary = DRE_MOVE(moduleBuffer);
-            
-            
-            spirv_cross::Compiler compiler{ reinterpret_cast<std::uint32_t const*>(shaderData.m_Binary.Data()), shaderData.m_Binary.Size() / sizeof(std::uint32_t) };
-            shaderData.m_ModuleType = SPVExecutionModelToVKWModuleType(compiler.get_execution_model());
-
-            ParseShaderInterface(compiler, shaderData.m_Interface); 
-            
-        }
-    }
-
-    m_ShaderObserverThread = std::thread{ &IOManager::ShaderObserver, this };
-}
-
-void IOManager::ShaderObserver()
-{
-    //                                                                                                                     required for dirs
-    HANDLE directoryHandle = CreateFileA("shaders", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-    if (directoryHandle == INVALID_HANDLE_VALUE)
-    {
-        std::cout << "IOManager::ShaderObserver: Failed to create directory handle. Terminating thread." << std::endl;
-        return;
-    }
-
-    while (true)
-    {
-        static std::uint8_t buffer[1024];
-        std::uint8_t* bufferPtr = DRE::PtrAlign(buffer, sizeof(DWORD));
-        DWORD bytesReturned = 0;
-        if (ReadDirectoryChangesW(directoryHandle, bufferPtr, 1024, FALSE, FILE_NOTIFY_CHANGE_LAST_WRITE, &bytesReturned, NULL, NULL) == 0)
-        {
-            std::cout << "IOManager::ShaderObserver: Failed to get directory changes." << std::endl;
-        }
-        
-        FILE_NOTIFY_INFORMATION* infoPtr = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(bufferPtr);
-        while (infoPtr != nullptr)
-        {
-            if (infoPtr->Action != FILE_ACTION_MODIFIED)
-            {
-                std::cout << "IOManager::ShaderObserver: Unsupported file event. Terminating thread." << std::endl;
-                return;
-            }
-
-            char fileName[64];
-            int const length = WideCharToMultiByte(CP_UTF8, 0, infoPtr->FileName, infoPtr->FileNameLength / sizeof(WCHAR), fileName, 64, NULL, NULL);
-            if (length == 0)
-            {
-                std::cout << "IOManager::ShaderObserver: Failed to get ASCII file name from the event." << std::endl;
-            }
-            fileName[length] = '\0';
-
-            char* ExtStart = std::strrchr(fileName, '.');
-            if (ExtStart == nullptr || 
-                (std::strcmp(ExtStart, ".vert") != 0 &&
-                std::strcmp(ExtStart, ".frag") != 0 &&
-                std::strcmp(ExtStart, ".comp") != 0))
-            {
-                infoPtr = infoPtr->NextEntryOffset == 0 ? nullptr : DRE::PtrAdd(infoPtr, infoPtr->NextEntryOffset);
-                continue;
-            }
-
-            DRE::String64 stem{ fileName };
-            char* stemEnd = std::strchr(fileName, '.');
-            stem.Shrink(DRE::PtrDifference(stemEnd, fileName));
-
-            {
-                std::lock_guard guard{ m_PendingShadersMutex };
-                if (m_PendingShaders.Find(stem) == m_PendingShaders.Size())
-                {
-                    m_PendingShaders.EmplaceBack(stem);
-                }
-                m_PendingChangesFlag.store(true, std::memory_order::release);
-            }
-
-            infoPtr = infoPtr->NextEntryOffset == 0 ? nullptr : DRE::PtrAdd(infoPtr, infoPtr->NextEntryOffset);
-        }
-    }
-}
-
+//
+//void IOManager::LoadShaderBinaries()
+//{
+//    std::filesystem::recursive_directory_iterator dir_iterator{ "shaders", std::filesystem::directory_options::follow_directory_symlink };
+//
+//    for (auto const& entry : dir_iterator)
+//    {
+//        if (entry.path().has_extension() && entry.path().extension() == ".spv")
+//        {
+//            DRE::ByteBuffer moduleBuffer{ static_cast<std::uint64_t>(entry.file_size()) };
+//            ReadFileToBuffer(entry.path().generic_string().c_str(), &moduleBuffer);
+//
+//            
+//        }
+//    }
+//
+//    m_ShaderObserverThread = std::thread{ &IOManager::ShaderObserver, this };
+//}
 
 }

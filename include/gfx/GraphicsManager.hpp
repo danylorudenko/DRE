@@ -95,7 +95,7 @@ class GraphicsManager final
 public:
     using ImGuiSyncQueue = DRE::Vector<Texture*, DRE::AllocatorLinear>;
 
-    GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::IOManager* ioManager, bool debug = false);
+    GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::IOManager* ioManager, IO::ShaderDB* shaderDB, bool debug = false);
     ~GraphicsManager();
 
     inline SYS::Window*                 GetMainWindow() { return m_MainWindow; }

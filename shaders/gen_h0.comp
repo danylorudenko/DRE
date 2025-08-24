@@ -9,7 +9,7 @@ float4 gaussRND(float2 coords)
     float N = GetFFTSize(data);
     uint texID = reinterpret<uint>(GetNoiseTextureID(data));
 
-    float4 noise = clamp(SampleGlobalTextureLinear(texID, coords / N), 0.001, 1.0);
+    float4 noise = clamp(ReadGlobalTexture(texID, int2(coords) % 16), 0.001, 1.0);
 
     float u0 = 2.0 * PI * noise.x;
     float v0 = sqrt(-2.0 * PI * log(noise.y));

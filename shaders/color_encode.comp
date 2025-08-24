@@ -29,7 +29,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
 {
     int2 coords = int2(DTid.xy);
 
-    float3 linearColor = linearRT.Load(int3(coords, 0)).rgb;
+    float3 linearColor = linearRT[coords].rgb;
     float3 encoded = ACESFilm(linearColor * GetExposure());
 
     float3 result = lerp(linearColor, encoded, GetUseEncoded());

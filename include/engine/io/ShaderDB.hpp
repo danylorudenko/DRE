@@ -4,91 +4,67 @@
 #include <foundation\class_features\NonCopyable.hpp>
 #include <foundation\class_features\NonMovable.hpp>
 #include <foundation\container\InplaceVector.hpp>
-#include <foundation\container\InplaceHashTable.hpp>
 #include <foundation\memory\ByteBuffer.hpp>
-#include <foundation\memory\MemoryOps.hpp>
 #include <foundation\string\InplaceString.hpp>
 
 #include <vk_wrapper\pipeline\ShaderModule.hpp>
+#include <vk_wrapper\descriptor\Descriptor.hpp>
 
-#include <spirv_cross.hpp>
-#include <wrl/client.h>
-#include <dxcapi.h>
-
-#include <slang.h>
-#include <slang-com-ptr.h>
 
 namespace IO
 {
 
 class IOManager;
+class ShaderDBImpl;
 
-// keep this object until hlsl was compiled
-/////////////////////////////////
-// DXCArgsBuilder
-struct DXCArgsBuilder
+struct ShaderInterface
 {
-    DXCArgsBuilder();
+    struct Member
+    {
+        VKW::DescriptorType type;
+        VKW::DescriptorStage stage;
+        std::uint8_t set;
+        std::uint8_t binding;
+        std::uint8_t arraySize;
 
-    void AddDebugArgs();
-    void AddOptimizedArgs();
-    void AddEntryPoint(char const* entryPoint, VKW::ShaderModuleType type);
-    void AppendGenericArgument(char const* input);
-    void AddGenericArgument(char const* prefix, char const* argument);
+        bool operator==(Member const& rhs) const;
+        bool operator!=(Member const& rhs) const;
+    };
 
-private:
-    void PeekGenericBufferSize(DRE::U32 appendSize);
+    DRE::InplaceVector<Member, 16> m_Members;
+    std::uint8_t m_PushConstantSize : 7 = 0;
+    std::uint8_t m_PushConstantPresent : 1 = 0;
+    VKW::DescriptorStage m_PushConstantStages = VKW::DESCRIPTOR_STAGE_NONE;
 
-    void AddProfileArgs(VKW::ShaderModuleType type);
-
-    static DRE::U32 constexpr GENERIC_ARGUMENT_BUFFER_SIZE = 512;
-    wchar_t m_GenericArgsBuffer[GENERIC_ARGUMENT_BUFFER_SIZE];
-    DRE::U32 m_GenericArgsBufferOffset = 0;
-
-public:
-    DRE::InplaceVector<LPCWSTR, 32> m_CompilationArgs;
+    void Merge(ShaderInterface const& rhs);
 };
 
+struct ShaderEntry
+{
+    DRE::String64           name;
+    VKW::ShaderModuleType   type;
+    DRE::ByteBuffer         spirv;
+    DRE::ByteBuffer         source;
+    ShaderInterface         bindingInterface;
+};
 
 /////////////////////////////////
 // ShaderModuleDB
-class ShaderDBImpl
+class ShaderDB
     : public NonMovable
     , public NonCopyable
 {
 public:
-    struct ShaderEntry
-    {
-        DRE::String64           name;
-        VKW::ShaderModuleType   type;
-        DRE::ByteBuffer         spirv;
-        DRE::ByteBuffer         source;
-    };
+    ShaderDB(IO::IOManager* io);
+    ~ShaderDB();
 
-    ShaderDBImpl(IO::IOManager* io);
-    ~ShaderDBImpl();
+    void                    CompileSources(bool parallel);
 
-    bool                    CompileShader(DRE::String64 const& name, DRE::ByteBuffer const& source, VKW::ShaderModuleType type);
-    DRE::ByteBuffer const&  GetShaderSpv(DRE::String64 const& name);
+    bool                    CompileShader(DRE::String64 const& name, VKW::ShaderModuleType type);
+    ShaderEntry const*      GetShaderEntry(DRE::String64 const& name);
 
 private:
-    IO::IOManager*                          m_IOManager;
-
-    Microsoft::WRL::ComPtr<IDxcUtils>       m_Utils;
-    Microsoft::WRL::ComPtr<IDxcCompiler3>   m_Compiler;
-    IDxcIncludeHandler*                     m_IncludeHandler;
-
-
-
-    Slang::ComPtr<slang::IGlobalSession>    m_SlangGlobalSession;
-
-
-
-    DRE::InplaceVector<LPCWSTR, 64>         m_DefaultCompilationArgs;
-
-    DRE::InplaceHashTable<DRE::String64, ShaderEntry, 512> m_ShaderMap;
-
-#undef COM_CHECK
+    ShaderDBImpl* m_Impl;
 };
 
 }

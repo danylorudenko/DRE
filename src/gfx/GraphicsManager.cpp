@@ -38,7 +38,7 @@ static constexpr std::uint32_t C_PERSISTENT_STORAGE_SIZE    = 1024 * 1024 * 16;
 
 GraphicsManager* g_GraphicsManager = nullptr;
 
-GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::IOManager* ioManager, bool debug)
+GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::IOManager* ioManager, IO::ShaderDB* shaderDB, bool debug)
     : m_MainWindow{ window }
     , m_IOManager{ ioManager }
     , m_Device{ hInstance, window->NativeHandle(), debug }
@@ -50,7 +50,7 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::I
     , m_UniformArena{ &m_Device, C_UNIFORM_ARENA_SIZE }
     , m_ReadbackArena{ &m_Device, C_READBACK_ARENA_SIZE }
     , m_TextureBank{ &m_MainContext, m_Device.GetResourcesController(), m_Device.GetDescriptorManager() }
-    , m_PipelineDB{ &m_Device, ioManager }
+    , m_PipelineDB{ &m_Device, shaderDB }
 #ifdef DRE_IMGUI_CUSTOM_TEXTURE
     , m_ImGuiSyncQueue{ &DRE::g_PersistentDataAllocator }
 #endif
@@ -194,11 +194,12 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
 
 void GraphicsManager::ReloadShaders()
 {
-    auto names = m_IOManager->GetPendingShaders();
-    for (std::uint32_t i = 0; i < names.Size(); i++)
-    {
-        m_PipelineDB.ReloadPipeline(names[i].GetData());
-    }
+    std::cout << "Unimplemented!!!!!" << std::endl;
+    //auto names = m_IOManager->GetPendingShaders();
+    //for (std::uint32_t i = 0; i < names.Size(); i++)
+    //{
+    //    m_PipelineDB.ReloadPipeline(names[i].GetData());
+    //}
 }
 
 void GraphicsManager::BuildMainSceneTLAS()

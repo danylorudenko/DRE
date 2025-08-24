@@ -83,7 +83,8 @@ PSInput main(VSInput input)
     output.ndc_pos = ndc_pos;
 
     float2 uv = ndc_pos.xy * 0.5 + 0.5;
-    float4 env_map_sample = envMap.Sample(GetSamplerLinear(), uv);
+    float4 env_map_sample = { 0 };
+    //float4 env_map_sample = envMap.Sample(GetSamplerLinear(), uv);
 
     float3 world_norm = mul(instanceUniform.model_mat, float4(norm, 0.0)).xyz;
     float3 refracted_light = refract(GetSunLightDir(), world_norm, REF_INDEX);
@@ -100,7 +101,8 @@ PSInput main(VSInput input)
         {
             ray_pos = env_map_sample.xyz;
             sample_uv += uv_refract_dir;
-            env_map_sample = envMap.Sample(GetSamplerLinear(), sample_uv);
+            //env_map_sample = envMap.Sample(GetSamplerLinear(), sample_uv);
+            env_map_sample = { 0 };
         }
     }
 

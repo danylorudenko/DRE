@@ -25,6 +25,7 @@
 #include <engine\data\GeometryLibrary.hpp>
 
 #include <engine\io\IOManager.hpp>
+#include <engine\io\ShaderDB.hpp>
 
 #include <editor\RootEditor.hpp>
 #include <editor\ViewportInputManager.hpp>
@@ -61,6 +62,7 @@ private:
     Data::MaterialLibrary               m_MaterialLibrary;
     Data::GeometryLibrary               m_GeometryLibrary;
     IO::IOManager                       m_IOManager;
+    IO::ShaderDB                        m_ShaderModuleDB;
 
     Data::Geometry                      m_WaterGeometry;
     //Data::Material                      m_WaterMaterial;

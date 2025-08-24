@@ -17,7 +17,7 @@ class Device;
 
 namespace IO
 {
-class IOManager;
+class ShaderDB;
 }
 
 namespace GFX
@@ -30,7 +30,7 @@ class PipelineDB
     , public NonMovable
 {
 public:
-    PipelineDB(VKW::Device* device, IO::IOManager* ioManager);
+    PipelineDB(VKW::Device* device, IO::ShaderDB* shaderDB);
     ~PipelineDB();
 
     void                        AddGlobalLayouts(VKW::PipelineLayout::Descriptor& descriptor);
@@ -68,7 +68,7 @@ private:
 
 private:
     VKW::Device*        m_Device;
-    IO::IOManager*      m_IOManager;
+    IO::ShaderDB*       m_ShaderDB;
 
     using ShaderLayoutsMap = DRE::InplaceHashTable<DRE::String64, DRE::InplaceVector<VKW::DescriptorSetLayout, VKW::CONSTANTS::MAX_PIPELINE_LAYOUT_MEMBERS - 3>>;
 
