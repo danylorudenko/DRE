@@ -77,6 +77,7 @@ struct AccelerationStructureResource
 {
     VkAccelerationStructureKHR      handle_             = VK_NULL_HANDLE;
     BufferResource*                 residenceBuffer_    = nullptr;
+    VkDeviceAddress                 acAddress_          = 0;
 };
 
 }

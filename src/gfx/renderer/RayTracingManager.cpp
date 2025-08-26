@@ -130,7 +130,7 @@ RayTracingManager::TLAS* RayTracingManager::BuildSceneAccelerationStructure(Rend
         instancesStart[i].mask = 0xFFFFFFFF;
         instancesStart[i].instanceShaderBindingTableRecordOffset = 0; // hmm
         instancesStart[i].flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FRONT_COUNTERCLOCKWISE_BIT_KHR;
-        instancesStart[i].accelerationStructureReference = renderableObjects[i]->GetBLASResource()->residenceBuffer_->gpuAddress_;
+        instancesStart[i].accelerationStructureReference = renderableObjects[i]->GetBLASResource()->acAddress_;
     }
 
 
@@ -142,13 +142,14 @@ RayTracingManager::TLAS* RayTracingManager::BuildSceneAccelerationStructure(Rend
     geometry.geometry.instances.pNext = nullptr;
     geometry.geometry.instances.arrayOfPointers = VK_FALSE;
     geometry.geometry.instances.data.deviceAddress = m_InstanceInputBuffer->gpuAddress_;
-    geometry.flags = VK_FLAGS_NONE;
+    geometry.flags = VK_GEOMETRY_OPAQUE_BIT_KHR;
 
     VkAccelerationStructureBuildGeometryInfoKHR buildInfo;
     buildInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
     buildInfo.pNext = nullptr;
     buildInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
-    buildInfo.flags = VK_FLAGS_NONE;
+    buildInfo.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
+    buildInfo.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
     buildInfo.srcAccelerationStructure = VK_NULL_HANDLE;
     buildInfo.dstAccelerationStructure = VK_NULL_HANDLE; // to fill after GetSizes and creation
     buildInfo.geometryCount = 1;
@@ -164,7 +165,7 @@ RayTracingManager::TLAS* RayTracingManager::BuildSceneAccelerationStructure(Rend
     sizes.buildScratchSize = 0;
     sizes.updateScratchSize = 0;
 
-    std::uint32_t primitiveCount = 1;
+    std::uint32_t primitiveCount = renderableObjects.Size();
     m_ParentDevice->GetFuncTable()->vkGetAccelerationStructureBuildSizesKHR(m_ParentDevice->GetLogicalDevice()->Handle(),
         VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
         &buildInfo,
@@ -176,7 +177,7 @@ RayTracingManager::TLAS* RayTracingManager::BuildSceneAccelerationStructure(Rend
     VKW::AccelerationStructureResource* tlas = m_ParentDevice->GetResourcesController()->CreateTLAS(tlasBuffer, "TLAS");
 
     // alloc scratch
-    std::uint64_t scratchGPUAddress = reinterpret_cast<std::uint64_t>(m_ScratchLinearAllocator.Alloc(sizes.buildScratchSize, 16));
+    std::uint64_t scratchGPUAddress = reinterpret_cast<std::uint64_t>(m_ScratchLinearAllocator.Alloc(sizes.buildScratchSize, 256));
 
     // build
     // context builds all desc struct anew

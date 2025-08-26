@@ -305,7 +305,14 @@ VkAccelerationStructureKHR ResourcesController::CreateAcceleratioStructureIntern
 AccelerationStructureResource* ResourcesController::CreateBLAS(VKW::BufferResource* buffer, char const* name)
 {
     VkAccelerationStructureKHR vkAccelerationStructure = CreateAcceleratioStructureInternal(buffer, name, false);
-    AccelerationStructureResource* resource = new AccelerationStructureResource{ vkAccelerationStructure, buffer };
+
+    VkAccelerationStructureDeviceAddressInfoKHR addressInfo;
+    addressInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR;
+    addressInfo.pNext = nullptr;
+    addressInfo.accelerationStructure = vkAccelerationStructure;
+    VkDeviceAddress address = table_->vkGetAccelerationStructureDeviceAddressKHR(device_->Handle(), &addressInfo);
+
+    AccelerationStructureResource* resource = new AccelerationStructureResource{ vkAccelerationStructure, buffer, address };
     accelerationStructures_.emplace(resource);
 
     return resource;
@@ -314,7 +321,14 @@ AccelerationStructureResource* ResourcesController::CreateBLAS(VKW::BufferResour
 AccelerationStructureResource* ResourcesController::CreateTLAS(VKW::BufferResource* buffer, char const* name)
 {
     VkAccelerationStructureKHR vkAccelerationStructure = CreateAcceleratioStructureInternal(buffer, name, true);
-    AccelerationStructureResource* resource = new AccelerationStructureResource{ vkAccelerationStructure,  };
+
+    VkAccelerationStructureDeviceAddressInfoKHR addressInfo;
+    addressInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR;
+    addressInfo.pNext = nullptr;
+    addressInfo.accelerationStructure = vkAccelerationStructure;
+    VkDeviceAddress address = table_->vkGetAccelerationStructureDeviceAddressKHR(device_->Handle(), &addressInfo);
+
+    AccelerationStructureResource* resource = new AccelerationStructureResource{ vkAccelerationStructure, buffer, address };
     accelerationStructures_.emplace(resource);
 
     return resource;
