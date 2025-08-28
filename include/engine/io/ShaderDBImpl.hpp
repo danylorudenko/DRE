@@ -78,13 +78,7 @@ public:
 
 private:
     IO::IOManager*                          m_IOManager;
-
-    Microsoft::WRL::ComPtr<IDxcUtils>       m_Utils;
-    Microsoft::WRL::ComPtr<IDxcCompiler3>   m_Compiler;
-    IDxcIncludeHandler*                     m_IncludeHandler;
     Slang::ComPtr<slang::IGlobalSession>    m_SlangGlobalSession;
-
-    //DRE::InplaceVector<LPCWSTR, 64>         m_DefaultCompilationArgs;
 
     DRE::InplaceHashTable<DRE::String64, ShaderEntry, 512> m_ShaderMap;
 

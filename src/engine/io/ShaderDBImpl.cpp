@@ -341,7 +341,7 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& path, VKW::ShaderModuleTyp
     slang::SessionDesc sessionDesc;
     sessionDesc.targetCount = 1;
     sessionDesc.targets = &targetDesc;
-    sessionDesc.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_ROW_MAJOR;
+    sessionDesc.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR;
     sessionDesc.searchPathCount = 1;
     sessionDesc.searchPaths = &paths;
     sessionDesc.preprocessorMacroCount = 1;
