@@ -1,6 +1,6 @@
 #include "common/shaders_common.h"
 
-[[vk::binding(0, 3)]] RWTexture2D<int4> butterflyImage;
+[[vk::binding(0, 3)]] RWTexture2D<float4> butterflyImage;
 
 struct ButterflyData
 {
@@ -41,22 +41,22 @@ void main(int2 DTid : SV_DispatchThreadID)
     {
         if (isTopOp)
         {
-            butterflyImage[coords] = int4(int(twiddle.r), int(twiddle.i), GetBitReversedID(index), GetBitReversedID(index + 1));
+            butterflyImage[coords] = float4(twiddle.r, twiddle.i, GetBitReversedID(index), GetBitReversedID(index + 1));
         }
         else
         {
-        	butterflyImage[coords] = int4(int(twiddle.r), int(twiddle.i), GetBitReversedID(index - 1), GetBitReversedID(index));
+        	butterflyImage[coords] = float4(twiddle.r, twiddle.i, GetBitReversedID(index - 1), GetBitReversedID(index));
         }
     }
     else
     {
         if (isTopOp)
         {
-            butterflyImage[coords] = int4(int(twiddle.r), int(twiddle.i), index, index + span);
+            butterflyImage[coords] = float4(twiddle.r, twiddle.i, index, index + span);
         }
         else
         {
-            butterflyImage[coords] = int4(int(twiddle.r), int(twiddle.i), index - span, index);
+            butterflyImage[coords] = float4(twiddle.r, twiddle.i, index - span, index);
         }
     }
 }
