@@ -275,7 +275,8 @@ ShaderDBImpl::ShaderDBImpl(IO::IOManager* io)
 ShaderDBImpl::~ShaderDBImpl()
 {
     // if we detach frie
-    m_ShaderObserverThread.detach();
+    //if (m_ShaderObserverThread.)
+    //    m_ShaderObserverThread.detach();
 }
 
 char const* GetShaderTypeDefineString(VKW::ShaderModuleType type)
