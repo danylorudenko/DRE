@@ -1,7 +1,7 @@
 #include "common/shaders_common.h"
 
-[[vk::binding(0, 3)]] Texture2D<int4> butterflyTexture;
-[[vk::binding(1, 3)]] Texture2D<float2> fftInput;
+[[vk::binding(0, 3)]] RWTexture2D<float4> butterflyTexture;
+[[vk::binding(1, 3)]] RWTexture2D<float2> fftInput;
 [[vk::binding(2, 3)]] RWTexture2D<float2> fftOutput;
 
 struct Data
@@ -41,7 +41,7 @@ void main(int2 DTid : SV_DispatchThreadID)
 
     if (isVertical)
     {
-        int4 butterflyData = butterflyTexture[int2(stage, coords.y)];
+        int4 butterflyData = int4(butterflyTexture[int2(stage, coords.y)]);
         int2 paramsCoords = butterflyData.zw;
         complex w = complex(butterflyData.x, butterflyData.y);
 
@@ -57,7 +57,7 @@ void main(int2 DTid : SV_DispatchThreadID)
     }
     else 
     {
-        int4 butterflyData = butterflyTexture[int2(stage, coords.x)];
+        int4 butterflyData = int4(butterflyTexture[int2(stage, coords.x)]);
         int2 paramsCoords = butterflyData.zw;
         complex w = complex(butterflyData.x, butterflyData.y);
 
