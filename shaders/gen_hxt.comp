@@ -3,7 +3,7 @@
 #include "fft_water_uniform.h"
 
 [[vk::binding(0, 3)]] RWTexture2D<float2> timedSpectumTexture;
-[[vk::binding(1, 3)]] Texture2D<float4> spectrumTexture;
+[[vk::binding(1, 3)]] RWTexture2D<float4> spectrumTexture;
 [[vk::binding(2, 3)]] ConstantBuffer<FFTWaterUniform> data;
 
 struct complex
