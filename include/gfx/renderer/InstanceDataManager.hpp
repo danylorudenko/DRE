@@ -48,6 +48,7 @@ public:
         void ScheduleUpdate(glm::uvec4 textureIndicies);
         void ScheduleUpdate(InstanceFlags flags, bool addFlags);
         void ScheduleUpdate(InstanceFlags flags);
+        void ScheduleUpdate(S_MATERIAL* material);
 
         glm::mat4 const& GetTransform() const { return m_InstanceDataCPU.world_space; }
 

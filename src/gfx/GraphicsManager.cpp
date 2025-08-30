@@ -59,6 +59,7 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::I
     , m_LightsManager{ &m_PersistentStorage }
     , m_RayTracingManager{ &m_Device, &m_GlobalGeometryManager }
     , m_InstanceDataManager{ &m_PersistentStorage }
+    , m_MaterialsManager{ &m_PersistentStorage }
     , m_MainView{ &DRE::g_MainAllocator }
     , m_SunShadowView{ &DRE::g_MainAllocator }
     , m_Settings{}
@@ -231,6 +232,7 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
     // maybe I should do these earlier?
     m_GlobalGeometryManager.UpdateGPUGeometry(context);
     m_InstanceDataManager.FlushUpdates(context);
+    m_MaterialsManager.FlushUpdates(context);
     m_LightsManager.FlushUpdates(context);
 
 #ifdef DRE_DEBUG

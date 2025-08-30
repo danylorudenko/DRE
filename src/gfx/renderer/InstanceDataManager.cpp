@@ -74,5 +74,11 @@ void InstanceDataManager::InstanceGPU::ScheduleUpdate(InstanceFlags flags)
     Base::Payload::ScheduleUpdate(m_InstanceDataCPU);
 }
 
+void InstanceDataManager::InstanceGPU::ScheduleUpdate(S_MATERIAL* material)
+{
+    m_InstanceDataCPU.material = material;
+    Base::Payload::ScheduleUpdate(m_InstanceDataCPU);
+}
+
 
 }

@@ -23,6 +23,7 @@
 #include <gfx\renderer\LightsManager.hpp>
 #include <gfx\renderer\RayTracingManager.hpp>
 #include <gfx\renderer\InstanceDataManager.hpp>
+#include <gfx\renderer\MaterialsManager.hpp>
 #include <gfx\renderer\GlobalGeometryManager.hpp>
 
 #include <engine\data\Geometry.hpp>
@@ -127,6 +128,7 @@ public:
     inline GlobalGeometry&              GetGlobalGeometryManager() { return m_GlobalGeometryManager; }
     inline LightsManager&               GetLightsManager() { return m_LightsManager; }
     inline InstanceDataManager&         GetInstanceDataManager() { return m_InstanceDataManager; }
+    inline MaterialsManager&            GetMaterialsManager() { return m_MaterialsManager; }
     inline RayTracingManager&           GetRayTracignManager() { return m_RayTracingManager; }
     inline DependencyManager&           GetDependencyManager() { return m_DependencyManager; }
     inline RenderGraph&                 GetMainRenderGraph() { return m_RenderGraph; }
@@ -197,6 +199,7 @@ private:
     LightsManager               m_LightsManager;
     RayTracingManager           m_RayTracingManager;
     InstanceDataManager         m_InstanceDataManager;
+    MaterialsManager            m_MaterialsManager;
 
     RenderView                  m_MainView;
     RenderView                  m_SunShadowView;

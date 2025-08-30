@@ -2,6 +2,7 @@
 #define _INSTANCES_H_
 
 #include "common/shaders_defines.h"
+#include "common/materials.h"
 
 #ifdef __cplusplus
 enum InstanceFlags : DRE::U32
@@ -26,6 +27,7 @@ struct S_INSTANCE
     float4x4 inv_world_space;
     uint4    texture_indicies;
     uint4    globalID_instanceFlags;
+    S_MATERIAL* material;
 };
 
 #ifndef __cplusplus
@@ -73,6 +75,11 @@ uint GetGlobalID(S_INSTANCE* instance)
 uint GetInstanceFlags(S_INSTANCE* instance)
 {
     return instance.globalID_instanceFlags.y;
+}
+
+S_MATERIAL* GetMaterial(S_INSTANCE* instance)
+{
+    return instance.material;
 }
 
 #endif // !__cplusplus
