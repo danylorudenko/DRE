@@ -128,7 +128,7 @@ void DREApplicationDelegate::start()
         InitImGui();
 
 
-    m_GraphicsManager.LoadDefaultData(&m_ViewportInput);
+    m_GraphicsManager.PrecacheAllData(&m_ViewportInput);
 
 
 

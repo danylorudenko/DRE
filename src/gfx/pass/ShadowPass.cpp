@@ -32,6 +32,7 @@ void ShadowPass::RegisterResources(RenderGraph& graph)
 
 void ShadowObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view, VKW::PipelineLayout const* passLayout)
 {
+    /*
     std::uint32_t constexpr uniformSize = sizeof(glm::mat4) * 2;
 
     auto uniformAllocation = arena.AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), uniformSize, 256);
@@ -45,6 +46,7 @@ void ShadowObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::Des
     glm::mat4 const mvp = view.GetViewProjectionM() * world;
     uniformProxy.WriteMember140(mvp);
     uniformProxy.WriteMember140(world);
+    */
 }
 
 
@@ -81,7 +83,8 @@ void ShadowPass::Render(RenderGraph& graph, VKW::Context& context)
     {
         AtomDraw const& atom = draws[i];
         context.CmdBindGraphicsPipeline(atom.pipeline);
-        context.CmdBindGraphicsDescriptorSets(atom.pipeline->GetLayout(), startSet, 1, &atom.descriptorSet);
+        // push constant here?
+        //context.CmdBindGraphicsDescriptorSets(atom.pipeline->GetLayout(), startSet, 1, &atom.descriptorSet);
         context.CmdBindVertexBuffer(atom.vertexBuffer, atom.vertexOffset);
         context.CmdBindIndexBuffer(atom.indexBuffer, atom.indexOffset);
         context.CmdDrawIndexed(atom.indexCount);

@@ -28,19 +28,19 @@ Texture* TextureBank::FindTexture(DRE::String128 const& name)
 
 void TextureBank::LoadDefaultTextures()
 {
-    DRE::U8 defaultColor[4] = { 0x00, 0x00, 0x00, 0x00 };
+    DRE::U8 defaultBlack[4] = { 0x00, 0x00, 0x00, 0x00 };
     DRE::U8 defaultNormal[4] = { 0x00, 0x00, 0xFF, 0x00 };
     DRE::U8 zero = 0x00;
     DRE::U8 one = 0xFF;
-    DRE::ByteBuffer defaultColorBuffer{ defaultColor, sizeof(defaultColor) };
+    DRE::ByteBuffer defaultBlackBuffer{ defaultBlack, sizeof(defaultBlack) };
     DRE::ByteBuffer defaultNormalBuffer{ defaultNormal, sizeof(defaultNormal) };
     DRE::ByteBuffer zeroBuffer{ &zero, sizeof(zero) };
     DRE::ByteBuffer oneBuffer{ &one, sizeof(one) };
 
-    LoadTexture2DSync("default_color", 1, 1, VKW::FORMAT_R8G8B8A8_UNORM, defaultColorBuffer);
-    LoadTexture2DSync("default_normal", 1, 1, VKW::FORMAT_R8G8B8A8_UNORM, defaultNormalBuffer);
-    LoadTexture2DSync("zero_r", 1, 1, VKW::FORMAT_R8_UNORM, zeroBuffer);
-    LoadTexture2DSync("one_r", 1, 1, VKW::FORMAT_R8_UNORM, oneBuffer);
+    LoadTexture2DSync(NAME_DEFAULT_BLACK, 1, 1, VKW::FORMAT_R8G8B8A8_UNORM, defaultBlackBuffer);
+    LoadTexture2DSync(NAME_DEFAULT_NORMAL, 1, 1, VKW::FORMAT_R8G8B8A8_UNORM, defaultNormalBuffer);
+    LoadTexture2DSync(NAME_DEFAULT_R_ZERO, 1, 1, VKW::FORMAT_R8_UNORM, zeroBuffer);
+    LoadTexture2DSync(NAME_DEFAULT_R_ONE, 1, 1, VKW::FORMAT_R8_UNORM, oneBuffer);
 }
 
 struct Complex

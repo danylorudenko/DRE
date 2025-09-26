@@ -7,26 +7,17 @@
 #ifdef __cplusplus
 enum InstanceFlags : DRE::U32
 {
-    NORMAL_TEXTURE                     = 1u << 0,
-    NORMAL_TEXTURE_INVERT_Y            = 1u << 1,
-    NORMAL_TBN                         = 1u << 2,
-    MATERIAL_TEXTURES_DEFAULT          = 1u << 3,
-    MATERIAL_TEXTURES_GLTF_SPHERES     = 1u << 4
+    INSTANCE_FLAG_DUMMY                 = 1u << 0
 };
 #else
-#define INSTANCE_FLAG_NORMAL_TEXTURE                 (1 << 0)
-#define INSTANCE_FLAG_NORMAL_TEXTURE_INVERT_Y        (1 << 1)
-#define INSTANCE_FLAG_NORMAL_TBN                     (1 << 2)
-#define INSTANCE_FLAG_MATERIAL_TEXTURES_DEFAULT      (1 << 3)
-#define INSTANCE_FLAG_MATERIAL_TEXTURES_GLTF_SPHERES (1 << 4)
+#define INSTANCE_FLAG_DUMMY                 (1 << 0)
 #endif
 
 struct S_INSTANCE
 {
-    float4x4 world_space;
-    float4x4 inv_world_space;
-    uint4    texture_indicies;
-    uint4    globalID_instanceFlags;
+    float4x4    world_space;
+    float4x4    inv_world_space;
+    uint4       globalID_instanceFlags;
     S_MATERIAL* material;
 };
 
@@ -45,26 +36,6 @@ float4x4 GetInvWorldTransform(S_INSTANCE* instance)
 float3 GetInstanceWorldPos(S_INSTANCE* instance)
 {
     return instance.world_space[3].xyz;
-}
-
-uint GetDiffuseTextureID(S_INSTANCE* instance)
-{
-    return instance.texture_indicies.x;
-}
-
-uint GetNormalTextureID(S_INSTANCE* instance)
-{
-    return instance.texture_indicies.y;
-}
-
-uint GetMetalnessTextureID(S_INSTANCE* instance)
-{
-    return instance.texture_indicies.z;
-}
-
-uint GetRoughnessTextureID(S_INSTANCE* instance)
-{
-    return instance.texture_indicies.w;
 }
 
 uint GetGlobalID(S_INSTANCE* instance)

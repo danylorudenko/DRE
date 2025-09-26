@@ -3,7 +3,7 @@
 #include <glm\vec3.hpp>
 
 #include <engine\scene\ISceneNodeUser.hpp>
-#include <gfx\renderer\LightsManager.hpp>
+#include <gfx\renderer\GPULightsManager.hpp>
 
 #include <common\lighting\lights.h>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <foundation\Common.hpp>
 
 #include <foundation\class_features\NonCopyable.hpp>
 #include <foundation\class_features\NonMovable.hpp>
@@ -27,27 +27,34 @@ namespace GFX
 
 class PersistentStorage;
 
+
+constexpr DRE::U32 MAX_GPU_LIGHTS           = 1024;
+constexpr DRE::U32 MAX_GPU_LIGHTS_QUEUE     = 64;
+
+using LightsManagerBase = GPUInstanceAllocator<S_LIGHT, MAX_GPU_LIGHTS, MAX_GPU_LIGHTS_QUEUE>;
+
+
 /////////////////////////////
 class LightsManager
-    : public GPUInstanceAllocator<S_LIGHT, 64, 8>
+    : public LightsManagerBase
 {
 public:
-    using Base = GPUInstanceAllocator<S_LIGHT, 64, 8>;
+    using Base = LightsManagerBase;
 
     class LightGPU : public Base::Payload
     {
         friend class LightsManager;
 
     public:
-        LightGPU(LightsManager* manager, std::uint64_t addressGPU, std::uint16_t id);
-        void ScheduleUpdate(glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, std::uint32_t type);
+        LightGPU(LightsManager* manager, DRE::U64 addressGPU, DRE::U32 id);
+        void ScheduleUpdate(glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, DRE::U32 type);
     };
 
 public:
     LightsManager(PersistentStorage* storage);
 
-    LightGPU AllocateLight();
-    void FreeLight(LightGPU& light);
+    LightGPU    AllocateLight();
+    void        FreeLight(LightGPU& light);
 };
 
 }

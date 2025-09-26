@@ -1,10 +1,10 @@
-#include <gfx\renderer\MaterialsManager.hpp>
+#include <gfx\renderer\GPUMaterialsManager.hpp>
 
 namespace GFX
 {
 
 MaterialsManager::MaterialsManager(PersistentStorage* storage)
-    : GPUInstanceAllocator<S_MATERIAL, MAX_MATERIALS, 1024>{ storage }
+    : Base{ storage }
 {
 }
 
@@ -26,23 +26,21 @@ MaterialsManager::MaterialGPU::MaterialGPU(MaterialsManager* manager, DRE::U64 a
 {
 }
 
-void MaterialsManager::MaterialGPU::ScheduleUpdate(glm::ivec4 textureIDs, glm::ivec4 auxTextureIDs, MaterialFlags flags)
+void MaterialsManager::MaterialGPU::ScheduleUpdate(S_MATERIAL materialData)
 {
-    m_MaterialDataCPU.texture_common_ids = textureIDs;
+    m_MaterialDataCPU = materialData;
+    Base::Payload::ScheduleUpdate(m_MaterialDataCPU);
+}
+
+void MaterialsManager::MaterialGPU::ScheduleUpdateTextures0(glm::ivec4 commonTextureIDs)
+{
+    m_MaterialDataCPU.texture_common_ids = commonTextureIDs;
+    Base::Payload::ScheduleUpdate(m_MaterialDataCPU);
+}
+
+void MaterialsManager::MaterialGPU::ScheduleUpdateTextures1(glm::ivec4 auxTextureIDs)
+{
     m_MaterialDataCPU.texture_aux_ids = auxTextureIDs;
-    m_MaterialDataCPU.flags = glm::ivec4{ static_cast<int>(flags), 0, 0, 0 };
-    Base::Payload::ScheduleUpdate(m_MaterialDataCPU);
-}
-
-void MaterialsManager::MaterialGPU::ScheduleUpdateTextures(glm::ivec4 textureIDs)
-{
-    m_MaterialDataCPU.texture_common_ids = textureIDs;
-    Base::Payload::ScheduleUpdate(m_MaterialDataCPU);
-}
-
-void MaterialsManager::MaterialGPU::ScheduleUpdateAuxTextures(glm::ivec4 textureIDs)
-{
-    m_MaterialDataCPU.texture_aux_ids = textureIDs;
     Base::Payload::ScheduleUpdate(m_MaterialDataCPU);
 }
 

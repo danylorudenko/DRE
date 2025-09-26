@@ -49,17 +49,17 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::I
     , m_UploadArena{ &m_Device, C_STAGING_ARENA_SIZE }
     , m_UniformArena{ &m_Device, C_UNIFORM_ARENA_SIZE }
     , m_ReadbackArena{ &m_Device, C_READBACK_ARENA_SIZE }
+    , m_PersistentStorage{ &m_Device, &m_UploadArena, &m_Device, C_PERSISTENT_STORAGE_SIZE }
+    , m_MaterialsManager{ &m_PersistentStorage }
+    , m_InstanceDataManager{ &m_PersistentStorage }
+    , m_LightsManager{ &m_PersistentStorage }
     , m_TextureBank{ &m_MainContext, m_Device.GetResourcesController(), m_Device.GetDescriptorManager() }
-    , m_PipelineDB{ &m_Device, shaderDB }
+    , m_PipelineDB{ &m_Device, shaderDB, &m_MaterialsManager }
 #ifdef DRE_IMGUI_CUSTOM_TEXTURE
     , m_ImGuiSyncQueue{ &DRE::g_PersistentDataAllocator }
 #endif
-    , m_PersistentStorage{ &m_Device, &m_UploadArena, &m_Device, C_PERSISTENT_STORAGE_SIZE }
     , m_GlobalGeometryManager{ &m_Device, &m_UploadArena }
-    , m_LightsManager{ &m_PersistentStorage }
     , m_RayTracingManager{ &m_Device, &m_GlobalGeometryManager }
-    , m_InstanceDataManager{ &m_PersistentStorage }
-    , m_MaterialsManager{ &m_PersistentStorage }
     , m_MainView{ &DRE::g_MainAllocator }
     , m_SunShadowView{ &DRE::g_MainAllocator }
     , m_Settings{}
@@ -78,7 +78,7 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::I
     m_Device.GetDescriptorManager()->AllocateDefaultDescriptors(VKW::CONSTANTS::FRAMES_BUFFERING, m_GlobalUniforms, m_PersistentStorage.GetStorage()->GetResource());
 }
 
-void GraphicsManager::LoadDefaultData(EDITOR::ViewportInputManager* viewportInput)
+void GraphicsManager::PrecacheAllData(EDITOR::ViewportInputManager* viewportInput)
 {
     m_PipelineDB.CreateDefaultPipelines();
     m_TextureBank.LoadDefaultTextures();
@@ -87,8 +87,8 @@ void GraphicsManager::LoadDefaultData(EDITOR::ViewportInputManager* viewportInpu
 
 void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInput)
 {
-    m_RenderGraph.AddPass<ShadowPass>();
-    m_RenderGraph.AddPass<CausticPass>();
+    //m_RenderGraph.AddPass<ShadowPass>();
+    //m_RenderGraph.AddPass<CausticPass>();
     //m_RenderGraph.AddPass<GBufferPass>();
     m_RenderGraph.AddPass<ForwardOpaquePass>();
     m_RenderGraph.AddPass<FFTButterflyGenPass>();
@@ -279,6 +279,7 @@ VKW::QueueExecutionPoint GraphicsManager::TransferToSwapchainAndPresent(Texture&
     return transferCompletePoint;
 }
 
+/*
 void EmplaceRenderableObjectTexture(Data::Material* material, Data::Material::TextureProperty::Slot slot, TextureBank& textureBank, char const* defaultName, RenderableObject::TexturesVector& result)
 {
     Data::Texture2D const& texture = material->GetTexture(slot);
@@ -295,24 +296,25 @@ void EmplaceRenderableObjectTexture(Data::Material* material, Data::Material::Te
             : gfxTexture);
     }
 }
+*/
 
-RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* sceneNode, VKW::Context& context, Data::Geometry* geometry, Data::Material* material)
+RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* sceneNode, VKW::Context& context, Data::Geometry* geometry, GFX::Material* material)
 {
-    DRE::String64 name = material->GetRenderingProperties().GetShader();
-    VKW::Pipeline* pipeline = m_PipelineDB.GetPipeline(name.GetData());
-    VKW::Pipeline* shadowPipeline = m_PipelineDB.GetPipeline("forward_shadow");
+    //DRE::String64 name = material->GetRenderingProperties().GetShader();
+    VKW::Pipeline* pipeline = material->GetPipeline();
+    //VKW::Pipeline* shadowPipeline = m_PipelineDB.GetPipeline("forward_shadow");
 
-    name.Append("_layout");
-    VKW::PipelineLayout* layout = m_PipelineDB.GetLayout(name.GetData());
-    VKW::PipelineLayout* shadowLayout = m_PipelineDB.GetLayout("forward_shadow_layout");
+    //name.Append("_layout");
+    //VKW::PipelineLayout* layout = m_PipelineDB.GetLayout(name.GetData());
+    //VKW::PipelineLayout* shadowLayout = m_PipelineDB.GetLayout("forward_shadow_layout");
 
     RenderableObject::LayerBits layers = RenderableObject::LAYER_NONE;
-    switch (material->GetRenderingProperties().GetMaterialType())
+    switch (material->GetType())
     {
-    case Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE:
+    case Material::Type::MATERIAL_TYPE_OPAQUE:
         layers = RenderableObject::LAYER_OPAQUE_BIT;
         break;
-    case Data::Material::RenderingProperties::MATERIAL_TYPE_WATER:
+    case Material::Type::MATERIAL_TYPE_WATER:
         layers = RenderableObject::LAYER_WATER_BIT;
         break;
     default:
@@ -321,11 +323,11 @@ RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* scen
     }
 
     // - load textures
-    RenderableObject::TexturesVector textures;
-    EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::DIFFUSE, m_TextureBank, "default_color", textures);
-    EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::NORMAL, m_TextureBank, "default_normal", textures);
-    EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::METALNESS, m_TextureBank, "zero_r", textures);
-    EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::ROUGHNESS, m_TextureBank, "one_r", textures);
+    //RenderableObject::TexturesVector textures;
+    //EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::DIFFUSE, m_TextureBank, "default_color", textures);
+    //EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::NORMAL, m_TextureBank, "default_normal", textures);
+    //EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::METALNESS, m_TextureBank, "zero_r", textures);
+    //EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::ROUGHNESS, m_TextureBank, "one_r", textures);
 
     // load geometry
     GlobalGeometry::GeometryGPU* geometryGPU = m_GlobalGeometryManager.FindOrUploadGeometry(geometry);
@@ -334,16 +336,16 @@ RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* scen
         m_RayTracingManager.RegisterGeometry(geometry, context);
     }
 
-    RenderableObject::DescriptorSetVector descriptors;
-    RenderableObject::DescriptorSetVector shadowDescriptors;
+    //RenderableObject::DescriptorSetVector descriptors;
+    //RenderableObject::DescriptorSetVector shadowDescriptors;
 
-    VKW::DescriptorManager* descriptorManager = GetMainDevice()->GetDescriptorManager();
+    //VKW::DescriptorManager* descriptorManager = GetMainDevice()->GetDescriptorManager();
 
-    std::uint8_t const mainRenderingPassSetCount = m_RenderGraph.GetPassDescriptorSet(PassID::ForwardOpaque, GetCurrentFrameID()).IsValid() ? 1 : 0;
-    std::uint8_t const shadowPassSetCount = m_RenderGraph.GetPassDescriptorSet(PassID::Shadow, GetCurrentFrameID()).IsValid() ? 1 : 0;
+    //std::uint8_t const mainRenderingPassSetCount = m_RenderGraph.GetPassDescriptorSet(PassID::ForwardOpaque, GetCurrentFrameID()).IsValid() ? 1 : 0;
+    //std::uint8_t const shadowPassSetCount = m_RenderGraph.GetPassDescriptorSet(PassID::Shadow, GetCurrentFrameID()).IsValid() ? 1 : 0;
 
-    std::uint8_t const layoutMemberId = std::uint8_t(descriptorManager->GetGlobalSetLayoutsCount() + mainRenderingPassSetCount); // globals + pass set
-    std::uint8_t const shadowLayoutMemberId = std::uint8_t(descriptorManager->GetGlobalSetLayoutsCount() + shadowPassSetCount); // globals + pass set
+    //std::uint8_t const layoutMemberId = std::uint8_t(descriptorManager->GetGlobalSetLayoutsCount() + mainRenderingPassSetCount); // globals + pass set
+    //std::uint8_t const shadowLayoutMemberId = std::uint8_t(descriptorManager->GetGlobalSetLayoutsCount() + shadowPassSetCount); // globals + pass set
 
     //DRE_ASSERT(layout->GetMemberCount() <= layoutMemberId + 1, "All renderable items should currently contain everything in one set.");
     //for (std::uint8_t i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
@@ -351,27 +353,20 @@ RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* scen
     //    descriptors.EmplaceBack(descriptorManager->AllocateStandaloneSet(*layout->GetMember(layoutMemberId)));
     //}
 
-    for (std::uint8_t i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
-    {
-        shadowDescriptors.EmplaceBack(descriptorManager->AllocateStandaloneSet(*shadowLayout->GetMember(shadowLayoutMemberId)));
-    }
+    //for (std::uint8_t i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
+    //{
+    //    shadowDescriptors.EmplaceBack(descriptorManager->AllocateStandaloneSet(*shadowLayout->GetMember(shadowLayoutMemberId)));
+    //}
 
-    InstanceDataManager::InstanceGPU instanceGPU = m_InstanceDataManager.AllocateTransform();
+    InstanceDataManager::InstanceGPU instanceGPU = m_InstanceDataManager.AllocateInstance(material->GetMaterialGPU());
     instanceGPU.ScheduleUpdate(
         sceneNode->GetGlobalMatrix(),
         glm::inverse(sceneNode->GetGlobalMatrix()),
-        glm::uvec4{
-            textures[0]->GetShaderGlobalDescriptor().id_,
-            textures[1]->GetShaderGlobalDescriptor().id_,
-            textures[2]->GetShaderGlobalDescriptor().id_,
-            textures[3]->GetShaderGlobalDescriptor().id_
-        },
         sceneNode->GetGlobalID(),
-        material->GetRenderingProperties().GetInstanceFlags()
+        InstanceFlags{ 0 }
     );
 
-    return m_RenderableObjectPool.Alloc(sceneNode, instanceGPU, layers, pipeline, *geometryGPU, m_RayTracingManager.GetGeometryBLAS(geometry)->m_LogicalHandle,
-        DRE_MOVE(textures), DRE_MOVE(descriptors), DRE_MOVE(shadowDescriptors), material->GetRenderingProperties().GetInstanceFlags());
+    return m_RenderableObjectPool.Alloc(sceneNode, instanceGPU, layers, pipeline, *geometryGPU, m_RayTracingManager.GetGeometryBLAS(geometry)->m_LogicalHandle);
 }
 
 void GraphicsManager::FreeRenderableObject(RenderableObject* obj)

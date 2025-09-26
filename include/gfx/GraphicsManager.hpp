@@ -20,11 +20,11 @@
 #include <gfx\pipeline\PipelineDB.hpp>
 #include <gfx\renderer\RenderableObject.hpp>
 #include <gfx\view\RenderView.hpp>
-#include <gfx\renderer\LightsManager.hpp>
-#include <gfx\renderer\RayTracingManager.hpp>
-#include <gfx\renderer\InstanceDataManager.hpp>
-#include <gfx\renderer\MaterialsManager.hpp>
+#include <gfx\renderer\GPULightsManager.hpp>
+#include <gfx\renderer\GPUInstanceManager.hpp>
+#include <gfx\renderer\GPUMaterialsManager.hpp>
 #include <gfx\renderer\GlobalGeometryManager.hpp>
+#include <gfx\renderer\RayTracingManager.hpp>
 
 #include <engine\data\Geometry.hpp>
 #include <engine\data\Material.hpp>
@@ -69,9 +69,9 @@ struct GraphicsSettings
 {
     bool            m_UseACESEncoding       = true;
     float           m_ExposureEV            = 0.0f;
-    float           m_AlphaTAA              =0;//= 0.9f;
+    float           m_AlphaTAA              = 0;//= 0.9f;
     float           m_VarianceGammaTAA      = 1.0f;
-    float           m_JitterScale           =0;//= 0.15f;
+    float           m_JitterScale           = 0;//= 0.15f;
     bool            m_WaterWireframe        = false;
     bool            m_UseFFTWater           = true;
     float           m_WaterSpeed            = 1.0f;
@@ -150,13 +150,13 @@ public:
 
 
 public:
-    void                                LoadDefaultData(EDITOR::ViewportInputManager* viewportInput);
+    void                                PrecacheAllData(EDITOR::ViewportInputManager* viewportInput);
     void                                ReloadShaders();
     void                                BuildMainSceneTLAS();
     void                                RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS, float globalTimeS);
     void                                WaitIdle();
 
-    RenderableObject*                   CreateRenderableObject(WORLD::SceneNode* sceneNode, VKW::Context& context, Data::Geometry* geometry, Data::Material* material);
+    RenderableObject*                   CreateRenderableObject(WORLD::SceneNode* sceneNode, VKW::Context& context, Data::Geometry* geometry, GFX::Material* material);
     void                                FreeRenderableObject(RenderableObject* obj);
 
 private:
@@ -184,6 +184,13 @@ private:
     UniformArena                m_UniformArena;
     ReadbackArena               m_ReadbackArena;
 
+    VKW::BufferResource*        m_GlobalUniforms[VKW::CONSTANTS::FRAMES_BUFFERING];
+    PersistentStorage           m_PersistentStorage;
+
+    MaterialsManager            m_MaterialsManager;
+    InstanceDataManager         m_InstanceDataManager;
+    LightsManager               m_LightsManager;
+
     TextureBank                 m_TextureBank;
     PipelineDB                  m_PipelineDB;
 
@@ -191,15 +198,8 @@ private:
     ImGuiSyncQueue              m_ImGuiSyncQueue;
 #endif
 
-
-    VKW::BufferResource*        m_GlobalUniforms[VKW::CONSTANTS::FRAMES_BUFFERING];
-    PersistentStorage           m_PersistentStorage;
-
     GlobalGeometry              m_GlobalGeometryManager;
-    LightsManager               m_LightsManager;
     RayTracingManager           m_RayTracingManager;
-    InstanceDataManager         m_InstanceDataManager;
-    MaterialsManager            m_MaterialsManager;
 
     RenderView                  m_MainView;
     RenderView                  m_SunShadowView;

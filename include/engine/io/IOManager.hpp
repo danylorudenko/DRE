@@ -92,7 +92,6 @@ private:
     void ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiMat, DRE::String256 const& assetFolderPath, Data::Material* material, Data::Material::TextureProperty::Slot slot, Data::TextureChannelVariations channels);
 
 private:
-    GFX::PipelineDB*        m_PipelineDB;
     Data::MaterialLibrary*  m_MaterialLibrary;
     Data::GeometryLibrary*  m_GeometryLibrary;
 

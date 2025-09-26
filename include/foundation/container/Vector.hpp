@@ -10,14 +10,16 @@ class Vector
 {
 public:
     Vector()
-        : m_Allocator{ nullptr }
+        : m_SVOBuffer{}
+        , m_Allocator{ nullptr }
         , m_Data{ nullptr }
         , m_Size{ 0 }
         , m_Capacity{ 0 }
     {}
 
     Vector(TAllocator* allocator)
-        : m_Allocator{ allocator }
+        : m_SVOBuffer{}
+        , m_Allocator{ allocator }
         , m_Data{ nullptr }
         , m_Size{ 0 }
         , m_Capacity{ 0 }
@@ -26,7 +28,8 @@ public:
     }
 
     Vector(TAllocator* allocator, std::uint32_t reserveSize)
-        : m_Allocator{ allocator }
+        : m_SVOBuffer{}
+        , m_Allocator{ allocator }
         , m_Data{ nullptr }
         , m_Size{ 0 }
         , m_Capacity{ 0 }
@@ -35,7 +38,8 @@ public:
     }
 
     Vector(Vector const& rhs)
-        : m_Allocator{ rhs.m_Allocator }
+        : m_SVOBuffer{}
+        , m_Allocator{ rhs.m_Allocator }
         , m_Data{ nullptr }
         , m_Size{ 0 }
         , m_Capacity{ 0 }
@@ -50,7 +54,8 @@ public:
     }
 
     Vector(Vector&& rhs)
-        : m_Allocator{ rhs.m_Allocator }
+        : m_SVOBuffer{}
+        , m_Allocator{ rhs.m_Allocator }
         , m_Data{ rhs.m_Data }
         , m_Size{ rhs.m_Size }
         , m_Capacity{ rhs.m_Capacity }

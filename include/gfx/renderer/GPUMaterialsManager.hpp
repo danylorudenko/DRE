@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <foundation\Common.hpp>
 
 #include <foundation\class_features\NonCopyable.hpp>
 #include <foundation\class_features\NonMovable.hpp>
@@ -26,13 +26,18 @@ namespace GFX
 
 class PersistentStorage;
 
+
+constexpr DRE::U32 MAX_GPU_MATERIALS        = 1024;
+constexpr DRE::U32 MAX_GPU_MATERIALS_QUEUE  = 64;
+
+using MaterialsManagerBase = GPUInstanceAllocator<S_MATERIAL, MAX_GPU_MATERIALS, MAX_GPU_MATERIALS_QUEUE>;
+
+//////////////////////////
 class MaterialsManager
-    : public GPUInstanceAllocator<S_MATERIAL, 1024 * 32, 1024>
+    : public MaterialsManagerBase
 {
 public:
-    static constexpr std::uint32_t MAX_MATERIALS = 1024 * 32;
-
-    using Base = GPUInstanceAllocator<S_MATERIAL, MAX_MATERIALS, 1024>;
+    using Base = MaterialsManagerBase;
 
     class MaterialGPU : public Base::Payload
     {
@@ -41,9 +46,9 @@ public:
     public:
         MaterialGPU(MaterialsManager* manager, DRE::U64 addressGPU, DRE::U32 id);
 
-        void ScheduleUpdate(glm::ivec4 textureIDs, glm::ivec4 auxTextureIDs, MaterialFlags flags);
-        void ScheduleUpdateTextures(glm::ivec4 textureIDs);
-        void ScheduleUpdateAuxTextures(glm::ivec4 textureIDs);
+        void ScheduleUpdate(S_MATERIAL materialData);
+        void ScheduleUpdateTextures0(glm::ivec4 textureIDs);
+        void ScheduleUpdateTextures1(glm::ivec4 textureIDs);
         void ScheduleUpdate(MaterialFlags flags, bool addFlags);
         void ScheduleUpdate(MaterialFlags flags);
 

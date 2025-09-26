@@ -22,9 +22,9 @@ enum MaterialFlags : DRE::U32
 
 struct S_MATERIAL
 {
-    int4 texture_common_ids;
-    int4 texture_aux_ids;
-    int4 flags;
+    uint4 texture_common_ids;
+    uint4 texture_aux_ids;
+    uint4 flags;
 };
 
 #ifndef __cplusplus
@@ -49,22 +49,22 @@ int GetRoughnessTextureID(S_MATERIAL* material)
     return material->texture_common_ids.w;
 }
 
-int GetAuxTextureID0(S_MATERIAL* material)
+int GetOcclusionTextureID(S_MATERIAL* material)
 {
     return material->texture_aux_ids.x;
 }
 
-int GetAuxTextureID1(S_MATERIAL* material)
+int GetBentNormalTextureID(S_MATERIAL* material)
 {
     return material->texture_aux_ids.y;
 }
 
-int GetAuxTextureID2(S_MATERIAL* material)
+int GetAuxTextureID0(S_MATERIAL* material)
 {
     return material->texture_aux_ids.z;
 }
 
-int GetAuxTextureID3(S_MATERIAL* material)
+int GetAuxTextureID1(S_MATERIAL* material)
 {
     return material->texture_aux_ids.w;
 }
