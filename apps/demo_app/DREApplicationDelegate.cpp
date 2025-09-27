@@ -150,11 +150,13 @@ void DREApplicationDelegate::start()
         if (nodeUser->GetType() == WORLD::ISceneNodeUser::Type::Entity)
         {
             WORLD::Entity* entity = reinterpret_cast<WORLD::Entity*>(nodeUser);
-            InstanceFlags flags = entity->GetRenderableObject()->GetInstanceFlags();
+            GFX::Material* material = entity->GetMaterial()->GetGfxMaterial();
+            MaterialFlags flags = material->GetFlags();
 
-            flags = InstanceFlags(flags & ~(InstanceFlags::NORMAL_TEXTURE | InstanceFlags::MATERIAL_TEXTURES_DEFAULT));
-            flags = InstanceFlags(flags | (InstanceFlags::NORMAL_TBN | InstanceFlags::MATERIAL_TEXTURES_GLTF_SPHERES));
-            entity->GetRenderableObject()->SetInstanceFlags(flags);
+            flags = MaterialFlags(flags & ~(MATERIAL_FLAG_NORMAL_TEXTURE | MATERIAL_FLAG_MATERIAL_TEXTURES_DEFAULT));
+            flags = MaterialFlags(flags | (MATERIAL_FLAG_NORMAL_TBN | MATERIAL_FLAG_MATERIAL_TEXTURES_GLTF_SPHERES));
+            material->SetFlagsNoUpdate(flags);
+            material->FlushDataToMaterialGPU();
         }
     });
 
