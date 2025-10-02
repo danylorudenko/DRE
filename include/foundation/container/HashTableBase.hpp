@@ -91,6 +91,7 @@ public:
         {
             baseBucket->m_Key.key = key;
             baseBucket->m_Key.isEmpty = false;
+            baseBucket->m_NextID = DRE_U32_MAX;
 
             new (baseBucket->m_Value.m_Storage) TValue{ std::forward<TArgs>(args)... };
 

@@ -37,7 +37,8 @@ void Material::FlushToGfxMaterial(GFX::Material* target)
     for (DRE::U32 i = 0; i < TextureProperty::Slot::MAX; i++)
     {
         TextureProperty& property = m_TextureProperties[i];
-        target->SetTextureNoUpdate(property.GetSlot(), property.m_GFXTexture);
+        if (property.GetSlot() != TextureProperty::Slot::MAX)
+            target->SetTextureNoUpdate(property.GetSlot(), property.m_GFXTexture);
     }
     target->SetFlagsNoUpdate(m_RenderingProperties.GetMaterialFlags());
 
