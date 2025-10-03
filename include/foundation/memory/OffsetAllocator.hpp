@@ -11,12 +11,12 @@ DRE_BEGIN_NAMESPACE
 ////////////////////////////////////////////////
 // FreeListOffsetAllocator
 ////////////////////////////////////////////////
-template<std::uint16_t LIST_SIZE>
+template<DRE::U32 LIST_SIZE>
 class FreeListOffsetAllocator
 {
-    static_assert(LIST_SIZE - 1 < DRE_U16_MAX);
+    static_assert(LIST_SIZE - 1 < DRE_U32_MAX);
 
-    static constexpr std::uint16_t INVALID_ELEMENT = DRE_U16_MAX;
+    static constexpr DRE::U32 INVALID_ELEMENT = DRE_U32_MAX;
 
 public:
     FreeListOffsetAllocator()
@@ -35,16 +35,16 @@ public:
         return *this;
     }
 
-    std::uint16_t Allocate()
+    DRE::U32 Allocate()
     {
         DRE_ASSERT(firstFree_ != INVALID_ELEMENT, "FreeListOffsetAllocator has no free entries.");
 
-        std::uint16_t result = firstFree_;
+        DRE::U32 result = firstFree_;
         firstFree_ = storage_[firstFree_];
         return result;
     }
 
-    void Free(std::uint16_t element)
+    void Free(DRE::U32 element)
     {
         storage_[element] = firstFree_;
         firstFree_ = element;
@@ -52,7 +52,7 @@ public:
 
     void Reset()
     {
-        for (std::uint16_t i = 0; i < LIST_SIZE - 1; i++)
+        for (DRE::U32 i = 0; i < LIST_SIZE - 1; i++)
         {
             storage_[i] = i + 1;
         }
@@ -62,28 +62,28 @@ public:
     }
 
 private:
-    std::uint16_t storage_[LIST_SIZE];
-    std::uint16_t firstFree_;
+    DRE::U32 storage_[LIST_SIZE];
+    DRE::U32 firstFree_;
 };
 
 
 ////////////////////////////////////////////////
 // LinearOffsetAllocator
 ////////////////////////////////////////////////
-template<std::uint16_t SIZE>
+template<DRE::U32 SIZE>
 class LinearOffsetAllocator
 {
 public:
-    std::uint16_t Allocate(std::uint16_t count)
+    DRE::U32 Allocate(DRE::U32 count)
     {
         DRE_ASSERT((nextFree_ + count) < SIZE, "LinearOffsetAllocator has no free space left.");
 
-        std::uint16_t result = nextFree_;
+        DRE::U32 result = nextFree_;
         nextFree_ += count;
         return result;
     }
 
-    void Free(std::uint16_t element) {}
+    void Free(DRE::U32 element) {}
 
     void Reset()
     {
@@ -91,17 +91,17 @@ public:
     }
 
 private:
-    std::uint16_t nextFree_;
+    DRE::U32 nextFree_;
 };
 
-template<std::uint16_t SIZE>
+template<DRE::U32 SIZE>
 class DummyElementsAllocator
 {
-    static constexpr std::uint16_t INVALID_ELEMENT = DRE_U16_MAX;
+    static constexpr DRE::U32 INVALID_ELEMENT = DRE_U32_MAX;
 public:
-    std::uint16_t Allocate  (std::uint16_t count) { /* noop */ return INVALID_ELEMENT; }
-    void Free               (std::uint16_t element) { /* noop */ }
-    void Reset              () { /* noop */ }
+    DRE::U32    Allocate  (DRE::U32 count) { /* noop */ return INVALID_ELEMENT; }
+    void        Free      (DRE::U32 element) { /* noop */ }
+    void        Reset     () { /* noop */ }
 };
 
 

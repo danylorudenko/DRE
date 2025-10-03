@@ -310,7 +310,7 @@ QueueExecutionPoint Queue::ExecuteInternal(CommandList* commandList, std::uint8_
     submitInfo.signalSemaphoreCount = 1 + binary;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
-    table_->vkQueueSubmit(queue_, 1, &submitInfo, VK_NULL_HANDLE);
+    VK_ASSERT(table_->vkQueueSubmit(queue_, 1, &submitInfo, VK_NULL_HANDLE));
 
     QueueExecutionPoint executionEndPoint{ this, signalValues[0] }; 
     commandList->SetFinishExecutionPoint(executionEndPoint);

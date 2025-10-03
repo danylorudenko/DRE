@@ -25,6 +25,11 @@ class TextureBank
     , public NonMovable
 {
 public:
+    static constexpr char NAME_DEFAULT_BLACK[]  = "default_color";
+    static constexpr char NAME_DEFAULT_NORMAL[] = "default_normal";
+    static constexpr char NAME_DEFAULT_R_ZERO[] = "zero_r";
+    static constexpr char NAME_DEFAULT_R_ONE[]  = "one_r";
+
     TextureBank(VKW::Context* loadingContext, VKW::ResourcesController* resourcesController, VKW::DescriptorManager* descriptorAllocator);
     ~TextureBank();
 

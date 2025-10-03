@@ -6,6 +6,8 @@
 #include <gfx\pass\BasePass.hpp>
 #include <gfx\scheduling\DependencyManager.hpp>
 
+#define DRE_FLUSH_EVERY_PASS
+
 namespace GFX
 {
 
@@ -147,6 +149,12 @@ Texture& RenderGraph::Render(VKW::Context& context)
     for (std::uint32_t i = 0, size = m_Passes.Size(); i < size; i++)
     {
         m_Passes[i]->Render(*this, context);
+
+#ifdef DRE_FLUSH_EVERY_PASS
+        context.FlushAll();
+        context.WaitIdle();
+        context.CmdBindGlobalDescriptorSets(*m_GraphicsManager->GetMainDevice()->GetDescriptorManager(), m_GraphicsManager->GetCurrentFrameID());
+#endif // DRE_FLUSH_EVERY_PASS
     }
 
     return *m_ResourcesManager.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage));

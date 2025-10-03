@@ -44,7 +44,6 @@ struct AtomDraw
     DRE::U32                instanceID;
 
     VKW::Pipeline*          pipeline;
-    VKW::DescriptorSet      descriptorSet;
 };
 
 /////////////////////////////

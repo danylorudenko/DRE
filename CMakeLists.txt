@@ -29,20 +29,6 @@ option(SHADERC_ENABLE_SHARED_CRT "Use the shared CRT instead of the static CRT" 
 add_subdirectory(extern/assimp)
 
 
-#add dxc
-#==========
-add_library(DXC::compiler SHARED IMPORTED GLOBAL)
-set_target_properties(DXC::compiler PROPERTIES
-	IMPORTED_IMPLIB "${DRE_SOURCE_DIR}/dxc/lib/x64/dxcompiler.lib"
-	IMPORTED_LOCATION "${DRE_SOURCE_DIR}/dxc/bin/x64/dxcompiler.dll"
-	INTERFACE_INCLUDE_DIRECTORIES "${DRE_SOURCE_DIR}/dxc/inc")
-	
-add_library(DXC::dxil SHARED IMPORTED GLOBAL)
-set_target_properties(DXC::dxil PROPERTIES
-	IMPORTED_IMPLIB "${DRE_SOURCE_DIR}/dxc/lib/x64/dxil.lib"
-    IMPORTED_LOCATION "${DRE_SOURCE_DIR}/dxc/bin/x64/dxil.dll")
-# demo_app symlinks binaries
-#==========
 
 #add slang
 #==========
@@ -51,8 +37,6 @@ set_target_properties(slang PROPERTIES
 	IMPORTED_IMPLIB "${DRE_SOURCE_DIR}/slang-2025.14.3-windows-x86_64/lib/slang.lib"
 	IMPORTED_LOCATION "${DRE_SOURCE_DIR}/slang-2025.14.3-windows-x86_64/bin/slang.dll"
 	INTERFACE_INCLUDE_DIRECTORIES "${DRE_SOURCE_DIR}/slang-2025.14.3-windows-x86_64/include/")
-# demo_app symlinks binaries
-#==========
 
 
 add_subdirectory(extern/glm)

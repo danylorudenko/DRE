@@ -1,7 +1,6 @@
 #pragma once
 
-#include <cstdint>
-
+#include <foundation\Common.hpp>
 #include <foundation\class_features\NonCopyable.hpp>
 #include <foundation\class_features\NonMovable.hpp>
 #include <foundation\container\InplaceVector.hpp>
@@ -17,16 +16,20 @@ class Context;
 namespace GFX
 {
 
-template<typename PayloadT, std::uint32_t MAX_COUNT, std::uint32_t QUEUE_SIZE>
+template<typename PayloadT, DRE::U32 MAX_COUNT, DRE::U32 QUEUE_SIZE>
 class GPUInstanceAllocator
     : public NonMovable
     , public NonCopyable
 {
 public:
+    using Type = GPUInstanceAllocator<PayloadT, MAX_COUNT, QUEUE_SIZE>;
+
     class Payload
     {
     public:
-        Payload(GPUInstanceAllocator* manager, std::uint64_t addressGPU, std::uint16_t id)
+        using ManagerType = Type;
+
+        Payload(ManagerType* manager, DRE::U64 addressGPU, DRE::U32 id)
             : m_Manager{ manager }
             , m_AddressGPU{ addressGPU }
             , m_id{ id }
@@ -37,13 +40,14 @@ public:
             m_Manager->ScheduleUpdate(m_id, data);
         }
 
-        std::uint32_t GetID() const { return m_id; }
-        std::uint64_t GetAddressGPU() const { return m_AddressGPU; }
+        DRE::U32     GetID() const { return m_id; }
+        DRE::U64     GetAddressGPU() const { return m_AddressGPU; }
+        ManagerType* GetManager() { return m_Manager; }
 
     protected:
-        GPUInstanceAllocator* m_Manager;
-        std::uint64_t        m_AddressGPU;
-        std::uint32_t        m_id;
+        Type*               m_Manager;
+        DRE::U64            m_AddressGPU;
+        DRE::U32            m_id;
     };
 
     friend class Payload;
@@ -53,29 +57,29 @@ public:
         , m_Count{ 0 }
     { }
 
-    std::uint16_t AllocateID()
+    DRE::U32 AllocateID()
     {
         ++m_Count;
         return m_ElementAllocator.Allocate();
     }
 
-    void FreeID(std::uint16_t id)
+    void FreeID(DRE::U32 id)
     {
         --m_Count;
         m_ElementAllocator.Free(id);
     }
 
-    std::uint64_t GetBufferAddress() const { return m_PersistentAllocation.GetGPUAddress(); }
-    std::uint32_t GetCount() const { return m_Count; }
+    DRE::U64 GetBufferAddress() const { return m_PersistentAllocation.GetGPUAddress(); }
+    DRE::U32 GetCount() const { return m_Count; }
 
-    void ScheduleUpdate(std::uint32_t id, PayloadT const& payload)
+    void ScheduleUpdate(DRE::U32 id, PayloadT const& payload)
     {
         m_UpdateQueue.EmplaceBack(id, payload);
     }
 
     void FlushUpdates(VKW::Context& context)
     {
-        for (std::uint32_t i = 0, count = m_UpdateQueue.Size(); i < count; ++i)
+        for (DRE::U32 i = 0, count = m_UpdateQueue.Size(); i < count; ++i)
         {
             UpdateEntry& entry = m_UpdateQueue[i];
             m_PersistentAllocation.Update(context, entry.id * sizeof(PayloadT), &entry.payload, sizeof(PayloadT));
@@ -86,13 +90,13 @@ public:
 protected:
     struct UpdateEntry
     {
-        std::uint32_t id;
+        DRE::U32 id;
         PayloadT payload;
     };
 
     PersistentStorage::Allocation m_PersistentAllocation;
     DRE::FreeListOffsetAllocator<MAX_COUNT> m_ElementAllocator;
-    std::uint32_t m_Count;
+    DRE::U32 m_Count;
     DRE::InplaceVector<UpdateEntry, QUEUE_SIZE> m_UpdateQueue;
 };
 

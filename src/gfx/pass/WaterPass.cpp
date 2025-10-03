@@ -143,7 +143,8 @@ void WaterPass::Render(RenderGraph& graph, VKW::Context& context)
     {
         AtomDraw const& atom = draws[i];
         context.CmdBindGraphicsPipeline(atom.pipeline);
-        context.CmdBindGraphicsDescriptorSets(atom.pipeline->GetLayout(), startSet, 1, &atom.descriptorSet);
+        // push constant here?
+        //context.CmdBindGraphicsDescriptorSets(atom.pipeline->GetLayout(), startSet, 1, &atom.descriptorSet);
         context.CmdBindVertexBuffer(atom.vertexBuffer, atom.vertexOffset);
         context.CmdBindIndexBuffer(atom.indexBuffer, atom.indexOffset);
         context.CmdDrawIndexed(atom.indexCount);

@@ -23,6 +23,7 @@ namespace IO
 
 class IOManager;
 
+/*
 // keep this object until hlsl was compiled
 /////////////////////////////////
 // DXCArgsBuilder
@@ -115,6 +116,7 @@ void DXCArgsBuilder::AddProfileArgs(VKW::ShaderModuleType type)
 
     m_CompilationArgs.EmplaceBack(profileStr);
 }
+*/
 
 /*
 VKW::ShaderModuleType SPVExecutionModelToVKWModuleType(spv::ExecutionModel executionModel)

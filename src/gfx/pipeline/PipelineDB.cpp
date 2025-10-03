@@ -17,9 +17,10 @@ namespace GFX
 
 /////////////////////////////////
 // PipelineDB
-PipelineDB::PipelineDB(VKW::Device* device, IO::ShaderDB* shaderDB)
+PipelineDB::PipelineDB(VKW::Device* device, IO::ShaderDB* shaderDB, MaterialsManager* materialsGPUManager)
     : m_Device{ device }
     , m_ShaderDB{ shaderDB }
+    , m_MaterialsGPUManager{ materialsGPUManager }
 {
 }
 
@@ -442,6 +443,11 @@ VKW::Pipeline* PipelineDB::CreatePipeline(char const* name, VKW::Pipeline::Descr
     return &(m_Pipelines.Emplace(name, m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), descriptor, name));
 }
 
+VKW::PipelineLayout const* PipelineDB::GetGlobalLayout() const
+{
+    return m_Device->GetDescriptorManager()->GetGlobalPipelineLayout();
+}
+
 VKW::PipelineLayout* PipelineDB::GetLayout(char const* name)
 {
     return m_PipelineLayouts.Find(name).value;
@@ -455,6 +461,12 @@ VKW::Pipeline* PipelineDB::GetPipeline(char const* name)
 VKW::DescriptorSetLayout* PipelineDB::GetSetLayout(char const* name)
 {
     return &m_SetLayouts[name];
+}
+
+GFX::Material* PipelineDB::CreateMaterial(char const* name, GFX::Material::Type type, VKW::Pipeline* pipeline)
+{
+    MaterialsManager::MaterialGPU materialGPU = m_MaterialsGPUManager->AllocateMaterial();
+    return &m_Materials.Emplace(name, type, materialGPU, pipeline);
 }
 
 }

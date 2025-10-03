@@ -31,7 +31,7 @@ Entity* Scene::CreateOpaqueEntity(VKW::Context& context, Data::Geometry* geometr
 
     SceneNode* node = CreateSceneNode(entity, parent == nullptr ? m_RootNode : parent);
 
-    GFX::RenderableObject* renderable = GFX::g_GraphicsManager->CreateRenderableObject(node, context, geometry, material);
+    GFX::RenderableObject* renderable = GFX::g_GraphicsManager->CreateRenderableObject(node, context, geometry, material->GetGfxMaterial());
     entity->SetRenderableObject(renderable);
 
     GFX::RenderView& mainView = GFX::g_GraphicsManager->GetMainRenderView();

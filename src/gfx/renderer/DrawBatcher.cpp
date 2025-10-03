@@ -45,8 +45,6 @@ void DrawBatcher::Batch(VKW::Context& context, RenderView const& view, VKW::Pipe
         atom.instanceID    = obj.GetInstanceGPU().GetID();
 
         atom.pipeline      = obj.GetPipeline();
-        if (obj.HasDescriptorSet())
-            atom.descriptorSet = obj.GetDescriptorSet(g_GraphicsManager->GetCurrentFrameID());
 
     }
 }
@@ -77,7 +75,6 @@ void DrawBatcher::BatchShadow(VKW::Context& context, RenderView const& view, VKW
         atom.instanceID    = obj.GetInstanceGPU().GetID();
 
         atom.pipeline      = shadowGenericPipeline;
-        atom.descriptorSet = obj.GetShadowDescriptorSet(g_GraphicsManager->GetCurrentFrameID());
 
     }
 }

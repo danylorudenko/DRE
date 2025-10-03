@@ -36,6 +36,7 @@ void CausticPass::RegisterResources(RenderGraph& graph)
 
 void WaterCausticDelegate(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view, VKW::PipelineLayout const* layout)
 {
+    /*
     auto uniformRegion = arena.AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(),
         sizeof(glm::mat4) * 2 +
         sizeof(glm::uvec4),
@@ -53,6 +54,7 @@ void WaterCausticDelegate(RenderableObject& obj, VKW::Context& context, VKW::Des
     proxy.WriteMember140(model);
     proxy.WriteMember140(model);
     proxy.WriteMember140(glm::uvec4{ normalIndex.id_, 0, 0, 0 });
+    */
 }
 
 void CausticPass::Render(RenderGraph& graph, VKW::Context& context)
@@ -107,7 +109,7 @@ void CausticPass::Render(RenderGraph& graph, VKW::Context& context)
         //context.CmdBindGraphicsPipeline(atom.pipeline);
         //context.CmdBindGraphicsDescriptorSets(atom.pipeline->GetLayout(), startSet, 1, &atom.descriptorSet);
         context.CmdBindGraphicsPipeline(pipeline);
-        context.CmdBindGraphicsDescriptorSets(layout, startSet, 1, &atom.descriptorSet);
+        //context.CmdBindGraphicsDescriptorSets(layout, startSet, 1, &atom.descriptorSet);
         context.CmdBindVertexBuffer(atom.vertexBuffer, atom.vertexOffset);
         context.CmdBindIndexBuffer(atom.indexBuffer, atom.indexOffset);
         context.CmdDrawIndexed(atom.indexCount);

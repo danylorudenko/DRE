@@ -35,7 +35,6 @@ namespace IO
 IOManager::IOManager(Data::MaterialLibrary* materialLibrary, Data::GeometryLibrary* geometryLibrary)
     : m_MaterialLibrary{ materialLibrary }
     , m_GeometryLibrary{ geometryLibrary }
-    //, m_ShaderData{ &DRE::g_PersistentDataAllocator }
 {
 }
 
@@ -158,7 +157,15 @@ void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiM
         textureFilePath.Append(aiTexturePath.C_Str(), DRE::U16(aiTexturePath.length));
 
         Data::Texture2D dataTexture = ReadTexture2D(textureFilePath.GetData(), channels);
-        material->AssignTextureToSlot(slot, DRE_MOVE(dataTexture));
+        GFX::Texture* gfxTexture = GFX::g_GraphicsManager->GetTextureBank().LoadTexture2DSync(
+            dataTexture.GetName(),
+            dataTexture.GetSizeX(),
+            dataTexture.GetSizeY(),
+            dataTexture.GetFormat(),
+            dataTexture.GetBuffer()
+        );
+
+        material->AssignTextureToSlot(slot, DRE_MOVE(dataTexture), gfxTexture);
     }
     else
     {
@@ -243,6 +250,8 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName
     }
     textureFilePath.Shrink(folderEnd);
 
+    VKW::Pipeline* defaultPipeline = GFX::g_GraphicsManager->GetPipelineDB().GetPipeline(defaultShader);
+
     for (std::uint32_t i = 0, size = scene->mNumMaterials; i < size; i++)
     {
         aiMaterial* aiMat = scene->mMaterials[i];
@@ -272,6 +281,14 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName
 
         material->GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE);
         material->GetRenderingProperties().SetShader(defaultShader);
+
+        DRE::String64 materialName;
+        materialName.Append(sceneName);
+        materialName.Append("_");
+        materialName.Append(material->GetName());
+
+        GFX::Material* gfxMaterial = GFX::g_GraphicsManager->GetPipelineDB().CreateMaterial(materialName, material->GetRenderingProperties().GetMaterialType(), defaultPipeline);
+        material->FlushToGfxMaterial(gfxMaterial);
     }
 }
 
