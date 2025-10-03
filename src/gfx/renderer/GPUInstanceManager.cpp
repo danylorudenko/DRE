@@ -34,6 +34,7 @@ InstanceDataManager::InstanceGPU::InstanceGPU(InstanceDataManager* manager, DRE:
     , m_InstanceDataCPU{}
     , m_MaterialGPU{ material }
 {
+    m_InstanceDataCPU.material = reinterpret_cast<S_MATERIAL*>(m_MaterialGPU.GetAddressGPU());
 }
 
 void InstanceDataManager::InstanceGPU::ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform, DRE::U32 globalID, InstanceFlags instanceFlags)

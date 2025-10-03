@@ -44,7 +44,8 @@ public:
         void SetDataTexture(Texture2D&& texture);
         void SetGfxTexture(GFX::Texture* texture);
 
-        inline Slot GetSlot() const { return m_Slot; }
+        inline Slot GetSlotType() const { return m_Slot; }
+        inline void SetSlotType(Slot slot) { m_Slot = slot; }
 
     private:
         Slot            m_Slot = Slot::MAX;

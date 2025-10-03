@@ -20,11 +20,11 @@ ForwardPassOutput main(PSInput input)
 {
     S_INSTANCE* InstancePtr = GetInstance();
     S_MATERIAL* MaterialPtr = GetMaterial(InstancePtr);
-    //uint instanceFlags = GetInstanceFlags(InstancePtr);
     uint materialFlags = GetMaterialFlags(MaterialPtr);
 
     float3 diffuse    = SampleGlobalTextureAnisotropic(GetDiffuseTextureID(MaterialPtr), input.uv).rgb;
     float3 normal     = SampleGlobalTextureAnisotropic(GetNormalTextureID(MaterialPtr), input.uv).rgb;
+
     float metalness   = 0.0;
     float roughness   = 0.0;
 

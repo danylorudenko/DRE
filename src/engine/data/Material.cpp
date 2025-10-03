@@ -22,6 +22,7 @@ void Material::TextureProperty::SetGfxTexture(GFX::Texture* texture)
 
 void Material::AssignTextureToSlot(TextureProperty::Slot slot, Texture2D&& texture, GFX::Texture* gfxTexture)
 {
+    m_TextureProperties[slot].SetSlotType(slot);
     m_TextureProperties[slot].SetDataTexture(DRE_MOVE(texture));
     m_TextureProperties[slot].SetGfxTexture(gfxTexture);
 }
@@ -37,8 +38,8 @@ void Material::FlushToGfxMaterial(GFX::Material* target)
     for (DRE::U32 i = 0; i < TextureProperty::Slot::MAX; i++)
     {
         TextureProperty& property = m_TextureProperties[i];
-        if (property.GetSlot() != TextureProperty::Slot::MAX)
-            target->SetTextureNoUpdate(property.GetSlot(), property.m_GFXTexture);
+        if (property.GetSlotType() != TextureProperty::Slot::MAX)
+            target->SetTextureNoUpdate(property.GetSlotType(), property.m_GFXTexture);
     }
     target->SetFlagsNoUpdate(m_RenderingProperties.GetMaterialFlags());
 

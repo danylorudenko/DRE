@@ -82,11 +82,11 @@ struct GraphicsSettings
     float           m_WindDirFactor         = 2.0f;
     float           m_GenericScalar         = 1.0f;
 
-    std::uint32_t   m_ShadowMapWidth        = 1024;
-    std::uint32_t   m_ShadowMapHeight       = 1024;
+    DRE::U32        m_ShadowMapWidth        = 1024;
+    DRE::U32        m_ShadowMapHeight       = 1024;
 
-    std::uint32_t   m_RenderingWidth        = 0;
-    std::uint32_t   m_RenderingHeight       = 0;
+    DRE::U32        m_RenderingWidth        = 0;
+    DRE::U32        m_RenderingHeight       = 0;
 };
 
 class GraphicsManager final

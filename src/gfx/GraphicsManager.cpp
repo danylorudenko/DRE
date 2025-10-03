@@ -279,34 +279,9 @@ VKW::QueueExecutionPoint GraphicsManager::TransferToSwapchainAndPresent(Texture&
     return transferCompletePoint;
 }
 
-/*
-void EmplaceRenderableObjectTexture(Data::Material* material, Data::Material::TextureProperty::Slot slot, TextureBank& textureBank, char const* defaultName, RenderableObject::TexturesVector& result)
-{
-    Data::Texture2D const& texture = material->GetTexture(slot);
-    if (!texture.IsInitialized())
-    {
-        result.EmplaceBack(textureBank.FindTexture(defaultName));
-    }
-    else
-    {
-        Texture* gfxTexture = textureBank.FindTexture(texture.GetName());
-
-        result.EmplaceBack(gfxTexture == nullptr 
-            ? textureBank.LoadTexture2DSync(texture.GetName(), texture.GetSizeX(), texture.GetSizeY(), texture.GetFormat(), texture.GetBuffer()) 
-            : gfxTexture);
-    }
-}
-*/
-
 RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* sceneNode, VKW::Context& context, Data::Geometry* geometry, GFX::Material* material)
 {
-    //DRE::String64 name = material->GetRenderingProperties().GetShader();
     VKW::Pipeline* pipeline = material->GetPipeline();
-    //VKW::Pipeline* shadowPipeline = m_PipelineDB.GetPipeline("forward_shadow");
-
-    //name.Append("_layout");
-    //VKW::PipelineLayout* layout = m_PipelineDB.GetLayout(name.GetData());
-    //VKW::PipelineLayout* shadowLayout = m_PipelineDB.GetLayout("forward_shadow_layout");
 
     RenderableObject::LayerBits layers = RenderableObject::LAYER_NONE;
     switch (material->GetType())
@@ -322,41 +297,12 @@ RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* scen
         break;
     }
 
-    // - load textures
-    //RenderableObject::TexturesVector textures;
-    //EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::DIFFUSE, m_TextureBank, "default_color", textures);
-    //EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::NORMAL, m_TextureBank, "default_normal", textures);
-    //EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::METALNESS, m_TextureBank, "zero_r", textures);
-    //EmplaceRenderableObjectTexture(material, Data::Material::TextureProperty::ROUGHNESS, m_TextureBank, "one_r", textures);
-
     // load geometry
     GlobalGeometry::GeometryGPU* geometryGPU = m_GlobalGeometryManager.FindOrUploadGeometry(geometry);
     if (m_RayTracingManager.GetGeometryBLAS(geometry) == nullptr)
     {
         m_RayTracingManager.RegisterGeometry(geometry, context);
     }
-
-    //RenderableObject::DescriptorSetVector descriptors;
-    //RenderableObject::DescriptorSetVector shadowDescriptors;
-
-    //VKW::DescriptorManager* descriptorManager = GetMainDevice()->GetDescriptorManager();
-
-    //std::uint8_t const mainRenderingPassSetCount = m_RenderGraph.GetPassDescriptorSet(PassID::ForwardOpaque, GetCurrentFrameID()).IsValid() ? 1 : 0;
-    //std::uint8_t const shadowPassSetCount = m_RenderGraph.GetPassDescriptorSet(PassID::Shadow, GetCurrentFrameID()).IsValid() ? 1 : 0;
-
-    //std::uint8_t const layoutMemberId = std::uint8_t(descriptorManager->GetGlobalSetLayoutsCount() + mainRenderingPassSetCount); // globals + pass set
-    //std::uint8_t const shadowLayoutMemberId = std::uint8_t(descriptorManager->GetGlobalSetLayoutsCount() + shadowPassSetCount); // globals + pass set
-
-    //DRE_ASSERT(layout->GetMemberCount() <= layoutMemberId + 1, "All renderable items should currently contain everything in one set.");
-    //for (std::uint8_t i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
-    //{
-    //    descriptors.EmplaceBack(descriptorManager->AllocateStandaloneSet(*layout->GetMember(layoutMemberId)));
-    //}
-
-    //for (std::uint8_t i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
-    //{
-    //    shadowDescriptors.EmplaceBack(descriptorManager->AllocateStandaloneSet(*shadowLayout->GetMember(shadowLayoutMemberId)));
-    //}
 
     InstanceDataManager::InstanceGPU instanceGPU = m_InstanceDataManager.AllocateInstance(material->GetMaterialGPU());
     instanceGPU.ScheduleUpdate(

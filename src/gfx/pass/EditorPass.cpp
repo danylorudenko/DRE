@@ -34,7 +34,7 @@ Data::DREVertex GizmoVertex2DREVertex(GizmoVertex const& vtx)
     };
 }
 
-template<std::uint32_t AXIS>
+template<DRE::U32 AXIS>
 void AssignCylinderVertex(GizmoVertex& vertexLower, GizmoVertex& vertexUpper, float offset0, float offset1);
 
 template<> // X
@@ -82,10 +82,10 @@ void AssignCylinderVertex<2>(GizmoVertex& vertexLower, GizmoVertex& vertexUpper,
     vertexUpper.normal = glm::vec3{ offset0, -offset1, 0.0f };
 }
 
-template<std::uint32_t AXIS>
-void GenerateCyllinder(DRE::Vector<GizmoVertex, DRE::AllocatorLinear>& vertices, std::uint32_t sections)
+template<DRE::U32 AXIS>
+void GenerateCyllinder(DRE::Vector<GizmoVertex, DRE::AllocatorLinear>& vertices, DRE::U32 sections)
 {
-    for (std::uint32_t i = 0; i < sections; i++)
+    for (DRE::U32 i = 0; i < sections; i++)
     {
         float const angle = (PI * 2) / (sections - 1) * i;
         float const nextAngle = (PI * 2) / (sections - 1) * (i + 1);
@@ -245,9 +245,9 @@ void FillConeSectionVertices<2>(DRE::Vector<GizmoVertex, DRE::AllocatorLinear>& 
     vertices.EmplaceBack(section[0]).normal = normal;
 }
 
-void Generate3Cones(DRE::Vector<GizmoVertex, DRE::AllocatorLinear>& vertices, std::uint32_t sections)
+void Generate3Cones(DRE::Vector<GizmoVertex, DRE::AllocatorLinear>& vertices, DRE::U32 sections)
 {
-    for (std::uint32_t i = 0; i < sections; i++)
+    for (DRE::U32 i = 0; i < sections; i++)
     {
         float const angle = (PI * 2) / (sections - 1) * i;
         float const nextAngle = (PI * 2) / (sections - 1) * (i + 1);
@@ -289,7 +289,7 @@ void EditorPass::Initialize(RenderGraph& graph)
 
 void EditorPass::RegisterResources(RenderGraph& graph)
 {
-    std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
+    DRE::U32 renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
     graph.RegisterRenderTarget(this, RESOURCE_ID(TextureID::DisplayEncodedImage),
         g_GraphicsManager->GetFinalImageFormat(), renderWidth, renderHeight,
@@ -308,6 +308,10 @@ void EditorPass::Render(RenderGraph& graph, VKW::Context& context)
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, colorBuffer->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
 
     context.CmdBeginRendering(1, &colorBuffer, nullptr, nullptr);
+
+    DRE::U32 renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
+    context.CmdSetViewport(1, 0, 0, renderWidth, renderHeight);
+    context.CmdSetScissor(1, 0, 0, renderWidth, renderHeight);
 
     if (m_ViewportInput->ShouldRenderTranslationGizmo())
     {
