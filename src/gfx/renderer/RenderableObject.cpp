@@ -7,17 +7,27 @@
 namespace GFX
 {
 
-RenderableObject::RenderableObject(WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline,
+RenderableObject::RenderableObject(WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU,
     GlobalGeometry::GeometryGPU const& geometryGPU,
     VKW::AccelerationStructureResource* blasResource
 )
     : m_SceneNode{ sceneNode }
-    , m_Layer{ layers }
-    , m_Pipeline{ pipeline }
+    , m_LayerBits{ 0 }
+    , m_Pipelines{}
     , m_BLASResource{ blasResource }
     , m_GeometryGPU{ geometryGPU }
     , m_InstanceGPU{ instanceGPU }
 {
+    for (DRE::U32 i = 0, size = DRE::U32(Layer::LAYER_COUNT); i < size; i++)
+    {
+        m_Pipelines.EmplaceBack(nullptr);
+    }
+}
+
+void RenderableObject::AddLayerPipeline(Layer layer, VKW::Pipeline* pipeline)
+{
+    m_LayerBits |= LayerToBits(layer);
+    m_Pipelines[DRE::U32(layer)] = pipeline;
 }
 
 void RenderableObject::SetInstanceFlags(InstanceFlags flags)
@@ -40,75 +50,5 @@ void RenderableObject::SetMaterialGPU(MaterialsManager::MaterialGPU const& mater
 {
     m_InstanceGPU.ScheduleUpdate(materialGPU);
 }
-
-/*
-* * 
-* majority of this stuff moved to GPU material
-void RenderableObject::SetDiffuseTexture(Texture* texture)
-{
-    DRE_ASSERT(m_Textures[Data::Material::TextureProperty::DIFFUSE] == nullptr, "Overriding textures is not supported");
-    m_Textures[Data::Material::TextureProperty::DIFFUSE] = texture;
-
-    UpdateGPUInstanceTextures();
-}
-void RenderableObject::SetNormalTexture(Texture* texture)
-{
-    DRE_ASSERT(m_Textures[Data::Material::TextureProperty::NORMAL] == nullptr, "Overriding textures is not supported");
-    m_Textures[Data::Material::TextureProperty::NORMAL] = texture;
-    UpdateGPUInstanceTextures();
-}
-
-void RenderableObject::SetMetalnessTexture(Texture* texture)
-{
-    DRE_ASSERT(m_Textures[Data::Material::TextureProperty::METALNESS] == nullptr, "Overriding textures is not supported");
-    m_Textures[Data::Material::TextureProperty::METALNESS] = texture;
-    UpdateGPUInstanceTextures();
-}
-
-void RenderableObject::SetRoughnessTexture(Texture* texture)
-{
-    DRE_ASSERT(m_Textures[Data::Material::TextureProperty::ROUGHNESS] == nullptr, "Overriding textures is not supported");
-    m_Textures[Data::Material::TextureProperty::ROUGHNESS] = texture;
-    UpdateGPUInstanceTextures();
-}
-
-void RenderableObject::SetNormalTexture(bool enable)
-{
-    SetFlag(InstanceFlags::NORMAL_TEXTURE, enable);
-}
-
-void RenderableObject::SetNormalTextureInvertY(bool enable)
-{
-    SetFlag(InstanceFlags::NORMAL_TEXTURE_INVERT_Y, enable);
-}
-
-void RenderableObject::SetNormalTBN(bool enable)
-{
-    SetFlag(InstanceFlags::NORMAL_TBN, enable);
-}
-
-void RenderableObject::SetMaterialTexturesDefault(bool enable)
-{
-    SetFlag(InstanceFlags::MATERIAL_TEXTURES_DEFAULT, enable);
-}
-
-void RenderableObject::SetMaterialTexturesGLTFSpheres(bool enable)
-{
-    SetFlag(InstanceFlags::MATERIAL_TEXTURES_GLTF_SPHERES, enable);
-}
-
-void RenderableObject::UpdateGPUInstanceTextures()
-{
-    m_InstanceGPU.ScheduleUpdate(
-        glm::uvec4{
-            GetDiffuseTexture()->GetShaderGlobalDescriptor().id_,
-            GetNormalTexture()->GetShaderGlobalDescriptor().id_,
-            GetMetalnessTexture()->GetShaderGlobalDescriptor().id_,
-            GetRoughnessTexture()->GetShaderGlobalDescriptor().id_
-        }
-    );
-}
-
-*/
 
 }

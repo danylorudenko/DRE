@@ -6,7 +6,7 @@
 #include <gfx\pass\BasePass.hpp>
 #include <gfx\scheduling\DependencyManager.hpp>
 
-#define DRE_FLUSH_EVERY_PASS
+//#define DRE_FLUSH_EVERY_PASS
 
 namespace GFX
 {

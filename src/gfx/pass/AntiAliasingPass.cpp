@@ -26,7 +26,7 @@ void AntiAliasingPass::RegisterResources(RenderGraph& graph)
 
     graph.RegisterTexture(this, 
         RESOURCE_ID(TextureID::Velocity),
-        VKW::FORMAT_R16G16_FLOAT, renderWidth, renderHeight, 
+        g_GraphicsManager->GetVelocityBufferFormat(), renderWidth, renderHeight,
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 1);
 
     graph.RegisterTexture(this,

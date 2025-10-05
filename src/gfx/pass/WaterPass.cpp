@@ -49,7 +49,7 @@ void WaterPass::RegisterResources(RenderGraph& graph)
 
     graph.RegisterRenderTarget(this,
         RESOURCE_ID(TextureID::Velocity),
-        VKW::FORMAT_R16G16_FLOAT, renderWidth, renderHeight,
+        g_GraphicsManager->GetVelocityBufferFormat(), renderWidth, renderHeight,
         1);
 
     graph.RegisterDepthOnlyTarget(this,
@@ -107,7 +107,7 @@ void WaterPass::Render(RenderGraph& graph, VKW::Context& context)
 
     VKW::PipelineLayout* passLayout = graph.GetPassPipelineLayout(GetID());
     DrawBatcher batcher{ &DRE::g_FrameScratchAllocator, g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), &g_GraphicsManager->GetUniformArena() };
-    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), passLayout, RenderableObject::LAYER_WATER_BIT, WaterObjectDelegate);
+    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), passLayout, RenderableObject::LAYER_WATER, WaterObjectDelegate);
 
     context.CmdBeginRendering(2, attachments, depthAttachment, nullptr);
 

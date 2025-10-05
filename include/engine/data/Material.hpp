@@ -68,9 +68,6 @@ public:
             MATERIAL_TYPE_MAX
         };
 
-        inline void SetShader(char const* name) { m_Shader = name; }
-        inline char const* GetShader() const { return m_Shader.GetData(); }
-
         inline void SetMaterialType(MaterialType type) { m_Type = type; }
         inline MaterialType GetMaterialType() const { return m_Type; }
 
@@ -100,7 +97,6 @@ public:
 
         MaterialType m_Type = MATERIAL_TYPE_MAX;
         MaterialFlags m_MaterialFlags = MATERIAL_FLAG_NORMAL_TEXTURE;
-        DRE::String32 m_Shader;
     };
 
 

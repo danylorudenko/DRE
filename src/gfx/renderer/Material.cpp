@@ -4,9 +4,8 @@
 namespace GFX
 {
 
-Material::Material(Type type, MaterialsManager::MaterialGPU const& materialGPU, VKW::Pipeline* pipeline)
+Material::Material(Type type, MaterialsManager::MaterialGPU const& materialGPU)
     : m_MaterialGPU{ materialGPU }
-    , m_Pipeline{ pipeline }
     , m_MaterialType{ type }
     , m_Flags{ 0 }
     , m_Textures{} // default-initialize array to zeros

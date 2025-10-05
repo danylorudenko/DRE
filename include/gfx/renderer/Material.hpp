@@ -20,7 +20,7 @@ public:
     using TextureSlot   = Data::Material::TextureProperty::Slot;
     using Type  = Data::Material::RenderingProperties::MaterialType;
 
-    Material(Type type, MaterialsManager::MaterialGPU const& materialGPU, VKW::Pipeline* pipeline);
+    Material(Type type, MaterialsManager::MaterialGPU const& materialGPU);
 
     virtual ~Material();
 
@@ -48,7 +48,6 @@ public:
     inline MaterialFlags GetFlags() const { return MaterialFlags(m_Flags); }
     inline bool IsFlagEnabled(MaterialFlags flag) const { return (m_Flags & DRE::U32(flag)) != 0; }
 
-    inline VKW::Pipeline* GetPipeline() { return m_Pipeline; }
     inline Type GetType() const { return m_MaterialType; }
 
     inline MaterialsManager::MaterialGPU& GetMaterialGPU() { return m_MaterialGPU; }
@@ -56,7 +55,6 @@ public:
 
 private:
     MaterialsManager::MaterialGPU   m_MaterialGPU;
-    VKW::Pipeline*                  m_Pipeline;
     Type                            m_MaterialType;
 
     DRE::U32                        m_Flags; // enum MaterialFlags

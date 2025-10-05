@@ -47,7 +47,7 @@ public:
     void                        ReloadPipeline(char const* name);
 
 
-    GFX::Material*              CreateMaterial(char const* name, GFX::Material::Type type, VKW::Pipeline* pipeline);
+    GFX::Material*              CreateMaterial(char const* name, GFX::Material::Type type);
 
 
     VKW::PipelineLayout const*  GetGlobalLayout() const;
@@ -63,6 +63,7 @@ public:
 
 private:
     DRE::String64 const*    CreateGraphicsForwardPipeline(char const* name);
+    DRE::String64 const*    CreateGraphicsGBufferPipeline(char const* name);
     DRE::String64 const*    CreateGraphicsForwardWaterPipeline(char const* name);
     DRE::String64 const*    CreateGraphicsForwardShadowPipeline(char const* name);
     DRE::String64 const*    CreateComputePipeline(char const* name);

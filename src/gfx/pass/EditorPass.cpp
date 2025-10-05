@@ -312,6 +312,9 @@ void EditorPass::Render(RenderGraph& graph, VKW::Context& context)
     DRE::U32 renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
     context.CmdSetViewport(1, 0, 0, renderWidth, renderHeight);
     context.CmdSetScissor(1, 0, 0, renderWidth, renderHeight);
+#ifndef DRE_COMPILE_FOR_RENDERDOC
+    context.CmdSetPolygonMode(VKW::POLYGON_FILL);
+#endif // DRE_COMPILE_FOR_RENDERDOC
 
     if (m_ViewportInput->ShouldRenderTranslationGizmo())
     {

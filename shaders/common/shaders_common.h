@@ -71,6 +71,17 @@ float3 Linear2sRGB(float3 x)
     return pow(x, 2.2);
 }
 
+float2 CalculateVelocity(float4 currPosClip, float3 prevWorldPos)
+{
+    float4 prevNDC = mul(GetPrevCameraViewProjM(), float4(prevWorldPos, 1.0));
+    prevNDC.xy /= prevNDC.w;
+
+    float2 currNDC = currPosClip.xy / currPosClip.w;
+
+    float2 vel = (currNDC - prevNDC.xy);
+    return vel * 0.5f;
+}
+
 #endif // !__cplusplus
 
 #endif // _SHADERS_COMMON_H_

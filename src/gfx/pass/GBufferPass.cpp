@@ -22,24 +22,27 @@ void GBufferPass::RegisterResources(RenderGraph& graph)
 {
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth,
         renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
+
+    auto gBufferFormats = g_GraphicsManager->GetGBufferFormats();
+
     graph.RegisterRenderTarget(this,
         RESOURCE_ID(TextureID::GBufferA),
-        VKW::FORMAT_R8G8B8A8_UNORM, renderWidth, renderHeight,
+        gBufferFormats[0], renderWidth, renderHeight,
         0);
 
     graph.RegisterRenderTarget(this,
         RESOURCE_ID(TextureID::GBufferB),
-        VKW::FORMAT_R8G8B8A8_UNORM, renderWidth, renderHeight,
+        gBufferFormats[1], renderWidth, renderHeight,
         1);
 
     graph.RegisterRenderTarget(this,
         RESOURCE_ID(TextureID::GBufferC),
-        VKW::FORMAT_R16G16_FLOAT, renderWidth, renderHeight,
+        gBufferFormats[2], renderWidth, renderHeight,
         2);
 
     graph.RegisterRenderTarget(this,
-        RESOURCE_ID(TextureID::ObjectIDBuffer),
-        g_GraphicsManager->GetObjectIDBufferFormat(), renderWidth, renderHeight,
+        RESOURCE_ID(TextureID::GBufferD),
+        gBufferFormats[3], renderWidth, renderHeight,
         3);
 
     graph.RegisterDepthOnlyTarget(this,
@@ -61,23 +64,24 @@ void GBufferPass::Render(RenderGraph& graph, VKW::Context& context)
     VKW::ImageResourceView* attachmentA = graph.GetTexture(RESOURCE_ID(TextureID::GBufferA))->GetShaderView();
     VKW::ImageResourceView* attachmentB = graph.GetTexture(RESOURCE_ID(TextureID::GBufferB))->GetShaderView();
     VKW::ImageResourceView* attachmentC = graph.GetTexture(RESOURCE_ID(TextureID::GBufferC))->GetShaderView();
-    VKW::ImageResourceView* objectIDAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ObjectIDBuffer))->GetShaderView();
+    VKW::ImageResourceView* attachmentD = graph.GetTexture(RESOURCE_ID(TextureID::GBufferD))->GetShaderView();
     VKW::ImageResourceView* depthAttachment = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth))->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentA->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentB->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentC->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, objectIDAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentD->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->parentResource_, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
 
     std::uint32_t constexpr attachmentsCount = 4;
-    VKW::ImageResourceView* attachments[attachmentsCount] = { attachmentA, attachmentB, attachmentC, objectIDAttachment };
+    VKW::ImageResourceView* attachments[attachmentsCount] = { attachmentA, attachmentB, attachmentC, attachmentD };
 
-    VKW::PipelineLayout* passLayout = graph.GetPassPipelineLayout(GetID());
+    //VKW::PipelineLayout* passLayout = graph.GetPassPipelineLayout(GetID());
+    VKW::PipelineLayout* passLayout = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalPipelineLayout();
     DrawBatcher batcher{ &DRE::g_FrameScratchAllocator, g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), &g_GraphicsManager->GetUniformArena() };
 
     // WARNING!!!!!!!!!!!!!!!
-    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), passLayout, RenderableObject::LAYER_OPAQUE_BIT, nullptr/*GFX::ForwardObjectDelegate*/);
+    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), passLayout, RenderableObject::LAYER_GBUFFER, nullptr/*GFX::ForwardObjectDelegate*/);
 
     context.CmdBeginRendering(attachmentsCount, attachments, depthAttachment, nullptr);
     float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -93,8 +97,8 @@ void GBufferPass::Render(RenderGraph& graph, VKW::Context& context)
 
 
 
-    VKW::DescriptorSet passSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
-    context.CmdBindDescriptorSets(passLayout, VKW::BindPoint::Graphics, graph.GetPassSetBinding(), 1, &passSet);
+    //VKW::DescriptorSet passSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
+    //context.CmdBindDescriptorSets(passLayout, VKW::BindPoint::Graphics, graph.GetPassSetBinding(), 1, &passSet);
 
     auto& draws = batcher.GetDraws();
 

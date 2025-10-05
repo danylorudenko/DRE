@@ -35,56 +35,51 @@ class RenderableObject
     : public NonCopyable
 {
 public:
-    enum LayerBits
+    enum Layer
     {
-        LAYER_NONE              = 0,
-        LAYER_OPAQUE_BIT        = 1 << 0,
-        LAYER_WATER_BIT         = 1 << 1
+        LAYER_FORWARD = 0,
+        LAYER_WATER,
+        LAYER_GBUFFER,
+        LAYER_SHADOW,
+        LAYER_COUNT
     };
 
-    using DescriptorSetVector = DRE::InplaceVector<VKW::DescriptorSet, VKW::CONSTANTS::FRAMES_BUFFERING>;
 
     RenderableObject(
-        WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU, LayerBits layers, VKW::Pipeline* pipeline,
+        WORLD::SceneNode* sceneNode, InstanceDataManager::InstanceGPU const& instanceGPU,
         GlobalGeometry::GeometryGPU const& goemtryGPU,
         VKW::AccelerationStructureResource* blasResource
     );
 
     inline WORLD::SceneNode*                    GetSceneNode() const { return m_SceneNode; }
-    inline LayerBits                            GetLayer() const { return m_Layer; }
-    inline VKW::Pipeline*                       GetPipeline() const{ return m_Pipeline; }
+    inline DRE::U32                             GetLayerBits() const { return m_LayerBits; }
+    inline VKW::Pipeline*                       GetPipeline(Layer layer) { return m_Pipelines[layer]; }
     inline VKW::AccelerationStructureResource*  GetBLASResource() const { return m_BLASResource; }
     inline InstanceDataManager::InstanceGPU&    GetInstanceGPU() { return m_InstanceGPU; }
     inline MaterialsManager::MaterialGPU&       GetMaterialGPU() { return m_InstanceGPU.GetMaterialGPU(); }
     inline GlobalGeometry::GeometryGPU&         GetGeometryGPU() { return m_GeometryGPU; }
     inline InstanceFlags                        GetInstanceFlags() const { return m_InstanceGPU.GetFlags(); }
 
+    static DRE::U32                             LayerToBits(Layer layer) { return 1u << DRE::U32(layer); }
+    void                                        AddLayerPipeline(Layer layer, VKW::Pipeline* pipeline);
+
     // will put material ptr into InstanceGPU + cache MaterialGPU in the object
     void                                        SetMaterialGPU(MaterialsManager::MaterialGPU const& materialGPU);
     void                                        SetInstanceFlags(InstanceFlags flags);
-
-    //void                                        SetDiffuseTexture(Texture* texture);
-    //void                                        SetNormalTexture(Texture* texture);
-    //void                                        SetMetalnessTexture(Texture* texture);
-    //void                                        SetRoughnessTexture(Texture* texture);
-
-    //void                                        SetNormalTexture(bool enable);
-    //void                                        SetNormalTextureInvertY(bool enable);
-    //void                                        SetNormalTBN(bool enable);
-    //void                                        SetMaterialTexturesDefault(bool enable);
-    //void                                        SetMaterialTexturesGLTFSpheres(bool enable);
 
 private:
     void                                        SetFlag(InstanceFlags flag, bool enable);
 
 private:
-    WORLD::SceneNode*                   m_SceneNode;
-    LayerBits                           m_Layer;
-    VKW::Pipeline*                      m_Pipeline;
-    VKW::AccelerationStructureResource* m_BLASResource;
+    WORLD::SceneNode*                               m_SceneNode;
 
-    InstanceDataManager::InstanceGPU    m_InstanceGPU;
-    GlobalGeometry::GeometryGPU         m_GeometryGPU;
+    DRE::U32                                                m_LayerBits;
+    DRE::InplaceVector<VKW::Pipeline*, Layer::LAYER_COUNT>   m_Pipelines;
+
+    VKW::AccelerationStructureResource*             m_BLASResource;
+
+    InstanceDataManager::InstanceGPU                m_InstanceGPU;
+    GlobalGeometry::GeometryGPU                     m_GeometryGPU;
 };
 
 }

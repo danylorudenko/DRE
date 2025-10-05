@@ -29,6 +29,8 @@
 #include <engine\data\Geometry.hpp>
 #include <engine\data\Material.hpp>
 
+#include <array>
+
 constexpr std::uint32_t C_SHADOW_MAP_WIDTH = 2048;
 constexpr std::uint32_t C_SHADOW_MAP_HEIGHT = 2048;
 constexpr float C_SHADOW_MAP_WORLD_EXTENT = 20.0f;
@@ -147,6 +149,9 @@ public:
     static constexpr VKW::Format        GetFinalImageFormat() { return VKW::FORMAT_B8G8R8A8_UNORM; }
     static constexpr VKW::Format        GetMainDepthFormat() { return VKW::FORMAT_D32_FLOAT; }
     static constexpr VKW::Format        GetObjectIDBufferFormat() { return VKW::FORMAT_B8G8R8A8_UNORM; }
+    static constexpr VKW::Format        GetVelocityBufferFormat() { return VKW::FORMAT_R16G16_FLOAT; }
+
+    static constexpr std::array<VKW::Format, 4> GetGBufferFormats() { return { VKW::FORMAT_B8G8R8A8_UNORM, VKW::FORMAT_B8G8R8A8_UNORM, GetVelocityBufferFormat(), GetObjectIDBufferFormat() }; }
 
 
 public:

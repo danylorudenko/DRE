@@ -20,14 +20,15 @@ DrawBatcher::DrawBatcher(DRE::AllocatorLinear* allocator, VKW::DescriptorManager
 {
 }
 
-void DrawBatcher::Batch(VKW::Context& context, RenderView const& view, VKW::PipelineLayout const* layout, RenderableObject::LayerBits layers, AtomDataDelegate atomDelegate)
+void DrawBatcher::Batch(VKW::Context& context, RenderView const& view, VKW::PipelineLayout const* layout, RenderableObject::Layer layer, AtomDataDelegate atomDelegate)
 {
     auto const& renderables = view.GetObjects();
+    DRE::U32 const layerBits = RenderableObject::LayerToBits(layer);
     for (std::uint32_t i = 0, count = renderables.Size(); i < count; i++)
     {
         RenderableObject& obj = *renderables[i];
 
-        if ((obj.GetLayer() & layers) == 0)
+        if ((obj.GetLayerBits() & layerBits) == 0)
             continue;
 
         if (atomDelegate != nullptr)
@@ -44,40 +45,9 @@ void DrawBatcher::Batch(VKW::Context& context, RenderView const& view, VKW::Pipe
 
         atom.instanceID    = obj.GetInstanceGPU().GetID();
 
-        atom.pipeline      = obj.GetPipeline();
+        atom.pipeline      = obj.GetPipeline(layer);
 
     }
 }
-
-void DrawBatcher::BatchShadow(VKW::Context& context, RenderView const& view, VKW::PipelineLayout const* passLayout, RenderableObject::LayerBits layers, AtomDataDelegate atomDelegate)
-{
-    VKW::Pipeline* shadowGenericPipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("forward_shadow");
-
-    auto const& renderables = view.GetObjects();
-    for (std::uint32_t i = 0, count = renderables.Size(); i < count; i++)
-    {
-        RenderableObject& obj = *renderables[i];
-
-        if ((obj.GetLayer() & layers) == 0)
-            continue;
-
-        atomDelegate(obj, context, *m_DescriptorManager, *m_UniformArena, view, passLayout);
-
-        AtomDraw& atom = m_Draws.EmplaceBack();
-        atom.vertexBuffer  = obj.GetGeometryGPU().GetBuffer();
-        atom.vertexOffset  = obj.GetGeometryGPU().GetVertexOffset();
-        atom.vertexCount   = obj.GetGeometryGPU().GetVertexCount();
-
-        atom.indexBuffer   = obj.GetGeometryGPU().GetBuffer();
-        atom.indexOffset   = obj.GetGeometryGPU().GetIndexOffset();
-        atom.indexCount    = obj.GetGeometryGPU().GetIndexCount();
-
-        atom.instanceID    = obj.GetInstanceGPU().GetID();
-
-        atom.pipeline      = shadowGenericPipeline;
-
-    }
-}
-
 
 }

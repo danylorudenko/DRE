@@ -212,7 +212,7 @@ void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext,
     }
 }
 
-WORLD::SceneNode* IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene, char const* defaultShader, glm::mat4 baseTransform, Data::TextureChannelVariations metalnessRoughnessOverride)
+WORLD::SceneNode* IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene, glm::mat4 baseTransform, Data::TextureChannelVariations metalnessRoughnessOverride)
 {
     Assimp::Importer importer = Assimp::Importer();
 
@@ -224,7 +224,7 @@ WORLD::SceneNode* IOManager::ParseModelFile(char const* path, WORLD::Scene& targ
         return nullptr;
 
     ParseAssimpMeshes(GFX::g_GraphicsManager->GetMainContext(), scene, sceneName);
-    ParseAssimpMaterials(scene, sceneName, path, defaultShader, metalnessRoughnessOverride);
+    ParseAssimpMaterials(scene, sceneName, path, metalnessRoughnessOverride);
 
     WORLD::SceneNode* parentNode = targetScene.CreateSceneNode(nullptr, targetScene.GetRootNode());
     parentNode->SetMatrix(baseTransform);
@@ -238,7 +238,7 @@ WORLD::SceneNode* IOManager::ParseModelFile(char const* path, WORLD::Scene& targ
     return parentNode;
 }
 
-void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName, char const* path, char const* defaultShader, Data::TextureChannelVariations metalnessRoughnessOverride)
+void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName, char const* path, Data::TextureChannelVariations metalnessRoughnessOverride)
 {
     // get folder with texture files
     DRE::String256 textureFilePath = path;
@@ -249,8 +249,6 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName
         --folderEnd;
     }
     textureFilePath.Shrink(folderEnd);
-
-    VKW::Pipeline* defaultPipeline = GFX::g_GraphicsManager->GetPipelineDB().GetPipeline(defaultShader);
 
     for (std::uint32_t i = 0, size = scene->mNumMaterials; i < size; i++)
     {
@@ -280,14 +278,13 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName
         // TODO: load rgb here
 
         material->GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE);
-        material->GetRenderingProperties().SetShader(defaultShader);
 
         DRE::String64 materialName;
         materialName.Append(sceneName);
         materialName.Append("_");
         materialName.Append(material->GetName());
 
-        GFX::Material* gfxMaterial = GFX::g_GraphicsManager->GetPipelineDB().CreateMaterial(materialName, material->GetRenderingProperties().GetMaterialType(), defaultPipeline);
+        GFX::Material* gfxMaterial = GFX::g_GraphicsManager->GetPipelineDB().CreateMaterial(materialName, material->GetRenderingProperties().GetMaterialType());
         material->FlushToGfxMaterial(gfxMaterial);
     }
 }

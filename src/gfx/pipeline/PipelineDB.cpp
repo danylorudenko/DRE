@@ -37,9 +37,8 @@ void PipelineDB::CreateDefaultPipelines()
     // default plane material shader
     {
         CreateGraphicsForwardPipeline("forward_pbr");
-        //CreateGraphicsForwardPipeline("gltf_spheres");
-        //CreateGraphicsForwardPipeline("sand_beach");
-        //CreateGraphicsForwardWaterPipeline("water");
+
+        CreateGraphicsGBufferPipeline("gbuffer_pbr");
 
         CreateGraphicsGizmoPipeline("gizmo_3D");
 
@@ -124,9 +123,45 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardPipeline(char const* name)
     desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
     desc.EnableDepthTest(g_GraphicsManager->GetMainDepthFormat());
     desc.AddColorOutput(g_GraphicsManager->GetMainColorFormat()); // main color
-    desc.AddColorOutput(VKW::FORMAT_R16G16_FLOAT);                // velocity vectors
+    desc.AddColorOutput(g_GraphicsManager->GetVelocityBufferFormat()); // velocity vectors
     desc.AddColorOutput(VKW::FORMAT_B8G8R8A8_UNORM);              // object IDs
     static_assert(FORWARD_PASS_OUTPUT_COUNT == 3, "Don't forget to modify PipelineDB and ForwardOpaquePass");
+
+    AddDREVertexAttributes(desc);
+
+    CreatePipeline(name, desc);
+    return m_Pipelines.Find(name).key;
+}
+
+DRE::String64 const* PipelineDB::CreateGraphicsGBufferPipeline(char const* name)
+{
+    DRE::String64 vertName{ name }; vertName.Append(".vert");
+    DRE::String64 fragName{ name }; fragName.Append(".frag");
+
+    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName.GetData(), fragName.GetData(), nullptr);
+
+    DRE::ByteBuffer const& vertData = m_ShaderDB->GetShaderEntry(vertName.GetData())->spirv;
+    DRE::ByteBuffer const& fragData = m_ShaderDB->GetShaderEntry(fragName.GetData())->spirv;
+
+    VKW::ShaderModule vertModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData, VKW::SHADER_MODULE_TYPE_VERTEX, "main" };
+    VKW::ShaderModule fragModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragData, VKW::SHADER_MODULE_TYPE_FRAGMENT, "main" };
+
+    VKW::Pipeline::Descriptor desc;
+
+    desc.SetPipelineType(VKW::PIPELINE_TYPE_GRAPHIC);
+    desc.SetVertexShader(vertModule);
+    desc.SetFragmentShader(fragModule);
+    desc.SetLayout(GetLayout(layoutName->GetData()));
+    desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
+    desc.EnableDepthTest(g_GraphicsManager->GetMainDepthFormat());
+
+    auto gBufferFormats = g_GraphicsManager->GetGBufferFormats();
+    static_assert(gBufferFormats.size() == 4, "Don't forget this");
+
+    desc.AddColorOutput(gBufferFormats[0]); // diffuse_roughness
+    desc.AddColorOutput(gBufferFormats[1]); // normal_metalness
+    desc.AddColorOutput(gBufferFormats[2]); // velocity
+    desc.AddColorOutput(gBufferFormats[3]); // objectID
 
     AddDREVertexAttributes(desc);
 
@@ -464,10 +499,10 @@ VKW::DescriptorSetLayout* PipelineDB::GetSetLayout(char const* name)
     return &m_SetLayouts[name];
 }
 
-GFX::Material* PipelineDB::CreateMaterial(char const* name, GFX::Material::Type type, VKW::Pipeline* pipeline)
+GFX::Material* PipelineDB::CreateMaterial(char const* name, GFX::Material::Type type)
 {
     MaterialsManager::MaterialGPU materialGPU = m_MaterialsGPUManager->AllocateMaterial();
-    return &m_Materials.Emplace(name, type, materialGPU, pipeline);
+    return &m_Materials.Emplace(name, type, materialGPU);
 }
 
 }

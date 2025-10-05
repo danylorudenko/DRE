@@ -58,6 +58,9 @@ void GraphDescriptorManager::InitDescriptors()
             //    DebugBreak();
 
         PerPassDescriptors& perPassDescriptors = m_PassDescriptors[*pair.key];
+        //if (*pair.key == PassID::GBuffer)
+        //    DebugBreak();
+
         SetInfo& setInfo = *pair.value;
 
         auto& descriptorInfos = setInfo.descriptorInfos;

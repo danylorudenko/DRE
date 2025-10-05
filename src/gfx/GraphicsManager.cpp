@@ -90,7 +90,7 @@ void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInpu
 {
     //m_RenderGraph.AddPass<ShadowPass>();
     //m_RenderGraph.AddPass<CausticPass>();
-    //m_RenderGraph.AddPass<GBufferPass>();
+    m_RenderGraph.AddPass<GBufferPass>();
     m_RenderGraph.AddPass<ForwardOpaquePass>();
     m_RenderGraph.AddPass<FFTButterflyGenPass>();
     m_RenderGraph.AddPass<FFTWaterH0GenPass>();
@@ -283,22 +283,6 @@ VKW::QueueExecutionPoint GraphicsManager::TransferToSwapchainAndPresent(Texture&
 
 RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* sceneNode, VKW::Context& context, Data::Geometry* geometry, GFX::Material* material)
 {
-    VKW::Pipeline* pipeline = material->GetPipeline();
-
-    RenderableObject::LayerBits layers = RenderableObject::LAYER_NONE;
-    switch (material->GetType())
-    {
-    case Material::Type::MATERIAL_TYPE_OPAQUE:
-        layers = RenderableObject::LAYER_OPAQUE_BIT;
-        break;
-    case Material::Type::MATERIAL_TYPE_WATER:
-        layers = RenderableObject::LAYER_WATER_BIT;
-        break;
-    default:
-        DRE_ASSERT(false, "No corresponding pipeline in PipelineDB for this material type.");
-        break;
-    }
-
     // load geometry
     GlobalGeometry::GeometryGPU* geometryGPU = m_GlobalGeometryManager.FindOrUploadGeometry(geometry);
     if (m_RayTracingManager.GetGeometryBLAS(geometry) == nullptr)
@@ -314,7 +298,20 @@ RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* scen
         InstanceFlags{ 0 }
     );
 
-    return m_RenderableObjectPool.Alloc(sceneNode, instanceGPU, layers, pipeline, *geometryGPU, m_RayTracingManager.GetGeometryBLAS(geometry)->m_LogicalHandle);
+    RenderableObject* renderable = m_RenderableObjectPool.Alloc(sceneNode, instanceGPU, *geometryGPU, m_RayTracingManager.GetGeometryBLAS(geometry)->m_LogicalHandle);
+
+    switch (material->GetType())
+    {
+    case Material::Type::MATERIAL_TYPE_OPAQUE:
+        renderable->AddLayerPipeline(RenderableObject::LAYER_FORWARD, m_PipelineDB.GetPipeline("forward_pbr"));
+        renderable->AddLayerPipeline(RenderableObject::LAYER_GBUFFER, m_PipelineDB.GetPipeline("gbuffer_pbr"));
+        break;
+    default:
+        DRE_ASSERT(false, "No corresponding pipeline in PipelineDB for this material type.");
+        break;
+    }
+
+    return renderable;
 }
 
 void GraphicsManager::FreeRenderableObject(RenderableObject* obj)

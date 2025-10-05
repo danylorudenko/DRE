@@ -28,23 +28,6 @@ struct ForwardUniform
 ///////////////////////////////////////
 // ====================================
 ///////////////////////////////////////
-
-/////////////
-// Object ID
-#ifndef __cplusplus
-float4 GlobalID2Color()
-{
-    S_INSTANCE* Instance = GetInstance();
-
-    float r = (GetGlobalID(Instance) & 0xFF000000) >> 24;
-    float g = (GetGlobalID(Instance) & 0x00FF0000) >> 16;
-    float b = (GetGlobalID(Instance) & 0x0000FF00) >> 8;
-    float a = (GetGlobalID(Instance) & 0x000000FF) >> 0;
-    return float4(r,g,b,a) / 255.0f;
-}
-#endif // __cplusplus
-
-/////////////
 // Output
 #ifdef DRE_PIXEL_SHADER
 struct ForwardPassOutput
