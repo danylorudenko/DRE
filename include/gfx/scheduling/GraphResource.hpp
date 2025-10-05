@@ -22,6 +22,7 @@ enum class TextureID
     WaterH0,
     WaterHeight,
     Velocity,
+    AmbientOcclusion,
     GBufferA,
     GBufferB,
     GBufferC,

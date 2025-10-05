@@ -44,6 +44,7 @@ void PipelineDB::CreateDefaultPipelines()
         CreateGraphicsGizmoPipeline("gizmo_3D");
 
         CreateComputePipeline("color_encode");
+        CreateComputePipeline("ambient_occlusion");
         CreateComputePipeline("temporal_AA");
         CreateComputePipeline("gen_butterfly");
         CreateComputePipeline("gen_h0");
