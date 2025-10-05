@@ -44,6 +44,7 @@ void AmbientOcclusionPass::Render(RenderGraph& graph, VKW::Context& context)
 
     VKW::DescriptorSet passDescriptorSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
     context.CmdBindComputeDescriptorSets(layout, graph.GetPassSetBinding(), 1, &passDescriptorSet);
+    context.CmdBindComputePipeline(pipeline);
 
     glm::uvec2 rtSize{ g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight };
     glm::uvec2 const groupSize{ 8, 8 };
