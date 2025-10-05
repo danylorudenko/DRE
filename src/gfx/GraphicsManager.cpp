@@ -13,6 +13,7 @@
 #include <gfx\pass\WaterPass.hpp>
 #include <gfx\pass\FFTWaterPass.hpp>
 #include <gfx\pass\AntiAliasingPass.hpp>
+#include <gfx\pass\AmbientOcclusionPass.hpp>
 #include <gfx\pass\CausticPass.hpp>
 #include <gfx\pass\ColorEncodingPass.hpp>
 #include <gfx\pass\ImGuiRenderPass.hpp>
@@ -98,6 +99,7 @@ void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInpu
     m_RenderGraph.AddPass<FFTInvPermutationPass>();
     m_RenderGraph.AddPass<WaterPass>();
     m_RenderGraph.AddPass<AntiAliasingPass>();
+    m_RenderGraph.AddPass<AmbientOcclusionPass>();
     m_RenderGraph.AddPass<ColorEncodingPass>();
     m_RenderGraph.AddPass<EditorPass>(viewportInput);
     //m_RenderGraph.AddPass<DebugPass>();
