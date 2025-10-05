@@ -17,6 +17,7 @@ enum class PassID
     FFTWaterHeightGen,
     FFTWaterInvPerm,
     AntiAliasing,
+    AmbientOcclusion,
     ImGuiRender,
     ColorEncoding,
     Editor,
