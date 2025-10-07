@@ -32,7 +32,8 @@ GBuffer main(PSInput input)
 
     GBuffer Output;
     Output.Diffuse_Roughness = float4(MaterialProperties.diffuse, MaterialProperties.roughness);
-    Output.Normal_Metalness = float4(MaterialProperties.normal, MaterialProperties.metalness);
+    float3 encodedNormal = MaterialProperties.normal * 0.5f + 0.5f;
+    Output.Normal_Metalness = float4(encodedNormal, MaterialProperties.metalness);
     Output.Velocity = CalculateVelocity(input.ndc_pos, input.prev_wpos);
     Output.ObjectID = GlobalID2Color();
 

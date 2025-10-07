@@ -7,6 +7,7 @@ enum class PassID
 {
     BulletForward,
     GBuffer,
+    Lighting,
     ForwardOpaque,
     Shadow,
     Caustic,

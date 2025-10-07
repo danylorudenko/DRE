@@ -1,11 +1,10 @@
 #include <gfx\pass\GBufferPass.hpp>
 
-#include <vk_wrapper\pipeline\ShaderModule.hpp>
-
 #include <gfx\GraphicsManager.hpp>
 #include <gfx\scheduling\RenderGraph.hpp>
 #include <gfx\renderer\DrawBatcher.hpp>
 
+#include <engine\ApplicationContext.hpp>
 #include <engine\io\IOManager.hpp>
 #include <engine\scene\Scene.hpp>
 
@@ -36,12 +35,12 @@ void GBufferPass::RegisterResources(RenderGraph& graph)
         1);
 
     graph.RegisterRenderTarget(this,
-        RESOURCE_ID(TextureID::GBufferC),
+        RESOURCE_ID(TextureID::Velocity),
         gBufferFormats[2], renderWidth, renderHeight,
         2);
 
     graph.RegisterRenderTarget(this,
-        RESOURCE_ID(TextureID::GBufferD),
+        RESOURCE_ID(TextureID::ObjectIDBuffer),
         gBufferFormats[3], renderWidth, renderHeight,
         3);
 
@@ -63,8 +62,8 @@ void GBufferPass::Render(RenderGraph& graph, VKW::Context& context)
 
     VKW::ImageResourceView* attachmentA = graph.GetTexture(RESOURCE_ID(TextureID::GBufferA))->GetShaderView();
     VKW::ImageResourceView* attachmentB = graph.GetTexture(RESOURCE_ID(TextureID::GBufferB))->GetShaderView();
-    VKW::ImageResourceView* attachmentC = graph.GetTexture(RESOURCE_ID(TextureID::GBufferC))->GetShaderView();
-    VKW::ImageResourceView* attachmentD = graph.GetTexture(RESOURCE_ID(TextureID::GBufferD))->GetShaderView();
+    VKW::ImageResourceView* attachmentC = graph.GetTexture(RESOURCE_ID(TextureID::Velocity))->GetShaderView();
+    VKW::ImageResourceView* attachmentD = graph.GetTexture(RESOURCE_ID(TextureID::ObjectIDBuffer))->GetShaderView();
     VKW::ImageResourceView* depthAttachment = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth))->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentA->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
@@ -122,6 +121,38 @@ void GBufferPass::Render(RenderGraph& graph, VKW::Context& context)
     }
 
     context.CmdEndRendering();
+
+    ReadbackScheduler readback(g_GraphicsManager->GetCurrentFrameID(), &g_GraphicsManager->GetReadbackArena(), renderWidth * renderHeight * 4);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentD->parentResource_, VKW::RESOURCE_ACCESS_TRANSFER_SRC, VKW::STAGE_TRANSFER);
+    context.CmdCopyImageToBuffer(readback.GetDstBuffer(), attachmentD->parentResource_, readback.GetDstOffset());
+
+    ReadbackFuture tempFuture = readback.CreateReadbackFuture(context.SyncPoint());
+
+    if (static_cast<bool>(m_LastObjectIDsFuture))
+    {
+        m_LastObjectIDsFuture.Sync();
+        void* readbackData = m_LastObjectIDsFuture.GetMappedPtr();
+
+        DRE::S32 x = DRE::Clamp(DRE::g_AppContext.m_CursorX, 0, DRE::S32(renderWidth - 1));
+        DRE::S32 y = DRE::Clamp(DRE::g_AppContext.m_CursorY, 0, DRE::S32(renderHeight - 1));
+        DRE::g_AppContext.m_MouseHoveredObjectID = ObjectIDFromBuffer(readbackData, x, y);
+    }
+
+    m_LastObjectIDsFuture = tempFuture;
+    context.CmdBindGlobalDescriptorSets(*g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), g_GraphicsManager->GetCurrentFrameID());
+}
+
+DRE::U32 GBufferPass::ObjectIDFromBuffer(void* ptr, DRE::U32 x, DRE::U32 y)
+{
+    DRE::U32 const xOffset = x * 4;
+    DRE::U32 const yOffset = y * 4 * g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth;
+
+    DRE::U32 const pixel = *(DRE::U32 const*)((DRE::U8 const*)ptr + (xOffset + yOffset));
+
+    DRE::U32 const a = (pixel & 0xFF000000) >> 24;
+    DRE::U32 const rgb = (pixel & 0x00FFFFFF) << 8;
+
+    return (rgb | a);
 }
 
 }
