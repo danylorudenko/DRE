@@ -4,19 +4,11 @@
 #include "common/shaders_common.h"
 #include "common/lighting/lighting.h"
 
-[[vk::binding(0, 3)]] RWTexture2D<float4> lightingOutput;
-[[vk::binding(1, 3)]] Texture2D<float4> gbufferDiffuseRoughness;
-[[vk::binding(2, 3)]] Texture2D<float4> gbufferNormalMetalness;
-[[vk::binding(3, 3)]] Texture2D<float>   sceneDepth;
+[[vk::binding(0, 3)]] RWTexture2D<float4>   lightingOutput;
+[[vk::binding(1, 3)]] Texture2D<float4>     gBufferDiffuseRoughness;
+[[vk::binding(2, 3)]] Texture2D<float4>     gBufferNormalMetalness;
+[[vk::binding(3, 3)]] Texture2D<float>      sceneDepth;
 
-float3 ReconstructWorldPosition(int2 pixel, float depth)
-{
-    float2 viewport = GetViewportSize();
-    float2 uv = (float2(pixel) + 0.5f) / viewport;
-    float4 ndc = float4(uv * 2.0f - 1.0f, depth * 2.0f - 1.0f, 1.0f);
-    float4 world = mul(GetCameraiViewProjM(), ndc);
-    return world.xyz / world.w;
-}
 
 [require(spvRayQueryKHR)]
 [shader("compute")]
@@ -37,11 +29,11 @@ void main(uint3 DTid : SV_DispatchThreadID)
         return;
     }
 
-    float4 gDiffuse = gbufferDiffuseRoughness[pixel];
-    float4 gNormal = gbufferNormalMetalness[pixel];
+    float4 gDiffuse = gBufferDiffuseRoughness[pixel];
+    float4 gNormal = gBufferNormalMetalness[pixel];
 
     S_SURFACE surface;
-    surface.wpos = ReconstructWorldPosition(pixel, depth);
+    surface.wpos = ConvertScreenToWorld(pixel, depth);
     surface.normal = normalize(gNormal.xyz * 2.0f - 1.0f);
     surface.diffuseSpectrum = gDiffuse.rgb;
     surface.roughness = gDiffuse.a;
