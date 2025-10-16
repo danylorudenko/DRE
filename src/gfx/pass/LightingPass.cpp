@@ -24,12 +24,12 @@ void LightingPass::RegisterResources(RenderGraph& graph)
         VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 0);
 
     graph.RegisterTexture(this,
-        RESOURCE_ID(TextureID::GBufferA),
+        RESOURCE_ID(TextureID::GBufferA_DiffuseRoughness),
         gBufferFormats[0], renderWidth, renderHeight,
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 1);
 
     graph.RegisterTexture(this,
-        RESOURCE_ID(TextureID::GBufferB),
+        RESOURCE_ID(TextureID::GBufferB_NormalMetalness),
         gBufferFormats[1], renderWidth, renderHeight,
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 2);
 
@@ -48,8 +48,8 @@ void LightingPass::Render(RenderGraph& graph, VKW::Context& context)
     DRE_GPU_SCOPE(Lighting);
 
     VKW::ImageResourceView* forwardColor = graph.GetTexture(RESOURCE_ID(TextureID::ForwardColor))->GetShaderView();
-    VKW::ImageResourceView* gbufferA = graph.GetTexture(RESOURCE_ID(TextureID::GBufferA))->GetShaderView();
-    VKW::ImageResourceView* gbufferB = graph.GetTexture(RESOURCE_ID(TextureID::GBufferB))->GetShaderView();
+    VKW::ImageResourceView* gbufferA = graph.GetTexture(RESOURCE_ID(TextureID::GBufferA_DiffuseRoughness))->GetShaderView();
+    VKW::ImageResourceView* gbufferB = graph.GetTexture(RESOURCE_ID(TextureID::GBufferB_NormalMetalness))->GetShaderView();
     VKW::ImageResourceView* depth = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth))->GetShaderView();
 
     auto& dependencyManager = g_GraphicsManager->GetDependencyManager();
