@@ -37,6 +37,11 @@ void LightingPass::RegisterResources(RenderGraph& graph)
         RESOURCE_ID(TextureID::MainDepth),
         g_GraphicsManager->GetMainDepthFormat(), renderWidth, renderHeight,
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 3);
+
+    graph.RegisterTexture(this,
+        RESOURCE_ID(TextureID::AmbientOcclusion),
+        VKW::FORMAT_R8_UNORM, renderWidth, renderHeight,
+        VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 4);
 }
 
 void LightingPass::Initialize(RenderGraph&)
@@ -48,15 +53,19 @@ void LightingPass::Render(RenderGraph& graph, VKW::Context& context)
     DRE_GPU_SCOPE(Lighting);
 
     VKW::ImageResourceView* forwardColor = graph.GetTexture(RESOURCE_ID(TextureID::ForwardColor))->GetShaderView();
+
     VKW::ImageResourceView* gbufferA = graph.GetTexture(RESOURCE_ID(TextureID::GBufferA_DiffuseRoughness))->GetShaderView();
     VKW::ImageResourceView* gbufferB = graph.GetTexture(RESOURCE_ID(TextureID::GBufferB_NormalMetalness))->GetShaderView();
     VKW::ImageResourceView* depth = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth))->GetShaderView();
+    VKW::ImageResourceView* ambientOcclusion = graph.GetTexture(RESOURCE_ID(TextureID::AmbientOcclusion))->GetShaderView();
 
     auto& dependencyManager = g_GraphicsManager->GetDependencyManager();
     dependencyManager.ResourceBarrier(context, forwardColor->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
+
     dependencyManager.ResourceBarrier(context, gbufferA->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
     dependencyManager.ResourceBarrier(context, gbufferB->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
     dependencyManager.ResourceBarrier(context, depth->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
+    dependencyManager.ResourceBarrier(context, ambientOcclusion->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
 
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
     VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("lighting_deferred");

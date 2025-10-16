@@ -8,6 +8,7 @@
 [[vk::binding(1, 3)]] Texture2D<float4>     gBufferDiffuseRoughness;
 [[vk::binding(2, 3)]] Texture2D<float4>     gBufferNormalMetalness;
 [[vk::binding(3, 3)]] Texture2D<float>      sceneDepth;
+[[vk::binding(4, 3)]] Texture2D<float>      ambientOcclusion;
 
 
 [require(spvRayQueryKHR)]
@@ -31,14 +32,17 @@ void main(uint3 DTid : SV_DispatchThreadID)
 
     float4 gDiffuse = gBufferDiffuseRoughness[pixel];
     float4 gNormal = gBufferNormalMetalness[pixel];
+    float ao = ambientOcclusion[pixel];
 
-    S_SURFACE surface;
-    surface.wpos = ConvertScreenToWorld(pixel, depth);
+    float3 wPos = ConvertScreenToWorld(pixel, depth);
+    S_SURFACE surface = InitSurface(wPos);
+
     surface.normal = normalize(gNormal.xyz * 2.0f - 1.0f);
     surface.diffuseSpectrum = gDiffuse.rgb;
     surface.roughness = gDiffuse.a;
     surface.metalness = gNormal.w;
-    surface.prevWpos = float4(surface.wpos, 1.0f);
+    surface.ao = ao;
+    surface.prevWpos = surface.wpos;
 
     S_LIGHTING_RESULT lighting = CalculateLighting(surface);
 

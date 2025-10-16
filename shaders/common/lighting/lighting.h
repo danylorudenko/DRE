@@ -15,12 +15,31 @@ struct S_LIGHTING_RESULT
 struct S_SURFACE
 {
     float3 wpos;
+
     float3 normal;
     float3 diffuseSpectrum;
     float  roughness;
     float  metalness;
-    float4 prevWpos;
+
+    float  ao;
+
+    float3 prevWpos;
 };
+
+S_SURFACE InitSurface(float3 wpos)
+{
+    S_SURFACE Surface;
+    Surface.wpos = wpos;
+    Surface.normal = float3(0,0,1);
+    Surface.diffuseSpectrum = float3(1,1,1);
+    Surface.roughness = 1;
+    Surface.metalness = 0;
+    Surface.ao = 0;
+
+    Surface.prevWpos = wpos;
+
+    return Surface;
+}
 
 S_LIGHTING_RESULT CalculateLighting(S_SURFACE surface)
 {
@@ -35,44 +54,33 @@ S_LIGHTING_RESULT CalculateLighting(S_SURFACE surface)
     for(uint i = 0; i < lightsCount; i++)
     {
         S_LIGHT* light = GetLight(i);
+
+        float3 L = GetDirection(light);
+        float3 h = normalize(v + L);
+        float NdotH = max(0.0f, dot(n, h));
+        float NdotL = max(0.0f, dot(n, L));
+        float3 brdf = CookTorranceBRDF(NdotH, NdotV, NdotL, surface.diffuseSpectrum, surface.roughness, surface.metalness);
+        float3 directRadiance = brdf * GetFlux(light);
+        float shadow = 1;
+
         switch(GetType(light))
         {
             case DRE_LIGHT_TYPE_SUN:
-            {
-                float3 L = GetDirection(light);
-                float3 h = normalize(v + L);
-                float NdotH = max(0.0f, dot(n, h));
-                float NdotL = max(0.0f, dot(n, L));
-                float3 brdf = CookTorranceBRDF(NdotH, NdotV, NdotL, surface.diffuseSpectrum, surface.roughness, surface.metalness);
-
-                #ifndef DRE_VERTEX_SHADER
-                float shadow = ShadowVisibilityTrace(surface.wpos, L);
-                #else
-                float shadow = 1.0f;
-                #endif // DRE_VERTEX_SHADER
-
-                Result.finalRadiance += brdf * GetFlux(light) * shadow;
-                break;
-            }
             case DRE_LIGHT_TYPE_DIRECTIONAL:
             {
-                float3 L = GetDirection(light);
-                float3 h = normalize(v + L);
-                float NdotH = max(0.0f, dot(n, h));
-                float NdotL = max(0.0f, dot(n, L));
-                float3 brdf = CookTorranceBRDF(NdotH, NdotV, NdotL, surface.diffuseSpectrum, surface.roughness, surface.metalness);
-
-                Result.finalRadiance += brdf * GetFlux(light);
-                break;
-            }
-            case DRE_LIGHT_TYPE_POINT:
-            {
+            #ifndef DRE_VERTEX_SHADER
+                shadow = ShadowVisibilityTrace(surface.wpos, L);
+            #endif // !DRE_VERTEX_SHADER
                 break;
             }
         }
+
+        directRadiance *= shadow;
+
+        Result.finalRadiance += directRadiance;
     }
 
-    Result.finalRadiance += float3(0.15f, 0.15f, 0.15f) * surface.diffuseSpectrum; // simple ambient
+    Result.finalRadiance += float3(0.15f, 0.15f, 0.15f) * surface.diffuseSpectrum * surface.ao; // simple ambient
 
     return Result;
 }

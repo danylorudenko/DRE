@@ -29,7 +29,7 @@ ForwardPassOutput main(PSInput input)
     surface.diffuseSpectrum = MaterialProperties.diffuse;
     surface.roughness = MaterialProperties.roughness;
     surface.metalness = MaterialProperties.metalness;
-    surface.prevWpos = float4(input.prev_wpos, 1.0);
+    surface.prevWpos = input.prev_wpos;
 
     S_LIGHTING_RESULT lighting = CalculateLighting(surface);
 

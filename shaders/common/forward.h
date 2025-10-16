@@ -47,7 +47,7 @@ ForwardPassOutput OutputForwardPass(in S_LIGHTING_RESULT Result, in S_SURFACE Su
     ForwardPassOutput outp;
     outp.finalColor = float4(Result.finalRadiance, 1.0f);
 
-    float4 prev_ndc = mul(GetPrevCameraViewProjM(), Surface.prevWpos);
+    float4 prev_ndc = mul(GetPrevCameraViewProjM(), float4(Surface.prevWpos, 1));
     prev_ndc /= prev_ndc.w;
 
     float2 pixel_pos_uv = fragCoord.xy / GetViewportSize();
