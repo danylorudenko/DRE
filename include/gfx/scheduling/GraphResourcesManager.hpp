@@ -78,11 +78,11 @@ public:
 private:
     VKW::Device*        m_Device;
 
-    DRE::InplaceHashTable<DRE::String32, GraphBuffer>  m_StorageBuffers;
-    DRE::InplaceHashTable<DRE::String32, GraphTexture> m_StorageTextures;
+    DRE::InplaceHashTable<DRE::String64, GraphBuffer>  m_StorageBuffers;
+    DRE::InplaceHashTable<DRE::String64, GraphTexture> m_StorageTextures;
 
-    DRE::InplaceHashTable<DRE::String32, AccumulatedInfo> m_AccumulatedBufferInfo;
-    DRE::InplaceHashTable<DRE::String32, AccumulatedInfo> m_AccumulatedTextureInfo;
+    DRE::InplaceHashTable<DRE::String64, AccumulatedInfo> m_AccumulatedBufferInfo;
+    DRE::InplaceHashTable<DRE::String64, AccumulatedInfo> m_AccumulatedTextureInfo;
 };
 
 }

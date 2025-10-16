@@ -21,16 +21,14 @@ enum class TextureID
     WaterColor,
     WaterH0,
     WaterHeight,
-    Velocity,
     AmbientOcclusion,
     DisplayEncodedImage,
     ColorHistoryBuffer0,
     ColorHistoryBuffer1,
-    ObjectIDBuffer,
-    GBufferA,
-    GBufferB,
-    GBufferC = Velocity,
-    GBufferD = ObjectIDBuffer,
+    GBufferA_DiffuseRoughness,
+    GBufferB_NormalMetalness,
+    GBufferC_Velocity,
+    GBufferD_ObjectIDBuffer,
     ID_MAX
 };
 

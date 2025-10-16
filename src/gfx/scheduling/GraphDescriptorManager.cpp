@@ -18,19 +18,19 @@ GraphDescriptorManager::GraphDescriptorManager(VKW::Device* device, GraphResourc
 {
 }
 
-void GraphDescriptorManager::RegisterTexture(PassID pass, char const* id, VKW::ResourceAccess access, VKW::DescriptorStage stages, std::uint8_t binding)
+void GraphDescriptorManager::RegisterTexture(PassID pass, char const* id, VKW::ResourceAccess access, VKW::DescriptorStage stages, DRE::U8 binding)
 {
     SetInfo& setInfo = m_DescriptorsInfo[pass];
-    setInfo.descriptorInfos.EmplaceBack(id, access, stages, 0u, 0u, std::uint8_t(1), binding);
+    setInfo.descriptorInfos.EmplaceBack(id, access, stages, 0u, 0u, DRE::U8(1), binding);
 }
 
-void GraphDescriptorManager::RegisterBuffer(PassID pass, char const* id, VKW::ResourceAccess access, VKW::DescriptorStage stages, std::uint8_t binding)
+void GraphDescriptorManager::RegisterBuffer(PassID pass, char const* id, VKW::ResourceAccess access, VKW::DescriptorStage stages, DRE::U8 binding)
 {
     SetInfo& setInfo = m_DescriptorsInfo[pass];
-    setInfo.descriptorInfos.EmplaceBack(id, access, stages, 0u, 0u, std::uint8_t(0), binding);
+    setInfo.descriptorInfos.EmplaceBack(id, access, stages, 0u, 0u, DRE::U8(0), binding);
 }
 
-void GraphDescriptorManager::RegisterUniformBuffer(PassID pass, VKW::DescriptorStage stages, std::uint8_t binding)
+void GraphDescriptorManager::RegisterUniformBuffer(PassID pass, VKW::DescriptorStage stages, DRE::U8 binding)
 {
     // onlny one uniform buffer is allowed per pass
     SetInfo& setInfo = m_DescriptorsInfo[pass];
@@ -68,7 +68,7 @@ void GraphDescriptorManager::InitDescriptors()
 
         VKW::DescriptorSetLayout::Descriptor layoutDesc{};
         VKW::DescriptorManager::WriteDesc writeDesc{};
-        for (std::uint8_t i = 0, size = descriptorInfos.Size(); i < size; i++)
+        for (DRE::U8 i = 0, size = descriptorInfos.Size(); i < size; i++)
         {
             DescriptorInfo const& info = descriptorInfos[i];
             if (info.m_IsTexture)
@@ -111,7 +111,7 @@ void GraphDescriptorManager::InitDescriptors()
         perPassDescriptors.m_DescriptorLayout = m_PipelineDB->CreateDescriptorSetLayout(name, layoutDesc);
 
 
-        for (std::uint8_t i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
+        for (DRE::U8 i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
         {
             perPassDescriptors.m_DescriptorSet[i] = m_ParentDevice->GetDescriptorManager()->AllocateStandaloneSet(*perPassDescriptors.m_DescriptorLayout);
             m_ParentDevice->GetDescriptorManager()->WriteDescriptorSet(perPassDescriptors.m_DescriptorSet[i], writeDesc);
