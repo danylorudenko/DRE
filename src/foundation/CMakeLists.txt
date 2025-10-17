@@ -31,6 +31,7 @@ set(FOUNDATION_HEADER_LIST
 	"${DRE_SOURCE_DIR}/include/foundation/memory/Pointer.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/string/ConstString.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/string/InplaceString.hpp"
+	"${DRE_SOURCE_DIR}/include/foundation/string/StringUtil.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/system/DynamicLibrary.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/system/Time.hpp"
 	"${DRE_SOURCE_DIR}/include/foundation/system/Window.hpp"

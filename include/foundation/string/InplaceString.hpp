@@ -76,6 +76,13 @@ public:
         m_Data[m_Size] = '\0';
     }
 
+    void AppendFormat(char const* format, auto&&... args)
+    {
+        int characters = std::snprintf(m_Data + m_Size, SIZE - (m_Size + 1), format, std::forward<decltype(args)>(args)...);
+        DRE_ASSERT(characters < SIZE, "InplaceString::AppendFormat(). OVERFLOW");
+        m_Size += characters;
+    }
+
 private:
     U16     m_Size;
     TChar   m_Data[SIZE];

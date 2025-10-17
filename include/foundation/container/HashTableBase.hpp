@@ -100,6 +100,8 @@ public:
         }
         else
         {
+            DRE_ASSERT(baseBucket->m_Key.key != key, "HashTableBase::Emplace(...): attempt to emplace already existing value. To replace values use operator[key] instead");
+
             Bucket* nextBucket = static_cast<Derived&>(*this).NewCollisionBucketBehavior();
             U32 const nextBucketID = U32(DRE::PtrDifference(nextBucket, m_CollisionPool) / sizeof(Bucket));
 
