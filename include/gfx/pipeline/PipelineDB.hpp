@@ -45,6 +45,7 @@ public:
     void                        CreateDefaultPipelines();
 
     void                        ReloadPipeline(char const* name);
+    void                        ReloadAllPipelines();
 
 
     GFX::Material*              CreateMaterial(char const* name, GFX::Material::Type type);

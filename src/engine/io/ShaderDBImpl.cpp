@@ -272,13 +272,13 @@ ShaderDBImpl::ShaderDBImpl(IO::IOManager* io)
         slang::createGlobalSession(&globalSessionDesc, m_SlangGlobalSession.writeRef());
         DRE_ASSERT(m_SlangGlobalSession.get() != nullptr, "Failed to create Slang Global Session");
     }
+
+    m_ShaderObserverThread = std::thread{ &ShaderDBImpl::ShaderObserver, this };
 }
 
 ShaderDBImpl::~ShaderDBImpl()
 {
-    // if we detach frie
-    //if (m_ShaderObserverThread.)
-    //    m_ShaderObserverThread.detach();
+    m_ShaderObserverThread.detach();
 }
 
 char const* GetShaderTypeDefineString(VKW::ShaderModuleType type)

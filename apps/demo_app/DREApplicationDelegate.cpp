@@ -259,10 +259,10 @@ void DREApplicationDelegate::update()
     // Reload shaders
     if (m_InputSystem.GetKeyboardButtonJustReleased(Keys::R))
     {
-        //if (m_IOManager.NewShadersPending())
+        if (m_ShaderModuleDB.NewShadersPending())
         {
-            //m_GraphicsManager.WaitIdle();
-            m_GraphicsManager.ReloadShaders();
+            m_GraphicsManager.WaitIdle();
+            ReloadShaders();
         }
     }
 
@@ -290,9 +290,14 @@ void DREApplicationDelegate::update()
     DRE::g_AppContext.m_EngineFrame++;
 }
 
-void DREApplicationDelegate::DEBUGBuildAccelerationStructure()
+void DREApplicationDelegate::ReloadShaders()
 {
-    
+    std::cout << "Start reloading shaders." << std::endl;
+    auto names = m_ShaderModuleDB.GetPendingShaders();
+    for (std::uint32_t i = 0; i < names.Size(); i++)
+    {
+        m_GraphicsManager.GetPipelineDB().ReloadPipeline(names[i].GetData());
+    }
 }
 
 //////////////////////////////////////////

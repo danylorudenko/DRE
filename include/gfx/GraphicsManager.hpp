@@ -174,6 +174,7 @@ private:
 private:
     SYS::Window*                m_MainWindow;
     IO::IOManager*              m_IOManager;
+    IO::ShaderDB*               m_ShaderDB;
 
     VKW::Device                 m_Device;
 

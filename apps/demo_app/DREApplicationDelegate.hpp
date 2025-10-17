@@ -54,8 +54,7 @@ private:
     void DestroyImGui();
     void ImGuiUser();
     void ProcessViewportInput();
-
-    void DEBUGBuildAccelerationStructure();
+    void ReloadShaders();
 
     SYS::Window                         m_MainWindow;
     SYS::InputSystem                    m_InputSystem;

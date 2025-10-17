@@ -277,11 +277,6 @@ DRE::String64 const* PipelineDB::CreateGraphicsGizmoPipeline(char const* name)
 
 void PipelineDB::ReloadPipeline(char const* name)
 {
-    std::cout << "Reloading pipeline IS NOT IMPLEMENTED" << name << std::endl;
-
-    return;
-
-    /*
     DRE::String128 layoutName{ name }; layoutName.Append("_layout");
     VKW::PipelineLayout* layout = GetLayout(layoutName.GetData());
 
@@ -289,9 +284,9 @@ void PipelineDB::ReloadPipeline(char const* name)
     DRE::String64 fragName{ name }; fragName.Append(".frag");
     DRE::String64 compName{ name }; compName.Append(".comp");
 
-    DRE::ByteBuffer const& vertData = m_ShaderDB->GetShaderEntry(vertName.GetData());
-    DRE::ByteBuffer const& fragData = m_ShaderDB->GetShaderEntry(fragName.GetData());
-    DRE::ByteBuffer const& compData = m_ShaderDB->GetShaderEntry(compName.GetData());
+    IO::ShaderEntry const* vertData = m_ShaderDB->GetShaderEntry(vertName.GetData());
+    IO::ShaderEntry const* fragData = m_ShaderDB->GetShaderEntry(fragName.GetData());
+    IO::ShaderEntry const* compData = m_ShaderDB->GetShaderEntry(compName.GetData());
 
     VKW::ShaderModule vertModule;
     VKW::ShaderModule fragModule;
@@ -304,62 +299,51 @@ void PipelineDB::ReloadPipeline(char const* name)
     if (vertData != nullptr)
     {
         DRE::String64 vertPath{ "shaders\\" }; vertPath.Append(vertName.GetData());
-        DRE::ByteBuffer compiledBinary = m_ShaderDB->CompileHLSL(vertPath.GetData(), VKW::SHADER_MODULE_TYPE_VERTEX);
-        if (compiledBinary.Size() == 0)
+        if (!m_ShaderDB->CompileShader(vertPath.GetData(), VKW::SHADER_MODULE_TYPE_VERTEX))
         {
             std::cout << "Failed to recompile shader " << vertPath.GetData() << ". Pipeline was not cecreated." << std::endl;
             return;
         }
 
-        vertData->m_Binary = compiledBinary;
-
-        vertPath.Append(".spv");
-        IO::ShaderDB::WriteNewFile(vertPath.GetData(), vertData->m_Binary);
-
-        vertModule = VKW::ShaderModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData->m_Binary, vertData->m_ModuleType, "main" };
+        vertModule = VKW::ShaderModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData->spirv, vertData->type, "main" };
         desc.SetVertexShader(vertModule);
     }
     
     if (fragData != nullptr)
     {
         DRE::String64 fragPath{ "shaders\\" }; fragPath.Append(fragName.GetData());
-        DRE::ByteBuffer compiledBinary = m_ShaderDB->CompileHLSL(fragPath.GetData(), VKW::SHADER_MODULE_TYPE_FRAGMENT);
-        if (compiledBinary.Size() == 0)
+        if (!m_ShaderDB->CompileShader(fragPath.GetData(), VKW::SHADER_MODULE_TYPE_FRAGMENT))
         {
             std::cout << "Failed to recompile shader " << fragPath.GetData() << ". Pipeline was not cecreated." << std::endl;
             return;
         }
 
-        fragData->m_Binary = compiledBinary;
-
-        fragPath.Append(".spv");
-        IO::ShaderDB::WriteNewFile(fragPath.GetData(), fragData->m_Binary);
-
-        fragModule = VKW::ShaderModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragData->m_Binary, fragData->m_ModuleType, "main" };
+        fragModule = VKW::ShaderModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragData->spirv, fragData->type, "main" };
         desc.SetFragmentShader(fragModule);
     }
 
     if (compData != nullptr)
     {
         DRE::String64 compPath{ "shaders\\" }; compPath.Append(compName.GetData());
-        DRE::ByteBuffer compiledBinary = m_ShaderDB->CompileHLSL(compPath.GetData(), VKW::SHADER_MODULE_TYPE_COMPUTE);
-        if (compiledBinary.Size() == 0)
+        if (!m_ShaderDB->CompileShader(compPath.GetData(), VKW::SHADER_MODULE_TYPE_COMPUTE))
         {
             std::cout << "Failed to recompile shader " << compPath.GetData() << ". Pipeline was not cecreated." << std::endl;
             return;
         }
 
-        compData->m_Binary = compiledBinary;
-
-        compPath.Append(".spv");
-        IO::ShaderDB::WriteNewFile(compPath.GetData(), compData->m_Binary);
-
-        compModule = VKW::ShaderModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), compData->m_Binary, compData->m_ModuleType, "main" };
+        compModule = VKW::ShaderModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), compData->spirv, compData->type, "main" };
         desc.SetComputeShader(compModule);
     }
 
     m_Pipelines[name] = VKW::Pipeline{ m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), desc, name };
-    */
+}
+
+void PipelineDB::ReloadAllPipelines()
+{
+    m_Pipelines.ForEach([this](auto pair)
+    {
+        ReloadPipeline(pair.key->GetData());
+    });
 }
 
 DRE::String64 const* PipelineDB::CreatePipelineLayoutFromShader(char const* shaderName,

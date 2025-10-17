@@ -195,16 +195,6 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
         VKW::RESOURCE_ACCESS_SHADER_UNIFORM, VKW::STAGE_VERTEX);
 }
 
-void GraphicsManager::ReloadShaders()
-{
-    std::cout << "Unimplemented!!!!!" << std::endl;
-    //auto names = m_IOManager->GetPendingShaders();
-    //for (std::uint32_t i = 0; i < names.Size(); i++)
-    //{
-    //    m_PipelineDB.ReloadPipeline(names[i].GetData());
-    //}
-}
-
 void GraphicsManager::BuildMainSceneTLAS()
 {
     m_InstanceDataManager.FlushUpdates(GetMainContext());

@@ -63,6 +63,9 @@ public:
     bool                    CompileShader(DRE::String64 const& name, VKW::ShaderModuleType type);
     ShaderEntry const*      GetShaderEntry(DRE::String64 const& name);
 
+    bool                    NewShadersPending() const;
+    DRE::InplaceVector<DRE::String64, 12> GetPendingShaders();
+
 private:
     ShaderDBImpl* m_Impl;
 };

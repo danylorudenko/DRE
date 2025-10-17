@@ -73,7 +73,7 @@ public:
 
     // shader recompilation
     void ShaderObserver();
-    inline bool                             NewShadersPending() { return m_PendingChangesFlag.load(std::memory_order::acquire); }
+    inline bool                             NewShadersPending() const { return m_PendingChangesFlag.load(std::memory_order::acquire); }
     DRE::InplaceVector<DRE::String64, 12>   GetPendingShaders();
 
 private:
