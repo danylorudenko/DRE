@@ -48,6 +48,7 @@ public:
 
 private:
     DRE::HashTable<Hash, Material, DRE::DefaultAllocator> m_MaterialsMap;
+    DRE::U32 m_MaterialIDCounter;
 };
 
 }

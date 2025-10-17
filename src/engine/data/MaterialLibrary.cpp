@@ -20,6 +20,7 @@ MaterialLibrary::Hash::Hash(std::uint32_t id, const char* sceneName)
 
 MaterialLibrary::MaterialLibrary(DRE::DefaultAllocator* allocator)
     : m_MaterialsMap{ allocator }
+    , m_MaterialIDCounter{ 0 }
 {}
 
 void MaterialLibrary::InitDefaultMaterials()
@@ -50,7 +51,14 @@ Material* MaterialLibrary::CreateMaterial(Hash hash, char const* name)
 
 Material* MaterialLibrary::CreateMaterial(std::uint32_t id, char const* sceneName, char const* name)
 {
-    return &m_MaterialsMap.Emplace(Hash(id, sceneName), name);
+    DRE::String64 materialName;
+    materialName.Append(sceneName);
+    materialName.Append("_");
+    materialName.Append(name);
+    DRE::U32 uniqueNameID = m_MaterialIDCounter++;
+    materialName.AppendFormat("%u", uniqueNameID);
+
+    return &m_MaterialsMap.Emplace(Hash(id, sceneName), materialName);
 }
 
 }

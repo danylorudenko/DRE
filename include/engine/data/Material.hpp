@@ -118,7 +118,7 @@ public:
 
 private:
 
-    DRE::String32                       m_Name;
+    DRE::String64                       m_Name;
     GFX::Material*                      m_GFXMaterial;
 
     TextureProperty     m_TextureProperties[TextureProperty::Slot::MAX];

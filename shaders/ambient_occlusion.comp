@@ -20,5 +20,5 @@ void main(uint3 DTid : SV_DispatchThreadID)
     float currentDepth = ConvertDeviceZToViewZ(scene_depth[coords]);
 
     float aoTerm = saturate(exp2(1 - (currentDepth * -0.003)));
-    ao_output[coords] = 1;
+    ao_output[coords] = aoTerm;
 }

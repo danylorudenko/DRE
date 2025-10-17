@@ -419,13 +419,16 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& path, VKW::ShaderModuleTyp
         DRE::ByteBuffer spvBuffer{ slangSpirv->getBufferSize() };
         DRE::MemCpy(spvBuffer.Data(), slangSpirv->getBufferPointer(), spvBuffer.Size());
 
-        m_ShaderMap.Emplace(name, ShaderEntry{
+        // we force clear the vector inside so we can copy into it later
+        m_ShaderMap[name].bindingInterface.m_Members.Clear();
+
+        m_ShaderMap[name] = ShaderEntry{
             .name = name,
             .type = type,
             .spirv = DRE_MOVE(spvBuffer),
             .source = sourceBlob,
             .bindingInterface = resultInterface
-        });
+        };
 
         return true;
     }

@@ -279,12 +279,7 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName
 
         material->GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE);
 
-        DRE::String64 materialName;
-        materialName.Append(sceneName);
-        materialName.Append("_");
-        materialName.Append(material->GetName());
-
-        GFX::Material* gfxMaterial = GFX::g_GraphicsManager->GetPipelineDB().CreateMaterial(materialName, material->GetRenderingProperties().GetMaterialType());
+        GFX::Material* gfxMaterial = GFX::g_GraphicsManager->GetPipelineDB().CreateMaterial(material->GetName(), material->GetRenderingProperties().GetMaterialType());
         material->FlushToGfxMaterial(gfxMaterial);
     }
 }
