@@ -72,8 +72,11 @@ public:
 
 
     // shader recompilation
-    void ShaderObserver();
-    inline bool                             NewShadersPending() const { return m_PendingChangesFlag.load(std::memory_order::acquire); }
+    void                                    ShaderObserver();
+
+    void                                    ClearPendingShaders();
+    inline bool                             AreNewShadersPending() const { return m_PendingChangesFlag.load(std::memory_order::acquire); }
+    // move-returns pending shaders. Pending shaders are automatically "cleared" after this call
     DRE::InplaceVector<DRE::String64, 12>   GetPendingShaders();
 
 private:

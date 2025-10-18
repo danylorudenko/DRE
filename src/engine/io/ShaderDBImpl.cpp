@@ -511,14 +511,20 @@ DRE::InplaceVector<DRE::String64, 12> ShaderDBImpl::GetPendingShaders()
     return DRE_MOVE(m_PendingShaders);
 }
 
+void ShaderDBImpl::ClearPendingShaders()
+{
+    std::lock_guard guard{ m_PendingShadersMutex };
+    m_PendingChangesFlag.store(false, std::memory_order_relaxed);
+    m_PendingShaders.Clear();
+}
 
-void ShaderDBImpl::ShaderObserver()
+void ShaderDBImpl::ShaderObserver_Thread()
 {
     //                                                                                                                     required for dirs
     HANDLE directoryHandle = CreateFileA("shaders", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
     if (directoryHandle == INVALID_HANDLE_VALUE)
     {
-        std::cout << "IOManager::ShaderObserver: Failed to create directory handle. Terminating thread." << std::endl;
+        std::cout << "ShaderDB::ShaderObserver: Failed to create directory handle. Terminating thread." << std::endl;
         return;
     }
 
@@ -529,7 +535,7 @@ void ShaderDBImpl::ShaderObserver()
         DWORD bytesReturned = 0;
         if (ReadDirectoryChangesW(directoryHandle, bufferPtr, 1024, FALSE, FILE_NOTIFY_CHANGE_LAST_WRITE, &bytesReturned, NULL, NULL) == 0)
         {
-            std::cout << "IOManager::ShaderObserver: Failed to get directory changes." << std::endl;
+            std::cout << "ShaderDB::ShaderObserver: Failed to get directory changes." << std::endl;
         }
         
         FILE_NOTIFY_INFORMATION* infoPtr = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(bufferPtr);
@@ -537,7 +543,7 @@ void ShaderDBImpl::ShaderObserver()
         {
             if (infoPtr->Action != FILE_ACTION_MODIFIED)
             {
-                std::cout << "IOManager::ShaderObserver: Unsupported file event. Terminating thread." << std::endl;
+                std::cout << "ShaderDB::ShaderObserver: Unsupported file event. Terminating thread." << std::endl;
                 return;
             }
 
@@ -545,7 +551,7 @@ void ShaderDBImpl::ShaderObserver()
             int const length = WideCharToMultiByte(CP_UTF8, 0, infoPtr->FileName, infoPtr->FileNameLength / sizeof(WCHAR), fileName, 64, NULL, NULL);
             if (length == 0)
             {
-                std::cout << "IOManager::ShaderObserver: Failed to get ASCII file name from the event." << std::endl;
+                std::cout << "ShaderDB::ShaderObserver: Failed to get ASCII file name from the event." << std::endl;
             }
             fileName[length] = '\0';
 
@@ -567,6 +573,7 @@ void ShaderDBImpl::ShaderObserver()
                 std::lock_guard guard{ m_PendingShadersMutex };
                 if (m_PendingShaders.Find(stem) == m_PendingShaders.Size())
                 {
+                    std::cout << "ShaderDB::ShaderObserver: Found new change in shader file" << fileName << std::endl;
                     m_PendingShaders.EmplaceBack(stem);
                 }
                 m_PendingChangesFlag.store(true, std::memory_order::release);

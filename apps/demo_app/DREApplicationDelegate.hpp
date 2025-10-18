@@ -54,7 +54,8 @@ private:
     void DestroyImGui();
     void ImGuiUser();
     void ProcessViewportInput();
-    void ReloadShaders();
+    void ReloadPendingShaders();
+    void ForceReloadAllShaders();
 
     SYS::Window                         m_MainWindow;
     SYS::InputSystem                    m_InputSystem;

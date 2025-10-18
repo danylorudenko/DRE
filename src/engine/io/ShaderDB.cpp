@@ -34,9 +34,14 @@ ShaderEntry const* ShaderDB::GetShaderEntry(DRE::String64 const& name)
     return m_Impl->GetShaderEntry(name);
 }
 
-bool ShaderDB::NewShadersPending() const
+bool ShaderDB::AreNewShadersPending() const
 {
-    return m_Impl->NewShadersPending();
+    return m_Impl->AreNewShadersPending();
+}
+
+void ShaderDB::ClearPendingShaders()
+{
+    return m_Impl->ClearPendingShaders();
 }
 
 DRE::InplaceVector<DRE::String64, 12> ShaderDB::GetPendingShaders()
