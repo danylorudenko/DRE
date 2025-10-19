@@ -54,6 +54,8 @@ private:
     void DestroyImGui();
     void ImGuiUser();
     void ProcessViewportInput();
+    void ProcessCameraInput();
+    void ProcessInputShortcuts();
     void ReloadPendingShaders();
     void ForceReloadAllShaders();
 
@@ -80,4 +82,6 @@ private:
 
     EDITOR::RootEditor                  m_RootEditor;
     EDITOR::ViewportInputManager        m_ViewportInput;
+
+    float                               m_CameraMoveSpeed;
 };
