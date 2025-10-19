@@ -340,79 +340,8 @@ void DREApplicationDelegate::DestroyImGui()
 //////////////////////////////////////////
 void DREApplicationDelegate::ImGuiUser()
 {
+    IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context. Refer to examples app!");
     m_RootEditor.Render();
-    //ImGui::ShowDemoWindow();
-
-    if (/*m_ImGuiEnabled*/false) {
-        IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context. Refer to examples app!");
-
-        ImGui::SetNextWindowContentSize(ImVec2{ 150.0f, 0.0f});
-        ImGui::SetNextWindowPos(ImVec2(1100.0f, 0.0f), ImGuiCond_Once);
-
-        ImGuiWindowFlags frameDataWindowFlags = 
-            //ImGuiWindowFlags_NoMove | 
-            ImGuiWindowFlags_NoResize | 
-            ImGuiWindowFlags_NoScrollbar;// | 
-            //ImGuiWindowFlags_NoCollapse;
-        static bool frameDataOpened = false;
-        if (ImGui::Begin("Stats", nullptr, frameDataWindowFlags))
-        {
-            ImGui::Text("DT: %f ms", static_cast<double>(DRE::g_AppContext.m_DeltaTimeUS) / 1000);
-            ImGui::Text("FPS: %f", 1.0 / (static_cast<double>(DRE::g_AppContext.m_DeltaTimeUS) / 1000000));
-            ImGui::Text("Global T(s): %f", m_GlobalStopwatch.CurrentSeconds());
-        }
-        ImGui::End();
-
-        ImGui::SetNextWindowPos(ImVec2(1100.0f, 100.0f), ImGuiCond_Once);
-        ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiCond_Always);
-
-        if (ImGui::Begin("Camera Controls", nullptr, ImGuiWindowFlags_NoResize))
-        {
-            if (ImGui::BeginCombo("Water settings", nullptr, ImGuiComboFlags_None))
-            {
-                /*
-    float           m_WaterSpeed            = 1.0f;
-    float           m_WaterSizeMeters       = 10.0f;
-    float           m_WindDirectionX        = 0.0f;
-    float           m_WindSpeed             = 1.0f;*/
-                ImGui::Checkbox("Water wireframe", &m_GraphicsManager.GetGraphicsSettings().m_WaterWireframe);
-                ImGui::Checkbox("FFT Water", &m_GraphicsManager.GetGraphicsSettings().m_UseFFTWater);
-                ImGui::SliderFloat("Water speed", &m_GraphicsManager.GetGraphicsSettings().m_WaterSpeed, 0.0f, 3.0f);
-                ImGui::SliderFloat("Water size meters", &m_GraphicsManager.GetGraphicsSettings().m_WaterSizeMeters, 1.0f, 100.0f);
-                ImGui::SliderFloat("Water amplitude", &m_GraphicsManager.GetGraphicsSettings().m_WaterAmplitude, 0.0f, 1000.0f);
-                ImGui::SliderFloat("Water wind dir X", &m_GraphicsManager.GetGraphicsSettings().m_WindDirectionX, -1.0f, 1.0f);
-                ImGui::SliderFloat("Water wind speed", &m_GraphicsManager.GetGraphicsSettings().m_WindSpeed, 0.0f, 100.0f);
-                ImGui::SliderFloat("Water wind dir factor", &m_GraphicsManager.GetGraphicsSettings().m_WindDirFactor, 0.0f, 100.0f);
-                ImGui::EndCombo();
-            }
-            ImGui::Checkbox("Use ACES", &m_GraphicsManager.GetGraphicsSettings().m_UseACESEncoding);
-            ImGui::SliderFloat("Exposure target EV", &m_GraphicsManager.GetGraphicsSettings().m_ExposureEV, -3.0f, 5.0f);
-
-            if (ImGui::Button("Enable TAA"))
-            {
-                m_GraphicsManager.GetGraphicsSettings().m_AlphaTAA = 0.9f;
-                m_GraphicsManager.GetGraphicsSettings().m_JitterScale = 0.35f;
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Disable TAA"))
-            {
-                m_GraphicsManager.GetGraphicsSettings().m_AlphaTAA = 0.0f;
-                m_GraphicsManager.GetGraphicsSettings().m_JitterScale = 0.0f;
-            }
-
-            ImGui::SliderFloat("TAA Alpha", &m_GraphicsManager.GetGraphicsSettings().m_AlphaTAA, 0.0f, 1.0f);
-            ImGui::SliderFloat("TAA Jitter Scale", &m_GraphicsManager.GetGraphicsSettings().m_JitterScale, 0.0f, 2.0f);
-            ImGui::SliderFloat("TAA Variance Gamma", &m_GraphicsManager.GetGraphicsSettings().m_VarianceGammaTAA, 0.0f, 5.0f);
-            ImGui::Checkbox("Pause time", &DRE::g_AppContext.m_PauseTime);
-            if(ImGui::Button("Reset global time"))
-            {
-                m_GlobalStopwatch.Reset();
-            }
-            ImGui::SliderFloat("Generic Scalar", &m_GraphicsManager.GetGraphicsSettings().m_GenericScalar, -2.0f, 2.0f);
-
-        }
-        ImGui::End();
-    }
 }
 
 void DREApplicationDelegate::ProcessViewportInput()
