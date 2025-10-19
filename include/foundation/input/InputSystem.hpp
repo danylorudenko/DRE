@@ -2,11 +2,11 @@
 
 #include <foundation\class_features\NonCopyable.hpp>
 
+#include <foundation\Common.hpp>
+#include <foundation\memory\MemoryOps.hpp>
 #include <foundation\input\Keyboard.hpp>
-#include <cstdint>
 #include <Windows.h>
 
-#include <foundation\Common.hpp>
 
 namespace SYS
 {
@@ -17,19 +17,36 @@ public:
     struct MouseState
     {
         enum MouseButtonOffsets { Left, Right, Middle };
-        std::uint32_t mouseButtonStates_ = 0;
+
+        DRE::U32 mouseButtonStates_ = 0;
         float xDelta_ = 0.0f;
         float yDelta_ = 0.0f;
-        std::int32_t mousePosX_ = 0;
-        std::int32_t mousePosY_ = 0;
-        std::int32_t mouseWheelPos_ = 0;
+        DRE::S32 mousePosX_ = 0;
+        DRE::S32 mousePosY_ = 0;
+        DRE::S32 mouseWheelPos_ = 0;
         float mouseWheelDelta_ = 0.0f;
+
+        void Reset()
+        {
+            mouseButtonStates_ = 0;
+            xDelta_ = 0.0f;
+            yDelta_ = 0.0f;
+            mousePosX_ = 0;
+            mousePosY_ = 0;
+            mouseWheelPos_ = 0;
+            mouseWheelDelta_ = 0.0f;
+        }
     };
 
     struct KeyboardState
     {
         // so we have enough bits for the whole Keys enum
-        std::uint64_t keysBits[(std::uint32_t)Keys::END / 64 + 1];
+        DRE::U64 keysBits[(DRE::U32)Keys::END / 64 + 1];
+
+        void Reset()
+        {
+            DRE::MemZero(&keysBits, sizeof(keysBits));
+        }
     };
 
 private:
@@ -73,8 +90,8 @@ public:
     static std::uint32_t GetCharFromKeys(Keys key);
 
 private:
-    static void SetKeysBitflagValue(std::uint64_t* bitflag, Keys key, bool value);
-    static bool GetKeysBitflagValue(std::uint64_t const* bitflag, Keys key);
+    static void SetKeysBitflagValue(DRE::U64* bitflag, Keys key, bool value);
+    static bool GetKeysBitflagValue(DRE::U64 const* bitflag, Keys key);
 
 
 };

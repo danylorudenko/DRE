@@ -51,7 +51,7 @@ DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* t
     //, m_WaterMaterial{ "water_mat" }
     //, m_BeachMaterial{ "beach_mat" }
     , m_ViewportInput{ &m_MainScene }
-    , m_CameraMoveSpeed{ 5.0f }
+    , m_CameraMoveSpeed{ 25.0f }
 {
     WORLD::g_MainScene = &m_MainScene;
 }
@@ -279,9 +279,6 @@ void DREApplicationDelegate::update()
 
 void DREApplicationDelegate::ProcessCameraInput()
 {
-    if (ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard)
-        return;
-
     if (!m_InputSystem.GetRightMouseButtonPressed())
         return;
 
@@ -293,32 +290,38 @@ void DREApplicationDelegate::ProcessCameraInput()
         m_CameraMoveSpeed = std::max(0.1f, m_CameraMoveSpeed + mouseState.mouseWheelDelta_ * CAMERA_SPEED_STEP);
     }
 
-    constexpr float CAMERA_ROTATION_SPEED = 0.1f;
-    glm::vec3 rotationDelta{ -mouseState.yDelta_ * CAMERA_ROTATION_SPEED, -mouseState.xDelta_ * CAMERA_ROTATION_SPEED, 0.0f };
-
     WORLD::Camera& camera = m_MainScene.GetMainCamera();
+    float const deltaSeconds = static_cast<double>(DRE::g_AppContext.m_DeltaTimeUS) / 1'000'000.0;
 
-    if (rotationDelta.x != 0.0f || rotationDelta.y != 0.0f)
+    // Camera rotation
     {
-        camera.RotateCamera(rotationDelta);
+        constexpr float CAMERA_ROTATION_SPEED = 100.0f;
+        glm::vec3 rotationDelta{ -mouseState.yDelta_ * CAMERA_ROTATION_SPEED, -mouseState.xDelta_ * CAMERA_ROTATION_SPEED, 0.0f };
+        rotationDelta *= deltaSeconds;
+        if (rotationDelta.x != 0.0f || rotationDelta.y != 0.0f)
+        {
+            camera.RotateCamera(rotationDelta);
+        }
     }
 
-    glm::vec3 movement{ 0.0f, 0.0f, 0.0f };
-
-    if (m_InputSystem.GetKeyboardButtonDown(Keys::W))
-        movement += camera.GetForward();
-    if (m_InputSystem.GetKeyboardButtonDown(Keys::S))
-        movement -= camera.GetForward();
-    if (m_InputSystem.GetKeyboardButtonDown(Keys::D))
-        movement += camera.GetRight();
-    if (m_InputSystem.GetKeyboardButtonDown(Keys::A))
-        movement -= camera.GetRight();
-
-    if (glm::length2(movement) > 0.0f)
+    // Camera movement
     {
-        movement = glm::normalize(movement);
-        float const deltaSeconds = static_cast<float>(DRE::g_AppContext.m_DeltaTimeUS) / 1'000'000.0f;
-        camera.Move(movement * m_CameraMoveSpeed * deltaSeconds);
+        glm::vec3 movement{ 0.0f, 0.0f, 0.0f };
+
+        if (m_InputSystem.GetKeyboardButtonDown(Keys::W))
+            movement += camera.GetForward();
+        if (m_InputSystem.GetKeyboardButtonDown(Keys::S))
+            movement -= camera.GetForward();
+        if (m_InputSystem.GetKeyboardButtonDown(Keys::D))
+            movement += camera.GetRight();
+        if (m_InputSystem.GetKeyboardButtonDown(Keys::A))
+            movement -= camera.GetRight();
+
+        if (glm::length(movement) > 0.0f)
+        {
+            movement = glm::normalize(movement);
+            camera.Move(movement * m_CameraMoveSpeed * deltaSeconds);
+        }
     }
 }
 
