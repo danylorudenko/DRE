@@ -16,9 +16,32 @@ float GetAOStrength() { return passUniform.ao_strength.x; }
 void main(uint3 DTid : SV_DispatchThreadID)
 {
     int2 coords = int2(DTid.xy);
+    float2 centerUV = ConvertScreenToUV(coords);
+    float centerDeviceZSample = scene_depth.SampleLevel(GetSamplerLinearClamp(), centerUV, 0);
+    float centerViewZ = ConvertDeviceZToViewZ(centerDeviceZSample);
 
-    float currentDepth = ConvertDeviceZToViewZ(scene_depth[coords]);
+    static int SAMPLE_COUNT = 8;
+    static float RADIAL_STEP = (2 * PI) / SAMPLE_COUNT;
+    static float RADIUS_PIXEL = 4;
+    static float AO_DEPTH_THRESHOLD = 1;
 
-    float aoTerm = saturate(exp2(1 - (currentDepth * -0.003)));
-    ao_output[coords] = aoTerm;
+    float2 uvRadius = RADIUS_PIXEL / GetViewportSize();
+
+    float ambientOcclusionAccum = 0;
+    for(int i = 0; i < SAMPLE_COUNT; i++)
+    {
+        float2 sampleUV = RadialKernel(centerUV, i * RADIAL_STEP, uvRadius);
+        float deviceZSample = scene_depth.SampleLevel(GetSamplerLinearClamp(), sampleUV, 0);
+        float viewZ = ConvertDeviceZToViewZ(deviceZSample);
+        float zDiff = max(0, viewZ - centerViewZ);
+
+        float aoWeight = zDiff > AO_DEPTH_THRESHOLD ? 0 : 1;
+
+        ambientOcclusionAccum += max(0, viewZ - centerViewZ) * aoWeight;
+    }
+
+    ambientOcclusionAccum /= SAMPLE_COUNT;
+
+    ao_output[coords] = 1 - saturate(ambientOcclusionAccum);
+    //ao_output[coords] = 1;
 }

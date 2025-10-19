@@ -273,7 +273,7 @@ ShaderDBImpl::ShaderDBImpl(IO::IOManager* io)
         DRE_ASSERT(m_SlangGlobalSession.get() != nullptr, "Failed to create Slang Global Session");
     }
 
-    m_ShaderObserverThread = std::thread{ &ShaderDBImpl::ShaderObserver, this };
+    m_ShaderObserverThread = std::thread{ &ShaderDBImpl::ShaderObserver_Thread, this };
 }
 
 ShaderDBImpl::~ShaderDBImpl()
@@ -361,13 +361,22 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& path, VKW::ShaderModuleTyp
         {
             std::cout << (const char*)diagnosticBlob->getBufferPointer() << std::endl;
         }
-        DRE_ASSERT(slangModule != nullptr, "Failed to load a slang module");
+
+        if (slangModule == nullptr)
+        {
+            std::cout << "Failed to load slang module:" << name << std::endl;
+            return false;
+        }
     }
 
     Slang::ComPtr<slang::IEntryPoint> entryPoint;
     slangModule->findEntryPointByName("main", entryPoint.writeRef());
 
-    DRE_ASSERT(entryPoint != nullptr, "Failed to find slang entry point \"main\"");
+    if (entryPoint == nullptr)
+    {
+        std::cout << "Failed to find slang entry point \"main\" for module " << name << std::endl;
+        return false;
+    }
 
     DRE::InplaceVector<slang::IComponentType*, 2> slangComponents;
     slangComponents.EmplaceBack(slangModule);
@@ -389,14 +398,23 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& path, VKW::ShaderModuleTyp
         }
     }
 
+    if (composedProgram.get() == nullptr)
+    {
+        std::cout << "Slang failed to compose a program for module " << name << std::endl;
+        return false;
+    }
+
     slang::ProgramLayout* programLayout = nullptr;
     ShaderInterface resultInterface;
     {
-        DRE_ASSERT(composedProgram.get() != nullptr, "Slang failed to compose a program.");
-
         Slang::ComPtr<slang::IBlob> diagnosticsBlob;
         programLayout = composedProgram->getLayout(0, diagnosticsBlob.writeRef());
-        DRE_ASSERT(programLayout != nullptr, "Slang failed to get program layout");
+
+        if (programLayout == nullptr)
+        {
+            std::cout << "Slang failed to get program layout for module " << name << std::endl;
+            return false;
+        }
 
         ParseShaderInterface(programLayout, resultInterface);
     }
@@ -410,8 +428,12 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& path, VKW::ShaderModuleTyp
         {
             std::cout << (const char*)diagnosticBlob->getBufferPointer() << std::endl;
         }
-        DRE_ASSERT(result == 0, "slang unknown error when compiling spirv");
 
+        if (result != 0)
+        {
+            std::cout << "Slang unknown error when compiling spirv for module " << name << std::endl;
+            return false;
+        }
     }
 
     if (slangSpirv != nullptr && slangSpirv->getBufferSize() != 0)
@@ -430,11 +452,13 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& path, VKW::ShaderModuleTyp
             .bindingInterface = resultInterface
         };
 
+        std::cout << "Successfully compiled module " << name << std::endl;
+
         return true;
     }
     else
     {
-        DRE_ASSERT(false, "slang failed to extract compilation result object");
+        std::cout << "Slang failed to extract compilation result object for module " << name << std::endl;
         return false;
     }
 }

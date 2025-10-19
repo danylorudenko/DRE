@@ -79,6 +79,11 @@ float ConvertDeviceZToViewZ(float deviceZ)
     return B / (deviceZ - A);
 }
 
+float2 ConvertScreenToUV(int2 pixel)
+{
+    return (float2(pixel) + 0.5) / GetViewportSize();
+}
+
 float2 ConvertScreenToNDC(int2 pixel)
 {
     return ((float2(pixel) + 0.5) / GetViewportSize()) * 2 - 1;
@@ -108,6 +113,14 @@ float2 CalculateVelocity(float4 currPosClip, float3 prevWorldPos)
 
     float2 vel = (currNDC - prevNDC.xy);
     return vel * 0.5f;
+}
+
+float2 RadialKernel(float2 center, float angleRadians, float2 extent)
+{
+    float2 xy;
+    sincos(angleRadians, xy[0], xy[1]);
+
+    return xy * extent + center;
 }
 
 #endif // !__cplusplus

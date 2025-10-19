@@ -72,7 +72,7 @@ public:
 
 
     // shader recompilation
-    void                                    ShaderObserver();
+    void                                    ShaderObserver_Thread();
 
     void                                    ClearPendingShaders();
     inline bool                             AreNewShadersPending() const { return m_PendingChangesFlag.load(std::memory_order::acquire); }
