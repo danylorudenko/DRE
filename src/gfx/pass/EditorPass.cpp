@@ -303,7 +303,7 @@ void EditorPass::Render(RenderGraph& graph, VKW::Context& context)
     DRE_GPU_SCOPE(EditorPass);
 
     VKW::ImageResourceView* colorBuffer = graph.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage))->GetShaderView();
-    VKW::ImageResourceView* objectIDBuffer = graph.GetTexture(RESOURCE_ID(TextureID::ObjectIDBuffer))->GetShaderView();
+    VKW::ImageResourceView* objectIDBuffer = graph.GetTexture(RESOURCE_ID(TextureID::GBufferD_ObjectIDBuffer))->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, colorBuffer->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
 

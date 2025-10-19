@@ -35,12 +35,12 @@ void GBufferPass::RegisterResources(RenderGraph& graph)
         1);
 
     graph.RegisterRenderTarget(this,
-        RESOURCE_ID(TextureID::Velocity),
+        RESOURCE_ID(TextureID::GBufferC_Velocity),
         gBufferFormats[2], renderWidth, renderHeight,
         2);
 
     graph.RegisterRenderTarget(this,
-        RESOURCE_ID(TextureID::ObjectIDBuffer),
+        RESOURCE_ID(TextureID::GBufferD_ObjectIDBuffer),
         gBufferFormats[3], renderWidth, renderHeight,
         3);
 
@@ -62,8 +62,8 @@ void GBufferPass::Render(RenderGraph& graph, VKW::Context& context)
 
     VKW::ImageResourceView* attachmentA = graph.GetTexture(RESOURCE_ID(TextureID::GBufferA_DiffuseRoughness))->GetShaderView();
     VKW::ImageResourceView* attachmentB = graph.GetTexture(RESOURCE_ID(TextureID::GBufferB_NormalMetalness))->GetShaderView();
-    VKW::ImageResourceView* attachmentC = graph.GetTexture(RESOURCE_ID(TextureID::Velocity))->GetShaderView();
-    VKW::ImageResourceView* attachmentD = graph.GetTexture(RESOURCE_ID(TextureID::ObjectIDBuffer))->GetShaderView();
+    VKW::ImageResourceView* attachmentC = graph.GetTexture(RESOURCE_ID(TextureID::GBufferC_Velocity))->GetShaderView();
+    VKW::ImageResourceView* attachmentD = graph.GetTexture(RESOURCE_ID(TextureID::GBufferD_ObjectIDBuffer))->GetShaderView();
     VKW::ImageResourceView* depthAttachment = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth))->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentA->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);

@@ -1,15 +1,18 @@
 #include "common/shaders_common.h"
 
-[[vk::binding(0, 3)]] RWTexture2D<float>   ao_output;
-[[vk::binding(1, 3)]] Texture2D<float>     scene_depth;
+[[vk::binding(0, 3)]] RWTexture2D<float>    ao_output;
+[[vk::binding(1, 3)]] Texture2D<float>      scene_depth;
+[[vk::binding(2, 3)]] Texture2D<float4>     gBufferNormal_Metalness;
 
 struct PassUniform
 {
-    float4 ao_strength;
+    float4 aoStrength_KernelScale;
 };
-[[vk::binding(2, 3)]] ConstantBuffer<PassUniform> passUniform;
+[[vk::binding(3, 3)]] ConstantBuffer<PassUniform> passUniform;
 
-float GetAOStrength() { return passUniform.ao_strength.x; }
+float GetAOStrength() { return passUniform.aoStrength_KernelScale.x; }
+float GetKernelScale() { return passUniform.aoStrength_KernelScale.y; }
+
 
 [shader("compute")]
 [numthreads(8, 8, 1)]
@@ -19,29 +22,40 @@ void main(uint3 DTid : SV_DispatchThreadID)
     float2 centerUV = ConvertScreenToUV(coords);
     float centerDeviceZSample = scene_depth.SampleLevel(GetSamplerLinearClamp(), centerUV, 0);
     float centerViewZ = ConvertDeviceZToViewZ(centerDeviceZSample);
+    float3 centerWorldPos = ConvertUVToWorld(centerUV, centerDeviceZSample);
+
+    float3 normal = normalize(gBufferNormal_Metalness.SampleLevel(GetSamplerLinearClamp(), centerUV, 0).xyz);
 
     static int SAMPLE_COUNT = 8;
     static float RADIAL_STEP = (2 * PI) / SAMPLE_COUNT;
-    static float RADIUS_PIXEL = 4;
     static float AO_DEPTH_THRESHOLD = 1;
 
-    float2 uvRadius = RADIUS_PIXEL / GetViewportSize();
+    float2 uvRadius = GetKernelScale() / GetViewportSize();
+    int marchStepCount = int(ceil(GetKernelScale()));
+    float2 uvRayMarchStep = uvRadius / marchStepCount;
 
-    float ambientOcclusionAccum = 0;
+    float ambientOcclusionAccum = float(SAMPLE_COUNT);
     for(int i = 0; i < SAMPLE_COUNT; i++)
     {
-        float2 sampleUV = RadialKernel(centerUV, i * RADIAL_STEP, uvRadius);
-        float deviceZSample = scene_depth.SampleLevel(GetSamplerLinearClamp(), sampleUV, 0);
-        float viewZ = ConvertDeviceZToViewZ(deviceZSample);
-        float zDiff = max(0, viewZ - centerViewZ);
+        for (int step = 0; step < marchStepCount; step++)
+        {
+            float2 marchUV = RadialKernel(centerUV, i * RADIAL_STEP, uvRayMarchStep * step);
+            float deviceZSample = scene_depth.SampleLevel(GetSamplerLinearClamp(), marchUV, 0);
 
-        float aoWeight = zDiff > AO_DEPTH_THRESHOLD ? 0 : 1;
+            float3 marchWorldPos = ConvertUVToWorld(marchUV, deviceZSample);
+            float3 marchedSampleDirection = normalize(marchWorldPos - centerWorldPos);
 
-        ambientOcclusionAccum += max(0, viewZ - centerViewZ) * aoWeight;
+            float horizonAngle = dot(marchedSampleDirection, normal);
+            if (horizonAngle >= 0.0)
+            {
+                ambientOcclusionAccum -= horizonAngle * GetAOStrength();
+                break; // go to the next direction
+            }
+        }
     }
 
     ambientOcclusionAccum /= SAMPLE_COUNT;
 
-    ao_output[coords] = 1 - saturate(ambientOcclusionAccum);
+    ao_output[coords] = ambientOcclusionAccum;
     //ao_output[coords] = 1;
 }

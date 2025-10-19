@@ -104,6 +104,21 @@ float3 ConvertScreenToWorld(int2 pixel, float deviceZ)
     return pixelWorldHomogeneous.xyz / pixelWorldHomogeneous.w;
 }
 
+float3 ConvertUVToWorld(float2 uv, float deviceZ)
+{
+    float zView = ConvertDeviceZToViewZ(deviceZ);
+
+    float A = GetCameraProjM()[2][2];
+    float B = GetCameraProjM()[3][2];
+    float zClip = A * zView + B;
+
+    float2 pixelNDC = uv * 2 - 1;
+    float4 pixelClip = float4(float2(pixelNDC) * zView, zClip, zView);
+
+    float4 pixelWorldHomogeneous = mul(GetCameraiViewProjM(), pixelClip);
+    return pixelWorldHomogeneous.xyz / pixelWorldHomogeneous.w;
+}
+
 float2 CalculateVelocity(float4 currPosClip, float3 prevWorldPos)
 {
     float4 prevNDC = mul(GetPrevCameraViewProjM(), float4(prevWorldPos, 1.0));

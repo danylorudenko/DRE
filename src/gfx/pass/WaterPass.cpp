@@ -48,7 +48,7 @@ void WaterPass::RegisterResources(RenderGraph& graph)
         0);
 
     graph.RegisterRenderTarget(this,
-        RESOURCE_ID(TextureID::Velocity),
+        RESOURCE_ID(TextureID::GBufferC_Velocity),
         g_GraphicsManager->GetVelocityBufferFormat(), renderWidth, renderHeight,
         1);
 
@@ -85,7 +85,7 @@ void WaterPass::Render(RenderGraph& graph, VKW::Context& context)
     DRE_GPU_SCOPE(Water);
 
     VKW::ImageResourceView* waterAttachment = graph.GetTexture(RESOURCE_ID(TextureID::WaterColor))->GetShaderView();
-    VKW::ImageResourceView* velocityAttachment = graph.GetTexture(RESOURCE_ID(TextureID::Velocity))->GetShaderView();
+    VKW::ImageResourceView* velocityAttachment = graph.GetTexture(RESOURCE_ID(TextureID::GBufferC_Velocity))->GetShaderView();
     VKW::ImageResourceView* depthAttachment = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth))->GetShaderView();
     VKW::ImageResourceView* shadowMap       = graph.GetTexture(RESOURCE_ID(TextureID::ShadowMap))->GetShaderView();
     VKW::ImageResourceView* heightMap       = graph.GetTexture(RESOURCE_ID(TextureID::WaterHeight))->GetShaderView();

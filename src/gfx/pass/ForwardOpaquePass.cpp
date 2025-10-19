@@ -42,12 +42,12 @@ void ForwardOpaquePass::RegisterResources(RenderGraph& graph)
         0);
 
     graph.RegisterRenderTarget(this,
-        RESOURCE_ID(TextureID::Velocity),
+        RESOURCE_ID(TextureID::GBufferC_Velocity),
         g_GraphicsManager->GetVelocityBufferFormat(), renderWidth, renderHeight,
         1);
 
     graph.RegisterRenderTarget(this,
-        RESOURCE_ID(TextureID::ObjectIDBuffer),
+        RESOURCE_ID(TextureID::GBufferD_ObjectIDBuffer),
         g_GraphicsManager->GetObjectIDBufferFormat(), renderWidth, renderHeight,
         2);
 

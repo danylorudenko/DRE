@@ -68,15 +68,9 @@ void RenderingSettingsEditor::Render()
             ImGui::SliderFloat("Generic Scalar", &settings.m_GenericScalar, -2.0f, 2.0f);
 
             ImGui::Separator();
-            ImGui::TextUnformatted("Water");
-            ImGui::Checkbox("Water wireframe", &settings.m_WaterWireframe);
-            ImGui::Checkbox("FFT Water", &settings.m_UseFFTWater);
-            ImGui::SliderFloat("Water speed", &settings.m_WaterSpeed, 0.0f, 3.0f);
-            ImGui::SliderFloat("Water size meters", &settings.m_WaterSizeMeters, 1.0f, 100.0f);
-            ImGui::SliderFloat("Water amplitude", &settings.m_WaterAmplitude, 0.0f, 1000.0f);
-            ImGui::SliderFloat("Water wind dir X", &settings.m_WindDirectionX, -1.0f, 1.0f);
-            ImGui::SliderFloat("Water wind speed", &settings.m_WindSpeed, 0.0f, 100.0f);
-            ImGui::SliderFloat("Water wind dir factor", &settings.m_WindDirFactor, 0.0f, 100.0f);
+            ImGui::TextUnformatted("Ambient Occlusion");
+            ImGui::SliderFloat("AO Strength", &settings.m_AOStrength, 0.0f, 2.0f);
+            ImGui::SliderFloat("AO Kernel Scale", &settings.m_AOKernelScale, 0.0f, 10.0f);
         }
         else
         {

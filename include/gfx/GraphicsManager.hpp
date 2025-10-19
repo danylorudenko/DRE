@@ -69,26 +69,35 @@ namespace GFX
 
 struct GraphicsSettings
 {
+    // Tonemapping
     bool            m_UseACESEncoding       = true;
     float           m_ExposureEV            = 0.0f;
+
+    // TAA
     float           m_AlphaTAA              = 0;//= 0.9f;
     float           m_VarianceGammaTAA      = 1.0f;
     float           m_JitterScale           = 0;//= 0.15f;
-    bool            m_WaterWireframe        = false;
-    bool            m_UseFFTWater           = true;
-    float           m_WaterSpeed            = 1.0f;
-    float           m_WaterSizeMeters       = 10.0f;
-    float           m_WaterAmplitude        = 1000.0f;
-    float           m_WindDirectionX        = 0.0f;
-    float           m_WindSpeed             = 1.0f;
-    float           m_WindDirFactor         = 2.0f;
     float           m_GenericScalar         = 1.0f;
+
+    // AO
+    float           m_AOStrength            = 1.0f;
+    float           m_AOKernelScale         = 5.0f;
 
     DRE::U32        m_ShadowMapWidth        = 1024;
     DRE::U32        m_ShadowMapHeight       = 1024;
 
     DRE::U32        m_RenderingWidth        = 0;
     DRE::U32        m_RenderingHeight       = 0;
+
+    bool            m_WaterWireframe = false;
+    bool            m_UseFFTWater = true;
+    float           m_WaterSpeed = 1.0f;
+    float           m_WaterSizeMeters = 10.0f;
+    float           m_WaterAmplitude = 1000.0f;
+    float           m_WindDirectionX = 0.0f;
+    float           m_WindSpeed = 1.0f;
+    float           m_WindDirFactor = 2.0f;
+
 };
 
 class GraphicsManager final
@@ -156,7 +165,6 @@ public:
 
 public:
     void                                PrecacheAllData(EDITOR::ViewportInputManager* viewportInput);
-    void                                ReloadShaders();
     void                                BuildMainSceneTLAS();
     void                                RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS, float globalTimeS);
     void                                WaitIdle();
