@@ -32,14 +32,19 @@ void RenderingSettingsEditor::Render()
     bool isOpen = true;
     if (ImGui::Begin("Rendering Settings", &isOpen))
     {
-        if (GFX::g_GraphicsManager != nullptr)
+        GFX::GraphicsManager* graphicsManager = GFX::g_GraphicsManager;
+        if (graphicsManager != nullptr)
         {
-            GFX::GraphicsSettings& settings = GFX::g_GraphicsManager->GetGraphicsSettings();
+            GFX::GraphicsSettings& settings = graphicsManager->GetGraphicsSettings();
 
+            ImGui::TextUnformatted("Tone mapping");
+            ImGui::Separator();
             ImGui::Checkbox("Use ACES", &settings.m_UseACESEncoding);
             ImGui::SliderFloat("Exposure target EV", &settings.m_ExposureEV, -3.0f, 5.0f);
 
-            if (ImGui::Button("Enable TAA"))
+            ImGui::Separator();
+            ImGui::TextUnformatted("Temporal AA");
+            if (ImGui::Button("Enable TAA defaults"))
             {
                 settings.m_AlphaTAA = 0.9f;
                 settings.m_JitterScale = 0.35f;
@@ -50,18 +55,20 @@ void RenderingSettingsEditor::Render()
                 settings.m_AlphaTAA = 0.0f;
                 settings.m_JitterScale = 0.0f;
             }
-
             ImGui::SliderFloat("TAA Alpha", &settings.m_AlphaTAA, 0.0f, 1.0f);
             ImGui::SliderFloat("TAA Jitter Scale", &settings.m_JitterScale, 0.0f, 2.0f);
             ImGui::SliderFloat("TAA Variance Gamma", &settings.m_VarianceGammaTAA, 0.0f, 5.0f);
 
+            ImGui::Separator();
+            ImGui::TextUnformatted("Timing");
             ImGui::Checkbox("Pause time", &DRE::g_AppContext.m_PauseTime);
 
+            ImGui::Separator();
+            ImGui::TextUnformatted("Misc");
             ImGui::SliderFloat("Generic Scalar", &settings.m_GenericScalar, -2.0f, 2.0f);
 
             ImGui::Separator();
-            ImGui::TextUnformatted("Water settings");
-
+            ImGui::TextUnformatted("Water");
             ImGui::Checkbox("Water wireframe", &settings.m_WaterWireframe);
             ImGui::Checkbox("FFT Water", &settings.m_UseFFTWater);
             ImGui::SliderFloat("Water speed", &settings.m_WaterSpeed, 0.0f, 3.0f);
