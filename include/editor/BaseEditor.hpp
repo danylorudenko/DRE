@@ -29,6 +29,7 @@ public:
         SceneGraph,
         Stats,
         TextureInspector,
+        RenderingSettings,
         MAX
     };
 

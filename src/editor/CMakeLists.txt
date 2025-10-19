@@ -6,7 +6,8 @@ set(EDITOR_HEADER_LIST
 	"${DRE_SOURCE_DIR}/include/editor/RootEditor.hpp"
 	"${DRE_SOURCE_DIR}/include/editor/SceneGraphEditor.hpp"
 	"${DRE_SOURCE_DIR}/include/editor/StatsEditor.hpp"
-	"${DRE_SOURCE_DIR}/include/editor/TextureInspector.hpp")
+	"${DRE_SOURCE_DIR}/include/editor/TextureInspector.hpp"
+	"${DRE_SOURCE_DIR}/include/editor/RenderingSettingsEditor.hpp")
 
 set(EDITOR_SOURCE_LIST
 	"${DRE_SOURCE_DIR}/src/editor/ViewportInputManager.cpp"
@@ -16,7 +17,8 @@ set(EDITOR_SOURCE_LIST
 	"${DRE_SOURCE_DIR}/src/editor/RootEditor.cpp"
 	"${DRE_SOURCE_DIR}/src/editor/SceneGraphEditor.cpp"
 	"${DRE_SOURCE_DIR}/src/editor/StatsEditor.cpp"
-	"${DRE_SOURCE_DIR}/src/editor/TextureInspector.cpp")
+	"${DRE_SOURCE_DIR}/src/editor/TextureInspector.cpp"
+	"${DRE_SOURCE_DIR}/src/editor/RenderingSettingsEditor.cpp")
 	
 add_library(editor STATIC ${EDITOR_HEADER_LIST} ${EDITOR_SOURCE_LIST})
 

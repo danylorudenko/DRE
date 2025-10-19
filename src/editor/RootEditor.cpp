@@ -4,6 +4,7 @@
 #include <engine\scene\Camera.hpp>
 #include <engine\scene\Scene.hpp>
 #include <editor\CameraEditor.hpp>
+#include <editor\RenderingSettingsEditor.hpp>
 #include <editor\SceneGraphEditor.hpp>
 #include <editor\StatsEditor.hpp>
 #include <editor\TextureInspector.hpp>
@@ -72,6 +73,15 @@ void RootEditor::Render()
             {
                 StatsEditor* statsEditor = DRE::g_MainAllocator.Alloc<StatsEditor>(this, EDITOR_FLAGS_NONE);
                 m_Editors.EmplaceBack(statsEditor);
+            }
+        }
+
+        if (ImGui::MenuItem("Rendering Settings"))
+        {
+            if (GetEditorByType(BaseEditor::Type::RenderingSettings) == nullptr)
+            {
+                RenderingSettingsEditor* renderingEditor = DRE::g_MainAllocator.Alloc<RenderingSettingsEditor>(this, EDITOR_FLAGS_NONE);
+                m_Editors.EmplaceBack(renderingEditor);
             }
         }
 
