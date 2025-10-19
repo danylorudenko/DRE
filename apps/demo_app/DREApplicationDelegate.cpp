@@ -10,6 +10,7 @@
 
 #include <utility>
 #include <cstdio>
+#include <algorithm>
 
 #include <vk_wrapper\Tools.hpp>
 #include <vk_wrapper\Helper.hpp>
@@ -50,6 +51,7 @@ DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* t
     //, m_WaterMaterial{ "water_mat" }
     //, m_BeachMaterial{ "beach_mat" }
     , m_ViewportInput{ &m_MainScene }
+    , m_CameraMoveSpeed{ 5.0f }
 {
     WORLD::g_MainScene = &m_MainScene;
 }
@@ -256,19 +258,6 @@ void DREApplicationDelegate::update()
 
     ProcessViewportInput();
 
-    // Reload shaders
-    if (m_InputSystem.GetKeyboardButtonJustReleased(Keys::R))
-    {
-        if (m_InputSystem.GetKeyboardButtonDown(Keys::Shift))
-        {
-            ForceReloadAllShaders();
-        }
-        else if (m_ShaderModuleDB.AreNewShadersPending())
-        {
-            ReloadPendingShaders();
-        }
-    }
-
     // Global stopwatch
     if (DRE::g_AppContext.m_PauseTime != m_GlobalStopwatch.IsPaused())
     {
@@ -285,12 +274,72 @@ void DREApplicationDelegate::update()
     // Rendering
     m_GraphicsManager.RenderFrame(DRE::g_AppContext.m_EngineFrame, DRE::g_AppContext.m_DeltaTimeUS, m_GlobalStopwatch.CurrentSeconds());
 
+    DRE::g_AppContext.m_EngineFrame++;
+}
+
+void DREApplicationDelegate::ProcessCameraInput()
+{
+    if (ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard)
+        return;
+
+    if (!m_InputSystem.GetRightMouseButtonPressed())
+        return;
+
+    auto const& mouseState = m_InputSystem.GetMouseState();
+
+    if (mouseState.mouseWheelDelta_ != 0.0f)
+    {
+        constexpr float CAMERA_SPEED_STEP = 0.5f;
+        m_CameraMoveSpeed = std::max(0.1f, m_CameraMoveSpeed + mouseState.mouseWheelDelta_ * CAMERA_SPEED_STEP);
+    }
+
+    constexpr float CAMERA_ROTATION_SPEED = 0.1f;
+    glm::vec3 rotationDelta{ -mouseState.yDelta_ * CAMERA_ROTATION_SPEED, -mouseState.xDelta_ * CAMERA_ROTATION_SPEED, 0.0f };
+
+    WORLD::Camera& camera = m_MainScene.GetMainCamera();
+
+    if (rotationDelta.x != 0.0f || rotationDelta.y != 0.0f)
+    {
+        camera.RotateCamera(rotationDelta);
+    }
+
+    glm::vec3 movement{ 0.0f, 0.0f, 0.0f };
+
+    if (m_InputSystem.GetKeyboardButtonDown(Keys::W))
+        movement += camera.GetForward();
+    if (m_InputSystem.GetKeyboardButtonDown(Keys::S))
+        movement -= camera.GetForward();
+    if (m_InputSystem.GetKeyboardButtonDown(Keys::D))
+        movement += camera.GetRight();
+    if (m_InputSystem.GetKeyboardButtonDown(Keys::A))
+        movement -= camera.GetRight();
+
+    if (glm::length2(movement) > 0.0f)
+    {
+        movement = glm::normalize(movement);
+        float const deltaSeconds = static_cast<float>(DRE::g_AppContext.m_DeltaTimeUS) / 1'000'000.0f;
+        camera.Move(movement * m_CameraMoveSpeed * deltaSeconds);
+    }
+}
+
+void DREApplicationDelegate::ProcessInputShortcuts()
+{
+    if (m_InputSystem.GetKeyboardButtonJustReleased(Keys::R))
+    {
+        if (m_InputSystem.GetKeyboardButtonDown(Keys::Shift))
+        {
+            ForceReloadAllShaders();
+        }
+        else if (m_ShaderModuleDB.AreNewShadersPending())
+        {
+            ReloadPendingShaders();
+        }
+    }
+
     if (m_InputSystem.GetKeyboardButtonJustPressed(Keys::Space))
     {
         DebugBreak();
     }
-
-    DRE::g_AppContext.m_EngineFrame++;
 }
 
 void DREApplicationDelegate::ReloadPendingShaders()
@@ -346,9 +395,24 @@ void DREApplicationDelegate::ImGuiUser()
 
 void DREApplicationDelegate::ProcessViewportInput()
 {
-    if (!ImGui::GetIO().WantCaptureMouse)
+    ImGuiIO const& imguiIO = ImGui::GetIO();
+
+    bool const allowMouseInput = !imguiIO.WantCaptureMouse;
+    bool const allowKeyboardInput = !imguiIO.WantCaptureKeyboard;
+
+    if (allowMouseInput)
     {
         m_ViewportInput.ProcessInput(m_InputSystem, m_GraphicsManager.GetMainRenderView());
+    }
+
+    if (allowMouseInput && allowKeyboardInput)
+    {
+        ProcessCameraInput();
+    }
+
+    if (allowKeyboardInput)
+    {
+        ProcessInputShortcuts();
     }
 }
 
