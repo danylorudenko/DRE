@@ -219,7 +219,7 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
     DRE_GPU_SCOPE(FRAME);
 
     context.ResetDependenciesVectors(&DRE::g_FrameScratchAllocator);
-    PrepareGlobalData(context,  *WORLD::g_MainScene, deltaTimeUS, globalTimeS);
+    PrepareGlobalData(context, *WORLD::g_MainScene, deltaTimeUS, globalTimeS);
 
     // maybe I should do these earlier?
     m_GlobalGeometryManager.UpdateGPUGeometry(context);
