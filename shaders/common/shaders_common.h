@@ -27,9 +27,10 @@ struct GlobalPushConstant
 
 // Default samplers
 #define GetSamplerNearest()      g_GlobalSamplers[0]
-#define GetSamplerLinear()       g_GlobalSamplers[1]
-#define GetSamplerLinearClamp()  g_GlobalSamplers[2]
-#define GetSamplerAnisotropic()  g_GlobalSamplers[3]
+#define GetSamplerNearestClamp() g_GlobalSamplers[1]
+#define GetSamplerLinear()       g_GlobalSamplers[2]
+#define GetSamplerLinearClamp()  g_GlobalSamplers[3]
+#define GetSamplerAnisotropic()  g_GlobalSamplers[4]
 
 // Texture sampling helpers
 //#define SampleTexture(texObj, sampObj, uv)  texObj.Sample(sampObj, uv)
@@ -89,6 +90,33 @@ float2 ConvertScreenToNDC(int2 pixel)
     return ((float2(pixel) + 0.5) / GetViewportSize()) * 2 - 1;
 }
 
+float2 ConvertViewOffsetToScreenOffset(float2 viewOffset, float zViewDistance)
+{
+    float _00 = GetCameraProjM()[0][0];
+    float _11 = GetCameraProjM()[1][1];
+
+    // -z because in right handed z is towards the camera (everything in VS has negative Z)
+    float viewZ = max(0.0001, -zViewDistance);
+
+    float2 NDC = (viewOffset.xy * float2(_00, _11)) / viewZ;
+    return NDC * GetViewportSize() * 0.5;
+}
+
+float3 ConvertScreenToView(int2 pixel, float deviceZ)
+{
+    float zView = ConvertDeviceZToViewZ(deviceZ);
+
+    float A = GetCameraProjM()[2][2];
+    float B = GetCameraProjM()[3][2];
+    float zClip = A * zView + B;
+
+    float2 pixelNDC = (float2(pixel) + 0.5) / GetViewportSize() * 2 - 1;
+    float4 pixelClip = float4(pixelNDC * zView, zClip, zView);
+
+    float4 pixelViewHomogeneous = mul(GetCameraiProjM(), pixelClip);
+    return pixelViewHomogeneous.xyz / pixelViewHomogeneous.w;
+}
+
 float3 ConvertScreenToWorld(int2 pixel, float deviceZ)
 {
     float zView = ConvertDeviceZToViewZ(deviceZ);
@@ -104,10 +132,8 @@ float3 ConvertScreenToWorld(int2 pixel, float deviceZ)
     return pixelWorldHomogeneous.xyz / pixelWorldHomogeneous.w;
 }
 
-float3 ConvertUVToWorld(float2 uv, float deviceZ)
+float3 ConvertUVzViewToWorld(float2 uv, float zView)
 {
-    float zView = ConvertDeviceZToViewZ(deviceZ);
-
     float A = GetCameraProjM()[2][2];
     float B = GetCameraProjM()[3][2];
     float zClip = A * zView + B;
@@ -117,6 +143,25 @@ float3 ConvertUVToWorld(float2 uv, float deviceZ)
 
     float4 pixelWorldHomogeneous = mul(GetCameraiViewProjM(), pixelClip);
     return pixelWorldHomogeneous.xyz / pixelWorldHomogeneous.w;
+}
+
+float3 ConvertUVzViewToView(float2 uv, float zView)
+{
+    float A = GetCameraProjM()[2][2];
+    float B = GetCameraProjM()[3][2];
+    float zClip = A * zView + B;
+
+    float2 pixelNDC = uv * 2 - 1;
+    float4 pixelClip = float4(float2(pixelNDC) * zView, zClip, zView);
+
+    float4 pixelWorldHomogeneous = mul(GetCameraiProjM(), pixelClip);
+    return pixelWorldHomogeneous.xyz / pixelWorldHomogeneous.w;
+}
+
+float3 ConvertUVToWorld(float2 uv, float deviceZ)
+{
+    float zView = ConvertDeviceZToViewZ(deviceZ);
+    return ConvertUVzViewToWorld(uv, zView);
 }
 
 float2 CalculateVelocity(float4 currPosClip, float3 prevWorldPos)

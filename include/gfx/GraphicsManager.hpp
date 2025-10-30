@@ -31,6 +31,9 @@
 
 #include <array>
 
+// shaders
+#include <ambient_occlusion_type.h>
+
 constexpr std::uint32_t C_SHADOW_MAP_WIDTH = 2048;
 constexpr std::uint32_t C_SHADOW_MAP_HEIGHT = 2048;
 constexpr float C_SHADOW_MAP_WORLD_EXTENT = 20.0f;
@@ -82,6 +85,8 @@ struct GraphicsSettings
     // AO
     float           m_AOStrength            = 1.0f;
     float           m_AOKernelScale         = 5.0f;
+    float           m_AOMaxOcclusionDistance= 0.5f;
+    AOVersion       m_AOVersion             = AO_HorizonBased;
 
     DRE::U32        m_ShadowMapWidth        = 1024;
     DRE::U32        m_ShadowMapHeight       = 1024;

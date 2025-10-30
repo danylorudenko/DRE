@@ -27,7 +27,7 @@ GBuffer main(PSInput input)
 {
     S_INSTANCE* InstancePtr = GetInstance();
     S_MATERIAL* MaterialPtr = GetMaterial(InstancePtr);
-    
+
     S_MATERIAL_PROPERTIES MaterialProperties = ReadMaterialProeprties(MaterialPtr, input.uv, input.TBN);
 
     GBuffer Output;

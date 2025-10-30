@@ -237,7 +237,26 @@ void DescriptorManager::AllocateDefaultDescriptors(std::uint8_t globalBuffersCou
     descriptorInfo.maxLod = VK_LOD_CLAMP_NONE;
     descriptorInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
     descriptorInfo.unnormalizedCoordinates = VK_FALSE;
-    VK_ASSERT(table_->vkCreateSampler(device_->Handle(), &descriptorInfo, nullptr, defaultSamplers_ + (int)SAMPLER_TYPE_NEAREST_REPEAT));
+    VK_ASSERT(table_->vkCreateSampler(device_->Handle(), &descriptorInfo, nullptr, defaultSamplers_ + (DRE::U32)SAMPLER_TYPE_NEAREST_REPEAT));
+
+    //////////////////////////
+    descriptorInfo.flags = VK_FLAGS_NONE;
+    descriptorInfo.magFilter = VK_FILTER_NEAREST;
+    descriptorInfo.minFilter = VK_FILTER_NEAREST;
+    descriptorInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+    descriptorInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    descriptorInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    descriptorInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    descriptorInfo.mipLodBias = 0.0f;
+    descriptorInfo.anisotropyEnable = VK_FALSE;
+    descriptorInfo.maxAnisotropy = 0.0f;
+    descriptorInfo.compareEnable = VK_FALSE;
+    descriptorInfo.compareOp = VK_COMPARE_OP_LESS;
+    descriptorInfo.minLod = VK_LOD_CLAMP_NONE;
+    descriptorInfo.maxLod = VK_LOD_CLAMP_NONE;
+    descriptorInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+    descriptorInfo.unnormalizedCoordinates = VK_FALSE;
+    VK_ASSERT(table_->vkCreateSampler(device_->Handle(), &descriptorInfo, nullptr, defaultSamplers_ + (DRE::U32)SAMPLER_TYPE_NEAREST_CLAMP));
 
     //////////////////////////
     descriptorInfo.flags = VK_FLAGS_NONE;
@@ -256,7 +275,7 @@ void DescriptorManager::AllocateDefaultDescriptors(std::uint8_t globalBuffersCou
     descriptorInfo.maxLod = VK_LOD_CLAMP_NONE;
     descriptorInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
     descriptorInfo.unnormalizedCoordinates = VK_FALSE;
-    VK_ASSERT(table_->vkCreateSampler(device_->Handle(), &descriptorInfo, nullptr, defaultSamplers_ + (int)SAMPLER_TYPE_LINEAR_REPEAT));
+    VK_ASSERT(table_->vkCreateSampler(device_->Handle(), &descriptorInfo, nullptr, defaultSamplers_ + (DRE::U32)SAMPLER_TYPE_LINEAR_REPEAT));
 
     //////////////////////////
     descriptorInfo.flags = VK_FLAGS_NONE;
@@ -275,7 +294,7 @@ void DescriptorManager::AllocateDefaultDescriptors(std::uint8_t globalBuffersCou
     descriptorInfo.maxLod = VK_LOD_CLAMP_NONE;
     descriptorInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
     descriptorInfo.unnormalizedCoordinates = VK_FALSE;
-    VK_ASSERT(table_->vkCreateSampler(device_->Handle(), &descriptorInfo, nullptr, defaultSamplers_ + (int)SAMPLER_TYPE_LINEAR_CLAMP));
+    VK_ASSERT(table_->vkCreateSampler(device_->Handle(), &descriptorInfo, nullptr, defaultSamplers_ + (DRE::U32)SAMPLER_TYPE_LINEAR_CLAMP));
 
     //////////////////////////
     descriptorInfo.flags = VK_FLAGS_NONE;
@@ -294,7 +313,7 @@ void DescriptorManager::AllocateDefaultDescriptors(std::uint8_t globalBuffersCou
     descriptorInfo.maxLod = VK_LOD_CLAMP_NONE;
     descriptorInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
     descriptorInfo.unnormalizedCoordinates = VK_FALSE;
-    VK_ASSERT(table_->vkCreateSampler(device_->Handle(), &descriptorInfo, nullptr, defaultSamplers_ + (int)SAMPLER_TYPE_ANISOTROPIC));
+    VK_ASSERT(table_->vkCreateSampler(device_->Handle(), &descriptorInfo, nullptr, defaultSamplers_ + (DRE::U32)SAMPLER_TYPE_ANISOTROPIC));
 
 
     DRE::InplaceVector<VkDescriptorBufferInfo, VKW::CONSTANTS::FRAMES_BUFFERING> uniformBuffersinfo;
@@ -309,7 +328,7 @@ void DescriptorManager::AllocateDefaultDescriptors(std::uint8_t globalBuffersCou
         info.range = globalUniformBuffers[i]->size_;
     }
 
-    for (std::uint8_t i = 0; i < (int)SAMPLER_TYPE_MAX; i++)
+    for (std::uint8_t i = 0; i < (DRE::U32)SAMPLER_TYPE_MAX; i++)
     {
         samplerInfo[i].sampler = defaultSamplers_[i];
     }
@@ -338,7 +357,7 @@ void DescriptorManager::AllocateDefaultDescriptors(std::uint8_t globalBuffersCou
     samplerWrite.dstSet = globalGenericSet_;
     samplerWrite.dstBinding = 0;
     samplerWrite.dstArrayElement = 0;
-    samplerWrite.descriptorCount = (int)SAMPLER_TYPE_MAX;
+    samplerWrite.descriptorCount = (DRE::U32)SAMPLER_TYPE_MAX;
     samplerWrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
     samplerWrite.pImageInfo = samplerInfo;
     samplerWrite.pBufferInfo = nullptr;

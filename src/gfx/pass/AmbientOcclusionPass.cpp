@@ -43,7 +43,10 @@ void AmbientOcclusionPass::Render(RenderGraph& graph, VKW::Context& context)
 
     float const aoStrength = g_GraphicsManager->GetGraphicsSettings().m_AOStrength;
     float const aoKernelScale = g_GraphicsManager->GetGraphicsSettings().m_AOKernelScale;
-    uniform.WriteMember140(glm::vec4{ aoStrength, aoKernelScale, 0.0f, 0.0f });
+    float const aoMaxOcclusionDistance = g_GraphicsManager->GetGraphicsSettings().m_AOMaxOcclusionDistance;
+    AOVersion const aoVersion = g_GraphicsManager->GetGraphicsSettings().m_AOVersion;
+    uniform.WriteMember140(glm::vec4{ aoStrength, aoKernelScale, aoMaxOcclusionDistance, 0.0f });
+    uniform.WriteMember140(glm::ivec4{ aoVersion, 0, 0, 0 });
 
 
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());

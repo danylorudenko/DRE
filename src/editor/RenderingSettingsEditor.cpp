@@ -69,8 +69,32 @@ void RenderingSettingsEditor::Render()
 
             ImGui::Separator();
             ImGui::TextUnformatted("Ambient Occlusion");
+
+            // update together with ambient_occlusion_type.h
+            char const* AOVersionNames[] = { "Dot Based", "Hotizon Based", "GTAO"};
+            static_assert(IM_ARRAYSIZE(AOVersionNames) == AOVersion::AO_COUNT, "AOVersion doesn't correspond to the list of names");
+
+            AOVersion* aoVersion = &settings.m_AOVersion;
+            if (ImGui::BeginCombo("AO Version", AOVersionNames[*aoVersion]))
+            {
+                for (DRE::U32 i = 0; i < DRE::U32(AOVersion::AO_COUNT); i++)
+                {
+                    bool isSelected = *aoVersion == i;
+                    if (ImGui::Selectable(AOVersionNames[i], &isSelected))
+                    {
+                        *aoVersion = (AOVersion)i;
+                    }
+
+                    if (isSelected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+
+
             ImGui::SliderFloat("AO Strength", &settings.m_AOStrength, 0.0f, 2.0f);
             ImGui::SliderFloat("AO Kernel Scale", &settings.m_AOKernelScale, 0.0f, 10.0f);
+            ImGui::SliderFloat("AO Max Occlusion Dist", &settings.m_AOMaxOcclusionDistance, 0.0f, 10.0f);
         }
         else
         {
