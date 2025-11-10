@@ -1,5 +1,6 @@
 set(DEMO_HEADER_LIST
 	"${DRE_SOURCE_DIR}/apps/unit_tests/BuddyAllocatorTests.hpp"
+	"${DRE_SOURCE_DIR}/apps/unit_tests/TransformTests.hpp"
 	)
 	
 set(DEMO_SOURCE_LIST
