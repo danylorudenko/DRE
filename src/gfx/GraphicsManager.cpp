@@ -167,12 +167,14 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     globalUniform.main_ViewM            = m_MainView.GetViewM();
     globalUniform.main_iViewM           = m_MainView.GetInvViewM();
     globalUniform.main_ProjM            = m_MainView.GetProjectionM();
+    globalUniform.main_iProjM           = m_MainView.GetInvProjectionM();
     globalUniform.main_ViewProjM        = m_MainView.GetViewProjectionM();
     globalUniform.main_iViewProjM       = m_MainView.GetInvViewProjectionM();
 
     globalUniform.main_PrevViewM        = m_MainView.GetPrevViewM();
     globalUniform.main_PreviViewM       = m_MainView.GetPrevInvViewM();
     globalUniform.main_PrevProjM        = m_MainView.GetPrevProjectionM();
+    globalUniform.main_PreviProjM       = m_MainView.GetPrevInvProjectionM();
     globalUniform.main_PrevViewProjM    = m_MainView.GetPrevViewProjectionM();
     globalUniform.main_PreviViewProjM   = m_MainView.GetPrevInvViewProjectionM();
 
