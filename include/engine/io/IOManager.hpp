@@ -18,6 +18,8 @@
 
 #include <assimp\matrix4x4.h>
 
+#include <mutex>
+
 namespace WORLD
 {
 class Scene;
@@ -89,13 +91,13 @@ private:
         ASGeometryVector& asGeometryVector,
         ASGeometryIndexCounts& asGeometryIndexCounts);
 
-    void ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiMat, DRE::String256 const& assetFolderPath, Data::Material* material, Data::Material::TextureProperty::Slot slot, Data::TextureChannelVariations channels);
+    void ParseMaterialTexture_Parallel(aiScene const* scene, aiMaterial const* aiMat, DRE::String256 const& assetFolderPath, Data::Material* material, Data::Material::TextureProperty::Slot slot, Data::TextureChannelVariations channels);
 
 private:
     Data::MaterialLibrary*  m_MaterialLibrary;
     Data::GeometryLibrary*  m_GeometryLibrary;
 
-
+    std::mutex              m_TextureLoadingMutex;
 };
 
 }
