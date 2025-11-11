@@ -137,12 +137,12 @@ void DREApplicationDelegate::start()
     /////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////
-    WORLD::SceneNode* sponzaNode = m_IOManager.ParseModelFile("data\\Sponza\\glTF\\Sponza.gltf", m_MainScene);
+    WORLD::SceneNode* sponzaNode = m_IOManager.ParseModelFile("data\\gltf_samples\\Sponza\\glTF\\Sponza.gltf", m_MainScene);
     sponzaNode->SetScale(0.1f);
 
 
     glm::mat spheresTransform = glm::rotate(glm::identity<glm::mat4>(), glm::radians(180.0f), glm::vec3{ 1.0f, 0.0, 0.0f });
-    WORLD::SceneNode* spheresNode = m_IOManager.ParseModelFile("data\\MetalRoughSpheres\\glTF\\MetalRoughSpheres.gltf", m_MainScene, spheresTransform, Data::TEXTURE_VARIATION_RGBA);
+    WORLD::SceneNode* spheresNode = m_IOManager.ParseModelFile("data\\gltf_samples\\MetalRoughSpheres\\glTF\\MetalRoughSpheres.gltf", m_MainScene, spheresTransform, Data::TEXTURE_VARIATION_RGBA);
     spheresNode->ForEachChild([this](WORLD::SceneNode* node)
     {
         WORLD::ISceneNodeUser* nodeUser = node->GetNodeUser();

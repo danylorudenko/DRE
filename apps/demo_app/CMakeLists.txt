@@ -54,9 +54,23 @@ add_custom_command(TARGET demo_app POST_BUILD
 
 add_custom_command(TARGET demo_app POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E create_symlink
-	"${DRE_SOURCE_DIR}/extern/glTF-Sample-Models/2.0"
+	"${DRE_SOURCE_DIR}/data"
 	"$<TARGET_FILE_DIR:demo_app>/data"
-	COMMENT "Creating symlink to data in binary directory"
+	COMMENT "Creating symlink to project data folder"
+)
+
+add_custom_command(TARGET demo_app POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E create_symlink
+	"${DRE_SOURCE_DIR}/extern/glTF-Sample-Models/2.0"
+	"$<TARGET_FILE_DIR:demo_app>/data/gltf_samples"
+	COMMENT "Creating symlink to gltf_samples in binary directory"
+)
+
+add_custom_command(TARGET demo_app POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E create_symlink
+	"${DRE_SOURCE_DIR}/downloadable"
+	"$<TARGET_FILE_DIR:demo_app>/data/downloadable"
+	COMMENT "Creating symlink to downloadable in binary directory"
 )
 
 add_custom_command(TARGET demo_app POST_BUILD
