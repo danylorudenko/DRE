@@ -92,15 +92,21 @@ GlobalGeometry::GeometryGPU* GlobalGeometry::ScheduleGeometryUpload(Data::Geomet
     }
 
     DRE::U64 vertexOffset = m_MainGeometryAllocator.Alloc(source->GetVertexSizeInBytes(), 256);
-    DRE::U64 indexOffset = DRE_U64_MAX;
+    DRE_ASSERT(vertexOffset != m_MainGeometryAllocator.INVALID_OFFSET, "GlobalGeometry allocator is out of space");
+
+    DRE::U64 indexOffset = m_MainGeometryAllocator.INVALID_OFFSET;
     if (source->GetIndexSizeInBytes() > 0)
+    {
         indexOffset = m_MainGeometryAllocator.Alloc(source->GetIndexSizeInBytes(), 256);
+        DRE_ASSERT(indexOffset != m_MainGeometryAllocator.INVALID_OFFSET, "GlobalGeometry allocator is out of space");
+    }
+
 
 
     GeometryGPU geometryGPU{
         this, m_MainGeometryBuffer,
-        DRE::U32(vertexOffset), source->GetVertexCount(),
-        DRE::U32(indexOffset), source->GetIndexCount() };
+        vertexOffset, source->GetVertexCount(),
+        indexOffset, source->GetIndexCount() };
 
     GeometryGPU& result = m_GeometryMap.Emplace(source, geometryGPU);
 

@@ -43,11 +43,11 @@ public:
 
         VKW::BufferResource*    GetBuffer() const { return m_ParentBuffer; }
 
-        DRE::U32                GetVertexOffset() const { return m_VertexOffset; }
+        DRE::U64                GetVertexOffset() const { return m_VertexOffset; }
         DRE::U32                GetVertexCount() const { return m_VertexCount; }
         DRE::U64                GetVertexGPUAddress() const { return m_ParentBuffer->gpuAddress_ + m_VertexOffset; }
 
-        DRE::U32                GetIndexOffset() const { return m_IndexOffset; }
+        DRE::U64                GetIndexOffset() const { return m_IndexOffset; }
         DRE::U32                GetIndexCount() const { return m_IndexCount; }
         DRE::U64                GetIndexGPUAddress() const { return m_ParentBuffer->gpuAddress_ + m_IndexOffset; }
 
@@ -84,7 +84,7 @@ private:
     UploadArena* m_UploadArena;
 
     VKW::BufferResource* m_MainGeometryBuffer;
-    DRE::BuddyOffsetAllocator<16384, 13> m_MainGeometryAllocator; // manages ~134MB  (134,217,728)
+    DRE::BuddyOffsetAllocator<65536, 13> m_MainGeometryAllocator; // manages ~536MB  (536,870,912) Size of the allocator drives the size of GPU buffer
 
     DRE::HashTable<Data::Geometry*, GeometryGPU, DRE::DefaultAllocator> m_GeometryMap;
 

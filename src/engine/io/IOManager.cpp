@@ -187,10 +187,10 @@ void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext,
 {
     aiMatrix4x4 const t = node->mTransformation;
     glm::mat4 const transform {
-            t.a1, t.a2, t.a3, t.a4,
-            t.b1, t.b2, t.b3, t.b4,
-            t.c1, t.c2, t.c3, t.c4,
-            t.d1, t.d2, t.d3, t.d4
+        t.a1, t.b1, t.c1, t.d1,
+        t.a2, t.b2, t.c2, t.d2,
+        t.a3, t.b3, t.c3, t.d3,
+        t.a4, t.b4, t.c4, t.d4
     };
 
     WORLD::SceneNode* aggregatorNode = targetScene.CreateSceneNode(nullptr, parentNode);

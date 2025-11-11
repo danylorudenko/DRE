@@ -70,14 +70,14 @@ private:
     Camera                  m_MainCamera;
     Light*                  m_MainLight;
 
-    EntityID                                    m_EntityCounter;
-    DRE::InplaceHashTable<EntityID, Entity>     m_SceneEntities;
+    EntityID                                            m_EntityCounter;
+    DRE::InplaceHashTable<EntityID, Entity, 8192>       m_SceneEntities;
 
-    LightID                                     m_LightsCounter;
-    DRE::InplaceHashTable<LightID, Light>       m_SceneLights;
+    LightID                                             m_LightsCounter;
+    DRE::InplaceHashTable<LightID, Light>               m_SceneLights;
 
-    NodeID                                      m_NodeCounter;
-    DRE::InplaceHashTable<NodeID, SceneNode>    m_Nodes;
+    NodeID                                              m_NodeCounter;
+    DRE::InplaceHashTable<NodeID, SceneNode, 8192>      m_Nodes;
 
     SceneNode* m_RootNode;
 };
