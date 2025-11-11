@@ -137,8 +137,9 @@ void DREApplicationDelegate::start()
     /////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////
-    WORLD::SceneNode* sponzaNode = m_IOManager.ParseModelFile("data\\gltf_samples\\Sponza\\glTF\\Sponza.gltf", m_MainScene);
-    sponzaNode->SetScale(0.1f);
+    //WORLD::SceneNode* sponzaNode = m_IOManager.ParseModelFile("data\\gltf_samples\\Sponza\\glTF\\Sponza.gltf", m_MainScene);
+    WORLD::SceneNode* sponzaNode = m_IOManager.ParseModelFile("data\\downloadable\\main_sponza\\NewSponza_Main_glTF_003.gltf", m_MainScene);
+    sponzaNode->SetScale(5.0f);
 
 
     glm::mat spheresTransform = glm::rotate(glm::identity<glm::mat4>(), glm::radians(180.0f), glm::vec3{ 1.0f, 0.0, 0.0f });
