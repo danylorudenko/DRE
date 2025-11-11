@@ -61,7 +61,7 @@ private:
 // complete. In the sequential case the returned group will be empty and Wait() will
 // return immediately.
 template<U32 MAX_PARALLEL_FACTOR = 8, typename TFunc>
-ParallelTaskGroup<MAX_PARALLEL_FACTOR> ParallelFor(U32 count, TFunc&& func, bool parallel, U32 chunkSize = 0)
+ParallelTaskGroup<MAX_PARALLEL_FACTOR> ParallelFor(U32 count, TFunc&& func, bool parallel)
 {
     ParallelTaskGroup<MAX_PARALLEL_FACTOR> taskGroup{};
 
@@ -84,19 +84,19 @@ ParallelTaskGroup<MAX_PARALLEL_FACTOR> ParallelFor(U32 count, TFunc&& func, bool
     }
 
     U32 const parallelFactor = DRE::Max<U32>(1, DRE::Min<U32>(MAX_PARALLEL_FACTOR, count));
-    U32 const effectiveChunkSize = chunkSize != 0 ? chunkSize : ((count + parallelFactor - 1) / parallelFactor);
+    U32 const chunkSize = (count + parallelFactor - 1) / parallelFactor;
 
     for (U32 chunkID = 0; chunkID < parallelFactor; ++chunkID)
     {
-        taskGroup.Add(std::async(std::launch::async, [chunkID, effectiveChunkSize, count, callable]() mutable
+        taskGroup.Add(std::async(std::launch::async, [chunkID, chunkSize, count, callable]()
         {
-            U32 const chunkStart = chunkID * effectiveChunkSize;
+            U32 const chunkStart = chunkID * chunkSize;
             if (chunkStart >= count)
             {
                 return;
             }
 
-            U32 const chunkEnd = DRE::Min<U32>(chunkStart + effectiveChunkSize, count);
+            U32 const chunkEnd = DRE::Min<U32>(chunkStart + chunkSize, count);
             for (U32 index = chunkStart; index < chunkEnd; ++index)
             {
                 std::invoke(callable, index);

@@ -13,6 +13,7 @@
 #include <foundation\Container\HashTable.hpp>
 #include <foundation\system\Time.hpp>
 #include <foundation\util\Hash.hpp>
+#include <foundation\system\Parallel.hpp>
 
 #include <assimp\Importer.hpp>
 #include <assimp\postprocess.h>
@@ -119,7 +120,7 @@ Data::Texture2D IOManager::ReadTexture2D(char const* path, Data::TextureChannelV
     return texture;
 }
 
-void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiMat, DRE::String256 const& assetFolderPath, Data::Material* material, Data::Material::TextureProperty::Slot slot, Data::TextureChannelVariations channels)
+void IOManager::ParseMaterialTexture_Parallel(aiScene const* scene, aiMaterial const* aiMat, DRE::String256 const& assetFolderPath, Data::Material* material, Data::Material::TextureProperty::Slot slot, Data::TextureChannelVariations channels)
 {
     aiString aiTexturePath;
     aiTextureType aiType = aiTextureType_NONE;
@@ -157,13 +158,18 @@ void IOManager::ParseMaterialTexture(aiScene const* scene, aiMaterial const* aiM
         textureFilePath.Append(aiTexturePath.C_Str(), DRE::U16(aiTexturePath.length));
 
         Data::Texture2D dataTexture = ReadTexture2D(textureFilePath.GetData(), channels);
-        GFX::Texture* gfxTexture = GFX::g_GraphicsManager->GetTextureBank().LoadTexture2DSync(
-            dataTexture.GetName(),
-            dataTexture.GetSizeX(),
-            dataTexture.GetSizeY(),
-            dataTexture.GetFormat(),
-            dataTexture.GetBuffer()
-        );
+        GFX::Texture* gfxTexture = nullptr;
+        
+        {
+            std::lock_guard<std::mutex> guard{ m_TextureLoadingMutex };
+            GFX::g_GraphicsManager->GetTextureBank().LoadTexture2DSync(
+                dataTexture.GetName(),
+                dataTexture.GetSizeX(),
+                dataTexture.GetSizeY(),
+                dataTexture.GetFormat(),
+                dataTexture.GetBuffer()
+            );
+        }
 
         material->AssignTextureToSlot(slot, DRE_MOVE(dataTexture), gfxTexture);
     }
@@ -216,7 +222,7 @@ WORLD::SceneNode* IOManager::ParseModelFile(char const* path, WORLD::Scene& targ
 {
     Assimp::Importer importer = Assimp::Importer();
 
-    aiScene const* scene = importer.ReadFile(path, aiProcessPreset_TargetRealtime_Fast | aiProcess_FlipUVs);
+    aiScene const* scene = importer.ReadFile(path, aiProcessPreset_TargetRealtime_Fast);
     char const* sceneName = aiScene::GetShortFilename(path);
 
     DRE_ASSERT(scene != nullptr, "Failed to load a model file.");
@@ -250,10 +256,17 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName
     }
     textureFilePath.Shrink(folderEnd);
 
-    for (std::uint32_t i = 0, size = scene->mNumMaterials; i < size; i++)
+    std::mutex materialMutex;
+
+    DRE::ParallelFor<16>(scene->mNumMaterials, 
+    [this, scene, sceneName, metalnessRoughnessOverride, &textureFilePath, &materialMutex](DRE::U32 index)
     {
-        aiMaterial* aiMat = scene->mMaterials[i];
-        Data::Material* material = m_MaterialLibrary->CreateMaterial(i, sceneName, aiMat->GetName().C_Str());
+        aiMaterial const* aiMat = scene->mMaterials[index];
+        Data::Material* material = nullptr;
+        {
+            std::lock_guard<std::mutex> guard{ materialMutex };
+            material = m_MaterialLibrary->CreateMaterial(index, sceneName, aiMat->GetName().C_Str());
+        }
 
         DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_DIFFUSE) <= 1, "We don't support multiple textures of the same type per material (DIFFUSE).");
         DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_NORMALS) <= 1, "We don't support multiple textures of the same type per material (NORMALS)");
@@ -262,26 +275,30 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName
         DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_AMBIENT_OCCLUSION) <= 1, "We don't support multiple textures of the same type per material (AMBIENT_OCCLUSION)");
 
         // PROCESS TEXTURES
-        ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::DIFFUSE, Data::TEXTURE_VARIATION_RGBA);
-        ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::NORMAL, Data::TEXTURE_VARIATION_RGBA);
+        ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::DIFFUSE, Data::TEXTURE_VARIATION_RGBA);
+        ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::NORMAL, Data::TEXTURE_VARIATION_RGBA);
 
         if (metalnessRoughnessOverride == Data::TEXTURE_VARIATION_INVALID)
         {
-            ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::METALNESS, Data::TEXTURE_VARIATION_GRAY);
-            ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::ROUGHNESS, Data::TEXTURE_VARIATION_GRAY);
+            ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::METALNESS, Data::TEXTURE_VARIATION_GRAY);
+            ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::ROUGHNESS, Data::TEXTURE_VARIATION_GRAY);
         }
         else
         {
             // it means we have texture with merged metalness and roughness attributes. Let it lie in metalness
-            ParseMaterialTexture(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::METALNESS, metalnessRoughnessOverride);
+            ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::METALNESS, metalnessRoughnessOverride);
         }
         // TODO: load rgb here
 
         material->GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE);
 
-        GFX::Material* gfxMaterial = GFX::g_GraphicsManager->GetPipelineDB().CreateMaterial(material->GetName(), material->GetRenderingProperties().GetMaterialType());
-        material->FlushToGfxMaterial(gfxMaterial);
+        {
+            std::lock_guard<std::mutex> guard{ materialMutex };
+            GFX::Material* gfxMaterial = GFX::g_GraphicsManager->GetPipelineDB().CreateMaterial(material->GetName(), material->GetRenderingProperties().GetMaterialType());
+            material->FlushToGfxMaterial(gfxMaterial);
+        }
     }
+    , true);
 }
 
 void IOManager::ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene, char const* sceneName)
