@@ -19,11 +19,13 @@ TextureInspector::TextureInspector(BaseEditor* rootEditor, EditorFlags flags, GF
     : BaseEditor{ rootEditor, flags }
     , m_TextureBank{ bank }
     , m_GraphResources{ graphResources }
+    , m_TextureSizeMultiplier{ 0.75f }
 {}
 
 TextureInspector::TextureInspector(TextureInspector&& rhs)
     : BaseEditor{ DRE_MOVE(rhs) }
     , m_TextureBank{ nullptr }
+    , m_TextureSizeMultiplier{ 0.75f }
 {
     operator=(DRE_MOVE(rhs));
 }
@@ -34,6 +36,7 @@ TextureInspector& TextureInspector::operator=(TextureInspector&& rhs)
 
     DRE_SWAP_MEMBER(m_TextureBank);
     DRE_SWAP_MEMBER(m_GraphResources);
+    DRE_SWAP_MEMBER(m_TextureSizeMultiplier);
 
     return *this;
 }
@@ -114,6 +117,8 @@ void TextureInspector::Render()
         {
 #ifdef DRE_IMGUI_CUSTOM_TEXTURE
 
+            ImGui::SliderFloat("Texture Size", &m_TextureSizeMultiplier, 0.0f, 10.0f);
+
             DRE::InplaceVector<GFX::Texture*, 2> deleteQueue;
             for(std::uint32_t i = 0, size = m_DisplayedTextures.Size(); i < size; i++)
             {
@@ -121,11 +126,9 @@ void TextureInspector::Render()
                 // Texture View BEGIN
                 ////////////////////////////
                 ImVec2 imageSize{ float(m_DisplayedTextures[i]->GetWidth()), float(m_DisplayedTextures[i]->GetHeight()) };
-                if (DRE::Max(imageSize.x, imageSize.y) > 512)
-                {
-                    imageSize.x *= 512.0f / DRE::Max(imageSize.x, imageSize.y);
-                    imageSize.y *= 512.0f / DRE::Max(imageSize.x, imageSize.y);
-                }
+                imageSize.x *= m_TextureSizeMultiplier;
+                imageSize.y *= m_TextureSizeMultiplier;
+
 
 
                 DRE::String128 window_id{ m_DisplayedTextures[i]->GetResource()->name_ };

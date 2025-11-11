@@ -35,6 +35,8 @@ private:
     GFX::GraphResourcesManager* m_GraphResources;
 
     DRE::InplaceVector<GFX::Texture*, 12> m_DisplayedTextures;
+
+    float m_TextureSizeMultiplier;
 };
 
 }
