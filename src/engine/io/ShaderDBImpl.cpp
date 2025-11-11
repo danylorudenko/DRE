@@ -4,6 +4,7 @@
 #include <engine\io\ShaderDB.hpp>
 
 #include <engine\io\IOManager.hpp>
+#include <foundation/system/Parallel.hpp>
 
 #include <spirv_cross.hpp>
 #include <wrl/client.h>
@@ -500,32 +501,14 @@ void ShaderDBImpl::CompileSources(bool parallel)
         }
     }
 
-    std::uint32_t constexpr MAX_PARALLEL_FACTOR = 8;
-    std::uint32_t const parallelFactor = parallel ? MAX_PARALLEL_FACTOR : 1;
-    std::uint32_t const parallelChunkSize = fileNames.Size() / parallelFactor + 1;
+    auto compileTasks = DRE::ParallelFor<8>(fileNames.Size(), [this, &fileNames](DRE::U32 index)
+        {
+            DRE::String64& name = fileNames[index].name;
+            DRE::ByteBuffer spirv = CompileShader(name.GetData(), fileNames[index].type);
+            DRE_ASSERT(spirv.Size() > 0, "Can't run with invalid shader.");
+        }, parallel);
 
-    DRE::InplaceVector<std::future<void>, MAX_PARALLEL_FACTOR> parallelCompilations;
-    for (std::uint32_t i = 0; i < parallelFactor; i++)
-    {
-        parallelCompilations.EmplaceBack(std::async(std::launch::async, [parallelChunkSize, &parallelCompilations, &fileNames, this](std::uint32_t chunkID) 
-            {
-                std::uint32_t chunkStart = chunkID * parallelChunkSize;
-                std::uint32_t chunkEnd = DRE::Min((chunkID + 1) * parallelChunkSize, fileNames.Size());
-
-                for (std::uint32_t j = chunkStart; j < chunkEnd; j++)
-                {
-                    DRE::String64& name = fileNames[j].name;
-                    DRE::ByteBuffer spirv = CompileShader(name.GetData(), fileNames[j].type);
-                    DRE_ASSERT(spirv.Size() > 0, "Can't run with invalid shader.");
-                }
-            }, i));
-    }
-
-    // std::wait_all not available yet/experimental. Though we should be fine
-    for (std::uint32_t i = 0; i < parallelFactor; i++)
-    {
-        parallelCompilations[i].wait();
-    }
+    compileTasks.Wait();
 }
 
 DRE::InplaceVector<DRE::String64, 12> ShaderDBImpl::GetPendingShaders()
