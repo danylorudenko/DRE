@@ -86,7 +86,7 @@ struct GraphicsSettings
     float           m_AOStrength            = 1.0f;
     float           m_AOKernelScale         = 5.0f;
     float           m_AOMaxOcclusionDistance= 0.5f;
-    AOVersion       m_AOVersion             = AO_HorizonBased;
+    AOVersion       m_AOVersion             = AO_GTAO;
 
     DRE::U32        m_ShadowMapWidth        = 1024;
     DRE::U32        m_ShadowMapHeight       = 1024;

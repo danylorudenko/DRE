@@ -29,6 +29,7 @@ enum class TextureID
     GBufferB_NormalMetalness,
     GBufferC_Velocity,
     GBufferD_ObjectIDBuffer,
+    DEBUG_TEXTURE,
     ID_MAX
 };
 

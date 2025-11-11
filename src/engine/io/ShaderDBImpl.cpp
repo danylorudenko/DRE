@@ -597,7 +597,7 @@ void ShaderDBImpl::ShaderObserver_Thread()
                 std::lock_guard guard{ m_PendingShadersMutex };
                 if (m_PendingShaders.Find(stem) == m_PendingShaders.Size())
                 {
-                    std::cout << "ShaderDB::ShaderObserver: Found new change in shader file" << fileName << std::endl;
+                    std::cout << "ShaderDB::ShaderObserver: Found new change in shader file: " << fileName << std::endl;
                     m_PendingShaders.EmplaceBack(stem);
                 }
                 m_PendingChangesFlag.store(true, std::memory_order::release);

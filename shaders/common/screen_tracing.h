@@ -47,35 +47,27 @@ float2 TraceScreenDepthForIntersection(ScreenTracingParamsOBSOLETE tracingParams
 struct ScreenTracingParams
 {
     float2  surfacePosUV;
+    float2  traceDirUV;
     float3  surfacePosVS;
     float3  surfaceNormalVS;
-    float3  traceDirVS;
     float   traceDistanceVS;
     int     maxStepsCount;
 };
 
-// returns ange of the horizon
+// returns angle of the horizon
 float TraceScreenDepthForHorizon(ScreenTracingParams tracingParams, Texture2D<float> depthTexture)
 {
-    float2 center = tracingParams.surfacePosUV;
-    float4 traceDirClip = mul(GetCameraProjM(), float4(tracingParams.traceDirVS * tracingParams.traceDistanceVS, 0));
-    float3 traceStepNDC = (traceDirClip.xyz / traceDirClip.w) / tracingParams.maxStepsCount;
-    float2 traceStepUV = traceStepNDC.xy * 0.5 - 0.5;
+    float2 centerUV = tracingParams.surfacePosUV;
 
     float horizonCos = -1;
     for (int step = 1; step < tracingParams.maxStepsCount; step++)
     {
-        float2 marchUV = center + traceStepUV * step;
+        float2 marchUV = centerUV + tracingParams.traceDirUV * step;
         float deviceZSample = depthTexture.SampleLevel(GetSamplerNearestClamp(), marchUV, 0).x;
 
         float zView = ConvertDeviceZToViewZ(deviceZSample);
 
-        float3 marchedPosWS = ConvertUVzViewToWorld(marchUV, zView);
         float3 marchedPosVS = ConvertUVzViewToView(marchUV, zView);
-        //if (distance(marchWorldPos, centerWorldPos) > GetMaxOcclusionDistance())
-        //{
-        //    continue;
-        //}
 
         float3 marchedSampleDirectionVS = normalize(marchedPosVS - tracingParams.surfacePosVS);
         float sampleHorizonAngle = dot(marchedSampleDirectionVS, tracingParams.surfaceNormalVS);

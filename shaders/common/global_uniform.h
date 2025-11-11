@@ -56,18 +56,18 @@ float3    GetCameraDir() { return g_GlobalUniforms.main_CameraDir.xyz; }
 float2    GetJitter() { return g_GlobalUniforms.main_Jitter.xy; }
 
 float4x4  GetCameraViewM() { return g_GlobalUniforms.main_ViewM; }
-float4x4  GetCameraiViewM() { return g_GlobalUniforms.main_iViewM; }
+float4x4  GetCameraInvViewM() { return g_GlobalUniforms.main_iViewM; }
 float4x4  GetCameraProjM() { return g_GlobalUniforms.main_ProjM; }
-float4x4  GetCameraiProjM() { return g_GlobalUniforms.main_iProjM; }
+float4x4  GetCameraInvProjM() { return g_GlobalUniforms.main_iProjM; }
 float4x4  GetCameraViewProjM() { return g_GlobalUniforms.main_ViewProjM; }
-float4x4  GetCameraiViewProjM() { return g_GlobalUniforms.main_iViewProjM; }
+float4x4  GetCameraInvViewProjM() { return g_GlobalUniforms.main_iViewProjM; }
 
 float4x4  GetPrevCameraViewM() { return g_GlobalUniforms.main_PrevViewM; }
-float4x4  GetPrevCameraiViewM() { return g_GlobalUniforms.main_PreviViewM; }
+float4x4  GetPrevCameraInvViewM() { return g_GlobalUniforms.main_PreviViewM; }
 float4x4  GetPrevCameraProjM() { return g_GlobalUniforms.main_PrevProjM; }
-float4x4  GetPrevCameraiProjM() { return g_GlobalUniforms.main_PreviProjM; }
+float4x4  GetPrevCameraInvProjM() { return g_GlobalUniforms.main_PreviProjM; }
 float4x4  GetPrevCameraViewProjM() { return g_GlobalUniforms.main_PrevViewProjM; }
-float4x4  GetPrevCameraiViewProjM() { return g_GlobalUniforms.main_PreviViewProjM; }
+float4x4  GetPrevCameraInvViewProjM() { return g_GlobalUniforms.main_PreviViewProjM; }
 
 float3    GetSunLightDir() { return g_GlobalUniforms.main_SunLightDir.xyz; }
 

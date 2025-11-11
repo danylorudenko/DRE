@@ -110,10 +110,10 @@ float3 ConvertScreenToView(int2 pixel, float deviceZ)
     float B = GetCameraProjM()[3][2];
     float zClip = A * zView + B;
 
-    float2 pixelNDC = (float2(pixel) + 0.5) / GetViewportSize() * 2 - 1;
+    float2 pixelNDC = ((float2(pixel) + 0.5) / GetViewportSize()) * 2 - 1;
     float4 pixelClip = float4(pixelNDC * zView, zClip, zView);
 
-    float4 pixelViewHomogeneous = mul(GetCameraiProjM(), pixelClip);
+    float4 pixelViewHomogeneous = mul(GetCameraInvProjM(), pixelClip);
     return pixelViewHomogeneous.xyz / pixelViewHomogeneous.w;
 }
 
@@ -126,9 +126,9 @@ float3 ConvertScreenToWorld(int2 pixel, float deviceZ)
     float zClip = A * zView + B;
 
     float2 pixelNDC = ((float2(pixel) + 0.5) / GetViewportSize()) * 2 - 1;
-    float4 pixelClip = float4(float2(pixelNDC) * zView, zClip, zView);
+    float4 pixelClip = float4(pixelNDC * zView, zClip, zView);
 
-    float4 pixelWorldHomogeneous = mul(GetCameraiViewProjM(), pixelClip);
+    float4 pixelWorldHomogeneous = mul(GetCameraInvViewProjM(), pixelClip);
     return pixelWorldHomogeneous.xyz / pixelWorldHomogeneous.w;
 }
 
@@ -139,9 +139,9 @@ float3 ConvertUVzViewToWorld(float2 uv, float zView)
     float zClip = A * zView + B;
 
     float2 pixelNDC = uv * 2 - 1;
-    float4 pixelClip = float4(float2(pixelNDC) * zView, zClip, zView);
+    float4 pixelClip = float4(pixelNDC * zView, zClip, zView);
 
-    float4 pixelWorldHomogeneous = mul(GetCameraiViewProjM(), pixelClip);
+    float4 pixelWorldHomogeneous = mul(GetCameraInvViewProjM(), pixelClip);
     return pixelWorldHomogeneous.xyz / pixelWorldHomogeneous.w;
 }
 
@@ -152,9 +152,9 @@ float3 ConvertUVzViewToView(float2 uv, float zView)
     float zClip = A * zView + B;
 
     float2 pixelNDC = uv * 2 - 1;
-    float4 pixelClip = float4(float2(pixelNDC) * zView, zClip, zView);
+    float4 pixelClip = float4(pixelNDC * zView, zClip, zView);
 
-    float4 pixelWorldHomogeneous = mul(GetCameraiProjM(), pixelClip);
+    float4 pixelWorldHomogeneous = mul(GetCameraInvProjM(), pixelClip);
     return pixelWorldHomogeneous.xyz / pixelWorldHomogeneous.w;
 }
 

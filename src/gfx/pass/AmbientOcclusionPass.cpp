@@ -25,6 +25,8 @@ void AmbientOcclusionPass::RegisterResources(RenderGraph& graph)
     graph.RegisterTexture(this, RESOURCE_ID(TextureID::GBufferB_NormalMetalness), g_GraphicsManager->GetGBufferFormats()[1], renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 2);
 
     graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 3);
+
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DEBUG_TEXTURE), VKW::FORMAT_R32G32B32A32_FLOAT, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_RW, VKW::STAGE_COMPUTE, 4);
 }
 
 void AmbientOcclusionPass::Render(RenderGraph& graph, VKW::Context& context)
@@ -34,10 +36,12 @@ void AmbientOcclusionPass::Render(RenderGraph& graph, VKW::Context& context)
     VKW::ImageResourceView* aoOutput = graph.GetTexture(RESOURCE_ID(TextureID::AmbientOcclusion))->GetShaderView();
     VKW::ImageResourceView* depth = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth))->GetShaderView();
     VKW::ImageResourceView* gBufferNormal_Metalness = graph.GetTexture(RESOURCE_ID(TextureID::GBufferB_NormalMetalness))->GetShaderView();
+    VKW::ImageResourceView* DEBUG_TEXTURE = graph.GetTexture(RESOURCE_ID(TextureID::DEBUG_TEXTURE))->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, aoOutput->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depth->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, gBufferNormal_Metalness->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, DEBUG_TEXTURE->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
 
     UniformProxy uniform = graph.GetPassUniform(GetID(), context, 128);
 
