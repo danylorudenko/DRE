@@ -159,10 +159,10 @@ void IOManager::ParseMaterialTexture_Parallel(aiScene const* scene, aiMaterial c
 
         Data::Texture2D dataTexture = ReadTexture2D(textureFilePath.GetData(), channels);
         GFX::Texture* gfxTexture = nullptr;
-        
+
         {
             std::lock_guard<std::mutex> guard{ m_TextureLoadingMutex };
-            GFX::g_GraphicsManager->GetTextureBank().LoadTexture2DSync(
+            gfxTexture = GFX::g_GraphicsManager->GetTextureBank().LoadTexture2DSync(
                 dataTexture.GetName(),
                 dataTexture.GetSizeX(),
                 dataTexture.GetSizeY(),
@@ -262,6 +262,7 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName
     [this, scene, sceneName, metalnessRoughnessOverride, &textureFilePath, &materialMutex](DRE::U32 index)
     {
         aiMaterial const* aiMat = scene->mMaterials[index];
+
         Data::Material* material = nullptr;
         {
             std::lock_guard<std::mutex> guard{ materialMutex };
@@ -345,24 +346,5 @@ void IOManager::ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene
         GFX::g_GraphicsManager->GetRayTracignManager().RegisterGeometry(m_GeometryLibrary->GetGeometry(i, sceneName), gfxContext);
     }
 }
-
-//
-//void IOManager::LoadShaderBinaries()
-//{
-//    std::filesystem::recursive_directory_iterator dir_iterator{ "shaders", std::filesystem::directory_options::follow_directory_symlink };
-//
-//    for (auto const& entry : dir_iterator)
-//    {
-//        if (entry.path().has_extension() && entry.path().extension() == ".spv")
-//        {
-//            DRE::ByteBuffer moduleBuffer{ static_cast<std::uint64_t>(entry.file_size()) };
-//            ReadFileToBuffer(entry.path().generic_string().c_str(), &moduleBuffer);
-//
-//            
-//        }
-//    }
-//
-//    m_ShaderObserverThread = std::thread{ &IOManager::ShaderObserver, this };
-//}
 
 }
