@@ -44,6 +44,11 @@ void GBufferPass::RegisterResources(RenderGraph& graph)
         gBufferFormats[3], renderWidth, renderHeight,
         3);
 
+    graph.RegisterRenderTarget(this,
+        RESOURCE_ID(TextureID::DEBUG_TEXTURE),
+        VKW::FORMAT_R32G32B32A32_FLOAT, renderWidth, renderHeight,
+        4);
+
     graph.RegisterDepthOnlyTarget(this,
         RESOURCE_ID(TextureID::MainDepth),
         g_GraphicsManager->GetMainDepthFormat(), renderWidth, renderHeight);
@@ -64,16 +69,18 @@ void GBufferPass::Render(RenderGraph& graph, VKW::Context& context)
     VKW::ImageResourceView* attachmentB = graph.GetTexture(RESOURCE_ID(TextureID::GBufferB_NormalMetalness))->GetShaderView();
     VKW::ImageResourceView* attachmentC = graph.GetTexture(RESOURCE_ID(TextureID::GBufferC_Velocity))->GetShaderView();
     VKW::ImageResourceView* attachmentD = graph.GetTexture(RESOURCE_ID(TextureID::GBufferD_ObjectIDBuffer))->GetShaderView();
+    VKW::ImageResourceView* attachmentDEBUG = graph.GetTexture(RESOURCE_ID(TextureID::DEBUG_TEXTURE))->GetShaderView();
     VKW::ImageResourceView* depthAttachment = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth))->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentA->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentB->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentC->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentD->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentDEBUG->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->parentResource_, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
 
-    std::uint32_t constexpr attachmentsCount = 4;
-    VKW::ImageResourceView* attachments[attachmentsCount] = { attachmentA, attachmentB, attachmentC, attachmentD };
+    std::uint32_t constexpr attachmentsCount = 5;
+    VKW::ImageResourceView* attachments[attachmentsCount] = { attachmentA, attachmentB, attachmentC, attachmentD, attachmentDEBUG };
 
     //VKW::PipelineLayout* passLayout = graph.GetPassPipelineLayout(GetID());
     VKW::PipelineLayout* passLayout = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalPipelineLayout();

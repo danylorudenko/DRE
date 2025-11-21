@@ -163,6 +163,7 @@ DRE::String64 const* PipelineDB::CreateGraphicsGBufferPipeline(char const* name)
     desc.AddColorOutput(gBufferFormats[1]); // normal_metalness
     desc.AddColorOutput(gBufferFormats[2]); // velocity
     desc.AddColorOutput(gBufferFormats[3]); // objectID
+    desc.AddColorOutput(VKW::FORMAT_R32G32B32A32_FLOAT); // DEBUG_TEXTURE
 
     AddDREVertexAttributes(desc);
 

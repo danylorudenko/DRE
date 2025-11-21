@@ -19,7 +19,10 @@ struct GBuffer
     float4 Normal_Metalness     : SV_Target1;
     float2 Velocity             : SV_Target2;
     float4 ObjectID             : SV_Target3;
+
+    float4 DEBUG_TEXTURE        : SV_Target4;
 };
+
 
 [require(spvRayQueryKHR)]
 [shader("pixel")]
@@ -37,5 +40,9 @@ GBuffer main(PSInput input)
     Output.Velocity = CalculateVelocity(input.ndc_pos, input.prev_wpos);
     Output.ObjectID = GlobalID2Color();
 
+    //Output.DEBUG_TEXTURE = float4(input.TBN[2], 1);
+    //Output.DEBUG_TEXTURE = float4(frac(input.uv), 0, 1);
+    Output.DEBUG_TEXTURE = float4(MaterialProperties.metalness.rrr, 1);
+    
     return Output;
 }
