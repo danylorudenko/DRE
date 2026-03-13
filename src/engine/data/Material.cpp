@@ -33,6 +33,13 @@ Material::Material(char const* name)
 {
 }
 
+void Material::RenderingProperties::SetMaterialType(Material::RenderingProperties::MaterialType type)
+{
+    m_Type = type;
+    if (type == MATERIAL_TYPE_ALPHA_MASKED)
+        EnableAlphaMasked(true);
+}
+
 void Material::FlushToGfxMaterial(GFX::Material* target)
 {
     for (DRE::U32 i = 0; i < TextureProperty::Slot::MAX; i++)
@@ -41,6 +48,10 @@ void Material::FlushToGfxMaterial(GFX::Material* target)
         if (property.GetSlotType() != TextureProperty::Slot::MAX)
             target->SetTextureNoUpdate(property.GetSlotType(), property.m_GFXTexture);
     }
+
+    MaterialFlags finalFlags = m_RenderingProperties.GetMaterialFlags();
+    finalFlags |= (m_RenderingProperties.GetMaterialType() == RenderingProperties::MATERIAL_TYPE_ALPHA_MASKED) ? MATERIAL_FLAG_ALPHA_MASKED : 0;
+
     target->SetFlagsNoUpdate(m_RenderingProperties.GetMaterialFlags());
 
     target->FlushDataToMaterialGPU();

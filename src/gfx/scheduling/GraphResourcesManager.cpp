@@ -20,7 +20,12 @@ GraphResourcesManager::GraphResourcesManager(VKW::Device* device)
 
 GraphResourcesManager::~GraphResourcesManager() = default;
 
-void GraphResourcesManager::RegisterTexture(char const* id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access)
+void GraphResourcesManager::RegisterTexture(char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access)
+{
+    RegisterTexture(id, format, width, height, 1, access);
+}
+
+void GraphResourcesManager::RegisterTexture(char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 mipCount, VKW::ResourceAccess access)
 {
     AccumulatedInfo& info = m_AccumulatedTextureInfo[id];
 
@@ -31,6 +36,7 @@ void GraphResourcesManager::RegisterTexture(char const* id, VKW::Format format, 
     info.format = format;
     info.size0 = width;
     info.size1 = height;
+    info.mipCount = mipCount;
     info.depth = 1;
 }
 
@@ -81,10 +87,10 @@ void GraphResourcesManager::InitResources()
             imageAspect |= VK_IMAGE_ASPECT_DEPTH_BIT;
         }
 
-        VKW::ImageResource* image    = m_Device->GetResourcesController()->CreateImage(info.size0, info.size1, info.format, usage, *pair.key);
+        VKW::ImageResource* image    = m_Device->GetResourcesController()->CreateImage(info.size0, info.size1, info.mipCount, info.format, usage, *pair.key);
 
 
-        VkImageSubresourceRange range = VKW::HELPER::DefaultImageSubresourceRange(imageAspect);
+        VkImageSubresourceRange range = VKW::HELPER::ImageSubresourceRange(imageAspect, image->mipLevels_);
         VKW::ImageResourceView* view = m_Device->GetResourcesController()->ViewImageAs(image, &range);
         VKW::TextureDescriptorIndex globalDescriptor = m_Device->GetDescriptorManager()->AllocateTextureDescriptor(view);
 

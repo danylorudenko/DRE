@@ -89,52 +89,18 @@ VkImageSubresourceLayers DefaultImageSubresourceLayers()
     };
 }
 
-VkImageSubresourceRange DefaultImageSubresourceRange(VkImageAspectFlags aspectFlags)
+VkImageSubresourceRange ImageSubresourceRange(VkImageAspectFlags aspectFlags, DRE::U32 mipLevels)
 {
     return VkImageSubresourceRange{
         aspectFlags,
         0,
-        1,
+        mipLevels,
         0,
         1
     };
 }
 
-VkImageMemoryBarrier BarrierUndefinedToTransferDst(VkImage image, std::uint32_t queueFamily)
-{
-    VkImageMemoryBarrier barrier{};
-    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barrier.pNext = nullptr;
-    barrier.srcAccessMask = VK_FLAGS_NONE;
-    barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    barrier.srcQueueFamilyIndex = queueFamily;
-    barrier.dstQueueFamilyIndex = queueFamily;
-    barrier.image = image;
-    barrier.subresourceRange = DefaultImageSubresourceRange();
-
-    return barrier;
-}
-
-VkImageMemoryBarrier BarrierTransferDstToTexture(VkImage image, std::uint32_t queueFamily)
-{
-    VkImageMemoryBarrier barrier{};
-    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barrier.pNext = nullptr;
-    barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    barrier.srcQueueFamilyIndex = queueFamily;
-    barrier.dstQueueFamilyIndex = queueFamily;
-    barrier.image = image;
-    barrier.subresourceRange = DefaultImageSubresourceRange();
-
-    return barrier;
-}
-
-VkBufferMemoryBarrier BarrierUploadToTransferSrc(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, std::uint32_t queueFamily)
+VkBufferMemoryBarrier BarrierUploadToTransferSrc(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, DRE::U32 queueFamily)
 {
     VkBufferMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
@@ -150,7 +116,7 @@ VkBufferMemoryBarrier BarrierUploadToTransferSrc(VkBuffer buffer, VkDeviceSize o
     return barrier;
 }
 
-VkBufferMemoryBarrier BarrierTransferDstToCompute(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, std::uint32_t queueFamily)
+VkBufferMemoryBarrier BarrierTransferDstToCompute(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, DRE::U32 queueFamily)
 {
     VkBufferMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
@@ -166,7 +132,7 @@ VkBufferMemoryBarrier BarrierTransferDstToCompute(VkBuffer buffer, VkDeviceSize 
     return barrier;
 }
 
-VkBufferMemoryBarrier BarrierTransferDstToShaderRead(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, std::uint32_t queueFamily)
+VkBufferMemoryBarrier BarrierTransferDstToShaderRead(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, DRE::U32 queueFamily)
 {
     VkBufferMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
@@ -182,7 +148,7 @@ VkBufferMemoryBarrier BarrierTransferDstToShaderRead(VkBuffer buffer, VkDeviceSi
     return barrier;
 }
 
-VkBufferMemoryBarrier BarrierTransferDstToHost(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, std::uint32_t queueFamily)
+VkBufferMemoryBarrier BarrierTransferDstToHost(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, DRE::U32 queueFamily)
 {
     VkBufferMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
@@ -198,7 +164,7 @@ VkBufferMemoryBarrier BarrierTransferDstToHost(VkBuffer buffer, VkDeviceSize off
     return barrier;
 }
 
-VkBufferMemoryBarrier BarrierComputeToTransferSrc(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, std::uint32_t queueFamily)
+VkBufferMemoryBarrier BarrierComputeToTransferSrc(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, DRE::U32 queueFamily)
 {
     VkBufferMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;

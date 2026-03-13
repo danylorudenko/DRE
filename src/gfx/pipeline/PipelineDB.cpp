@@ -53,7 +53,6 @@ void PipelineDB::CreateDefaultPipelines()
         CreateComputePipeline("fft_inv_perm");
         CreateComputePipeline("debug_view");
 
-
         VKW::Pipeline::Descriptor waterCausticDesc;
         waterCausticDesc.SetPipelineType(VKW::PIPELINE_TYPE_GRAPHIC);
         //waterCausticDesc.EnableDepthTest(g_GraphicsManager->GetMainDepthFormat(), false);

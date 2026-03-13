@@ -31,7 +31,12 @@ GBuffer main(PSInput input)
     S_INSTANCE* InstancePtr = GetInstance();
     S_MATERIAL* MaterialPtr = GetMaterial(InstancePtr);
 
-    S_MATERIAL_PROPERTIES MaterialProperties = ReadMaterialProeprties(MaterialPtr, input.uv, input.TBN);
+    S_MATERIAL_PROPERTIES MaterialProperties = ReadMaterialProperties(MaterialPtr, input.uv, input.TBN);
+
+    if (MaterialProperties.opacity < 1.0f)
+    {
+        discard;
+    }
 
     GBuffer Output;
     Output.Diffuse_Roughness = float4(MaterialProperties.diffuse, MaterialProperties.roughness);
@@ -42,7 +47,7 @@ GBuffer main(PSInput input)
 
     //Output.DEBUG_TEXTURE = float4(input.TBN[2], 1);
     //Output.DEBUG_TEXTURE = float4(frac(input.uv), 0, 1);
-    Output.DEBUG_TEXTURE = float4(MaterialProperties.metalness.rrr, 1);
+    Output.DEBUG_TEXTURE = float4(MaterialProperties.opacity.rrr, 1);
     
     return Output;
 }

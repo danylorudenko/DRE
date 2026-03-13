@@ -69,7 +69,7 @@ S_LIGHTING_RESULT CalculateLighting(S_SURFACE surface)
             case DRE_LIGHT_TYPE_DIRECTIONAL:
             {
             #ifndef DRE_VERTEX_SHADER
-                shadow = ShadowVisibilityTrace(surface.wpos, L);
+                //shadow = ShadowVisibilityTrace(surface.wpos, L);
             #endif // !DRE_VERTEX_SHADER
                 break;
             }

@@ -59,12 +59,12 @@ struct Complex
     }
 };
 
-Texture* TextureBank::LoadTexture2DSync(DRE::String128 const& name, std::uint32_t width, std::uint32_t height, VKW::Format format, DRE::ByteBuffer const& textureData)
+Texture* TextureBank::LoadTexture2DSync(DRE::String128 const& name, DRE::U32 width, DRE::U32 height, VKW::Format format, DRE::ByteBuffer const& textureData)
 {
     UploadArena& transientArena = g_GraphicsManager->GetUploadArena();
 
     // 1. staging buffer region and target texture
-    VKW::ImageResource* imageResource = m_ResourcesController->CreateImage(width, height, format, VKW::ImageUsage::TEXTURE, name);
+    VKW::ImageResource* imageResource = m_ResourcesController->CreateImage(width, height, 1, format, VKW::ImageUsage::TEXTURE, name);
     UploadArena::Allocation stagingRegion = transientArena.AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), static_cast<std::uint32_t>(textureData.Size()), 16);
     std::memcpy(stagingRegion.m_MappedRange, textureData.Data(), textureData.Size());
     stagingRegion.FlushCaches();

@@ -456,7 +456,7 @@ void Context::CmdBindIndexBuffer(VKW::BufferResource const* indexBuffer, std::ui
 
 void Context::CmdClearColorImage(VKW::ImageResource const* image, float color[4])
 {
-    VkImageSubresourceRange const range = VKW::HELPER::DefaultImageSubresourceRange();
+    VkImageSubresourceRange const range = VKW::HELPER::ImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT, image->mipLevels_);
     VkClearColorValue value{};
     value.float32[0] = color[0];
     value.float32[1] = color[1];
@@ -469,7 +469,7 @@ void Context::CmdClearColorImage(VKW::ImageResource const* image, float color[4]
 
 void Context::CmdClearDepthStencilImage(VKW::ImageResource const* image, float depth, std::uint32_t stencil)
 {
-    VkImageSubresourceRange const range = VKW::HELPER::DefaultImageSubresourceRange();
+    VkImageSubresourceRange const range = VKW::HELPER::ImageSubresourceRange(VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT, 1);
     VkClearDepthStencilValue value{};
     value.depth = depth;
     value.stencil = stencil;

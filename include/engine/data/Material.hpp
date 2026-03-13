@@ -37,6 +37,7 @@ public:
             ROUGHNESS,
             OCCLUSION,
             BENT_NORMAL,
+            OPACITY,
             MAX
         };
 
@@ -64,11 +65,12 @@ public:
         enum MaterialType
         {
             MATERIAL_TYPE_OPAQUE,
+            MATERIAL_TYPE_ALPHA_MASKED,
             MATERIAL_TYPE_WATER,
             MATERIAL_TYPE_MAX
         };
 
-        inline void SetMaterialType(MaterialType type) { m_Type = type; }
+        void SetMaterialType(MaterialType type);
         inline MaterialType GetMaterialType() const { return m_Type; }
 
         inline void SetMaterialFlags(MaterialFlags flags) { m_MaterialFlags = flags; }
@@ -79,12 +81,14 @@ public:
         inline void EnableNormalTBN(bool enable)                    { SetFlag(MATERIAL_FLAG_NORMAL_TBN, enable); }
         inline void EnableMaterialTexturesDefault(bool enable)      { SetFlag(MATERIAL_FLAG_MATERIAL_TEXTURES_DEFAULT, enable); }
         inline void EnableMaterialTexturesGLTFSpheres(bool enable)  { SetFlag(MATERIAL_FLAG_MATERIAL_TEXTURES_GLTF_SPHERES, enable); }
+        inline void EnableAlphaMasked(bool enable)                  { SetFlag(MATERIAL_FLAG_ALPHA_MASKED, enable); }
 
         inline bool HasNormalTexture() const                { return (m_MaterialFlags & MATERIAL_FLAG_NORMAL_TEXTURE) != 0; }
         inline bool HasNormalTextureInvertY() const         { return (m_MaterialFlags & MATERIAL_FLAG_NORMAL_TEXTURE_INVERT_Y) != 0; }
         inline bool HasNormalTBN() const                    { return (m_MaterialFlags & MATERIAL_FLAG_NORMAL_TBN) != 0; }
         inline bool HasMaterialTexturesDefault() const      { return (m_MaterialFlags & MATERIAL_FLAG_MATERIAL_TEXTURES_DEFAULT) != 0; }
         inline bool HasMaterialTexturesGLTFSpheres() const  { return (m_MaterialFlags & MATERIAL_FLAG_MATERIAL_TEXTURES_GLTF_SPHERES) != 0; }
+        inline bool IsAlphaMasked() const                   { return (m_MaterialFlags & MATERIAL_FLAG_ALPHA_MASKED) != 0; }
 
     private:
         inline void SetFlag(MaterialFlags flag, bool enable)

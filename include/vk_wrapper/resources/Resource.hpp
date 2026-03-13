@@ -2,6 +2,7 @@
 
 #include <vulkan\vulkan.h>
 
+#include <foundation\Common.hpp>
 #include <foundation\string\InplaceString.hpp>
 
 #include <vk_wrapper\Format.hpp>
@@ -13,12 +14,12 @@ namespace VKW
 
 struct BufferResource
 {
-    BufferResource(VkBuffer handle, std::uint32_t size, MemoryRegion const& memory, std::uint64_t gpuAddress, char const* name);
+    BufferResource(VkBuffer handle, DRE::U32 size, MemoryRegion const& memory, DRE::U64 gpuAddress, char const* name);
 
     VkBuffer        handle_     = VK_NULL_HANDLE;
-    std::uint32_t   size_       = 0;
+    DRE::U32        size_       = 0;
     MemoryRegion    memory_;
-    std::uint64_t   gpuAddress_ = 0;
+    DRE::U64        gpuAddress_ = 0;
 
     DRE::String128  name_;
 
@@ -28,20 +29,21 @@ struct BufferResource
 struct SubbufferResource
 {
     VkBuffer        handle_ = VK_NULL_HANDLE;
-    std::uint32_t   offset_ = 0;
-    std::uint32_t   size_   = 0;
+    DRE::U32        offset_ = 0;
+    DRE::U32        size_   = 0;
 };
 
 
 
 struct ImageResource
 {
-    ImageResource(VkImage handle, Format format, std::uint32_t width, std::uint32_t height, MemoryRegion const& memory, VkImageCreateInfo const& createInfo, char const* name);
+    ImageResource(VkImage handle, Format format, DRE::U32 width, DRE::U32 height, DRE::U32 mipCount, MemoryRegion const& memory, VkImageCreateInfo const& createInfo, char const* name);
 
     VkImage             handle_ = VK_NULL_HANDLE;
     Format              format_ = FORMAT_UNDEFINED;
-    std::uint32_t       width_  = 0;
-    std::uint32_t       height_ = 0;
+    DRE::U32            width_  = 0;
+    DRE::U32            height_ = 0;
+    DRE::U32            mipLevels_ = 0;
     MemoryRegion        memory_;
     VkImageCreateInfo   createInfo_;
 
@@ -60,15 +62,15 @@ struct ImageResourceView
 
     inline Format           GetFormat() const        { return VK2Format(createInfo_.format); }
     inline VkImageViewType  GetType() const          { return createInfo_.viewType; };
-    inline std::uint32_t    GetMipCount() const      { return createInfo_.subresourceRange.levelCount; }
-    inline std::uint32_t    GetLayerCount() const    { return createInfo_.subresourceRange.layerCount; }
+    inline DRE::U32         GetMipCount() const      { return createInfo_.subresourceRange.levelCount; }
+    inline DRE::U32         GetLayerCount() const    { return createInfo_.subresourceRange.layerCount; }
     
     inline MemoryRegion*    GetMemoryRegion() const  { return &parentResource_->memory_; }
     inline MemoryPage*      GetMemoryPage() const    { return parentResource_->GetMemoryPage(); }
     inline VkImage          GetImageHandle() const   { return parentResource_->handle_; }
     inline Format           GetImageFormat() const   { return parentResource_->format_; }
-    inline std::uint32_t    GetImageWidth() const    { return parentResource_->width_; }
-    inline std::uint32_t    GetImageHeight() const   { return parentResource_->height_; }
+    inline DRE::U32         GetImageWidth() const    { return parentResource_->width_; }
+    inline DRE::U32         GetImageHeight() const   { return parentResource_->height_; }
 };
 
 

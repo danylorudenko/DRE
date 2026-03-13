@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include <foundation\string\InplaceString.hpp>
+#include <foundation\math\SimpleMath.hpp>
 
 #include <vk_wrapper\memory\MemoryController.hpp>
 #include <vk_wrapper\LogicalDevice.hpp>
@@ -65,7 +66,7 @@ ResourcesController::~ResourcesController()
     }
 }
 
-BufferResource* ResourcesController::CreateBuffer(std::uint32_t size, BufferUsage usage, char const* name)
+BufferResource* ResourcesController::CreateBuffer(DRE::U32 size, BufferUsage usage, char const* name)
 {
     VkBufferCreateInfo vkBufferCreateInfo;
     vkBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -169,7 +170,12 @@ BufferResource* ResourcesController::CreateBuffer(std::uint32_t size, BufferUsag
     return resource;
 }
 
-ImageResource* ResourcesController::CreateImage(std::uint32_t width, std::uint32_t height, Format format, ImageUsage usage, char const* name)
+DRE::U32 CalculateMipCount(DRE::U32 width, DRE::U32 height)
+{
+    return static_cast<DRE::U32>(DRE::Log2(DRE::Max(width, height))) + 1;
+}
+
+ImageResource* ResourcesController::CreateImage(DRE::U32 width, DRE::U32 height, DRE::U32 mipCount, Format format, ImageUsage usage, char const* name)
 {
     VkImageCreateInfo info;
     info.sType                  = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -180,7 +186,7 @@ ImageResource* ResourcesController::CreateImage(std::uint32_t width, std::uint32
     info.extent.height          = height;
     info.extent.depth           = 1;
     info.arrayLayers            = 1;
-    info.mipLevels              = 1;
+    info.mipLevels              = mipCount != 0 ? mipCount : CalculateMipCount(width, height);
     info.tiling                 = VK_IMAGE_TILING_OPTIMAL;
     info.samples                = VK_SAMPLE_COUNT_1_BIT;
     info.sharingMode            = VK_SHARING_MODE_EXCLUSIVE;
@@ -249,7 +255,7 @@ ImageResource* ResourcesController::CreateImage(std::uint32_t width, std::uint32
     MemoryRegion memoryRegion = memoryController_->AllocateMemoryRegion(memoryDesc);
     VK_ASSERT(table_->vkBindImageMemory(device_->Handle(), vkImage, memoryRegion.page_->deviceMemory_, memoryRegion.offset_));
 
-    ImageResource* imageResource = new ImageResource{ vkImage, format, width, height, memoryRegion, info, name };
+    ImageResource* imageResource = new ImageResource{ vkImage, format, width, height, info.mipLevels, memoryRegion, info, name };
     images_.emplace(imageResource);
 
 #ifdef DRE_DEBUG
@@ -423,7 +429,7 @@ ImageResourceView* ResourcesController::ViewImageAs(ImageResource* resource, VkI
     viewCreateInfo.viewType = type ? *type : ImageTypeToViewType(resource->createInfo_.imageType, resource->createInfo_.arrayLayers);
     viewCreateInfo.components = mapping ? *mapping : DefaultComponentMapping();
     viewCreateInfo.flags = VK_FLAGS_NONE;
-    viewCreateInfo.subresourceRange = subresource ? *subresource : VKW::HELPER::DefaultImageSubresourceRange();
+    viewCreateInfo.subresourceRange = subresource ? *subresource : VKW::HELPER::ImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT, resource->mipLevels_);
 
     VkImageView handle = VK_NULL_HANDLE;
     VK_ASSERT(table_->vkCreateImageView(device_->Handle(), &viewCreateInfo, nullptr, &handle));

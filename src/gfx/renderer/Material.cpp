@@ -43,9 +43,10 @@ void Material::FlushDataToMaterialGPU()
     DRE::U32 roughness  = TextureID(Data::Material::TextureProperty::Slot::ROUGHNESS);
     DRE::U32 occlusion  = TextureID(Data::Material::TextureProperty::Slot::OCCLUSION);
     DRE::U32 bentNormal = TextureID(Data::Material::TextureProperty::Slot::BENT_NORMAL);
+    DRE::U32 opacity    = TextureID(Data::Material::TextureProperty::Slot::OPACITY);
 
     data.texture_common_ids = uint4{ diffuse, normal, metalness, roughness };
-    data.texture_aux_ids = uint4{ occlusion, bentNormal, 0, 0 };
+    data.texture_aux_ids = uint4{ occlusion, bentNormal, opacity, 0 };
     data.flags = uint4{ m_Flags, 0, 0, 0 };
 
     m_MaterialGPU.ScheduleUpdate(data);

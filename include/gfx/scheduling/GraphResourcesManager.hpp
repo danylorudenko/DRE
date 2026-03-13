@@ -27,9 +27,10 @@ public:
     {
         VKW::ResourceAccess access  = VKW::RESOURCE_ACCESS_UNDEFINED;
         VKW::Format         format  = VKW::FORMAT_UNDEFINED;
-        std::uint32_t       size0   = 0;
-        std::uint32_t       size1   = 0;
-        std::uint32_t       depth   = 0;
+        DRE::U32            size0   = 0;
+        DRE::U32            size1   = 0;
+        DRE::U32            mipCount   = 0;
+        DRE::U32            depth   = 0;
 
         inline bool operator==(AccumulatedInfo const& rhs)
         {
@@ -60,8 +61,9 @@ public:
 
     virtual ~GraphResourcesManager();
 
-    void RegisterTexture(char const* id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access);
-    void RegisterBuffer(char const* id, std::uint32_t size, VKW::ResourceAccess access);
+    void RegisterTexture(char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access);
+    void RegisterTexture(char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 mipCount, VKW::ResourceAccess access);
+    void RegisterBuffer(char const* id, DRE::U32 size, VKW::ResourceAccess access);
 
     void InitResources();
     void DestroyResources();

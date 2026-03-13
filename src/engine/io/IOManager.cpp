@@ -18,6 +18,7 @@
 #include <assimp\Importer.hpp>
 #include <assimp\postprocess.h>
 #include <assimp\scene.h>
+#include <assimp\GltfMaterial.h>
 
 #include <vk_wrapper\pipeline\ShaderModule.hpp>
 
@@ -138,6 +139,9 @@ void IOManager::ParseMaterialTexture_Parallel(aiScene const* scene, aiMaterial c
     case Data::Material::TextureProperty::ROUGHNESS:
         aiType = aiTextureType_DIFFUSE_ROUGHNESS;
         break;
+    case Data::Material::TextureProperty::OPACITY:
+        aiType = aiTextureType_OPACITY;
+        break;
     default:
         DRE_ASSERT(false, "Unsupported Data::Material::TextureProperty::Slot while parsing material textures.");
     }
@@ -244,6 +248,34 @@ WORLD::SceneNode* IOManager::ParseModelFile(char const* path, WORLD::Scene& targ
     return parentNode;
 }
 
+Data::Material::RenderingProperties::MaterialType MaterialTypeFromAssimpMaterial(aiMaterial const* aiMaterial)
+{
+    aiString alphaMode;
+    if (aiMaterial->Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode) == aiReturn_SUCCESS)
+    {
+        if (alphaMode == aiString{ "MASK" })
+            return Data::Material::RenderingProperties::MATERIAL_TYPE_ALPHA_MASKED;
+        else if (alphaMode == aiString{ "BLEND" })
+            return Data::Material::RenderingProperties::MATERIAL_TYPE_ALPHA_MASKED; // we don't support blended materials for now, so we will treat them as masked
+    }
+
+    aiBlendMode blendMode = aiBlendMode_Default;
+    aiMaterial->Get(AI_MATKEY_BLEND_FUNC, blendMode);
+    if (blendMode == aiBlendMode_Additive)
+        return Data::Material::RenderingProperties::MATERIAL_TYPE_ALPHA_MASKED;
+
+    float opacity = 1.0f;
+    aiMaterial->Get(AI_MATKEY_OPACITY, opacity);
+    if (opacity < 1.0f)
+        return Data::Material::RenderingProperties::MATERIAL_TYPE_ALPHA_MASKED;
+
+    DRE::U32 opacityTextureCount = aiMaterial->GetTextureCount(aiTextureType_OPACITY);
+    if (opacityTextureCount > 0)
+        return Data::Material::RenderingProperties::MATERIAL_TYPE_ALPHA_MASKED;
+
+    return Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE;
+}
+
 void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName, char const* path, Data::TextureChannelVariations metalnessRoughnessOverride)
 {
     // get folder with texture files
@@ -289,9 +321,12 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName
             // it means we have texture with merged metalness and roughness attributes. Let it lie in metalness
             ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::METALNESS, metalnessRoughnessOverride);
         }
+        
+        ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::OPACITY, Data::TEXTURE_VARIATION_GRAY);
+
         // TODO: load rgb here
 
-        material->GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE);
+        material->GetRenderingProperties().SetMaterialType(MaterialTypeFromAssimpMaterial(aiMat));
 
         {
             std::lock_guard<std::mutex> guard{ materialMutex };

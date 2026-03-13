@@ -1,6 +1,9 @@
 #pragma once
 
 #include <foundation\class_features\NonCopyable.hpp>
+
+#include <foundation\Common.hpp>
+
 #include <vk_wrapper\resources\Resource.hpp>
 
 #include <vulkan\vulkan.h>
@@ -48,10 +51,10 @@ public:
     ResourcesController(ResourcesController&& rhs);
     ResourcesController& operator=(ResourcesController&& rhs);
 
-    BufferResource* CreateBuffer(std::uint32_t size, BufferUsage usage, char const* name);
+    BufferResource* CreateBuffer(DRE::U32 size, BufferUsage usage, char const* name);
     void FreeBuffer(BufferResource* handle);
 
-    ImageResource* CreateImage(std::uint32_t width, std::uint32_t height, Format format, ImageUsage usage, char const* name);
+    ImageResource* CreateImage(DRE::U32 width, DRE::U32 height, DRE::U32 mipCount, Format format, ImageUsage usage, char const* name);
     void FreeImage(ImageResource* handle);
 
     AccelerationStructureResource* CreateBLAS(VKW::BufferResource* buffer, char const* name);
@@ -71,7 +74,7 @@ public:
     ~ResourcesController();
 
 public:
-    static VkImageViewType         ImageTypeToViewType(VkImageType type, std::uint32_t arrayLayers);
+    static VkImageViewType         ImageTypeToViewType(VkImageType type, DRE::U32 arrayLayers);
     static VkComponentMapping      DefaultComponentMapping();
 
 private:

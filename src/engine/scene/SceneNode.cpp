@@ -181,6 +181,7 @@ void SceneNode::SetMatrix(glm::mat4 const& matrix)
     mat[2] /= scale[2];
 
     m_Orientation = glm::quat{ mat };
+    m_Scale = scale[0]; // we assume uniform scale here
 
     NotifyTransformChange();
 }

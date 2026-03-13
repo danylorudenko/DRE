@@ -146,7 +146,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
 
         // reintroduce lost luminance!
 
-        ao_output[coords] = visibility;
+        //ao_output[coords] = visibility;
         //DEBUG_TEXTURE[coords] = float4(normalWS, 1);
         //ao_output[coords] = float(coords.x) / GetViewportSize().x;
     }

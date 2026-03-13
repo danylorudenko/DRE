@@ -241,7 +241,7 @@ void Dependency::Add(
 
     VkImageAspectFlags aspectFlags = Format2Aspect(resource->format_);
 
-    barrier.subresourceRange = HELPER::DefaultImageSubresourceRange(aspectFlags);
+    barrier.subresourceRange = HELPER::ImageSubresourceRange(aspectFlags, resource->mipLevels_);
 }
 
 void Dependency::Add(

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <foundation\Common.hpp>
 #include <vulkan\vulkan.h>
 
 #include <vk_wrapper\descriptor\Descriptor.hpp>
@@ -20,15 +20,13 @@ VkPipelineStageFlags        DescriptorStageToVK(DescriptorStage stages);
 
 VkImageSubresource          DefaultImageSubresource();
 VkImageSubresourceLayers    DefaultImageSubresourceLayers();
-VkImageSubresourceRange     DefaultImageSubresourceRange(VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
+VkImageSubresourceRange     ImageSubresourceRange(VkImageAspectFlags aspectFlags, DRE::U32 mipCount);
 
-VkBufferMemoryBarrier       BarrierUploadToTransferSrc(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, std::uint32_t queueFamily);
-VkBufferMemoryBarrier       BarrierTransferDstToCompute(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, std::uint32_t queueFamily);
-VkBufferMemoryBarrier       BarrierTransferDstToShaderRead(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, std::uint32_t queueFamily);
-VkBufferMemoryBarrier       BarrierTransferDstToHost(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, std::uint32_t queueFamily);
-VkBufferMemoryBarrier       BarrierComputeToTransferSrc(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, std::uint32_t queueFamily);
-VkImageMemoryBarrier        BarrierUndefinedToTransferDst(VkImage image, std::uint32_t queueFamily);
-VkImageMemoryBarrier        BarrierTransferDstToTexture(VkImage image, std::uint32_t queueFamily);
+VkBufferMemoryBarrier       BarrierUploadToTransferSrc(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, DRE::U32 queueFamily);
+VkBufferMemoryBarrier       BarrierTransferDstToCompute(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, DRE::U32 queueFamily);
+VkBufferMemoryBarrier       BarrierTransferDstToShaderRead(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, DRE::U32 queueFamily);
+VkBufferMemoryBarrier       BarrierTransferDstToHost(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, DRE::U32 queueFamily);
+VkBufferMemoryBarrier       BarrierComputeToTransferSrc(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, DRE::U32 queueFamily);
 
 
 }

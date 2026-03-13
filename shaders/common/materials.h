@@ -3,16 +3,18 @@
 
 #include "common/shaders_defines.h"
 
+#define MATERIAL_FLAG_NORMAL_TEXTURE                    (1 << 0)
+#define MATERIAL_FLAG_NORMAL_TEXTURE_INVERT_Y           (1 << 1)
+#define MATERIAL_FLAG_NORMAL_TBN                        (1 << 2)
+#define MATERIAL_FLAG_MATERIAL_TEXTURES_DEFAULT         (1 << 3)
+#define MATERIAL_FLAG_MATERIAL_TEXTURES_GLTF_SPHERES    (1 << 4)
+#define MATERIAL_FLAG_ALPHA_MASKED                      (1 << 5)
+
 #ifdef __cplusplus
-enum MaterialFlags : DRE::U32
-{
-    MATERIAL_FLAG_NORMAL_TEXTURE                 = 1u << 0,
-    MATERIAL_FLAG_NORMAL_TEXTURE_INVERT_Y        = 1u << 1,
-    MATERIAL_FLAG_NORMAL_TBN                     = 1u << 2,
-    MATERIAL_FLAG_MATERIAL_TEXTURES_DEFAULT      = 1u << 3,
-    MATERIAL_FLAG_MATERIAL_TEXTURES_GLTF_SPHERES = 1u << 4
-};
+using MaterialFlags = DRE::U32;
 #endif // __cplusplus
+
+
 
 struct S_MATERIAL
 {
@@ -22,14 +24,9 @@ struct S_MATERIAL
 };
 
 
+
 #ifndef __cplusplus
 #include "common/shaders_common.h"
-
-#define MATERIAL_FLAG_NORMAL_TEXTURE                 (1 << 0)
-#define MATERIAL_FLAG_NORMAL_TEXTURE_INVERT_Y        (1 << 1)
-#define MATERIAL_FLAG_NORMAL_TBN                     (1 << 2)
-#define MATERIAL_FLAG_MATERIAL_TEXTURES_DEFAULT      (1 << 3)
-#define MATERIAL_FLAG_MATERIAL_TEXTURES_GLTF_SPHERES (1 << 4)
 
 struct S_MATERIAL_PROPERTIES
 {
@@ -37,9 +34,10 @@ struct S_MATERIAL_PROPERTIES
     float3 normal = float3(0,0,1);
     float metalness = 0;
     float roughness = 0;
+    float opacity = 1;
 };
 
-S_MATERIAL_PROPERTIES ReadMaterialProeprties(S_MATERIAL* material, float2 UV, float3x3 TBN)
+S_MATERIAL_PROPERTIES ReadMaterialProperties(S_MATERIAL* material, float2 UV, float3x3 TBN)
 {
     S_MATERIAL_PROPERTIES result = {};
 
@@ -47,6 +45,11 @@ S_MATERIAL_PROPERTIES ReadMaterialProeprties(S_MATERIAL* material, float2 UV, fl
 
     result.diffuse    = SampleGlobalTextureAnisotropic(GetDiffuseTextureID(material), UV).rgb;
     result.normal     = SampleGlobalTextureAnisotropic(GetNormalTextureID(material), UV).rgb;
+
+    if ((materialFlags & MATERIAL_FLAG_ALPHA_MASKED) != 0)
+    {
+        result.opacity = SampleGlobalTextureAnisotropic(GetOpacityTextureID(material), UV).a;
+    }
 
     if ((materialFlags & MATERIAL_FLAG_MATERIAL_TEXTURES_DEFAULT) != 0)
     {
@@ -109,7 +112,7 @@ int GetBentNormalTextureID(S_MATERIAL* material)
     return material->texture_aux_ids.y;
 }
 
-int GetAuxTextureID0(S_MATERIAL* material)
+int GetOpacityTextureID(S_MATERIAL* material)
 {
     return material->texture_aux_ids.z;
 }

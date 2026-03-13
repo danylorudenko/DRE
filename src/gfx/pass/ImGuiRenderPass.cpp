@@ -14,8 +14,6 @@
 
 #include <engine\io\IOManager.hpp>
 
-#include <gfx\GraphicsManager.hpp>
-
 namespace GFX
 {
 

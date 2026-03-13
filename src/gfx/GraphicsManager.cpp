@@ -295,6 +295,7 @@ RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* scen
     switch (material->GetType())
     {
     case Material::Type::MATERIAL_TYPE_OPAQUE:
+    case Material::Type::MATERIAL_TYPE_ALPHA_MASKED:
         renderable->AddLayerPipeline(RenderableObject::LAYER_FORWARD, m_PipelineDB.GetPipeline("forward_pbr"));
         renderable->AddLayerPipeline(RenderableObject::LAYER_GBUFFER, m_PipelineDB.GetPipeline("gbuffer_pbr"));
         break;

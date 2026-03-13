@@ -192,7 +192,11 @@ VKW::DescriptorType SlangTypeToDescriptorArraylessType(slang::TypeReflection* ty
         break;
     case slang::TypeReflection::Kind::Resource:
     {
-        switch (type->getResourceShape())
+        SlangResourceShape totalShape = type->getResourceShape();
+        SlangResourceShape shape = SlangResourceShape(totalShape & SLANG_RESOURCE_BASE_SHAPE_MASK);
+        DRE::U32 shapeExtFlags = totalShape & SLANG_RESOURCE_EXT_SHAPE_MASK;
+
+        switch (shape)
         {
         case SlangResourceShape::SLANG_ACCELERATION_STRUCTURE:
             return VKW::DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE;
@@ -201,7 +205,17 @@ VKW::DescriptorType SlangTypeToDescriptorArraylessType(slang::TypeReflection* ty
         case SlangResourceShape::SLANG_TEXTURE_3D:
         {
             if (type->getResourceAccess() == SlangResourceAccess::SLANG_RESOURCE_ACCESS_READ)
-                return VKW::DESCRIPTOR_TYPE_TEXTURE;
+            {
+                if (shapeExtFlags & SLANG_TEXTURE_COMBINED_FLAG)
+                {
+                    DRE_ASSERT(false, "ShaderDB: slang parser doesn't support combined image-samplers.");
+                    return VKW::DESCRIPTOR_TYPE_NONE;
+                }
+                else
+                {
+                    return VKW::DESCRIPTOR_TYPE_TEXTURE;
+                }
+            }
             else
                 return VKW::DESCRIPTOR_TYPE_STORAGE_IMAGE;
         }

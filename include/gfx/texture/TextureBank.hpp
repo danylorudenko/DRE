@@ -34,7 +34,7 @@ public:
     ~TextureBank();
 
     void                LoadDefaultTextures ();
-    Texture*            LoadTexture2DSync   (DRE::String128 const& name, std::uint32_t width, std::uint32_t height, VKW::Format format, DRE::ByteBuffer const& textureData);
+    Texture*            LoadTexture2DSync   (DRE::String128 const& name, DRE::U32 width, DRE::U32 height, VKW::Format format, DRE::ByteBuffer const& textureData);
     Texture*            FindTexture         (DRE::String128 const& name);
 
     template<typename TDelegate>
