@@ -66,7 +66,7 @@ public:
 
     Data::Texture2D ReadTexture2D(char const* path, Data::TextureChannelVariations channels);
 
-    WORLD::SceneNode* ParseModelFile(char const* path, WORLD::Scene& targetScene, glm::mat4 baseTransform = glm::identity<glm::mat4>(), Data::TextureChannelVariations metalnessRoughnessOverride = Data::TEXTURE_VARIATION_INVALID);
+    WORLD::SceneNode* ParseModelFile(char const* path, WORLD::Scene& targetScene, glm::mat4 baseTransform = glm::identity<glm::mat4>());
 
 
     static std::uint64_t    ReadFileToBuffer(char const* path, DRE::ByteBuffer* buffer);
@@ -75,7 +75,7 @@ public:
 
 private:
     void ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene, char const* sceneName);
-    void ParseAssimpMaterials(aiScene const* scene, char const* sceneName, char const* path, Data::TextureChannelVariations metalnessRoughnessOverride);
+    void ParseAssimpMaterials(aiScene const* scene, char const* sceneName, char const* path);
 
     using ASGeometryIndexCounts = DRE::Vector<std::uint32_t, DRE::AllocatorLinear>;
     using ASGeometryVector = DRE::Vector<VkAccelerationStructureGeometryKHR, DRE::AllocatorLinear>;

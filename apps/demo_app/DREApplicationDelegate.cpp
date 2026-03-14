@@ -143,68 +143,8 @@ void DREApplicationDelegate::start()
 
 
     glm::mat spheresTransform = glm::rotate(glm::identity<glm::mat4>(), glm::radians(180.0f), glm::vec3{ 1.0f, 0.0, 0.0f });
-    WORLD::SceneNode* spheresNode = m_IOManager.ParseModelFile("data\\gltf_samples\\MetalRoughSpheres\\glTF\\MetalRoughSpheres.gltf", m_MainScene, spheresTransform, Data::TEXTURE_VARIATION_RGBA);
-    spheresNode->ForEachChild([this](WORLD::SceneNode* node)
-    {
-        WORLD::ISceneNodeUser* nodeUser = node->GetNodeUser();
-        if (nodeUser == nullptr)
-            return;
-
-        if (nodeUser->GetType() == WORLD::ISceneNodeUser::Type::Entity)
-        {
-            WORLD::Entity* entity = reinterpret_cast<WORLD::Entity*>(nodeUser);
-            GFX::Material* material = entity->GetMaterial()->GetGfxMaterial();
-            MaterialFlags flags = material->GetFlags();
-
-            flags = MaterialFlags(flags & ~(MATERIAL_FLAG_NORMAL_TEXTURE | MATERIAL_FLAG_MATERIAL_TEXTURES_DEFAULT));
-            flags = MaterialFlags(flags | (MATERIAL_FLAG_NORMAL_TBN | MATERIAL_FLAG_MATERIAL_TEXTURES_GLTF_SPHERES));
-            material->SetFlagsNoUpdate(flags);
-            material->FlushDataToMaterialGPU();
-        }
-    });
-
-    m_GraphicsManager.GetMainContext().FlushAll();
-
-
-    ////////////
-    //DRE::ByteBuffer planeVertices;
-    //DRE::ByteBuffer planeIndicies;
-    //GeneratePlaneMesh(C_WATER_VERTEX_X, C_WATER_VERTEX_Z, planeVertices, planeIndicies);
-    //
-    //m_WaterGeometry.SetVertexData(DRE_MOVE(planeVertices));
-    //m_WaterGeometry.SetIndexData(DRE_MOVE(planeIndicies));
-    //Data::Texture2D waterNormalMap = m_IOManager.ReadTexture2D("textures\\water_normal0.jpg", Data::TEXTURE_VARIATION_RGBA);
-    //
-    //m_WaterMaterial.AssignTextureToSlot(Data::Material::TextureProperty::NORMAL, DRE_MOVE(waterNormalMap));
-    //m_WaterMaterial.GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_WATER);
-    //m_WaterMaterial.GetRenderingProperties().SetShader("water");
-
-
-
-    //glm::mat4 waterTransform = glm::identity<glm::mat4>();
-    //wTrans.model = glm::rotate(wTrans.model, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    //waterTransform[3][1] += 1.5f;
-    //wTrans.model[3][2] -= 0.4f;
-    //waterTransform = glm::scale(waterTransform, glm::vec3{ 0.1f });
-    //WORLD::Entity* waterEntity = m_MainScene.CreateOpaqueEntity(m_GraphicsManager.GetMainContext(), &m_WaterGeometry, &m_WaterMaterial);
-    //waterEntity->SetMatrix(waterTransform);
-    //waterEntity->GetSceneNode()->SetName("water");
-
-    ////////////
-    //m_BeachMaterial.GetRenderingProperties().SetMaterialType(Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE);
-    //m_BeachMaterial.GetRenderingProperties().SetShader("sand_beach");
-    //m_BeachMaterial.AssignTextureToSlot(Data::Material::TextureProperty::DIFFUSE, m_IOManager.ReadTexture2D("textures\\wavy-sand_albedo.png", Data::TEXTURE_VARIATION_RGBA));
-    //m_BeachMaterial.AssignTextureToSlot(Data::Material::TextureProperty::NORMAL, m_IOManager.ReadTexture2D("textures\\wavy-sand_normal-dx.png", Data::TEXTURE_VARIATION_RGBA));
-    //m_BeachMaterial.AssignTextureToSlot(Data::Material::TextureProperty::METALNESS, m_IOManager.ReadTexture2D("textures\\wavy-sand_metallic.png", Data::TEXTURE_VARIATION_GRAY));
-    //m_BeachMaterial.AssignTextureToSlot(Data::Material::TextureProperty::ROUGHNESS, m_IOManager.ReadTexture2D("textures\\wavy-sand_roughness.png", Data::TEXTURE_VARIATION_GRAY));
-
-    //glm::mat4 beachTransform = waterTransform; // beach transform
-    //bTrans.model = glm::scale(bTrans.model, glm::vec3(1.5f));
-    //beachTransform = glm::rotate(beachTransform, glm::radians(20.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    //beachTransform[3][2] -= 6.0f;
-    //WORLD::Entity* beachEntity = m_MainScene.CreateOpaqueEntity(m_GraphicsManager.GetMainContext(), &m_WaterGeometry, &m_BeachMaterial); // reuse water geometry
-    //beachEntity->SetMatrix(beachTransform);
-    //beachEntity->ForEachChild([this](WORLD::SceneNode* node)
+    WORLD::SceneNode* spheresNode = m_IOManager.ParseModelFile("data\\gltf_samples\\MetalRoughSpheres\\glTF\\MetalRoughSpheres.gltf", m_MainScene, spheresTransform);
+    //spheresNode->ForEachChild([this](WORLD::SceneNode* node)
     //{
     //    WORLD::ISceneNodeUser* nodeUser = node->GetNodeUser();
     //    if (nodeUser == nullptr)
@@ -213,18 +153,28 @@ void DREApplicationDelegate::start()
     //    if (nodeUser->GetType() == WORLD::ISceneNodeUser::Type::Entity)
     //    {
     //        WORLD::Entity* entity = reinterpret_cast<WORLD::Entity*>(nodeUser);
-    //        InstanceFlags flags = entity->GetRenderableObject()->GetInstanceFlags();
+    //        Data::Material* material = entity->GetMaterial();
+    //        Data::Material::RenderingProperties& props = material->GetRenderingProperties();
     //
-    //        flags = InstanceFlags(flags & ~InstanceFlags::NORMAL_TEXTURE);
-    //        flags = InstanceFlags(flags | InstanceFlags::NORMAL_TEXTURE_INVERT_Y);
-    //        entity->GetRenderableObject()->SetInstanceFlags(flags);
+    //        props.EnableMaterialTexturesDefault(false);
+    //        props.EnableNormalTexture(false);
+    //
+    //        props.EnableMaterialTexturesGLTFSpheres(true);
+    //        props.EnableNormalTBN(false);
+    //
+    //        GFX::Material* gfxMaterial = material->GetGfxMaterial();
+    //        gfxMaterial->SetFlagsNoUpdate(props.GetMaterialFlags());
+    //        gfxMaterial->FlushDataToMaterialGPU();
     //    }
     //});
-    //beachEntity->GetSceneNode()->SetName("beach_plane");
 
+    m_GraphicsManager.GetMainContext().FlushAll();
+
+    ////////////
     Data::Texture2D blueNoise256 = m_IOManager.ReadTexture2D("textures\\blue_noise_rgba.png", Data::TEXTURE_VARIATION_RGBA);
     m_GraphicsManager.GetTextureBank().LoadTexture2DSync("blue_noise_256", 256, 256, VKW::FORMAT_R8G8B8A8_UNORM, blueNoise256.GetBuffer());
 
+    ////////////
     m_GraphicsManager.BuildMainSceneTLAS();
 
     ////////////

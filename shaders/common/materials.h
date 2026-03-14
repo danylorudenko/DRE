@@ -7,7 +7,7 @@
 #define MATERIAL_FLAG_NORMAL_TEXTURE_INVERT_Y           (1 << 1)
 #define MATERIAL_FLAG_NORMAL_TBN                        (1 << 2)
 #define MATERIAL_FLAG_MATERIAL_TEXTURES_DEFAULT         (1 << 3)
-#define MATERIAL_FLAG_MATERIAL_TEXTURES_GLTF_SPHERES    (1 << 4)
+#define MATERIAL_FLAG_METALLIC_ROUGNESS_COMBINED        (1 << 4)
 #define MATERIAL_FLAG_ALPHA_MASKED                      (1 << 5)
 
 #ifdef __cplusplus
@@ -32,8 +32,8 @@ struct S_MATERIAL_PROPERTIES
 {
     float3 diffuse = float3(0,0,0);
     float3 normal = float3(0,0,1);
-    float metalness = 0;
-    float roughness = 0;
+    float metalness = 1;
+    float roughness = 1;
     float opacity = 1;
 };
 
@@ -56,7 +56,7 @@ S_MATERIAL_PROPERTIES ReadMaterialProperties(S_MATERIAL* material, float2 UV, fl
         result.metalness = SampleGlobalTextureAnisotropic(GetMetalnessTextureID(material), UV).r;
         result.roughness = SampleGlobalTextureAnisotropic(GetRoughnessTextureID(material), UV).r;
     }
-    if ((materialFlags & MATERIAL_FLAG_MATERIAL_TEXTURES_GLTF_SPHERES) != 0)
+    else if ((materialFlags & MATERIAL_FLAG_METALLIC_ROUGNESS_COMBINED) != 0)
     {
         float2 metalness_roughness = SampleGlobalTextureAnisotropic(GetMetalnessTextureID(material), UV).bg;
         result.metalness = metalness_roughness.x;
@@ -65,16 +65,16 @@ S_MATERIAL_PROPERTIES ReadMaterialProperties(S_MATERIAL* material, float2 UV, fl
 
     if ((materialFlags & MATERIAL_FLAG_NORMAL_TEXTURE) != 0)
     {
-        result.normal = normalize(mul(TBN, (result.normal * 2.0 - 1.0)));
+        result.normal = result.normal * 2.0f - 1.0f;
+        result.normal = normalize(mul(TBN, result.normal));
     }
-
-    if ((materialFlags & MATERIAL_FLAG_NORMAL_TEXTURE_INVERT_Y) != 0)
+    else if ((materialFlags & MATERIAL_FLAG_NORMAL_TEXTURE_INVERT_Y) != 0)
     {
-        result.normal = float3(result.normal.r, 1 - result.normal.g, result.normal.b);
-        result.normal = normalize(mul(TBN, (result.normal * 2.0 - 1.0)));
+        result.normal = result.normal * 2.0f - 1.0f;
+        result.normal.y = -result.normal.y;
+        result.normal = normalize(mul(TBN, result.normal));
     }
-
-    if ((materialFlags & MATERIAL_FLAG_NORMAL_TBN) != 0)
+    else if ((materialFlags & MATERIAL_FLAG_NORMAL_TBN) != 0)
     {
         result.normal = TBN[2];
     }
@@ -149,7 +149,7 @@ bool IsMaterialTexturesDefault(S_MATERIAL* material)
 
 bool IsMaterialTexturesGLTFSpheres(S_MATERIAL* material)
 {
-    return (GetMaterialFlags(material) & MATERIAL_FLAG_MATERIAL_TEXTURES_GLTF_SPHERES) != 0;
+    return (GetMaterialFlags(material) & MATERIAL_FLAG_METALLIC_ROUGNESS_COMBINED) != 0;
 }
 
 #endif // !__cplusplus

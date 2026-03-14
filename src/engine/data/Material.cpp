@@ -49,9 +49,6 @@ void Material::FlushToGfxMaterial(GFX::Material* target)
             target->SetTextureNoUpdate(property.GetSlotType(), property.m_GFXTexture);
     }
 
-    MaterialFlags finalFlags = m_RenderingProperties.GetMaterialFlags();
-    finalFlags |= (m_RenderingProperties.GetMaterialType() == RenderingProperties::MATERIAL_TYPE_ALPHA_MASKED) ? MATERIAL_FLAG_ALPHA_MASKED : 0;
-
     target->SetFlagsNoUpdate(m_RenderingProperties.GetMaterialFlags());
 
     target->FlushDataToMaterialGPU();

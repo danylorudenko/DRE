@@ -222,11 +222,11 @@ void IOManager::ParseAssimpNodeRecursive(VKW::Context& gfxContext,
     }
 }
 
-WORLD::SceneNode* IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene, glm::mat4 baseTransform, Data::TextureChannelVariations metalnessRoughnessOverride)
+WORLD::SceneNode* IOManager::ParseModelFile(char const* path, WORLD::Scene& targetScene, glm::mat4 baseTransform)
 {
     Assimp::Importer importer = Assimp::Importer();
 
-    aiScene const* scene = importer.ReadFile(path, aiProcessPreset_TargetRealtime_Fast);
+    aiScene const* scene = importer.ReadFile(path, aiProcessPreset_TargetRealtime_Fast | aiProcess_FlipUVs);
     char const* sceneName = aiScene::GetShortFilename(path);
 
     DRE_ASSERT(scene != nullptr, "Failed to load a model file.");
@@ -234,7 +234,7 @@ WORLD::SceneNode* IOManager::ParseModelFile(char const* path, WORLD::Scene& targ
         return nullptr;
 
     ParseAssimpMeshes(GFX::g_GraphicsManager->GetMainContext(), scene, sceneName);
-    ParseAssimpMaterials(scene, sceneName, path, metalnessRoughnessOverride);
+    ParseAssimpMaterials(scene, sceneName, path);
 
     WORLD::SceneNode* parentNode = targetScene.CreateSceneNode(nullptr, targetScene.GetRootNode());
     parentNode->SetMatrix(baseTransform);
@@ -276,7 +276,36 @@ Data::Material::RenderingProperties::MaterialType MaterialTypeFromAssimpMaterial
     return Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE;
 }
 
-void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName, char const* path, Data::TextureChannelVariations metalnessRoughnessOverride)
+bool IsMaterialRoughnessDiffuseCombined(aiMaterial const* aiMaterial)
+{
+    aiString metallicRoughnessTexturePath;
+    if (aiMaterial->GetTexture(aiTextureType_GLTF_METALLIC_ROUGHNESS, 0, &metallicRoughnessTexturePath) == aiReturn_SUCCESS)
+        return true;
+
+    // let's have it here just in case, very weird check. Maybe other formats (not GLTF) also do this
+    aiString metallicPath, roughnessPath;
+
+    bool const hasMetalness = aiMaterial->GetTexture(aiTextureType_METALNESS, 0, &metallicPath) == aiReturn_SUCCESS;
+    bool const hasRoughness = aiMaterial->GetTexture(aiTextureType_DIFFUSE_ROUGHNESS, 0, &roughnessPath) == aiReturn_SUCCESS;
+
+    if (hasMetalness && hasRoughness)
+    {
+        if (std::strcmp(metallicPath.C_Str(), roughnessPath.C_Str()) == 0)
+        {
+            DRE_ASSERT(false, "This is a very weird check, and we need to be extra cautious when it's triggered.");
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool IsMaterialNormalTextureSet(aiMaterial const* aiMaterial)
+{
+    return aiMaterial->GetTextureCount(aiTextureType_NORMALS) > 0;
+}
+
+void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName, char const* path)
 {
     // get folder with texture files
     DRE::String256 textureFilePath = path;
@@ -291,7 +320,7 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName
     std::mutex materialMutex;
 
     DRE::ParallelFor<16>(scene->mNumMaterials, 
-    [this, scene, sceneName, metalnessRoughnessOverride, &textureFilePath, &materialMutex](DRE::U32 index)
+    [this, scene, sceneName, &textureFilePath, &materialMutex](DRE::U32 index)
     {
         aiMaterial const* aiMat = scene->mMaterials[index];
 
@@ -300,6 +329,8 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName
             std::lock_guard<std::mutex> guard{ materialMutex };
             material = m_MaterialLibrary->CreateMaterial(index, sceneName, aiMat->GetName().C_Str());
         }
+
+        material->GetRenderingProperties().SetMaterialType(MaterialTypeFromAssimpMaterial(aiMat));
 
         DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_DIFFUSE) <= 1, "We don't support multiple textures of the same type per material (DIFFUSE).");
         DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_NORMALS) <= 1, "We don't support multiple textures of the same type per material (NORMALS)");
@@ -311,22 +342,29 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName
         ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::DIFFUSE, Data::TEXTURE_VARIATION_RGBA);
         ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::NORMAL, Data::TEXTURE_VARIATION_RGBA);
 
-        if (metalnessRoughnessOverride == Data::TEXTURE_VARIATION_INVALID)
+        if (IsMaterialRoughnessDiffuseCombined(aiMat))
         {
-            ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::METALNESS, Data::TEXTURE_VARIATION_GRAY);
-            ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::ROUGHNESS, Data::TEXTURE_VARIATION_GRAY);
+            // it means we have texture with merged metalness and roughness attributes. Let it lie in metalness
+            ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::METALNESS, Data::TEXTURE_VARIATION_RGBA);
+            material->GetRenderingProperties().EnableMaterialTexturesMetallicRoughnessCombined(true);
         }
         else
         {
-            // it means we have texture with merged metalness and roughness attributes. Let it lie in metalness
-            ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::METALNESS, metalnessRoughnessOverride);
+            ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::METALNESS, Data::TEXTURE_VARIATION_GRAY);
+            ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::ROUGHNESS, Data::TEXTURE_VARIATION_GRAY);
+            material->GetRenderingProperties().EnableMaterialTexturesDefault(true);
         }
-        
+
+        if (IsMaterialNormalTextureSet(aiMat))
+        {
+            material->GetRenderingProperties().EnableNormalTexture(true);
+        }
+        else
+        {
+            material->GetRenderingProperties().EnableNormalTBN(true);
+        }
+
         ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::OPACITY, Data::TEXTURE_VARIATION_GRAY);
-
-        // TODO: load rgb here
-
-        material->GetRenderingProperties().SetMaterialType(MaterialTypeFromAssimpMaterial(aiMat));
 
         {
             std::lock_guard<std::mutex> guard{ materialMutex };

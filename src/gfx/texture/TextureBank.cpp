@@ -61,6 +61,12 @@ struct Complex
 
 Texture* TextureBank::LoadTexture2DSync(DRE::String128 const& name, DRE::U32 width, DRE::U32 height, VKW::Format format, DRE::ByteBuffer const& textureData)
 {
+    GFX::Texture* texture = FindTexture(name);
+    if (texture != nullptr)
+    {
+        return texture;
+    }
+
     UploadArena& transientArena = g_GraphicsManager->GetUploadArena();
 
     // 1. staging buffer region and target texture
@@ -90,6 +96,8 @@ Texture* TextureBank::LoadTexture2DSync(DRE::String128 const& name, DRE::U32 wid
 
     VKW::ImageResourceView* imageView = m_ResourcesController->ViewImageAs(imageResource);
     VKW::TextureDescriptorIndex descriptorHandle = m_DescriptorAllocator->AllocateTextureDescriptor(imageView);
+
+    DRE_ASSERT(m_Textures.Find(name).key == nullptr, "Texture with name %s already exists in the bank!", name.GetData());
 
     return &(m_Textures[name] = Texture{ g_GraphicsManager->GetMainDevice(), imageResource, imageView, descriptorHandle });
 }
