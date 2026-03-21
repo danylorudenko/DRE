@@ -4,9 +4,13 @@
 #include <foundation\string\InplaceString.hpp>
 
 #include <editor\RootEditor.hpp>
+#include <engine\data\Material.hpp>
 #include <engine\scene\Scene.hpp>
 #include <engine\scene\ISceneNodeUser.hpp>
 #include <engine\ApplicationContext.hpp>
+
+#include <gfx\renderer\RenderableObject.hpp>
+#include <gfx\GraphicsManager.hpp>
 
 #include <glm\gtc\type_ptr.hpp>
 
@@ -41,6 +45,7 @@ SceneGraphEditor& SceneGraphEditor::operator=(SceneGraphEditor&& rhs)
 void SceneGraphEditor::Render()
 {
     ImGui::SetNextWindowSize(ImVec2(500, 440), ImGuiCond_FirstUseEver);
+    RenderingContext context;
 
     bool isOpen = true;
     if (ImGui::Begin("Scene Graph Editor", &isOpen, ImGuiWindowFlags_MenuBar))
@@ -53,7 +58,6 @@ void SceneGraphEditor::Render()
 
         if (ImGui::BeginChild("nodes_tree", ImVec2(150, 0), ImGuiChildFlags_Border | ImGuiChildFlags_ResizeX))
         {
-            RenderingContext context;
 
             WORLD::SceneNode* root = m_Scene->GetRootNode();
             DRE::U32 const rootChildCount = root->GetChildrenCount();
@@ -74,6 +78,10 @@ void SceneGraphEditor::Render()
                 if (DRE::g_AppContext.m_FocusedObject->GetType() == WORLD::Entity::Type::Light)
                 {
                     RenderLightProperties(transformUpdated);
+                }
+                else if (DRE::g_AppContext.m_FocusedObject->GetType() == WORLD::Entity::Type::Entity)
+                {
+                    RenderEntityProperties(context);
                 }
             }
             else
@@ -133,6 +141,126 @@ bool SceneGraphEditor::RenderNodeProperties()
     return wasUpdated;
 }
 
+char const* GetMaterialTypeString(Data::Material::RenderingProperties::MaterialType type)
+{
+    switch (type)
+    {
+    case Data::Material::RenderingProperties::MaterialType::MATERIAL_TYPE_OPAQUE:
+        return "Opaque";
+    case Data::Material::RenderingProperties::MaterialType::MATERIAL_TYPE_ALPHA_MASKED:
+        return "Alpha Masked";
+    case Data::Material::RenderingProperties::MaterialType::MATERIAL_TYPE_WATER:
+        return "Water";
+    default:
+        return "Unknown";
+    }
+}
+
+char const* GetTextureSlotString(Data::Material::TextureProperty::Slot slot)
+{
+    switch (slot)
+    {
+    case Data::Material::TextureProperty::Slot::DIFFUSE:
+        return "Diffuse";
+    case Data::Material::TextureProperty::Slot::NORMAL:
+        return "Normal";
+    case Data::Material::TextureProperty::Slot::METALNESS:
+        return "Metalness";
+    case Data::Material::TextureProperty::Slot::ROUGHNESS:
+        return "Roughness";
+    case Data::Material::TextureProperty::Slot::OCCLUSION:
+        return "Occlusion";
+    case Data::Material::TextureProperty::Slot::BENT_NORMAL:
+        return "Bent Normal";
+    case Data::Material::TextureProperty::Slot::OPACITY:
+        return "Opacity";
+    default:
+        return "Unknown";
+    }
+}
+
+void SceneGraphEditor::RenderEntityProperties(RenderingContext& context)
+{
+    ImGui::NewLine();
+    ImGui::SeparatorText("Entity");
+    WORLD::Entity* entity = reinterpret_cast<WORLD::Entity*>(DRE::g_AppContext.m_FocusedObject);
+    if (GFX::RenderableObject* renderable = entity->GetRenderableObject())
+    {
+        ImGui::SeparatorText("Renderable Object");
+        InstanceFlags flags = renderable->GetInstanceFlags();
+        ImGui::Text("Flags hex: 0x%X", flags);
+        ImGui::Text("|%d| FLAG_DUMMY", flags & INSTANCE_FLAG_DUMMY);
+        ImGui::NewLine();
+        
+        DRE::U32 layerBits =renderable->GetLayerBits();
+        ImGui::Text("Layer Bits hex: 0x%X", layerBits);
+        ImGui::Text("|%d| LAYER_FORWARD",   bool(layerBits & GFX::RenderableObject::LayerToBits(GFX::RenderableObject::Layer::LAYER_FORWARD)));
+        ImGui::Text("|%d| LAYER_WATER",     bool(layerBits & GFX::RenderableObject::LayerToBits(GFX::RenderableObject::Layer::LAYER_WATER)));
+        ImGui::Text("|%d| LAYER_GBUFFER",   bool(layerBits & GFX::RenderableObject::LayerToBits(GFX::RenderableObject::Layer::LAYER_GBUFFER)));
+        ImGui::Text("|%d| LAYER_SHADOW",    bool(layerBits & GFX::RenderableObject::LayerToBits(GFX::RenderableObject::Layer::LAYER_SHADOW)));
+        ImGui::NewLine();
+    }
+
+
+
+    Data::Material* material = entity->GetMaterial();
+    if (material != nullptr)
+    {
+        ImGui::SeparatorText("Material");
+        ImGui::Text("Name: %s(GUID=%d)", material->GetName(), material->GetGfxMaterial()->GetMaterialGPU().GetID());
+        ImGui::Text("Type: %s", GetMaterialTypeString(material->GetRenderingProperties().GetMaterialType()));
+        ImGui::Text("Flags hex: 0x%X", material->GetRenderingProperties().GetMaterialFlags());
+        ImGui::Text("|%d| NORMAL_TEXTURE", material->GetRenderingProperties().HasNormalTexture());
+        ImGui::Text("|%d| NORMAL_TEXTURE_INVERT_Y", material->GetRenderingProperties().HasNormalTextureInvertY());
+        ImGui::Text("|%d| NORMAL_TBN", material->GetRenderingProperties().HasNormalTBN());
+        ImGui::Text("|%d| MATERIAL_TEXTURES_DEFAULT", material->GetRenderingProperties().HasMaterialTexturesDefault());
+        ImGui::Text("|%d| METALLIC_ROUGNESS_COMBINED", material->GetRenderingProperties().HasMaterialTexturesMetallicRoughnessCombined());
+        ImGui::Text("|%d| ALPHA_MASKED", material->GetRenderingProperties().HasAlphaMasked());
+
+        ImGui::NewLine();
+        ImGui::Text("Textures:");
+
+        if (ImGui::BeginTable("##textures", 2, ImGuiTableFlags_SizingFixedFit))
+        {
+            ImGui::TableSetupColumn("Slot", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+            ImGui::TableSetupColumn("Texture", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableHeadersRow();
+
+            for(DRE::U32 i = 0; i < Data::Material::TextureProperty::Slot::MAX; ++i)
+            {
+                Data::Material::TextureProperty::Slot slot = static_cast<Data::Material::TextureProperty::Slot>(i);
+                Data::Texture2D const& texture = material->GetTexture(slot);
+
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted(GetTextureSlotString(slot));
+
+                ImGui::TableSetColumnIndex(1);
+                if (texture.IsInitialized())
+                {
+                    GFX::Texture* gfxTexture = GFX::g_GraphicsManager->GetTextureBank().FindTexture(texture.GetName());
+                    DRE_ASSERT(gfxTexture != nullptr, "Material has a texture that is not loaded in the TextureBank");
+
+                    char const* uniqueViewLabel = context.GetNextUniqueLabel("[view]");
+                    if (ImGui::Button(uniqueViewLabel, ImVec2(50, 0)))
+                    {
+                        DRE::g_AppContext.m_TextureInspectorViewState.m_DrawTexture = true;
+                        DRE::g_AppContext.m_TextureInspectorViewState.m_TextureName = texture.GetName();
+                    }
+                    ImGui::SameLine();
+                    ImGui::Text("(GUID=%d)%s", gfxTexture->GetShaderGlobalDescriptor().id_, texture.GetName());
+                }
+                else
+                {
+                    ImGui::TextUnformatted("None");
+                }
+            }
+
+            ImGui::EndTable();
+        }
+    }
+}
+
 bool SceneGraphEditor::RenderLightProperties(bool wasTransformUpdated)
 {
     ImGui::NewLine();
@@ -180,7 +308,20 @@ bool SceneGraphEditor::RenderLightProperties(bool wasTransformUpdated)
     return needsUpdate;
 }
 
-DRE::String64 SceneGraphEditor::GetUniqueLabel(WORLD::SceneNode* node, SceneGraphEditor::RenderingContext& context)
+SceneGraphEditor::RenderingContext::RenderingContext()
+    : m_CurrentID{ 0 }
+{
+    DRE::MemZero(m_UniqueLabel, sizeof(m_UniqueLabel));
+}
+
+char const* SceneGraphEditor::RenderingContext::GetNextUniqueLabel(char const* displayLabel)
+{
+    DRE::MemZero(m_UniqueLabel, sizeof(m_UniqueLabel));
+    std::sprintf(m_UniqueLabel, "%s##%u", displayLabel, m_CurrentID++);
+    return m_UniqueLabel;
+}
+
+DRE::String128 SceneGraphEditor::GetUniqueSceneNodeLabel(WORLD::SceneNode* node, SceneGraphEditor::RenderingContext& context)
 {
     char const* typeStr = "Node";
     if (node->GetNodeUser() != nullptr) // not a structural node
@@ -198,21 +339,22 @@ DRE::String64 SceneGraphEditor::GetUniqueLabel(WORLD::SceneNode* node, SceneGrap
         }
     }
 
-    char buffer[128];
+    char displayLabelBuffer[128];
     char const* label = std::strlen(node->GetName()) > 0 ? node->GetName() : typeStr;
 
     if (m_ShowIDs)
-        std::sprintf(buffer, "%s (%u)##%u", label, node->GetGlobalID(), context.m_CurrentID++);
+        std::sprintf(displayLabelBuffer, "%s (%u)", label, node->GetGlobalID());
     else
-        std::sprintf(buffer, "%s##%u", label, context.m_CurrentID++);
+        std::sprintf(displayLabelBuffer, "%s", label);
 
-    return DRE::String64{ buffer };
+    char const* uniqueStr = context.GetNextUniqueLabel(displayLabelBuffer);
+    return DRE::String64{ uniqueStr };
 }
 
 void SceneGraphEditor::RenderSceneNodeRecursive(WORLD::SceneNode* node, SceneGraphEditor::RenderingContext& context)
 {
     DRE::U32 const childCount = node->GetChildrenCount();
-    DRE::String64 label = GetUniqueLabel(node, context);
+    DRE::String128 label = GetUniqueSceneNodeLabel(node, context);
 
     ImGuiTreeNodeFlags const flags = childCount > 0 ? ImGuiTreeNodeFlags_None : ImGuiTreeNodeFlags_Leaf;
     if (ImGui::TreeNodeEx(label.GetData(), flags))

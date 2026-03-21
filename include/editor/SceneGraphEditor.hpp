@@ -31,16 +31,24 @@ public:
 
 private:
 
-    struct RenderingContext
+    class RenderingContext
     {
+    public:
+        RenderingContext();
+
+        // warning that the string becomes invalid after the next call to GetNextUniqueLabel()
+        char const* GetNextUniqueLabel(char const* displayLabel);
+    private:
         DRE::U32 m_CurrentID = 0u;
+        char m_UniqueLabel[128];
     };
 
-    DRE::String64 GetUniqueLabel(WORLD::SceneNode* node, SceneGraphEditor::RenderingContext& context);
+    DRE::String128 GetUniqueSceneNodeLabel(WORLD::SceneNode* node, SceneGraphEditor::RenderingContext& context);
 
     void RenderSceneNodeRecursive(WORLD::SceneNode* node, RenderingContext& context);
 
     bool RenderNodeProperties();
+    void RenderEntityProperties(SceneGraphEditor::RenderingContext& context);
     bool RenderLightProperties(bool wasTransformUpdated);
 
 private:

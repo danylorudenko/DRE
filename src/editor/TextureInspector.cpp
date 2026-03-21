@@ -100,12 +100,6 @@ void TextureInspector::Render()
                     TextureInList(*texture.value);
                 });
             }
-
-            if (ImGui::BeginPopup("many_views_popup"))
-            {
-                ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Too many textures in the view. Limit is 12");
-                ImGui::EndPopup();
-            }
         };
         ImGui::EndChild();
         ////////////////////////////
@@ -119,11 +113,19 @@ void TextureInspector::Render()
         ////////////////////////////
         // Texture View BEGIN
         ////////////////////////////
-        if (ImGui::BeginChild("viewer"))
+        if (ImGui::BeginChild("properties"))
         {
 #ifdef DRE_IMGUI_CUSTOM_TEXTURE
 
             auto& ctx = DRE::g_AppContext.m_TextureInspectorViewState;
+
+            ImGui::TextUnformatted(ctx.m_TextureName.GetData());
+            if (ImGui::Button("Disable View"))
+            {
+                ctx.m_DrawTexture = false;
+                ctx.m_TextureName.Shrink(0);
+                m_DisplayedTexture = nullptr;
+            }
 
             ImGui::SliderFloat("Size", &ctx.m_Size, 0.0f, 1.0f);
 
