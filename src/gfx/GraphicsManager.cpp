@@ -102,7 +102,7 @@ void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInpu
     m_RenderGraph.AddPass<AmbientOcclusionPass>();
     m_RenderGraph.AddPass<ColorEncodingPass>();
     m_RenderGraph.AddPass<EditorPass>(viewportInput);
-    //m_RenderGraph.AddPass<DebugPass>();
+    m_RenderGraph.AddPass<DebugPass>();
     m_RenderGraph.AddPass<ImGuiRenderPass>();
     m_RenderGraph.ParseGraph();
     m_RenderGraph.InitGraphResources();

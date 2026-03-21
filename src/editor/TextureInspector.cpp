@@ -43,7 +43,7 @@ TextureInspector& TextureInspector::operator=(TextureInspector&& rhs)
 
 void TextureInspector::Render()
 {
-    ImGui::SetNextWindowSize(ImVec2(500, 440), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(250, 250), ImGuiCond_FirstUseEver);
 
     bool isOpen = true;
     if (ImGui::Begin("Texture Inspector", &isOpen, ImGuiWindowFlags_None))
@@ -51,7 +51,7 @@ void TextureInspector::Render()
         ////////////////////////////
         // Texture List BEGIN
         ////////////////////////////
-        if (ImGui::BeginChild("nodes_tree", ImVec2(300, 0), ImGuiChildFlags_Border | ImGuiChildFlags_ResizeX))
+        if (ImGui::BeginChild("nodes_tree", ImVec2(150, 0), ImGuiChildFlags_Border | ImGuiChildFlags_ResizeX))
         {
             ////////////
             // Search Buff
@@ -67,13 +67,19 @@ void TextureInspector::Render()
                 {
                     if (ImGui::Button(name))
                     {
-                        if (m_DisplayedTextures.Size() < m_DisplayedTextures.Capacity())
+                        auto& ctx = DRE::g_AppContext;
+                        if (m_DisplayedTexture == &texture)
                         {
-                            m_DisplayedTextures.EmplaceBackUnique(&texture);
+                            m_DisplayedTexture = nullptr;
+                            ctx.m_TextureInspectorViewState.m_DrawTexture = false;
+                            ctx.m_TextureInspectorViewState.m_TextureName.Shrink(0);
                         }
                         else
                         {
-                            ImGui::OpenPopup("many_views_popup");
+                            m_DisplayedTexture = &texture;
+                            ctx.m_TextureInspectorViewState.m_DrawTexture = true;
+                            ctx.m_TextureInspectorViewState.m_TextureName = m_DisplayedTexture->GetResource()->name_;
+
                         }
                     }
                 }
@@ -117,8 +123,20 @@ void TextureInspector::Render()
         {
 #ifdef DRE_IMGUI_CUSTOM_TEXTURE
 
-            ImGui::SliderFloat("Texture Size", &m_TextureSizeMultiplier, 0.0f, 10.0f);
+            auto& ctx = DRE::g_AppContext.m_TextureInspectorViewState;
 
+            ImGui::SliderFloat("Size", &ctx.m_Size, 0.0f, 1.0f);
+
+            ImGui::SliderFloat("Lower", &ctx.m_LowerEnd, 0.0f, 1.0f);
+            ImGui::SliderFloat("Upper", &ctx.m_UpperEnd, 0.0f, 1.0f);
+
+            ImGui::Checkbox("X Channel", &ctx.m_ShowX);
+            ImGui::Checkbox("Y Channel", &ctx.m_ShowY);
+            ImGui::Checkbox("Z Channel", &ctx.m_ShowZ);
+            ImGui::Checkbox("W Channel", &ctx.m_ShowW);
+
+
+            /*
             DRE::InplaceVector<GFX::Texture*, 2> deleteQueue;
             for(std::uint32_t i = 0, size = m_DisplayedTextures.Size(); i < size; i++)
             {
@@ -153,6 +171,8 @@ void TextureInspector::Render()
             {
                 m_DisplayedTextures.RemoveValue(deleteQueue[i]);
             }
+
+            */
 #endif
         }
         ImGui::EndChild();

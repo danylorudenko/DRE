@@ -4,7 +4,9 @@
 #include <gfx\scheduling\RenderGraph.hpp>
 #include <gfx\renderer\DrawBatcher.hpp>
 
-#include <engine\scene\Scene.hpp>
+#include <engine\ApplicationContext.hpp>
+
+#include <debug_view.h>
 
 namespace GFX
 {
@@ -27,30 +29,46 @@ void DebugPass::RegisterResources(RenderGraph& graph)
         VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE,
         0);
 
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::FFTH0), VKW::FORMAT_R32G32B32A32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 1);
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::FFTHxt), VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 2);
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::WaterHeight), VKW::FORMAT_R32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 3);
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::FFTPingPong0), VKW::FORMAT_R32G32_FLOAT, C_WATER_DIM, C_WATER_DIM, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 4);
-
-    //graph.RegisterPushConstant(this, 8, VKW::STAGE_COMPUTE);
+    graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 1);
 }
 
 void DebugPass::Render(RenderGraph& graph, VKW::Context& context)
 {
+    auto& viewContext = DRE::g_AppContext.m_TextureInspectorViewState;
+    if (!viewContext.m_DrawTexture)
+    {
+        return;
+    }
+
+    GFX::Texture* displayedTexture = g_GraphicsManager->GetTextureBank().FindTexture(viewContext.m_TextureName);
+    if (displayedTexture == nullptr)
+    {
+        displayedTexture = graph.GetTexture(viewContext.m_TextureName);
+
+        if (displayedTexture == nullptr)
+        {
+            return;
+        }
+    }
+
     DRE_GPU_SCOPE(DebugPass);
 
     VKW::ImageResourceView* output = graph.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage))->GetShaderView();
-
-    VKW::ImageResourceView* fftH0 = graph.GetTexture(RESOURCE_ID(TextureID::FFTH0))->GetShaderView();
-    VKW::ImageResourceView* fftHxt = graph.GetTexture(RESOURCE_ID(TextureID::FFTHxt))->GetShaderView();
-    VKW::ImageResourceView* height = graph.GetTexture(RESOURCE_ID(TextureID::WaterHeight))->GetShaderView();
-    VKW::ImageResourceView* pingPong = graph.GetTexture(RESOURCE_ID(TextureID::FFTPingPong0))->GetShaderView();
+    VKW::ImageResourceView* displayedTextureView = displayedTexture->GetShaderView();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, output->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, fftH0->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, fftHxt->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, height->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, pingPong->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, displayedTextureView->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
+
+
+    DebugViewArgs args{};
+    args.textureID = displayedTexture->GetShaderGlobalDescriptor().id_;
+    args.size = viewContext.m_Size;
+    args.lowBound = viewContext.m_LowerEnd;
+    args.highBound = viewContext.m_UpperEnd;
+    args.channelMask = (viewContext.m_ShowX ? 0x1 : 0) | (viewContext.m_ShowY ? 0x2 : 0) | (viewContext.m_ShowZ ? 0x4 : 0) | (viewContext.m_ShowW ? 0x8 : 0);
+
+    UniformProxy uniform = graph.GetPassUniform(GetID(), context, sizeof(DebugViewArgs));
+    uniform.WriteMember140(args);
 
     VKW::DescriptorSet set = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
 
@@ -60,9 +78,9 @@ void DebugPass::Render(RenderGraph& graph, VKW::Context& context)
     context.CmdBindComputeDescriptorSets(pipeline->GetLayout(), graph.GetPassSetBinding(), 1, &set);
     context.CmdBindComputePipeline(pipeline);
 
-    glm::uvec2 imageSize{ C_WATER_DIM, C_WATER_DIM };
+    glm::uvec2 imageSize{ g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight };
     glm::uvec2 const groupSize{ 8, 8 };
-    glm::uvec2 const dispatchSize = imageSize / groupSize;
+    glm::uvec2 const dispatchSize = imageSize / groupSize + 1u;
 
     context.CmdDispatch(dispatchSize.x * 4, dispatchSize.y, 1);
 

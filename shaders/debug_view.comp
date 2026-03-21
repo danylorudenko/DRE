@@ -1,37 +1,43 @@
 #include "common/shaders_common.h"
+#include "debug_view.h"
 
 [[vk::binding(0, 3)]] RWTexture2D<float4> outputTexture;
+[[vk::binding(1, 3)]] ConstantBuffer<DebugViewArgs> debugViewArgs;
 
-[[vk::binding(1, 3)]] Texture2D texture_h0;
-[[vk::binding(2, 3)]] Texture2D texture_hkt;
-[[vk::binding(3, 3)]] Texture2D texture_height;
-[[vk::binding(4, 3)]] Texture2D texture_pingpong;
+float4 RemapDisplayValue(float4 value, float lowBound, float highBound)
+{
+    float distance = highBound - lowBound;
+    return (value - lowBound) / distance;
+}
 
 [numthreads(8, 8, 1)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
-	int2 coords = int2(DTid.xy);
-	float2 uv = float2(coords) / 256;
+    int2 coords = int2(DTid.xy);
+    float2 uv = float2(coords - 50) / GetViewportSize();
+    uv /= debugViewArgs.size;
 
-	float4 value = texture_pingpong.SampleLevel(GetSamplerLinear(), uv, 0);
-	
-	if(coords.x > 255 * 3)
-	{
-		value = texture_h0.SampleLevel(GetSamplerLinear(), uv, 0);
-	}
-	else if(coords.x > 255 * 2)
-	{
-		value = texture_hkt.SampleLevel(GetSamplerLinear(), uv, 0);
-	}
-	else if(coords.x > 255)
-	{
-		value = texture_pingpong.SampleLevel(GetSamplerLinear(), uv, 0);
-	}
-	else if(coords.x < 255)
-	{
-		value = texture_height.SampleLevel(GetSamplerLinear(), uv, 0);
-	}
-	
-	outputTexture[coords] = value;
-	
+    if (all(uv <= 1.0) && all(uv >= 0.0))
+    {
+        float4 textureValue = SampleGlobalTextureLinear(debugViewArgs.textureID, uv, 0.0);
+
+        uint4 channelMask = uint4(
+            GetChannelX(debugViewArgs),
+            GetChannelY(debugViewArgs),
+            GetChannelZ(debugViewArgs),
+            GetChannelW(debugViewArgs)
+        );
+
+        float4 channelMaskFloat = float4(channelMask);
+        float4 displayValue = textureValue * channelMaskFloat;
+
+        // special case when single channel is selected
+        if (channelMask.x + channelMask.y + channelMask.z + channelMask.w == 1)
+        {
+            displayValue = (displayValue.x + displayValue.y + displayValue.z + displayValue.w).xxxx;
+        }
+
+        displayValue = RemapDisplayValue(displayValue, debugViewArgs.lowBound, debugViewArgs.highBound);
+        outputTexture[coords] = displayValue;
+    }
 }

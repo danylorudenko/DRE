@@ -1,6 +1,7 @@
 #pragma once
 
 #include <foundation\Common.hpp>
+#include <foundation\string\InplaceString.hpp>
 
 namespace WORLD
 {
@@ -15,6 +16,21 @@ enum class ObjectFocusEvent
     None,
     ImGui,
     Picking
+};
+
+struct TextureViewState
+{
+    bool m_DrawTexture = false;
+    DRE::String128 m_TextureName;
+    float m_Size = 0.5f;
+
+    float m_LowerEnd = 0.0f;
+    float m_UpperEnd = 1.0f;
+
+    bool m_ShowX = true;
+    bool m_ShowY = true;
+    bool m_ShowZ = true;
+    bool m_ShowW = true;
 };
 
 struct ApplicationContext
@@ -34,6 +50,9 @@ struct ApplicationContext
     DRE::S32    m_CursorX = 0;
     DRE::S32    m_CursorY = 0;
 
+
+    // Texture Inspector
+    TextureViewState m_TextureInspectorViewState;
 };
 
 extern ApplicationContext g_AppContext;

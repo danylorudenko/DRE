@@ -34,9 +34,16 @@ private:
     GFX::TextureBank*           m_TextureBank;
     GFX::GraphResourcesManager* m_GraphResources;
 
-    DRE::InplaceVector<GFX::Texture*, 12> m_DisplayedTextures;
+    GFX::Texture* m_DisplayedTexture;
 
     float m_TextureSizeMultiplier;
+    float m_TextureLowerEnd;
+    float m_TextureUpperEnd;
+
+    bool m_ShowX = true;
+    bool m_ShowY = true;
+    bool m_ShowZ = true;
+    bool m_ShowW = true;
 };
 
 }

@@ -47,6 +47,11 @@ float4 SampleGlobalTextureLinear(uint id, float2 uv)
     return g_GlobalTextures[id].Sample(GetSamplerLinear(), uv);
 }
 
+float4 SampleGlobalTextureLinear(uint id, float2 uv, float mipLevel)
+{
+    return g_GlobalTextures[id].SampleLevel(GetSamplerLinear(), uv, mipLevel);
+}
+
 float4 SampleGlobalTextureAnisotropic(uint id, float2 uv)
 {
     return g_GlobalTextures[id].Sample(GetSamplerAnisotropic(), uv);
