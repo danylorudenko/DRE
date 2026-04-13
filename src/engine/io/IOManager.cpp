@@ -226,7 +226,15 @@ WORLD::SceneNode* IOManager::ParseModelFile(char const* path, WORLD::Scene& targ
 {
     Assimp::Importer importer = Assimp::Importer();
 
-    aiScene const* scene = importer.ReadFile(path, aiProcessPreset_TargetRealtime_Fast | aiProcess_FlipUVs);
+    aiScene const* scene = importer.ReadFile(path,
+        aiProcess_CalcTangentSpace |
+        aiProcess_GenNormals |
+        aiProcess_JoinIdenticalVertices |
+        aiProcess_Triangulate |
+        aiProcess_GenUVCoords |
+        aiProcess_SortByPType |
+        aiProcess_FlipUVs
+    );
     char const* sceneName = aiScene::GetShortFilename(path);
 
     DRE_ASSERT(scene != nullptr, "Failed to load a model file.");

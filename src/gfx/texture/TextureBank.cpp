@@ -29,7 +29,7 @@ Texture* TextureBank::FindTexture(DRE::String128 const& name)
 void TextureBank::LoadDefaultTextures()
 {
     DRE::U8 defaultBlack[4] = { 0x00, 0x00, 0x00, 0x00 };
-    DRE::U8 defaultNormal[4] = { 0x00, 0x00, 0xFF, 0x00 };
+    DRE::U8 defaultNormal[4] = { 0x80, 0x80, 0xFF, 0x00 };
     DRE::U8 zero = 0x00;
     DRE::U8 one = 0xFF;
     DRE::ByteBuffer defaultBlackBuffer{ defaultBlack, sizeof(defaultBlack) };
@@ -97,7 +97,7 @@ Texture* TextureBank::LoadTexture2DSync(DRE::String128 const& name, DRE::U32 wid
     VKW::ImageResourceView* imageView = m_ResourcesController->ViewImageAs(imageResource);
     VKW::TextureDescriptorIndex descriptorHandle = m_DescriptorAllocator->AllocateTextureDescriptor(imageView);
 
-    DRE_ASSERT(m_Textures.Find(name).key == nullptr, "Texture with name %s already exists in the bank!", name.GetData());
+    DRE_ASSERT(m_Textures.Find(name).key == nullptr, "Texture with already exists in the bank!");
 
     return &(m_Textures[name] = Texture{ g_GraphicsManager->GetMainDevice(), imageResource, imageView, descriptorHandle });
 }

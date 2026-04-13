@@ -123,6 +123,7 @@ void DREApplicationDelegate::start()
     m_MainScene.SetMainSunLight(sunLight);
 
     sunLight->SetEulerOrientation(glm::vec3{ -70.0f, 110.0f, 0.0f });
+    //sunLight->SetEulerOrientation(glm::vec3{ 0.0f, 0.0f, 0.0f });
     sunLight->ScheduleUpdateGPUData();
 
 
@@ -138,8 +139,9 @@ void DREApplicationDelegate::start()
     /////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////
     //WORLD::SceneNode* sponzaNode = m_IOManager.ParseModelFile("data\\gltf_samples\\Sponza\\glTF\\Sponza.gltf", m_MainScene);
-    WORLD::SceneNode* sponzaNode = m_IOManager.ParseModelFile("data\\downloadable\\main_sponza\\NewSponza_Main_glTF_003.gltf", m_MainScene);
-    sponzaNode->SetScale(5.0f);
+    //WORLD::SceneNode* sponzaNode = m_IOManager.ParseModelFile("data\\downloadable\\main_sponza\\NewSponza_Main_glTF_003.gltf", m_MainScene);
+    WORLD::SceneNode* sponzaNode = m_IOManager.ParseModelFile("data\\downloadable\\mcguire_sponza\\sponza.obj", m_MainScene);
+    sponzaNode->SetScale(0.1f);
 
 
     glm::mat spheresTransform = glm::rotate(glm::identity<glm::mat4>(), glm::radians(180.0f), glm::vec3{ 1.0f, 0.0, 0.0f });
