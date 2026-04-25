@@ -8,12 +8,12 @@
 namespace Data
 {
 
-enum TextureChannelVariations : std::uint32_t
+enum TextureChannels : std::uint32_t
 {
-    TEXTURE_VARIATION_INVALID,
-    TEXTURE_VARIATION_GRAY,
-    TEXTURE_VARIATION_GRAY_ALPHA,
-    TEXTURE_VARIATION_RGBA
+    TEXTURE_CHANNELS_INVALID,
+    TEXTURE_CHANNELS_GRAY,
+    TEXTURE_CHANNELS_GRAY_ALPHA,
+    TEXTURE_CHANNELS_RGBA
 };
 
 class Texture2D
@@ -22,7 +22,7 @@ public:
     Texture2D();
 
     bool IsInitialized() const;
-    void ReadFromFile(char const* filePath, TextureChannelVariations channelVariations);
+    void ReadFromFile(char const* filePath, TextureChannels channelVariations);
 
     VKW::Format GetFormat() const;
     DRE::ByteBuffer const& GetBuffer() const;

@@ -20,25 +20,25 @@ bool Texture2D::IsInitialized() const
     return format_ != VKW::FORMAT_UNDEFINED;
 }
 
-void Texture2D::ReadFromFile(char const* filePath, TextureChannelVariations channelVariations)
+void Texture2D::ReadFromFile(char const* filePath, TextureChannels channelVariations)
 {
     int desiredChannels = 0;
     switch (channelVariations)
     {
-    case Data::TEXTURE_VARIATION_GRAY:
+    case Data::TEXTURE_CHANNELS_GRAY:
         desiredChannels = STBI_grey;
         format_ = VKW::FORMAT_R8_UNORM;
         break;
-    case Data::TEXTURE_VARIATION_GRAY_ALPHA:
+    case Data::TEXTURE_CHANNELS_GRAY_ALPHA:
         desiredChannels = STBI_grey_alpha;
         format_ = VKW::FORMAT_R8G8_UNORM;
         break;
-    case Data::TEXTURE_VARIATION_RGBA:
+    case Data::TEXTURE_CHANNELS_RGBA:
         desiredChannels = STBI_rgb_alpha;
         format_ = VKW::FORMAT_R8G8B8A8_UNORM;
         break;
     default:
-        assert(false && "Invalid TextureChannelVariations");
+        assert(false && "Invalid TextureChannels");
     }
 
     int x, y, n;

@@ -30,7 +30,7 @@ class PersistentStorage;
 
 
 constexpr DRE::U32 MAX_GPU_INSTANCES            = 1024 * 32;
-constexpr DRE::U32 MAX_GPU_INSTANCES_QUEUE      = 1024;
+constexpr DRE::U32 MAX_GPU_INSTANCES_QUEUE      = 4096;
 
 using InstanceDataManagerBase = GPUInstanceAllocator<S_INSTANCE, MAX_GPU_INSTANCES, MAX_GPU_INSTANCES_QUEUE>;
 

@@ -57,6 +57,11 @@ float4 SampleGlobalTextureAnisotropic(uint id, float2 uv)
     return g_GlobalTextures[id].Sample(GetSamplerAnisotropic(), uv);
 }
 
+Texture2D<float4> GetGlobalTextureObject(uint id)
+{
+    return g_GlobalTextures[id];
+}
+
 float sRGB2Linear(float x)
 {
     return pow(x, 1.0 / 2.2);

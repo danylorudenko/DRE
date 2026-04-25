@@ -55,7 +55,7 @@ PSInput main(VSInput input)
     input.tan = cross(input.norm, input.btan);
     #endif
 
-    float3 T = normalize(mul(model_mat, float4(input.tan, 0.0)).xyz);
+    float3 T = normalize(mul(model_mat, float4(input.tan.xyz, 0.0)).xyz);
     float3 B = normalize(mul(model_mat, float4(input.btan, 0.0)).xyz);
     float3 N = normalize(mul(model_mat, float4(input.norm, 0.0)).xyz);
 

@@ -34,13 +34,13 @@ void MaterialsManager::MaterialGPU::ScheduleUpdate(S_MATERIAL materialData)
 
 void MaterialsManager::MaterialGPU::ScheduleUpdateTextures0(glm::ivec4 commonTextureIDs)
 {
-    m_MaterialDataCPU.texture_common_ids = commonTextureIDs;
+    m_MaterialDataCPU.texture_ids0 = commonTextureIDs;
     Base::Payload::ScheduleUpdate(m_MaterialDataCPU);
 }
 
 void MaterialsManager::MaterialGPU::ScheduleUpdateTextures1(glm::ivec4 auxTextureIDs)
 {
-    m_MaterialDataCPU.texture_aux_ids = auxTextureIDs;
+    m_MaterialDataCPU.texture_ids1 = auxTextureIDs;
     Base::Payload::ScheduleUpdate(m_MaterialDataCPU);
 }
 

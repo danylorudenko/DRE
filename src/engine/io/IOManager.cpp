@@ -114,14 +114,14 @@ void IOManager::WriteNewFile(char const* path, DRE::ByteBuffer const& buffer)
     ostream.close();
 }
 
-Data::Texture2D IOManager::ReadTexture2D(char const* path, Data::TextureChannelVariations channelVariations)
+Data::Texture2D IOManager::ReadTexture2D(char const* path, Data::TextureChannels channelVariations)
 {
     Data::Texture2D texture;
     texture.ReadFromFile(path, channelVariations);
     return texture;
 }
 
-void IOManager::ParseMaterialTexture_Parallel(aiScene const* scene, aiMaterial const* aiMat, DRE::String256 const& assetFolderPath, Data::Material* material, Data::Material::TextureProperty::Slot slot, Data::TextureChannelVariations channels)
+void IOManager::ParseMaterialTexture_Parallel(aiScene const* scene, aiMaterial const* aiMat, DRE::String256 const& assetFolderPath, Data::Material& material, Data::Material::TextureProperty::Slot slot, Data::TextureChannels channels)
 {
     aiString aiTexturePath;
     aiTextureType aiType = aiTextureType_NONE;
@@ -141,6 +141,15 @@ void IOManager::ParseMaterialTexture_Parallel(aiScene const* scene, aiMaterial c
         break;
     case Data::Material::TextureProperty::OPACITY:
         aiType = aiTextureType_OPACITY;
+        break;
+    case Data::Material::TextureProperty::GLOSSINESS:
+        aiType = aiTextureType_SHININESS;
+        break;
+    case Data::Material::TextureProperty::SPECULAR:
+        aiType = aiTextureType_SPECULAR;
+        break;
+    case Data::Material::TextureProperty::BUMP:
+        aiType = aiTextureType_HEIGHT;
         break;
     default:
         DRE_ASSERT(false, "Unsupported Data::Material::TextureProperty::Slot while parsing material textures.");
@@ -175,7 +184,7 @@ void IOManager::ParseMaterialTexture_Parallel(aiScene const* scene, aiMaterial c
             );
         }
 
-        material->AssignTextureToSlot(slot, DRE_MOVE(dataTexture), gfxTexture);
+        material.AssignTextureToSlot(slot, DRE_MOVE(dataTexture), gfxTexture);
     }
     else
     {
@@ -227,13 +236,13 @@ WORLD::SceneNode* IOManager::ParseModelFile(char const* path, WORLD::Scene& targ
     Assimp::Importer importer = Assimp::Importer();
 
     aiScene const* scene = importer.ReadFile(path,
-        aiProcess_CalcTangentSpace |
-        aiProcess_GenNormals |
-        aiProcess_JoinIdenticalVertices |
-        aiProcess_Triangulate |
-        aiProcess_GenUVCoords |
-        aiProcess_SortByPType |
-        aiProcess_FlipUVs
+        aiProcess_CalcTangentSpace
+        | aiProcess_GenNormals
+        | aiProcess_JoinIdenticalVertices
+        | aiProcess_Triangulate
+        | aiProcess_GenUVCoords
+        | aiProcess_SortByPType
+        | aiProcess_FlipUVs
     );
     char const* sceneName = aiScene::GetShortFilename(path);
 
@@ -284,6 +293,37 @@ Data::Material::RenderingProperties::MaterialType MaterialTypeFromAssimpMaterial
     return Data::Material::RenderingProperties::MATERIAL_TYPE_OPAQUE;
 }
 
+enum class MaterialTexturingWorkflow
+{
+    PBR,
+    GLOSS_SPEC,
+    DIFFUSE_ONLY
+};
+
+MaterialTexturingWorkflow MaterialTexturingWorkflowFromAssimpMaterial(aiMaterial const* aiMaterial)
+{
+    if (
+        aiMaterial->GetTextureCount(aiTextureType_METALNESS) > 0 ||
+        aiMaterial->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS) > 0 ||
+        aiMaterial->GetTextureCount(aiTextureType_AMBIENT_OCCLUSION) > 0 ||
+        aiMaterial->GetTextureCount(aiTextureType_GLTF_METALLIC_ROUGHNESS) > 0
+        )
+    {
+        return MaterialTexturingWorkflow::PBR;
+    }
+
+    // SHININESS == glossiness
+    if (
+        aiMaterial->GetTextureCount(aiTextureType_SPECULAR) > 0 ||
+        aiMaterial->GetTextureCount(aiTextureType_SHININESS) > 0
+        )
+    {
+        return MaterialTexturingWorkflow::GLOSS_SPEC;
+    }
+
+    return MaterialTexturingWorkflow::DIFFUSE_ONLY;
+}
+
 bool IsMaterialRoughnessDiffuseCombined(aiMaterial const* aiMaterial)
 {
     aiString metallicRoughnessTexturePath;
@@ -308,9 +348,14 @@ bool IsMaterialRoughnessDiffuseCombined(aiMaterial const* aiMaterial)
     return false;
 }
 
-bool IsMaterialNormalTextureSet(aiMaterial const* aiMaterial)
+bool IsMaterialNormalTextureSet(aiMaterial const* aiMat)
 {
-    return aiMaterial->GetTextureCount(aiTextureType_NORMALS) > 0;
+    return aiMat->GetTextureCount(aiTextureType_NORMALS) > 0;
+}
+
+bool IsMaterialBumpTextureSet(aiMaterial const* aiMat)
+{
+    return aiMat->GetTextureCount(aiTextureType_HEIGHT) > 0;
 }
 
 void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName, char const* path)
@@ -331,48 +376,42 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName
     [this, scene, sceneName, &textureFilePath, &materialMutex](DRE::U32 index)
     {
         aiMaterial const* aiMat = scene->mMaterials[index];
-
         Data::Material* material = nullptr;
         {
             std::lock_guard<std::mutex> guard{ materialMutex };
             material = m_MaterialLibrary->CreateMaterial(index, sceneName, aiMat->GetName().C_Str());
         }
 
-        material->GetRenderingProperties().SetMaterialType(MaterialTypeFromAssimpMaterial(aiMat));
+        MaterialTexturingWorkflow texturingWorkflow = MaterialTexturingWorkflowFromAssimpMaterial(aiMat);
+        Data::Material::RenderingProperties::MaterialType materialType = MaterialTypeFromAssimpMaterial(aiMat);
+        material->GetRenderingProperties().SetMaterialType(materialType);
 
-        DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_DIFFUSE) <= 1, "We don't support multiple textures of the same type per material (DIFFUSE).");
-        DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_NORMALS) <= 1, "We don't support multiple textures of the same type per material (NORMALS)");
-        DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_METALNESS) <= 1, "We don't support multiple textures of the same type per material (METALNESS)");
-        DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS) <= 1, "We don't support multiple textures of the same type per material (DIFFUSE_ROUGHNESS)");
-        DRE_ASSERT(aiMat->GetTextureCount(aiTextureType_AMBIENT_OCCLUSION) <= 1, "We don't support multiple textures of the same type per material (AMBIENT_OCCLUSION)");
-
-        // PROCESS TEXTURES
-        ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::DIFFUSE, Data::TEXTURE_VARIATION_RGBA);
-        ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::NORMAL, Data::TEXTURE_VARIATION_RGBA);
-
-        if (IsMaterialRoughnessDiffuseCombined(aiMat))
+        switch (texturingWorkflow)
         {
-            // it means we have texture with merged metalness and roughness attributes. Let it lie in metalness
-            ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::METALNESS, Data::TEXTURE_VARIATION_RGBA);
-            material->GetRenderingProperties().EnableMaterialTexturesMetallicRoughnessCombined(true);
+        case MaterialTexturingWorkflow::PBR:
+        {
+            material->GetRenderingProperties().EnableUsePBRTextures(true);
+            ParseAssimpMaterials_PBRTextures(scene, aiMat, textureFilePath, *material);
+            break;
         }
-        else
+        case MaterialTexturingWorkflow::GLOSS_SPEC:
         {
-            ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::METALNESS, Data::TEXTURE_VARIATION_GRAY);
-            ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::ROUGHNESS, Data::TEXTURE_VARIATION_GRAY);
-            material->GetRenderingProperties().EnableMaterialTexturesDefault(true);
+            material->GetRenderingProperties().EnableUseSpecGloss(true);
+            ParseAssimpMaterials_SpecGlossTextures(scene, aiMat, textureFilePath, *material);
+            break;
         }
-
-        if (IsMaterialNormalTextureSet(aiMat))
+        case MaterialTexturingWorkflow::DIFFUSE_ONLY:
         {
-            material->GetRenderingProperties().EnableNormalTexture(true);
+            ParseAssimpMaterials_DiffuseOnly(scene, aiMat, textureFilePath, *material);
+            break;
         }
-        else
-        {
-            material->GetRenderingProperties().EnableNormalTBN(true);
         }
 
-        ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, material, Data::Material::TextureProperty::OPACITY, Data::TEXTURE_VARIATION_GRAY);
+        // this is outside because we always want to attempt reading it
+        if (materialType == Data::Material::RenderingProperties::MaterialType::MATERIAL_TYPE_ALPHA_MASKED)
+        {
+            ParseMaterialTexture_Parallel(scene, aiMat, textureFilePath, *material, Data::Material::TextureProperty::OPACITY, Data::TEXTURE_CHANNELS_GRAY);
+        }
 
         {
             std::lock_guard<std::mutex> guard{ materialMutex };
@@ -380,7 +419,62 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName
             material->FlushToGfxMaterial(gfxMaterial);
         }
     }
-    , true);
+    , false);
+}
+
+void IOManager::ParseAssimpMaterials_PBRTextures(aiScene const* scene, aiMaterial const* aiMat, DRE::String128 const& path, Data::Material& targetDataMaterial)
+{
+    // PROCESS TEXTURES
+    ParseMaterialTexture_Parallel(scene, aiMat, path, targetDataMaterial, Data::Material::TextureProperty::DIFFUSE, Data::TEXTURE_CHANNELS_RGBA);
+
+    ParseAssimpMaterials_NormalsHELPER(scene, aiMat, path, targetDataMaterial);
+
+    if (IsMaterialRoughnessDiffuseCombined(aiMat))
+    {
+        // it means we have texture with merged metalness and roughness attributes. Let it lie in metalness
+        ParseMaterialTexture_Parallel(scene, aiMat, path, targetDataMaterial, Data::Material::TextureProperty::METALNESS, Data::TEXTURE_CHANNELS_RGBA);
+        targetDataMaterial.GetRenderingProperties().EnableMaterialTexturesMetallicRoughnessCombined(true);
+    }
+    else
+    {
+        ParseMaterialTexture_Parallel(scene, aiMat, path, targetDataMaterial, Data::Material::TextureProperty::METALNESS, Data::TEXTURE_CHANNELS_GRAY);
+        ParseMaterialTexture_Parallel(scene, aiMat, path, targetDataMaterial, Data::Material::TextureProperty::ROUGHNESS, Data::TEXTURE_CHANNELS_GRAY);
+        targetDataMaterial.GetRenderingProperties().EnableMaterialTexturesMetallicRoughnessCombined(false);
+    }
+}
+
+void IOManager::ParseAssimpMaterials_SpecGlossTextures(aiScene const* scene, aiMaterial const* aiMat, DRE::String128 const& path, Data::Material& targetDataMaterial)
+{
+    ParseMaterialTexture_Parallel(scene, aiMat, path, targetDataMaterial, Data::Material::TextureProperty::DIFFUSE, Data::TEXTURE_CHANNELS_RGBA);
+
+    ParseAssimpMaterials_NormalsHELPER(scene, aiMat, path, targetDataMaterial);
+
+    ParseMaterialTexture_Parallel(scene, aiMat, path, targetDataMaterial, Data::Material::TextureProperty::GLOSSINESS, Data::TEXTURE_CHANNELS_GRAY);
+    ParseMaterialTexture_Parallel(scene, aiMat, path, targetDataMaterial, Data::Material::TextureProperty::SPECULAR, Data::TEXTURE_CHANNELS_RGBA);
+}
+
+void IOManager::ParseAssimpMaterials_DiffuseOnly(aiScene const* scene, aiMaterial const* aiMat, DRE::String128 const& path, Data::Material& targetDataMaterial)
+{
+    ParseMaterialTexture_Parallel(scene, aiMat, path, targetDataMaterial, Data::Material::TextureProperty::DIFFUSE, Data::TEXTURE_CHANNELS_RGBA);
+    ParseAssimpMaterials_NormalsHELPER(scene, aiMat, path, targetDataMaterial);
+}
+
+void IOManager::ParseAssimpMaterials_NormalsHELPER(aiScene const* scene, aiMaterial const* aiMat, DRE::String128 const& path, Data::Material& targetDataMaterial)
+{
+    if (IsMaterialNormalTextureSet(aiMat))
+    {
+        ParseMaterialTexture_Parallel(scene, aiMat, path, targetDataMaterial, Data::Material::TextureProperty::NORMAL, Data::TEXTURE_CHANNELS_RGBA);
+        targetDataMaterial.GetRenderingProperties().EnableNormalTexture(true);
+    }
+    else if (IsMaterialBumpTextureSet(aiMat))
+    {
+        ParseMaterialTexture_Parallel(scene, aiMat, path, targetDataMaterial, Data::Material::TextureProperty::BUMP, Data::TEXTURE_CHANNELS_GRAY);
+        targetDataMaterial.GetRenderingProperties().EnableBumpTexture(true);
+    }
+    else
+    {
+        targetDataMaterial.GetRenderingProperties().EnableNormalTBN(true);
+    }
 }
 
 void IOManager::ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene, char const* sceneName)

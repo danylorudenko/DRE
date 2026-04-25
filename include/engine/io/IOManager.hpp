@@ -64,7 +64,7 @@ public:
     IOManager(Data::MaterialLibrary* materialLibrary, Data::GeometryLibrary* geometryLibrary);
     ~IOManager();
 
-    Data::Texture2D ReadTexture2D(char const* path, Data::TextureChannelVariations channels);
+    Data::Texture2D ReadTexture2D(char const* path, Data::TextureChannels channels);
 
     WORLD::SceneNode* ParseModelFile(char const* path, WORLD::Scene& targetScene, glm::mat4 baseTransform = glm::identity<glm::mat4>());
 
@@ -76,6 +76,11 @@ public:
 private:
     void ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene, char const* sceneName);
     void ParseAssimpMaterials(aiScene const* scene, char const* sceneName, char const* path);
+
+    void ParseAssimpMaterials_PBRTextures       (aiScene const* scene, aiMaterial const* aiMat, DRE::String128 const& path, Data::Material& targetDataMaterial);
+    void ParseAssimpMaterials_SpecGlossTextures (aiScene const* scene, aiMaterial const* aiMat, DRE::String128 const& path, Data::Material& targetDataMaterial);
+    void ParseAssimpMaterials_DiffuseOnly       (aiScene const* scene, aiMaterial const* aiMat, DRE::String128 const& path, Data::Material& targetDataMaterial);
+    void ParseAssimpMaterials_NormalsHELPER     (aiScene const* scene, aiMaterial const* aiMat, DRE::String128 const& path, Data::Material& targetDataMaterial);
 
     using ASGeometryIndexCounts = DRE::Vector<std::uint32_t, DRE::AllocatorLinear>;
     using ASGeometryVector = DRE::Vector<VkAccelerationStructureGeometryKHR, DRE::AllocatorLinear>;
@@ -91,7 +96,7 @@ private:
         ASGeometryVector& asGeometryVector,
         ASGeometryIndexCounts& asGeometryIndexCounts);
 
-    void ParseMaterialTexture_Parallel(aiScene const* scene, aiMaterial const* aiMat, DRE::String256 const& assetFolderPath, Data::Material* material, Data::Material::TextureProperty::Slot slot, Data::TextureChannelVariations channels);
+    void ParseMaterialTexture_Parallel(aiScene const* scene, aiMaterial const* aiMat, DRE::String256 const& assetFolderPath, Data::Material& material, Data::Material::TextureProperty::Slot slot, Data::TextureChannels channels);
 
 private:
     Data::MaterialLibrary*  m_MaterialLibrary;

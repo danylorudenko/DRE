@@ -38,6 +38,9 @@ public:
             OCCLUSION,
             BENT_NORMAL,
             OPACITY,
+            GLOSSINESS,
+            SPECULAR,
+            BUMP,
             MAX
         };
 
@@ -76,19 +79,23 @@ public:
         inline void SetMaterialFlags(MaterialFlags flags) { m_MaterialFlags = flags; }
         inline MaterialFlags GetMaterialFlags() const { return m_MaterialFlags; }
 
+        inline void EnableUsePBRTextures(bool enable)                               { SetFlag(MATERIAL_FLAG_USE_PBR, enable); }
+        inline void EnableUseSpecGloss(bool enable)                                 { SetFlag(MATERIAL_FLAG_USE_SPEC_GLOSS, enable); }
         inline void EnableNormalTexture(bool enable)                                { SetFlag(MATERIAL_FLAG_NORMAL_TEXTURE, enable); }
         inline void EnableNormalInvertY(bool enable)                                { SetFlag(MATERIAL_FLAG_NORMAL_TEXTURE_INVERT_Y, enable); }
         inline void EnableNormalTBN(bool enable)                                    { SetFlag(MATERIAL_FLAG_NORMAL_TBN, enable); }
-        inline void EnableMaterialTexturesDefault(bool enable)                      { SetFlag(MATERIAL_FLAG_MATERIAL_TEXTURES_DEFAULT, enable); }
         inline void EnableMaterialTexturesMetallicRoughnessCombined(bool enable)    { SetFlag(MATERIAL_FLAG_METALLIC_ROUGNESS_COMBINED, enable); }
         inline void EnableAlphaMasked(bool enable)                                  { SetFlag(MATERIAL_FLAG_ALPHA_MASKED, enable); }
+        inline void EnableBumpTexture(bool enable)                                  { SetFlag(MATERIAL_FLAG_BUMP_TEXTURE, enable); }
 
-        inline bool HasNormalTexture() const                                { return (m_MaterialFlags & MATERIAL_FLAG_NORMAL_TEXTURE) != 0; }
-        inline bool HasNormalTextureInvertY() const                         { return (m_MaterialFlags & MATERIAL_FLAG_NORMAL_TEXTURE_INVERT_Y) != 0; }
-        inline bool HasNormalTBN() const                                    { return (m_MaterialFlags & MATERIAL_FLAG_NORMAL_TBN) != 0; }
-        inline bool HasMaterialTexturesDefault() const                      { return (m_MaterialFlags & MATERIAL_FLAG_MATERIAL_TEXTURES_DEFAULT) != 0; }
-        inline bool HasMaterialTexturesMetallicRoughnessCombined() const    { return (m_MaterialFlags & MATERIAL_FLAG_METALLIC_ROUGNESS_COMBINED) != 0; }
-        inline bool HasAlphaMasked() const                                  { return (m_MaterialFlags & MATERIAL_FLAG_ALPHA_MASKED) != 0; }
+        inline bool HasUsePBRTextures() const                                       { return (m_MaterialFlags & MATERIAL_FLAG_USE_PBR) != 0; }
+        inline bool HasUseSpecGloss() const                                         { return (m_MaterialFlags & MATERIAL_FLAG_USE_SPEC_GLOSS) != 0; }
+        inline bool HasNormalTexture() const                                        { return (m_MaterialFlags & MATERIAL_FLAG_NORMAL_TEXTURE) != 0; }
+        inline bool HasNormalTextureInvertY() const                                 { return (m_MaterialFlags & MATERIAL_FLAG_NORMAL_TEXTURE_INVERT_Y) != 0; }
+        inline bool HasNormalTBN() const                                            { return (m_MaterialFlags & MATERIAL_FLAG_NORMAL_TBN) != 0; }
+        inline bool HasMaterialTexturesMetallicRoughnessCombined() const            { return (m_MaterialFlags & MATERIAL_FLAG_METALLIC_ROUGNESS_COMBINED) != 0; }
+        inline bool HasAlphaMasked() const                                          { return (m_MaterialFlags & MATERIAL_FLAG_ALPHA_MASKED) != 0; }
+        inline bool HasBumpTexture() const                                          { return (m_MaterialFlags & MATERIAL_FLAG_BUMP_TEXTURE) != 0; }
 
     private:
         inline void SetFlag(MaterialFlags flag, bool enable)

@@ -48,8 +48,6 @@ DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* t
     , m_MainScene{ &DRE::g_MainAllocator }
     , m_RootEditor{ &m_MainScene }
     , m_WaterGeometry{ sizeof(Data::DREVertex), 4 }
-    //, m_WaterMaterial{ "water_mat" }
-    //, m_BeachMaterial{ "beach_mat" }
     , m_ViewportInput{ &m_MainScene }
     , m_CameraMoveSpeed{ 25.0f }
 {
@@ -138,10 +136,30 @@ void DREApplicationDelegate::start()
     /////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////
-    //WORLD::SceneNode* sponzaNode = m_IOManager.ParseModelFile("data\\gltf_samples\\Sponza\\glTF\\Sponza.gltf", m_MainScene);
-    //WORLD::SceneNode* sponzaNode = m_IOManager.ParseModelFile("data\\downloadable\\main_sponza\\NewSponza_Main_glTF_003.gltf", m_MainScene);
+#if 1
+    WORLD::SceneNode* sponzaNode = m_IOManager.ParseModelFile("data\\gltf_samples\\Sponza\\glTF\\Sponza.gltf", m_MainScene);
+    sponzaNode->SetScale(5.0f);
+#endif
+
+#if 0
+    WORLD::SceneNode* sponzaNode = m_IOManager.ParseModelFile("data\\downloadable\\main_sponza\\NewSponza_Main_glTF_003.gltf", m_MainScene);
+    sponzaNode->SetScale(5.0f);
+#endif
+
+#if 0
     WORLD::SceneNode* sponzaNode = m_IOManager.ParseModelFile("data\\downloadable\\mcguire_sponza\\sponza.obj", m_MainScene);
     sponzaNode->SetScale(0.1f);
+#endif
+
+#if 0
+    WORLD::SceneNode* galleryNode = m_IOManager.ParseModelFile("data\\downloadable\\gallery\\gallery.obj", m_MainScene); // texture too big
+    galleryNode->SetScale(0.1f);
+#endif
+
+#if 0
+    WORLD::SceneNode* palaceNode = m_IOManager.ParseModelFile("data\\downloadable\\palace\\sibenik.obj", m_MainScene);
+    palaceNode->SetScale(2.0f);
+#endif
 
 
     glm::mat spheresTransform = glm::rotate(glm::identity<glm::mat4>(), glm::radians(180.0f), glm::vec3{ 1.0f, 0.0, 0.0f });
@@ -173,7 +191,7 @@ void DREApplicationDelegate::start()
     m_GraphicsManager.GetMainContext().FlushAll();
 
     ////////////
-    Data::Texture2D blueNoise256 = m_IOManager.ReadTexture2D("textures\\blue_noise_rgba.png", Data::TEXTURE_VARIATION_RGBA);
+    Data::Texture2D blueNoise256 = m_IOManager.ReadTexture2D("textures\\blue_noise_rgba.png", Data::TEXTURE_CHANNELS_RGBA);
     m_GraphicsManager.GetTextureBank().LoadTexture2DSync("blue_noise_256", 256, 256, VKW::FORMAT_R8G8B8A8_UNORM, blueNoise256.GetBuffer());
 
     ////////////

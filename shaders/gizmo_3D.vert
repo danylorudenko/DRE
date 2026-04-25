@@ -10,7 +10,7 @@ PSInput main(VSInput input)
 
     out.wpos = mul(cb.m_Model, float4(input.pos, 1.0)).xyz;
     out.normal = input.norm;
-    out.color = input.tan;
+    out.color = input.tan.xyz;
 
     float4 ndc_pos = mul(GetCameraViewProjM(), float4(out.wpos, 1.0));
     out.ndc_pos = ndc_pos;

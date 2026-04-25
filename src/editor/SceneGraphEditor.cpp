@@ -174,6 +174,12 @@ char const* GetTextureSlotString(Data::Material::TextureProperty::Slot slot)
         return "Bent Normal";
     case Data::Material::TextureProperty::Slot::OPACITY:
         return "Opacity";
+    case Data::Material::TextureProperty::Slot::GLOSSINESS:
+        return "Gloss";
+    case Data::Material::TextureProperty::Slot::SPECULAR:
+        return "Spec";
+    case Data::Material::TextureProperty::Slot::BUMP:
+        return "Bump";
     default:
         return "Unknown";
     }
@@ -210,12 +216,14 @@ void SceneGraphEditor::RenderEntityProperties(RenderingContext& context)
         ImGui::Text("Name: %s(GUID=%d)", material->GetName(), material->GetGfxMaterial()->GetMaterialGPU().GetID());
         ImGui::Text("Type: %s", GetMaterialTypeString(material->GetRenderingProperties().GetMaterialType()));
         ImGui::Text("Flags hex: 0x%X", material->GetRenderingProperties().GetMaterialFlags());
+        ImGui::Text("|%d| USE_PBR", material->GetRenderingProperties().HasUsePBRTextures());
+        ImGui::Text("|%d| USE_SPEC_GLOSS", material->GetRenderingProperties().HasUseSpecGloss());
         ImGui::Text("|%d| NORMAL_TEXTURE", material->GetRenderingProperties().HasNormalTexture());
         ImGui::Text("|%d| NORMAL_TEXTURE_INVERT_Y", material->GetRenderingProperties().HasNormalTextureInvertY());
         ImGui::Text("|%d| NORMAL_TBN", material->GetRenderingProperties().HasNormalTBN());
-        ImGui::Text("|%d| MATERIAL_TEXTURES_DEFAULT", material->GetRenderingProperties().HasMaterialTexturesDefault());
         ImGui::Text("|%d| METALLIC_ROUGNESS_COMBINED", material->GetRenderingProperties().HasMaterialTexturesMetallicRoughnessCombined());
         ImGui::Text("|%d| ALPHA_MASKED", material->GetRenderingProperties().HasAlphaMasked());
+        ImGui::Text("|%d| BUMP_TEXTURE", material->GetRenderingProperties().HasBumpTexture());
 
         ImGui::NewLine();
         ImGui::Text("Textures:");

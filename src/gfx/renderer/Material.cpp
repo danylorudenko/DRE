@@ -44,9 +44,13 @@ void Material::FlushDataToMaterialGPU()
     DRE::U32 occlusion  = TextureID(Data::Material::TextureProperty::Slot::OCCLUSION);
     DRE::U32 bentNormal = TextureID(Data::Material::TextureProperty::Slot::BENT_NORMAL);
     DRE::U32 opacity    = TextureID(Data::Material::TextureProperty::Slot::OPACITY);
+    DRE::U32 glossiness = TextureID(Data::Material::TextureProperty::Slot::GLOSSINESS);
+    DRE::U32 specular   = TextureID(Data::Material::TextureProperty::Slot::SPECULAR);
+    DRE::U32 bump       = TextureID(Data::Material::TextureProperty::Slot::BUMP);
 
-    data.texture_common_ids = uint4{ diffuse, normal, metalness, roughness };
-    data.texture_aux_ids = uint4{ occlusion, bentNormal, opacity, 0 };
+    data.texture_ids0 = uint4{ diffuse, normal, metalness, roughness };
+    data.texture_ids1 = uint4{ occlusion, bentNormal, opacity, glossiness };
+    data.texture_ids2 = uint4{ specular, bump, 0, 0 };
     data.flags = uint4{ m_Flags, 0, 0, 0 };
 
     m_MaterialGPU.ScheduleUpdate(data);
