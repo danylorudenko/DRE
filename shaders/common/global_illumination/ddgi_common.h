@@ -3,23 +3,17 @@
 
 #include "common/shaders_defines.h"
 
-struct DDGIVolumeDesc
+struct DDGIConstantBuffer
 {
-    float3  probeGridOrigin;
-    float   probeSpacing;
+    uint3 probesDimentions;
+    int pad0;
+    float3 probesWorldDistance;
+    int pad1;
+};
 
-    uint3   probeGridDimensions;
-    uint    raysPerProbe;
-
-    uint    irradianceProbeSize;
-    uint    visibilityProbeSize;
-    float   maxProbeRayDistance;
-    float   depthSharpness;
-
-    float   hysteresis;
-    float   irradianceThreshold;
-    float   brightnessThreshold;
-    float   _pad0;
+struct DDGIProbeData
+{
+    float4 position;
 };
 
 #endif // _DDGI_COMMON_H_

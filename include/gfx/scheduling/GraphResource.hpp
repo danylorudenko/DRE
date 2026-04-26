@@ -29,6 +29,8 @@ enum class TextureID
     GBufferB_NormalMetalness,
     GBufferC_Velocity,
     GBufferD_ObjectIDBuffer,
+    DDGI_ProbeGBuffer,
+    DDGI_ProbeIrradiance,
     DEBUG_TEXTURE,
     ID_MAX
 };
@@ -38,6 +40,7 @@ enum class BufferID
 {
     ID_None,
     BulletInstances,
+    DDGI_ProbeData,
     ID_MAX
 };
 

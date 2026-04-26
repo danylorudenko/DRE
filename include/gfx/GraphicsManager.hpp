@@ -103,6 +103,14 @@ struct GraphicsSettings
     float           m_WindSpeed = 1.0f;
     float           m_WindDirFactor = 2.0f;
 
+    // DDGI COMPILE_TIME_SETTINGS BEGIN
+
+    DRE::U32        m_DDGIProbeCountX = 64;
+    DRE::U32        m_DDGIProbeCountY = 32;
+    DRE::U32        m_DDGIProbeCountZ = 64;
+
+    // DDGI COMPILE_TIME_SETTINGS END
+
 };
 
 class GraphicsManager final
