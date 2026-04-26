@@ -82,54 +82,62 @@ set(GFX_SOURCE_LIST
 	"${DRE_SOURCE_DIR}/src/gfx/view/RenderView.cpp")
 
 set(GFX_SHADER_LIST
-    "${DRE_SOURCE_DIR}/shaders/common/lighting/lighting_model.h"
-    "${DRE_SOURCE_DIR}/shaders/common/lighting/lighting.h"
-    "${DRE_SOURCE_DIR}/shaders/common/lighting/lights.h"
-    "${DRE_SOURCE_DIR}/shaders/common/ray_tracing/ray_tracing_inline.h"
-    "${DRE_SOURCE_DIR}/shaders/common/shadows/shadows.h"
-    "${DRE_SOURCE_DIR}/shaders/common/utils/poisson.h"
-    "${DRE_SOURCE_DIR}/shaders/common/vertex/dre_vertex_layout.h"
-    "${DRE_SOURCE_DIR}/shaders/common/forward.h"
-    "${DRE_SOURCE_DIR}/shaders/common/global_uniform.h"
-    "${DRE_SOURCE_DIR}/shaders/common/instances.h"
-    "${DRE_SOURCE_DIR}/shaders/common/materials.h"
-    "${DRE_SOURCE_DIR}/shaders/common/screen_tracing.h"
-    "${DRE_SOURCE_DIR}/shaders/common/shaders_common.h"
-    "${DRE_SOURCE_DIR}/shaders/common/shaders_defines.h"
-    "${DRE_SOURCE_DIR}/shaders/ambient_occlusion_type.h"
-    "${DRE_SOURCE_DIR}/shaders/ambient_occlusion.comp"
-    "${DRE_SOURCE_DIR}/shaders/color_encode.comp"
-    "${DRE_SOURCE_DIR}/shaders/debug_view.comp"
-    "${DRE_SOURCE_DIR}/shaders/fft_inv_perm.comp"
-    "${DRE_SOURCE_DIR}/shaders/fft_iter.comp"
-    "${DRE_SOURCE_DIR}/shaders/fft_water_uniform.h"
-    "${DRE_SOURCE_DIR}/shaders/forward_pbr.vert"
-    "${DRE_SOURCE_DIR}/shaders/forward_pbr.frag"
-    "${DRE_SOURCE_DIR}/shaders/forward_shadow.vert"
-    "${DRE_SOURCE_DIR}/shaders/forward_shadow.frag"
-    "${DRE_SOURCE_DIR}/shaders/gbuffer_pbr.vert"
-    "${DRE_SOURCE_DIR}/shaders/gbuffer_pbr.frag"
-    "${DRE_SOURCE_DIR}/shaders/forward_pbr.vert"
-    "${DRE_SOURCE_DIR}/shaders/gen_butterfly.comp"
-    "${DRE_SOURCE_DIR}/shaders/gen_h0.comp"
-    "${DRE_SOURCE_DIR}/shaders/gen_hxt.comp"
-    "${DRE_SOURCE_DIR}/shaders/gizmo_3D.frag"
-    "${DRE_SOURCE_DIR}/shaders/gizmo_3D.h"
-    "${DRE_SOURCE_DIR}/shaders/gizmo_3D.vert"
-    "${DRE_SOURCE_DIR}/shaders/imgui_old.vert"
-    "${DRE_SOURCE_DIR}/shaders/imgui_old.frag"
-    "${DRE_SOURCE_DIR}/shaders/lighting_deferred.comp"
-    "${DRE_SOURCE_DIR}/shaders/temporal_AA.comp"
-    "${DRE_SOURCE_DIR}/shaders/water_caustics.frag"
-    "${DRE_SOURCE_DIR}/shaders/water_caustics.vert"
-    "${DRE_SOURCE_DIR}/shaders/water.frag"
-    "${DRE_SOURCE_DIR}/shaders/water.vert")
-	
+	"${DRE_SOURCE_DIR}/shaders/common/lighting/lighting_model.h"
+	"${DRE_SOURCE_DIR}/shaders/common/lighting/lighting.h"
+	"${DRE_SOURCE_DIR}/shaders/common/lighting/lights.h"
+	"${DRE_SOURCE_DIR}/shaders/common/shadows/shadows.h"
+	"${DRE_SOURCE_DIR}/shaders/common/utils/poisson.h"
+	"${DRE_SOURCE_DIR}/shaders/common/vertex/dre_vertex_layout.h"
+	"${DRE_SOURCE_DIR}/shaders/common/forward.h"
+	"${DRE_SOURCE_DIR}/shaders/common/global_uniform.h"
+	"${DRE_SOURCE_DIR}/shaders/common/instances.h"
+	"${DRE_SOURCE_DIR}/shaders/common/materials.h"
+	"${DRE_SOURCE_DIR}/shaders/common/screen_tracing.h"
+	"${DRE_SOURCE_DIR}/shaders/common/shaders_common.h"
+	"${DRE_SOURCE_DIR}/shaders/common/shaders_defines.h"
+	"${DRE_SOURCE_DIR}/shaders/ambient_occlusion_type.h"
+	"${DRE_SOURCE_DIR}/shaders/ambient_occlusion.comp"
+	"${DRE_SOURCE_DIR}/shaders/color_encode.comp"
+	"${DRE_SOURCE_DIR}/shaders/debug_view.comp"
+	"${DRE_SOURCE_DIR}/shaders/fft_inv_perm.comp"
+	"${DRE_SOURCE_DIR}/shaders/fft_iter.comp"
+	"${DRE_SOURCE_DIR}/shaders/fft_water_uniform.h"
+	"${DRE_SOURCE_DIR}/shaders/forward_pbr.vert"
+	"${DRE_SOURCE_DIR}/shaders/forward_pbr.frag"
+	"${DRE_SOURCE_DIR}/shaders/forward_shadow.vert"
+	"${DRE_SOURCE_DIR}/shaders/forward_shadow.frag"
+	"${DRE_SOURCE_DIR}/shaders/gbuffer_pbr.vert"
+	"${DRE_SOURCE_DIR}/shaders/gbuffer_pbr.frag"
+	"${DRE_SOURCE_DIR}/shaders/forward_pbr.vert"
+	"${DRE_SOURCE_DIR}/shaders/gen_butterfly.comp"
+	"${DRE_SOURCE_DIR}/shaders/gen_h0.comp"
+	"${DRE_SOURCE_DIR}/shaders/gen_hxt.comp"
+	"${DRE_SOURCE_DIR}/shaders/gizmo_3D.frag"
+	"${DRE_SOURCE_DIR}/shaders/gizmo_3D.h"
+	"${DRE_SOURCE_DIR}/shaders/gizmo_3D.vert"
+	"${DRE_SOURCE_DIR}/shaders/imgui_old.vert"
+	"${DRE_SOURCE_DIR}/shaders/imgui_old.frag"
+	"${DRE_SOURCE_DIR}/shaders/lighting_deferred.comp"
+	"${DRE_SOURCE_DIR}/shaders/temporal_AA.comp"
+	"${DRE_SOURCE_DIR}/shaders/water_caustics.frag"
+	"${DRE_SOURCE_DIR}/shaders/water_caustics.vert"
+	"${DRE_SOURCE_DIR}/shaders/water.frag"
+	"${DRE_SOURCE_DIR}/shaders/water.vert")
+
 add_library(gfx STATIC ${GFX_HEADER_LIST} ${GFX_SOURCE_LIST})
 
 target_include_directories(gfx PUBLIC "${DRE_SOURCE_DIR}/include" "${DRE_SOURCE_DIR}/shaders")
 
 target_sources(gfx PRIVATE ${GFX_SHADER_LIST})
+set_source_files_properties(${GFX_SHADER_LIST} PROPERTIES
+	VS_TOOL_OVERRIDE "FXCompile"
+	VS_SETTINGS "ExcludedFromBuild=true") #doesn't work, I'll have to rename all files to proper extensions for smth like this to work. Most likely I won't even need these lines afterwards
+
+source_group(
+	TREE "${DRE_SOURCE_DIR}/shaders"
+	PREFIX "Shader Files"
+	FILES ${GFX_SHADER_LIST})
+
 
 target_compile_features(gfx PUBLIC cxx_std_20)
 target_compile_definitions(gfx PUBLIC WIN32_LEAN_AND_MEAN NOMINMAX)
