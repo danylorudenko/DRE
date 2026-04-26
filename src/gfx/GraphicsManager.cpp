@@ -5,8 +5,6 @@
 #include <foundation\input\InputSystem.hpp>
 
 #include <vk_wrapper\Device.hpp>
-#include <vk_wrapper\pipeline\Pipeline.hpp>
-#include <vk_wrapper\pipeline\ShaderModule.hpp>
 
 #include <gfx\pass\GBufferPass.hpp>
 #include <gfx\pass\LightingPass.hpp>
@@ -14,17 +12,17 @@
 #include <gfx\pass\FFTWaterPass.hpp>
 #include <gfx\pass\AntiAliasingPass.hpp>
 #include <gfx\pass\AmbientOcclusionPass.hpp>
-#include <gfx\pass\CausticPass.hpp>
 #include <gfx\pass\ColorEncodingPass.hpp>
 #include <gfx\pass\ImGuiRenderPass.hpp>
-#include <gfx\pass\ShadowPass.hpp>
 #include <gfx\pass\DebugPass.hpp>
 #include <gfx\pass\EditorPass.hpp>
+#include <gfx\pass\DDGI\DDGIProbeTracePass.hpp>
+#include <gfx\pass\DDGI\DDGIProbeBlendPass.hpp>
+#include <gfx\pass\DDGI\DDGIProbeLightingPass.hpp>
+#include <gfx\pass\DDGI\DDGIProbeScatterPass.hpp>
 
-#include <engine\ApplicationContext.hpp>
 #include <engine\io\IOManager.hpp>
 #include <engine\scene\Scene.hpp>
-#include <engine\scene\SceneNodeManipulator.hpp>
 
 #include <common\global_uniform.h>
 
@@ -91,6 +89,10 @@ void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInpu
     //m_RenderGraph.AddPass<ShadowPass>();
     //m_RenderGraph.AddPass<CausticPass>();
     m_RenderGraph.AddPass<GBufferPass>();
+    m_RenderGraph.AddPass<DDGIProbeTracePass>();
+    m_RenderGraph.AddPass<DDGIProbeBlendPass>();
+    m_RenderGraph.AddPass<DDGIProbeLightingPass>();
+    m_RenderGraph.AddPass<DDGIProbeScatterPass>();
     m_RenderGraph.AddPass<LightingPass>();
     m_RenderGraph.AddPass<FFTButterflyGenPass>();
     m_RenderGraph.AddPass<FFTWaterH0GenPass>();

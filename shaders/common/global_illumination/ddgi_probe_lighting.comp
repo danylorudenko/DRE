@@ -1,0 +1,12 @@
+#include "common/shaders_common.h"
+#include "common/global_illumination/ddgi_common.h"
+#include "common/lighting/lighting.h"
+
+[[vk::binding(0, 3)]] ConstantBuffer<DDGIVolumeDesc>    ddgiVolumeDesc;
+
+
+[shader("compute")]
+[numthreads(8, 8, 1)]
+void main(uint3 DTid : SV_DispatchThreadID)
+{
+}

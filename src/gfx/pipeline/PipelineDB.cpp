@@ -53,6 +53,12 @@ void PipelineDB::CreateDefaultPipelines()
         CreateComputePipeline("fft_inv_perm");
         CreateComputePipeline("debug_view");
 
+        // DDGI
+        CreateComputePipeline("ddgi_probe_border_blend");
+        CreateComputePipeline("ddgi_probe_lighting");
+        CreateComputePipeline("ddgi_probe_scatter");
+        CreateComputePipeline("ddgi_probe_trace");
+
         VKW::Pipeline::Descriptor waterCausticDesc;
         waterCausticDesc.SetPipelineType(VKW::PIPELINE_TYPE_GRAPHIC);
         //waterCausticDesc.EnableDepthTest(g_GraphicsManager->GetMainDepthFormat(), false);

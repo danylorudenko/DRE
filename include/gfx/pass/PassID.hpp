@@ -23,6 +23,10 @@ enum class PassID
     ColorEncoding,
     Editor,
     Debug,
+    DDGIProbeTrace,
+    DDGIProbeBlend,
+    DDGIProbeLighting,
+    DDGIProbeScatter,
     MAX
 };
 

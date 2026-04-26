@@ -8,6 +8,10 @@ set(GFX_HEADER_LIST
 	"${DRE_SOURCE_DIR}/include/gfx/buffer/StorageBuffer.hpp"
 	"${DRE_SOURCE_DIR}/include/gfx/buffer/TransientArena.hpp"
 	"${DRE_SOURCE_DIR}/include/gfx/buffer/UniformProxy.hpp"
+	"${DRE_SOURCE_DIR}/include/gfx/pass/DDGI/DDGIProbeBlendPass.hpp"
+	"${DRE_SOURCE_DIR}/include/gfx/pass/DDGI/DDGIProbeLightingPass.hpp"
+	"${DRE_SOURCE_DIR}/include/gfx/pass/DDGI/DDGIProbeScatterPass.hpp"
+	"${DRE_SOURCE_DIR}/include/gfx/pass/DDGI/DDGIProbeTracePass.hpp"
 	"${DRE_SOURCE_DIR}/include/gfx/pass/BasePass.hpp"
 	"${DRE_SOURCE_DIR}/include/gfx/pass/AntiAliasingPass.hpp"
 	"${DRE_SOURCE_DIR}/include/gfx/pass/AmbientOcclusionPass.hpp"
@@ -50,6 +54,10 @@ set(GFX_SOURCE_LIST
 	"${DRE_SOURCE_DIR}/src/gfx/buffer/ReadbackProxy.cpp"
 	"${DRE_SOURCE_DIR}/src/gfx/buffer/StorageBuffer.cpp"
 	"${DRE_SOURCE_DIR}/src/gfx/buffer/UniformProxy.cpp"
+	"${DRE_SOURCE_DIR}/src/gfx/pass/DDGI/DDGIProbeBlendPass.cpp"
+	"${DRE_SOURCE_DIR}/src/gfx/pass/DDGI/DDGIProbeLightingPass.cpp"
+	"${DRE_SOURCE_DIR}/src/gfx/pass/DDGI/DDGIProbeScatterPass.cpp"
+	"${DRE_SOURCE_DIR}/src/gfx/pass/DDGI/DDGIProbeTracePass.cpp"
 	"${DRE_SOURCE_DIR}/src/gfx/pass/BasePass.cpp"
 	"${DRE_SOURCE_DIR}/src/gfx/pass/AntiAliasingPass.cpp"
 	"${DRE_SOURCE_DIR}/src/gfx/pass/AmbientOcclusionPass.cpp"
@@ -82,6 +90,11 @@ set(GFX_SOURCE_LIST
 	"${DRE_SOURCE_DIR}/src/gfx/view/RenderView.cpp")
 
 set(GFX_SHADER_LIST
+	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_common.h"
+	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_border_blend.comp"
+	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_lighting.comp"
+	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_scatter.comp"
+	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_trace.comp"
 	"${DRE_SOURCE_DIR}/shaders/common/lighting/lighting_model.h"
 	"${DRE_SOURCE_DIR}/shaders/common/lighting/lighting.h"
 	"${DRE_SOURCE_DIR}/shaders/common/lighting/lights.h"
