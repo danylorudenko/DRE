@@ -51,7 +51,8 @@ void PipelineDB::CreateDefaultPipelines()
         CreateComputePipeline("gen_hxt");
         CreateComputePipeline("fft_iter");
         CreateComputePipeline("fft_inv_perm");
-        CreateComputePipeline("debug_view");
+        CreateComputePipeline("debug_view_texture");
+        CreateComputePipeline("debug_view_ddgi_probes");
 
         // DDGI
         CreateComputePipeline("ddgi_probe_border_blend");

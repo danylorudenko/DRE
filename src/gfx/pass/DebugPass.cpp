@@ -2,7 +2,7 @@
 
 #include <gfx\GraphicsManager.hpp>
 #include <gfx\scheduling\RenderGraph.hpp>
-#include <gfx\renderer\DrawBatcher.hpp>
+#include <gfx\renderer\DDGI.hpp>
 
 #include <engine\ApplicationContext.hpp>
 
@@ -30,6 +30,9 @@ void DebugPass::RegisterResources(RenderGraph& graph)
         0);
 
     graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 1);
+
+    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DebugPassDDGIProbeIndirectArgs), sizeof(DrawIndirectCommand), VKW::RESOURCE_ACCESS_INDIRECT_ARGS, VKW::STAGE_ALL_GLOBAL, 2);
+    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData), DDGI::GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_ALL_GLOBAL, 3);
 }
 
 void DebugPass::Render(RenderGraph& graph, VKW::Context& context)
@@ -53,8 +56,11 @@ void DebugPass::Render(RenderGraph& graph, VKW::Context& context)
 
     DRE_GPU_SCOPE(DebugPass);
 
+    glm::uvec2 outputImageSize{ g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight };
+
     VKW::ImageResourceView* output = graph.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage))->GetShaderView();
     VKW::ImageResourceView* displayedTextureView = displayedTexture->GetShaderView();
+
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, output->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, displayedTextureView->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
@@ -78,19 +84,24 @@ void DebugPass::Render(RenderGraph& graph, VKW::Context& context)
     context.CmdBindComputeDescriptorSets(pipeline->GetLayout(), graph.GetPassSetBinding(), 1, &set);
     context.CmdBindComputePipeline(pipeline);
 
-    glm::uvec2 imageSize{ g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight };
-    glm::uvec2 const groupSize{ 8, 8 };
-    glm::uvec2 const dispatchSize = imageSize / groupSize + 1u;
+    glm::uvec3 const textureViewerGroupSize{ 8, 8, 1 };
+    glm::uvec3 const dispatchSize = GetComputeGroupCount(glm::uvec3(outputImageSize, 1), textureViewerGroupSize);
+    context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
 
-    context.CmdDispatch(dispatchSize.x * 4, dispatchSize.y, 1);
 
-    //for (std::uint32_t i = 0; i < 4; i++)
-    //{
-    //    float texture_offset[2] = { static_cast<float>(i) + 0.5, 256.0f * i };
-    //    //context.CmdPushConstants(layout, VKW::DESCRIPTOR_STAGE_COMPUTE, 0, 8, &texture_offset);
-    //    context.CmdDispatch(dispatchSize.x, dispatchSize.y, 1);
-    //}
-    
+    // DDGI PROBES DEBUG
+    VKW::BufferResource* ddgiProbeIndirectArgs = graph.GetBuffer(RESOURCE_ID(BufferID::DebugPassDDGIProbeIndirectArgs))->GetResource();
+    VKW::BufferResource* ddgiProbeData = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData))->GetResource();
+
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeIndirectArgs, VKW::RESOURCE_ACCESS_GENERIC_WRITE, VKW::STAGE_TRANSFER);
+    context.CmdFillBuffer(ddgiProbeIndirectArgs, 0, sizeof(DrawIndirectCommand), 0);
+
+
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeIndirectArgs, VKW::RESOURCE_ACCESS_GENERIC_RW, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData, VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_COMPUTE);
+    glm::uvec3 const probeDebugGroupSize{ 4, 4, 4 };
+    glm::uvec3 const probeDebugDisplatchSize = GetComputeGroupCount(DDGI::GetProbeCount3D(), probeDebugGroupSize);
+    context.CmdDispatch(probeDebugDisplatchSize.x, probeDebugDisplatchSize.y, probeDebugDisplatchSize.z);
 }
 
 }

@@ -7,17 +7,27 @@
 namespace GFX::DDGI
 {
 
-DRE::U32 GetProbeDataBufferSize()
+glm::uvec3 GetProbeCount3D()
 {
     auto const& settings = g_GraphicsManager->GetGraphicsSettings();
-    glm::uvec3 const ddgiProbeDimentions = glm::uvec3(settings.m_DDGIProbeCountX, settings.m_DDGIProbeCountY, settings.m_DDGIProbeCountZ);
-    return sizeof(DDGIProbeData) * ddgiProbeDimentions.x * ddgiProbeDimentions.y * ddgiProbeDimentions.z;
+    return glm::uvec3(settings.m_DDGIProbeCountX, settings.m_DDGIProbeCountY, settings.m_DDGIProbeCountZ);
+}
+
+DRE::U32 GetProbeTotalCount()
+{
+    glm::uvec3 const ddgiProbeDimentions = GetProbeCount3D();
+    return ddgiProbeDimentions.x * ddgiProbeDimentions.y * ddgiProbeDimentions.z;
+}
+
+DRE::U32 GetProbeDataBufferSize()
+{
+    return sizeof(DDGIProbeData) * GetProbeTotalCount();
 }
 
 DDGIConstantBuffer GetConstantBuffer()
 {
     auto const& settings = g_GraphicsManager->GetGraphicsSettings();
-    glm::uvec3 const ddgiProbeDimentions = glm::uvec3(settings.m_DDGIProbeCountX, settings.m_DDGIProbeCountY, settings.m_DDGIProbeCountZ);
+    glm::uvec3 const ddgiProbeDimentions = GetProbeCount3D();
     glm::vec3 const ddgiProbeWorldDistance = glm::vec3(1.0f); // TODO: make this a setting
 
     DDGIConstantBuffer cb{};

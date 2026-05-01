@@ -166,6 +166,8 @@ void ImportTable::GetDeviceProcAddresses(VkDevice device)
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdCopyBufferToImage2);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdCopyImageToBuffer2);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdBlitImage2);
+    VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdFillBuffer);
+    VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdUpdateBuffer);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdClearColorImage);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdClearDepthStencilImage);
 

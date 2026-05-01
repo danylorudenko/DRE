@@ -13,7 +13,6 @@ using uint2     = glm::uvec2;
 using uint3     = glm::uvec3;
 using uint4     = glm::uvec4;
 
-using int       = std::int32_t;
 using int2      = glm::ivec2;
 using int3      = glm::ivec3;
 using int4      = glm::ivec4;
@@ -24,6 +23,27 @@ using float4    = glm::vec4;
 using float4x4  = glm::mat4;
 
 #endif // __cplusplus
+
+
+/////////////////////////////
+// Indirect draw command structures
+struct DrawIndexedIndirectCommand
+{
+    uint indexCount;
+    uint instanceCount;
+    uint firstIndex;
+    int  vertexOffset;
+    uint firstInstance;
+};
+
+struct DrawIndirectCommand
+{
+    uint vertexCount;
+    uint instanceCount;
+    uint firstVertex;
+    uint firstInstance;
+};
+
 
 #define PI 3.14159
 

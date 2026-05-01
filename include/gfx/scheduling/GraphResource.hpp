@@ -41,6 +41,7 @@ enum class BufferID
     ID_None,
     BulletInstances,
     DDGI_ProbeData,
+    DebugPassDDGIProbeIndirectArgs,
     ID_MAX
 };
 

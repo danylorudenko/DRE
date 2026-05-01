@@ -165,6 +165,8 @@ public:
     PFN_vkCmdCopyBufferToImage2 vkCmdCopyBufferToImage2 = nullptr;
     PFN_vkCmdCopyImageToBuffer2 vkCmdCopyImageToBuffer2 = nullptr;
     PFN_vkCmdBlitImage2 vkCmdBlitImage2 = nullptr;
+    PFN_vkCmdFillBuffer vkCmdFillBuffer = nullptr;
+    PFN_vkCmdUpdateBuffer vkCmdUpdateBuffer = nullptr;
     PFN_vkCmdClearColorImage vkCmdClearColorImage = nullptr;
     PFN_vkCmdClearDepthStencilImage vkCmdClearDepthStencilImage = nullptr;
 

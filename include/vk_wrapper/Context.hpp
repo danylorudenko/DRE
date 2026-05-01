@@ -153,6 +153,8 @@ public:
     void CmdCopyImageToBuffer(VKW::BufferResource const* dst, VKW::ImageResource const* src, std::uint32_t bufferOffset);
     void CmdCopyBufferToImage(VKW::ImageResource const* dst, VKW::BufferResource const* src, std::uint32_t bufferOffset);
     void CmdCopyBufferToBuffer(VKW::BufferResource const* dst, std::uint32_t dstOffset, VKW::BufferResource const* scr, std::uint32_t srcOffset, std::uint32_t size);
+    void CmdFillBuffer(VKW::BufferResource const* dst, DRE::U32 dstOffset, DRE::U32 size, DRE::U32 data);
+    void CmdUpdateBuffer(VKW::BufferResource const* dst, DRE::U32 dstOffset, DRE::U32 size, void const* pData);
 
     void CmdBuildBLAS(
         VKW::AccelerationStructureResource const* blas,

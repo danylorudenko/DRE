@@ -217,8 +217,15 @@ VKW::DescriptorType SlangTypeToDescriptorArraylessType(slang::TypeReflection* ty
                 }
             }
             else
+            {
                 return VKW::DESCRIPTOR_TYPE_STORAGE_IMAGE;
+            }
         }
+        case SlangResourceShape::SLANG_STRUCTURED_BUFFER:
+        {
+            return VKW::DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        }
+
         default:
             DRE_ASSERT(false, "Unknown resource shape in the slang encountered.");
             return VKW::DESCRIPTOR_TYPE_NONE;

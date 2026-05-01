@@ -61,6 +61,9 @@ VkAccessFlags2KHR AccessToFlags(ResourceAccess access)
     case RESOURCE_ACCESS_GENERIC_RW:
         return VK_ACCESS_2_MEMORY_READ_BIT | VK_ACCESS_2_MEMORY_WRITE_BIT;
 
+    case RESOURCE_ACCESS_INDIRECT_ARGS:
+        return VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT | VK_ACCESS_2_MEMORY_READ_BIT | VK_ACCESS_2_MEMORY_WRITE_BIT;
+
 
     default:
         DRE_ASSERT(false, "Unsupported ResourceAccess.");

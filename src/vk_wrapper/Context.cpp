@@ -582,6 +582,20 @@ void Context::CmdCopyBufferToBuffer(VKW::BufferResource const* dst, std::uint32_
     m_ImportTable->vkCmdCopyBuffer2(*m_CurrentCommandList, &info);
 }
 
+void Context::CmdFillBuffer(VKW::BufferResource const* dst, DRE::U32 dstOffset, DRE::U32 size, DRE::U32 data)
+{
+    WriteResourceDependencies();
+    m_ImportTable->vkCmdFillBuffer(*m_CurrentCommandList, dst->handle_, dstOffset, size, data);
+}
+
+void Context::CmdUpdateBuffer(VKW::BufferResource const* dst, DRE::U32 dstOffset, DRE::U32 dataSize, void const* pData)
+{
+    DRE_ASSERT(dataSize < 65536, "Data size for CmdUpdateBuffer must be less than 65536 bytes according to the Vulkan specification.");
+
+    WriteResourceDependencies();
+    m_ImportTable->vkCmdUpdateBuffer(*m_CurrentCommandList, dst->handle_, dstOffset, dataSize, pData);
+}
+
 void Context::CmdBuildBLAS(VKW::AccelerationStructureResource const* blas,
     std::uint64_t scratchBufferAddress,
     std::uint64_t vertexBufferAddress,

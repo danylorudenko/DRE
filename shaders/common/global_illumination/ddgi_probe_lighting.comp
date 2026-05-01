@@ -2,7 +2,7 @@
 #include "common/global_illumination/ddgi_common.h"
 #include "common/lighting/lighting.h"
 
-[[vk::binding(0, 3)]] ConstantBuffer<DDGIVolumeDesc>    ddgiVolumeDesc;
+[[vk::binding(0, 3)]] ConstantBuffer<DDGIConstantBuffer>    ddgiCB;
 
 
 [shader("compute")]

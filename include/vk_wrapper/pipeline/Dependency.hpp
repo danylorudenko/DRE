@@ -38,13 +38,15 @@ enum ResourceAccess : std::uint64_t
     RESOURCE_ACCESS_PRESENT                     = (1 << 14),
     RESOURCE_ACCESS_GENERIC_READ                = (1 << 15),
     RESOURCE_ACCESS_GENERIC_WRITE               = (1 << 16),
-    RESOURCE_ACCESS_GENERIC_RW                  = (1 << 17)
+    RESOURCE_ACCESS_GENERIC_RW                  = (1 << 17),
+    RESOURCE_ACCESS_INDIRECT_ARGS               = (1 << 18),
 };
 
 /////////////////////////////////////
 enum StageBits : std::uint64_t
 {
     STAGE_UNDEFINED         = 0,
+    STAGE_INDIRECT_ARGS     = VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT,
     STAGE_INPUT_ASSEMBLER   = VK_PIPELINE_STAGE_2_VERTEX_INPUT_BIT_KHR,
     STAGE_VERTEX            = VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT_KHR,
     STAGE_FRAGMENT          = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT_KHR,
