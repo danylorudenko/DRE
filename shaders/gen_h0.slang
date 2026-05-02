@@ -1,0 +1,72 @@
+#include "common/shaders_common.slang"
+#include "fft_water_uniform.slang"
+
+[[vk::binding(0, 3)]] RWTexture2D<float4> spectrumTexture;
+[[vk::binding(1, 3)]] ConstantBuffer<FFTWaterUniform> data;
+
+float4 gaussRND(float2 coords)
+{
+    float N = GetFFTSize(data);
+    uint texID = reinterpret<uint>(GetNoiseTextureID(data));
+
+    float4 noise = clamp(ReadGlobalTexture(texID, int2(coords) % 16), 0.001, 1.0);
+
+    float u0 = 2.0 * PI * noise.x;
+    float v0 = sqrt(-2.0 * PI * log(noise.y));
+    float u1 = 2.0 * PI * noise.z;
+    float v1 = sqrt(-2.0 * PI * log(noise.w));
+
+    return float4(v0 * cos(u0), v0 * sin(u0), v1 * cos(u1), v1 * sin(u1));
+}
+
+float phillips_spectrum(float2 k)
+{
+    float kLen = length(k);
+
+    if (kLen < 0.001)
+        return 0.0;
+
+    float kw = pow(dot(k, GetWindDir(data)), 4);
+    float L = 0.001;
+
+    float p = GetWaterAmplitude(data) * (exp(-1 / kLen * L * L) / pow(kLen, 4)) * kw;
+    p *= exp(-1.0 * kLen * kLen * 0.00001);
+
+    return p;
+}
+
+[numthreads(8, 8, 1)]
+void mainCS(int2 DTid : SV_DispatchThreadID)
+{
+    float N = GetFFTSize(data);
+    float2 windDir = GetWindDir(data);
+
+    const float G = 9.8;
+
+    int2 coords = DTid;
+    float2 x = coords - float2(N / 2, N / 2);
+
+
+
+    float2 k = (2 * PI * x) / N; // 2-dim vector K
+    float kLen = length(k);
+    float L = GetWindSpeed(data) / 9.8; // V^2 / g - wind speed squared
+
+    //float phyllips_spectrum_pos = exp(-1 / pow(max(kLen,   0.0001) * L, 2)) / pow(max(kLen,   0.0001), 4);// * pow(dot(normalize(windDir), normalize(k)), 4);
+    //float phyllips_spectrum_neg = exp(-1 / pow(min(-kLen, -0.0001) * L, 2)) / pow(min(-kLen, -0.0001), 4);// * pow(dot(normalize(windDir), normalize(k)), 4);
+
+    float phillips_pos = phillips_spectrum(k);
+    float phillips_neg = phillips_spectrum(-k);
+    float4 rnd = gaussRND(coords);
+
+    //vec2 hK 			= (rnd.xy * sqrt(phyllips_spectrum_pos)) / sqrt(2);
+    //vec2 h_minusK_conj 	= (rnd.zw * sqrt(phyllips_spectrum_neg)) / sqrt(2);
+
+    float2 hK 		= (1 / sqrt(2)) * rnd.xy * sqrt(phillips_pos);
+    float2 h_minK 	= (1 / sqrt(2)) * rnd.zw * sqrt(phillips_neg);
+
+    //vec2 hK 			= (sqrt(phyllips_spectrum_pos)).xx;
+    //vec2 h_minusK_conj 	= (sqrt(phyllips_spectrum_neg)).xx;
+
+    spectrumTexture[coords] = float4(hK, h_minK);
+}

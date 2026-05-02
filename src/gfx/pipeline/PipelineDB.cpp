@@ -9,7 +9,7 @@
 
 #include <engine\io\ShaderDB.hpp>
 
-#include <common\forward.h>
+#include <common\forward.slang>
 
 
 namespace GFX
@@ -87,8 +87,8 @@ void PipelineDB::AddDREVertexAttributes(VKW::Pipeline::Descriptor& desc)
 
 DRE::String64 const* PipelineDB::CreateCustomGraphicsPipeline(char const* name, VKW::Pipeline::Descriptor& descriptor)
 {
-    DRE::String64 vertName{ name }; vertName.Append(".vert");
-    DRE::String64 fragName{ name }; fragName.Append(".frag");
+    DRE::String64 vertName{ name };
+    DRE::String64 fragName{ name };
 
     DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName.GetData(), fragName.GetData(), nullptr);
 
@@ -110,8 +110,8 @@ DRE::String64 const* PipelineDB::CreateCustomGraphicsPipeline(char const* name, 
 
 DRE::String64 const* PipelineDB::CreateGraphicsForwardPipeline(char const* name)
 {
-    DRE::String64 vertName{ name }; vertName.Append(".vert");
-    DRE::String64 fragName{ name }; fragName.Append(".frag");
+    DRE::String64 vertName{ name };
+    DRE::String64 fragName{ name };
 
     DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName.GetData(), fragName.GetData(), nullptr);
 
@@ -142,8 +142,8 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardPipeline(char const* name)
 
 DRE::String64 const* PipelineDB::CreateGraphicsGBufferPipeline(char const* name)
 {
-    DRE::String64 vertName{ name }; vertName.Append(".vert");
-    DRE::String64 fragName{ name }; fragName.Append(".frag");
+    DRE::String64 vertName{ name };
+    DRE::String64 fragName{ name };
 
     DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName.GetData(), fragName.GetData(), nullptr);
 
@@ -179,8 +179,8 @@ DRE::String64 const* PipelineDB::CreateGraphicsGBufferPipeline(char const* name)
 
 DRE::String64 const* PipelineDB::CreateGraphicsForwardWaterPipeline(char const* name)
 {
-    DRE::String64 vertName{ name }; vertName.Append(".vert");
-    DRE::String64 fragName{ name }; fragName.Append(".frag");
+    DRE::String64 vertName{ name };
+    DRE::String64 fragName{ name };
 
     DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName.GetData(), fragName.GetData(), nullptr);
 
@@ -210,7 +210,7 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardWaterPipeline(char const* 
 
 DRE::String64 const* PipelineDB::CreateGraphicsForwardShadowPipeline(char const* name)
 {
-    DRE::String64 vertName{ name }; vertName.Append(".vert");
+    DRE::String64 vertName{ name };
 
     DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName.GetData(), nullptr, nullptr);
 
@@ -233,7 +233,7 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardShadowPipeline(char const*
 
 DRE::String64 const* PipelineDB::CreateComputePipeline(char const* name)
 {
-    DRE::String64 compName{ name }; compName.Append(".comp");
+    DRE::String64 compName{ name };
 
     DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, nullptr, nullptr, compName.GetData());
     VKW::PipelineLayout* layout = GetLayout(layoutName->GetData());
@@ -255,8 +255,8 @@ DRE::String64 const* PipelineDB::CreateGraphicsGizmoPipeline(char const* name)
 {
     VKW::Pipeline::Descriptor pipeDesc;
 
-    DRE::String64 vertName{ name }; vertName.Append(".vert");
-    DRE::String64 fragName{ name }; fragName.Append(".frag");
+    DRE::String64 vertName{ name };
+    DRE::String64 fragName{ name };
 
     DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName.GetData(), fragName.GetData(), nullptr);
 
@@ -287,9 +287,9 @@ void PipelineDB::ReloadPipeline(char const* name)
     DRE::String128 layoutName{ name }; layoutName.Append("_layout");
     VKW::PipelineLayout* layout = GetLayout(layoutName.GetData());
 
-    DRE::String64 vertName{ name }; vertName.Append(".vert");
-    DRE::String64 fragName{ name }; fragName.Append(".frag");
-    DRE::String64 compName{ name }; compName.Append(".comp");
+    DRE::String64 vertName{ name };
+    DRE::String64 fragName{ name };
+    DRE::String64 compName{ name };
 
     IO::ShaderEntry const* vertData = m_ShaderDB->GetShaderEntry(vertName.GetData());
     IO::ShaderEntry const* fragData = m_ShaderDB->GetShaderEntry(fragName.GetData());

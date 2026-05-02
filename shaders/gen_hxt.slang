@@ -1,0 +1,68 @@
+#include "common/shaders_common.slang"
+#include "common/global_uniform.slang"
+#include "fft_water_uniform.slang"
+
+[[vk::binding(0, 3)]] RWTexture2D<float2> timedSpectumTexture;
+[[vk::binding(1, 3)]] RWTexture2D<float4> spectrumTexture;
+[[vk::binding(2, 3)]] ConstantBuffer<FFTWaterUniform> data;
+
+struct complex
+{
+    float r;
+    float i;
+};
+
+complex add(complex lhs, complex rhs)
+{
+	return complex(lhs.r + rhs.r, lhs.i + rhs.i);
+}
+
+complex multiply(complex lhs, complex rhs)
+{
+	return complex(lhs.r * rhs.r - lhs.i * rhs.i, lhs.r * rhs.i + lhs.i * rhs.r);
+}
+
+complex conjugate(complex x)
+{
+	return complex(x.r, -x.i);
+}
+
+complex exp_complex(float x)
+{
+	return complex(cos(x), sin(x));
+}
+
+[numthreads(8, 8, 1)]
+void mainCS(int2 DTid : SV_DispatchThreadID)
+{
+    float N = GetFFTSize(data);
+    float2 windDir = GetWindDir(data);
+
+    int2 coords = DTid;
+
+    //vec2 x = coords - N.rr / 2;
+    //vec2 k = 2 * PI * x/
+
+    float2 k = ((float2(coords) - N / 2) * 2 * PI) / GetWaterPatchSize(data); // 10 is patch size in meters;
+
+    float4 spectrum = spectrumTexture[coords];
+    complex h0k = complex(spectrum.x, spectrum.y);
+    complex h0_minK = complex(spectrum.z, spectrum.w);
+
+    complex hK = complex(spectrum.x, spectrum.y);
+    complex hMinusK = complex(spectrum.z, spectrum.w);
+
+    float w = sqrt(9.8 * length(k));
+    float t = GetTimeS() + 1000;
+
+    float wt = w * t * GetWaterSimSpeed(data);
+    //wt = 0.0;
+
+    complex eiwt = exp_complex(wt);
+    complex e_minus_iwt = exp_complex(-wt);
+
+    complex hkt = add(multiply(h0k, eiwt), multiply(h0_minK, e_minus_iwt));
+
+    timedSpectumTexture[coords] = float2(hkt.r, hkt.i);
+
+}

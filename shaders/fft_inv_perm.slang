@@ -1,0 +1,20 @@
+#include "common/shaders_common.slang"
+#include "fft_water_uniform.slang"
+
+[[vk::binding(0, 3)]] RWTexture2D<float2> fftIntermediate;
+[[vk::binding(1, 3)]] RWTexture2D<float> heightMap;
+[[vk::binding(2, 3)]] ConstantBuffer<FFTWaterUniform> data;
+
+[numthreads(8, 8, 1)]
+void mainCS(int2 DTid : SV_DispatchThreadID)
+{
+    float N = GetFFTSize(data);
+
+    float perms[] = { 1.0, -1.0 };
+    int index = int(DTid.x + DTid.y) % 2;
+    float perm = perms[index];
+
+
+    float h = fftIntermediate[DTid].r;
+    heightMap[DTid] = perm * (h / (N*N));
+}
