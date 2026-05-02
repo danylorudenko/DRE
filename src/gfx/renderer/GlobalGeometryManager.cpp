@@ -1,10 +1,7 @@
 #include <gfx\renderer\GlobalGeometryManager.hpp>
 
 #include <foundation\memory\MemoryOps.hpp>
-
-#include <vk_wrapper\descriptor\DescriptorManager.hpp>
 #include <gfx\GraphicsManager.hpp>
-
 #include <engine\data\Geometry.hpp>
 
 namespace GFX
@@ -34,9 +31,10 @@ GlobalGeometry::GeometryGPU::GeometryGPU()
 
 }
 
-GlobalGeometry::GlobalGeometry(VKW::Device* device, UploadArena* uploadArena)
+GlobalGeometry::GlobalGeometry(VKW::Context* loadingContext, VKW::Device* device, UploadArena* uploadArena)
     : DeviceChild{ device }
     , m_UploadArena{ uploadArena }
+    , m_LoadingContext{ loadingContext }
     , m_GeometryMap{ &DRE::g_MainAllocator }
     , m_MainGeometryBuffer{ nullptr }
     , m_PendingUpdates{ &DRE::g_FrameScratchAllocator }

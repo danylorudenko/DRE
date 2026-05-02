@@ -9,6 +9,16 @@
 
 
 /////////////////////////////
+// ShaderStage enum for compile-time branching
+enum ShaderStage
+{
+    Vertex,
+    Pixel,
+    Compute
+};
+
+
+/////////////////////////////
 // Global push constants
 struct GlobalPushConstant
 {

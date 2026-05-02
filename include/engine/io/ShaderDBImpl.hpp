@@ -67,7 +67,7 @@ public:
 
     void                    CompileSources(bool parallel);
 
-    bool                    CompileShader(DRE::String64 const& path, VKW::ShaderModuleType type);
+    bool                    CompileShader(DRE::String64 const& path/*, VKW::ShaderModuleType type*/);
     ShaderEntry const*      GetShaderEntry(DRE::String64 const& name);
 
 

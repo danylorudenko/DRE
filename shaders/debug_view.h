@@ -18,6 +18,8 @@ struct DebugViewArgs
     uint probeCount;
 };
 
+#ifndef __cplusplus
+
 uint GetChannelX(DebugViewArgs args)
 {
     return args.channelMask & 0x1;
@@ -47,3 +49,8 @@ bool IsDDGIProbesDebugView(DebugViewArgs args)
 {
     return (args.DebugViewMode & DEBUG_VIEW_MODE_DDGI_PROBES_BIT) != 0;
 }
+
+[[vk::binding(0, 3)]] RWTexture2D<float4> outputTexture;
+[[vk::binding(1, 3)]] ConstantBuffer<DebugViewArgs> debugViewArgs;
+
+#endif // !__cplusplus

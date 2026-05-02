@@ -68,7 +68,7 @@ public:
     };
 
 public:
-    GlobalGeometry(VKW::Device* device, UploadArena* uploadArena);
+    GlobalGeometry(VKW::Context* loadingContext, VKW::Device* device, UploadArena* uploadArena);
 
     void FreeGeometry(GeometryGPU& geometry);
 
@@ -82,6 +82,7 @@ public:
 
 private:
     UploadArena* m_UploadArena;
+    VKW::Context* m_LoadingContext;
 
     VKW::BufferResource* m_MainGeometryBuffer;
     DRE::BuddyOffsetAllocator<65536, 13> m_MainGeometryAllocator; // manages ~536MB  (536,870,912) Size of the allocator drives the size of GPU buffer

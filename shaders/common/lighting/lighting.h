@@ -41,7 +41,7 @@ S_SURFACE InitSurface(float3 wpos)
     return Surface;
 }
 
-S_LIGHTING_RESULT CalculateLighting(S_SURFACE surface)
+S_LIGHTING_RESULT CalculateLighting(S_SURFACE surface, ShaderStage shaderStage)
 {
     S_LIGHTING_RESULT Result;
     Result.finalRadiance = float3(0.0f, 0.0f, 0.0f);
@@ -68,10 +68,11 @@ S_LIGHTING_RESULT CalculateLighting(S_SURFACE surface)
             case DRE_LIGHT_TYPE_SUN:
             case DRE_LIGHT_TYPE_DIRECTIONAL:
             {
-            #ifndef DRE_VERTEX_SHADER
+            if (shaderStage != ShaderStage::Vertex)
+            {
                 shadow = ShadowVisibilityTrace(surface.wpos, L);
-            #endif // !DRE_VERTEX_SHADER
                 break;
+            }
             }
         }
 

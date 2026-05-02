@@ -29,19 +29,19 @@ struct ForwardUniform
 // ====================================
 ///////////////////////////////////////
 // Output
-#ifdef DRE_PIXEL_SHADER
+#ifndef __cplusplus
 struct ForwardPassOutput
 {
     float4 finalColor : SV_Target0;
     float2 velocity   : SV_Target1;
     float4 id         : SV_Target2;
 };
-#endif // DRE_FRAGMENT_SHADER
+#endif // !__cplusplus
 #define FORWARD_PASS_OUTPUT_COUNT 3 // DON'T FORGET
 
 /////////////
 // Reusable outputs
-#ifdef DRE_PIXEL_SHADER
+#ifndef __cplusplus
 ForwardPassOutput OutputForwardPass(in S_LIGHTING_RESULT Result, in S_SURFACE Surface, float4 fragCoord)
 {
     ForwardPassOutput outp;
@@ -61,6 +61,6 @@ ForwardPassOutput OutputForwardPass(in S_LIGHTING_RESULT Result, in S_SURFACE Su
 
     return outp;
 }
-#endif // DRE_FRAGMENT_SHADER
+#endif // !__cplusplus
 
 #endif // __FORWARD_H__

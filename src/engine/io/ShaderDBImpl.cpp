@@ -242,15 +242,16 @@ VKW::DescriptorType SlangTypeToDescriptorArraylessType(slang::TypeReflection* ty
     }
 }
 
-void ParseShaderInterface(slang::ProgramLayout* layout, ShaderInterface& resultInterface)
+void ParseShaderInterface(slang::ProgramLayout* layout, SlangStage& outStage, ShaderInterface& resultInterface)
 {
+    outStage = layout->getEntryPointByIndex(0)->getStage();
+
     for (DRE::U32 i = 0, size = layout->getParameterCount(); i < size; i ++)
     {
         slang::VariableLayoutReflection* variableReflection = layout->getParameterByIndex(i);
         DRE::U32    descriptorSet = variableReflection->getBindingSpace();
         DRE::U32    bindingIndex = variableReflection->getBindingIndex();
         char const* name = variableReflection->getName();
-        SlangStage  stage = layout->getEntryPointByIndex(0)->getStage();
 
         slang::TypeReflection* typeReflection = variableReflection->getType();
         slang::TypeReflection::Kind typeKind = typeReflection->getKind();
@@ -267,7 +268,7 @@ void ParseShaderInterface(slang::ProgramLayout* layout, ShaderInterface& resultI
 
         auto& member = resultInterface.m_Members.EmplaceBack();
         member.type = vkwType;
-        member.stage = SlangStageToVKWStage(stage);
+        member.stage = SlangStageToVKWStage(outStage);
         member.set = descriptorSet;
         member.binding = bindingIndex;
         member.arraySize = elementCount;
@@ -319,7 +320,23 @@ char const* GetShaderTypeDefineString(VKW::ShaderModuleType type)
     };
 }
 
-bool ShaderDBImpl::CompileShader(DRE::String64 const& path, VKW::ShaderModuleType type)
+VKW::ShaderModuleType SlangStageToVKWModuleType(SlangStage stage)
+{
+    switch (stage)
+    {
+    case SLANG_STAGE_VERTEX:
+        return VKW::SHADER_MODULE_TYPE_VERTEX;
+    case SLANG_STAGE_PIXEL:
+        return VKW::SHADER_MODULE_TYPE_FRAGMENT;
+    case SLANG_STAGE_COMPUTE:
+        return VKW::SHADER_MODULE_TYPE_COMPUTE;
+    default:
+        DRE_ASSERT(false, "Unknown stage of the resource");
+        return VKW::SHADER_MODULE_TYPE_NONE;
+    }
+}
+
+bool ShaderDBImpl::CompileShader(DRE::String64 const& path/*, VKW::ShaderModuleType type*/)
 {
     std::filesystem::path filePath{ path.GetData() };
     DRE::String64 name { filePath.filename().string().c_str() };
@@ -330,9 +347,9 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& path, VKW::ShaderModuleTyp
     std::uint64_t const bytesRead = m_IOManager->ReadFileStringToBuffer(filePath.generic_string().c_str(), &sourceBlob);
     DRE_ASSERT(bytesRead != 0, "Failed to read GLSL source.");
 
-    slang::PreprocessorMacroDesc shaderTypeMacro;
-    shaderTypeMacro.name = GetShaderTypeDefineString(type);
-    shaderTypeMacro.value = "1";
+    //slang::PreprocessorMacroDesc shaderTypeMacro;
+    //shaderTypeMacro.name = GetShaderTypeDefineString(type);
+    //shaderTypeMacro.value = "1";
 
     DRE::InplaceVector<slang::CompilerOptionEntry, 2> optionEntries;
     {
@@ -368,8 +385,10 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& path, VKW::ShaderModuleTyp
     sessionDesc.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR;
     sessionDesc.searchPathCount = 1;
     sessionDesc.searchPaths = &paths;
-    sessionDesc.preprocessorMacroCount = 1;
-    sessionDesc.preprocessorMacros = &shaderTypeMacro;
+    //sessionDesc.preprocessorMacroCount = 1;
+    //sessionDesc.preprocessorMacros = &shaderTypeMacro;
+    sessionDesc.preprocessorMacroCount = 0;
+    sessionDesc.preprocessorMacros = nullptr;
     //sessionDesc.structureSize // not needed
     Slang::ComPtr<slang::ISession> slangCurrentSession;
     m_SlangGlobalSession->createSession(sessionDesc, slangCurrentSession.writeRef());
@@ -391,102 +410,128 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& path, VKW::ShaderModuleTyp
         }
     }
 
-    Slang::ComPtr<slang::IEntryPoint> entryPoint;
-    slangModule->findEntryPointByName("main", entryPoint.writeRef());
+    SlangInt32 entryPointCount = slangModule->getDefinedEntryPointCount();
 
-    if (entryPoint == nullptr)
+    if (entryPointCount == 0)
     {
-        std::cout << "Failed to find slang entry point \"main\" for module " << name << std::endl;
+        std::cout << "Failed to find any entry points in slang module " << name << std::endl;
         return false;
     }
 
-    DRE::InplaceVector<slang::IComponentType*, 2> slangComponents;
-    slangComponents.EmplaceBack(slangModule);
-    slangComponents.EmplaceBack(entryPoint.get());
-
-    Slang::ComPtr<slang::IComponentType> composedProgram;
+    bool allSuccess = true;
+    for (SlangInt32 entryPointId = 0; entryPointId < entryPointCount; entryPointId++)
     {
-        Slang::ComPtr<slang::IBlob> diagnosticBlob;
-        slangCurrentSession->createCompositeComponentType(
-            slangComponents.Data(),
-            slangComponents.Size(),
-            composedProgram.writeRef(),
-            diagnosticBlob.writeRef()
-        );
-
-        if (diagnosticBlob != nullptr)
+        Slang::ComPtr<slang::IEntryPoint> entryPoint;
+        slangModule->getDefinedEntryPoint(entryPointId, entryPoint.writeRef());
+        if (entryPoint == nullptr)
         {
-            std::cout << (const char*)diagnosticBlob->getBufferPointer() << std::endl;
+            std::cout << "Failed to get slang entry point " << entryPointId << " for module " << name << std::endl;
+            allSuccess = false;
+            continue;
+        }
+
+        char const* entryPointName = entryPoint->getFunctionReflection()->getName();
+
+        DRE::InplaceVector<slang::IComponentType*, 2> slangComponents;
+        slangComponents.EmplaceBack(slangModule);
+        slangComponents.EmplaceBack(entryPoint.get());
+
+        Slang::ComPtr<slang::IComponentType> composedProgram;
+        {
+            Slang::ComPtr<slang::IBlob> diagnosticBlob;
+            slangCurrentSession->createCompositeComponentType(
+                slangComponents.Data(),
+                slangComponents.Size(),
+                composedProgram.writeRef(),
+                diagnosticBlob.writeRef()
+            );
+
+            if (diagnosticBlob != nullptr)
+            {
+                std::cout << (const char*)diagnosticBlob->getBufferPointer() << std::endl;
+            }
+        }
+
+        if (composedProgram.get() == nullptr)
+        {
+            std::cout << "Slang failed to compose a program for module " << name << " entry point " << entryPointName << std::endl;
+            allSuccess = false;
+            continue;
+        }
+
+        slang::ProgramLayout* programLayout = nullptr;
+        SlangStage shaderStage = SLANG_STAGE_COUNT;
+        ShaderInterface resultInterface;
+        {
+            Slang::ComPtr<slang::IBlob> diagnosticsBlob;
+            programLayout = composedProgram->getLayout(0, diagnosticsBlob.writeRef());
+
+            if (programLayout == nullptr)
+            {
+                std::cout << "Slang failed to get program layout for module " << name << " entry point " << entryPointName << std::endl;
+                allSuccess = false;
+                continue;
+            }
+
+            ParseShaderInterface(programLayout, shaderStage, resultInterface);
+        }
+
+        Slang::ComPtr<slang::IBlob> slangSpirv;
+        {
+            Slang::ComPtr<slang::IBlob> diagnosticBlob;
+            SlangResult result = composedProgram->getEntryPointCode(0, 0, slangSpirv.writeRef(), diagnosticBlob.writeRef());
+
+            if (diagnosticBlob != nullptr)
+            {
+                std::cout << (const char*)diagnosticBlob->getBufferPointer() << std::endl;
+            }
+
+            if (result != 0)
+            {
+                std::cout << "Slang unknown error when compiling spirv for module " << name << " entry point " << entryPointName << std::endl;
+                allSuccess = false;
+                continue;
+            }
+        }
+
+        if (slangSpirv != nullptr && slangSpirv->getBufferSize() != 0)
+        {
+            DRE::ByteBuffer spvBuffer{ slangSpirv->getBufferSize() };
+            DRE::MemCpy(spvBuffer.Data(), slangSpirv->getBufferPointer(), spvBuffer.Size());
+
+            DRE::String64 entryName{ name };
+            entryName.Append("_");
+            entryName.Append(entryPointName);
+
+            // we force clear the vector inside so we can copy into it later
+            m_ShaderMap[entryName].bindingInterface.m_Members.Clear();
+
+            m_ShaderMap[entryName] = ShaderEntry{
+                .name = entryName,
+                .type = SlangStageToVKWModuleType(shaderStage),
+                .spirv = DRE_MOVE(spvBuffer),
+                .source = sourceBlob,
+                .bindingInterface = resultInterface
+            };
+
+            std::cout << "Successfully compiled module " << name << " entry point " << entryPointName << std::endl;
+        }
+        else
+        {
+            std::cout << "Slang failed to extract compilation result object for module " << name << " entry point " << entryPointName << std::endl;
+            allSuccess = false;
         }
     }
 
-    if (composedProgram.get() == nullptr)
-    {
-        std::cout << "Slang failed to compose a program for module " << name << std::endl;
-        return false;
-    }
-
-    slang::ProgramLayout* programLayout = nullptr;
-    ShaderInterface resultInterface;
-    {
-        Slang::ComPtr<slang::IBlob> diagnosticsBlob;
-        programLayout = composedProgram->getLayout(0, diagnosticsBlob.writeRef());
-
-        if (programLayout == nullptr)
-        {
-            std::cout << "Slang failed to get program layout for module " << name << std::endl;
-            return false;
-        }
-
-        ParseShaderInterface(programLayout, resultInterface);
-    }
-
-    Slang::ComPtr<slang::IBlob> slangSpirv;
-    {
-        Slang::ComPtr<slang::IBlob> diagnosticBlob;
-        SlangResult result = composedProgram->getEntryPointCode(0, 0, slangSpirv.writeRef(), diagnosticBlob.writeRef());
-
-        if (diagnosticBlob != nullptr)
-        {
-            std::cout << (const char*)diagnosticBlob->getBufferPointer() << std::endl;
-        }
-
-        if (result != 0)
-        {
-            std::cout << "Slang unknown error when compiling spirv for module " << name << std::endl;
-            return false;
-        }
-    }
-
-    if (slangSpirv != nullptr && slangSpirv->getBufferSize() != 0)
-    {
-        DRE::ByteBuffer spvBuffer{ slangSpirv->getBufferSize() };
-        DRE::MemCpy(spvBuffer.Data(), slangSpirv->getBufferPointer(), spvBuffer.Size());
-
-        // we force clear the vector inside so we can copy into it later
-        m_ShaderMap[name].bindingInterface.m_Members.Clear();
-
-        m_ShaderMap[name] = ShaderEntry{
-            .name = name,
-            .type = type,
-            .spirv = DRE_MOVE(spvBuffer),
-            .source = sourceBlob,
-            .bindingInterface = resultInterface
-        };
-
-        std::cout << "Successfully compiled module " << name << std::endl;
-
-        return true;
-    }
-    else
-    {
-        std::cout << "Slang failed to extract compilation result object for module " << name << std::endl;
-        return false;
-    }
+    return allSuccess;
 }
 
 ShaderEntry const* ShaderDBImpl::GetShaderEntry(DRE::String64 const& name)
 {
+    m_ShaderMap.ForEach([](auto const& pair)
+        {
+            std::cout << *pair.key << std::endl;
+        });
     auto result = m_ShaderMap.Find(name);
     return result.value;
 }
@@ -496,7 +541,7 @@ void ShaderDBImpl::CompileSources(bool parallel)
 {
     struct ShaderFile
     {
-        DRE::String64 name; VKW::ShaderModuleType type;
+        DRE::String64 name;/* VKW::ShaderModuleType type;*/
     };
 
     std::filesystem::recursive_directory_iterator dir_iterator{ "shaders", std::filesystem::directory_options::follow_directory_symlink };
@@ -506,26 +551,26 @@ void ShaderDBImpl::CompileSources(bool parallel)
     {
         if (entry.path().has_extension())
         {
-
             if (entry.path().extension() == ".vert")
             {
-                fileNames.EmplaceBack(entry.path().generic_string().c_str(), VKW::SHADER_MODULE_TYPE_VERTEX);
+                fileNames.EmplaceBack(entry.path().generic_string().c_str()/*, VKW::SHADER_MODULE_TYPE_VERTEX*/);
             }
             else if (entry.path().extension() == ".frag")
             {
-                fileNames.EmplaceBack(entry.path().generic_string().c_str(), VKW::SHADER_MODULE_TYPE_FRAGMENT);
+                fileNames.EmplaceBack(entry.path().generic_string().c_str()/*, VKW::SHADER_MODULE_TYPE_FRAGMENT*/);
             }
             else if (entry.path().extension() == ".comp")
             {
-                fileNames.EmplaceBack(entry.path().generic_string().c_str(), VKW::SHADER_MODULE_TYPE_COMPUTE);
+                fileNames.EmplaceBack(entry.path().generic_string().c_str()/*, VKW::SHADER_MODULE_TYPE_COMPUTE*/);
             }
         }
+        
     }
 
     auto compileTasks = DRE::ParallelFor<8>(fileNames.Size(), [this, &fileNames](DRE::U32 index)
         {
             DRE::String64& name = fileNames[index].name;
-            DRE::ByteBuffer spirv = CompileShader(name.GetData(), fileNames[index].type);
+            DRE::ByteBuffer spirv = CompileShader(name.GetData()/*, fileNames[index].type*/);
             DRE_ASSERT(spirv.Size() > 0, "Can't run with invalid shader.");
         }, parallel);
 

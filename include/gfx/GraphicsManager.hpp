@@ -54,6 +54,7 @@ class IOManager;
 namespace Data
 {
 class Geometry;
+class GeometryLibrary;
 }
 
 namespace WORLD
@@ -177,7 +178,7 @@ public:
 
 
 public:
-    void                                PrecacheAllData(EDITOR::ViewportInputManager* viewportInput);
+    void                                PrecacheAllData(EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary);
     void                                BuildMainSceneTLAS();
     void                                RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS, float globalTimeS);
     void                                WaitIdle();
@@ -186,7 +187,7 @@ public:
     void                                FreeRenderableObject(RenderableObject* obj);
 
 private:
-    void                                CreateAllPasses(EDITOR::ViewportInputManager* viewportInput);
+    void                                CreateAllPasses(EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary);
 
     void                                PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, std::uint64_t deltaTimeUS, float globalTimeS);
     VKW::QueueExecutionPoint            TransferToSwapchainAndPresent(Texture& src);
@@ -194,8 +195,6 @@ private:
 
 private:
     SYS::Window*                m_MainWindow;
-    IO::IOManager*              m_IOManager;
-    IO::ShaderDB*               m_ShaderDB;
 
     VKW::Device                 m_Device;
 

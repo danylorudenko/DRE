@@ -2,19 +2,10 @@
 
 #include <foundation\Common.hpp>
 
-#include <foundation\class_features\NonCopyable.hpp>
-#include <foundation\class_features\NonMovable.hpp>
-
-#include <foundation\memory\AllocatorLinear.hpp>
-#include <foundation\Container\Vector.hpp>
-#include <foundation\memory\OffsetAllocator.hpp>
 #include <gfx\renderer\GPUInstanceAllocator.hpp>
-
-#include <gfx\buffer\PersistentStorage.hpp>
+#include <glm\vec4.hpp>
 
 #include <common\materials.h>
-
-#include <glm\vec4.hpp>
 
 namespace VKW
 {

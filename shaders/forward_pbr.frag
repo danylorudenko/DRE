@@ -31,7 +31,7 @@ ForwardPassOutput main(PSInput input)
     surface.metalness = MaterialProperties.metalness;
     surface.prevWpos = input.prev_wpos;
 
-    S_LIGHTING_RESULT lighting = CalculateLighting(surface);
+    S_LIGHTING_RESULT lighting = CalculateLighting(surface, ShaderStage::Pixel);
 
     return OutputForwardPass(lighting, surface, input.ndc_pos);
 }

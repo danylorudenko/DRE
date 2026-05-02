@@ -12,9 +12,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
     float3 probesCoordinateStart = -((float3(ddgiCB.probesDimentions) * ddgiCB.probesWorldDistance) / 2);
     if (all(DTid < ddgiCB.probesDimentions))
     {
-        uint sliceStart = ddgiCB.probesDimentions.x * ddgiCB.probesDimentions.y * DTid.z;
-        uint columnStart = sliceStart + ddgiCB.probesDimentions.y * DTid.y;
-        uint probeIndex = columnStart + DTid.x;
+        uint probeIndex = GetProbeIndex(ddgiCB, DTid);
 
         DDGIProbeData probeData;
         probeData.position = float4(probesCoordinateStart + ddgiCB.probesWorldDistance * float3(DTid), 1.0);

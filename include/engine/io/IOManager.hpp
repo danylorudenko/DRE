@@ -65,7 +65,6 @@ public:
     ~IOManager();
 
     Data::Texture2D ReadTexture2D(char const* path, Data::TextureChannels channels);
-
     WORLD::SceneNode* ParseModelFile(char const* path, WORLD::Scene& targetScene, glm::mat4 baseTransform = glm::identity<glm::mat4>());
 
 

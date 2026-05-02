@@ -8,7 +8,7 @@
 #include <glm\vec4.hpp>
 #include <glm\mat4x4.hpp>
 
-using uint      = std::uint32_t;
+using uint      = DRE::U32;
 using uint2     = glm::uvec2;
 using uint3     = glm::uvec3;
 using uint4     = glm::uvec4;
@@ -23,7 +23,6 @@ using float4    = glm::vec4;
 using float4x4  = glm::mat4;
 
 #endif // __cplusplus
-
 
 /////////////////////////////
 // Indirect draw command structures
@@ -43,7 +42,6 @@ struct DrawIndirectCommand
     uint firstVertex;
     uint firstInstance;
 };
-
 
 #define PI 3.14159
 

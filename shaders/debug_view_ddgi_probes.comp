@@ -1,6 +1,10 @@
 #include "common/shaders_common.h"
-#include "debug_view.h"
+//#include "debug_view.h"
 #include "common/global_illumination/ddgi_common.h"
+
+[[vk::binding(0, 3)]] RWStructuredBuffer<DrawIndexedIndirectCommand>    indirectArgBuffer;
+[[vk::binding(1, 3)]] StructuredBuffer<DDGIProbeData>                   probeData;
+[[vk::binding(2, 3)]] ConstantBuffer<DDGIConstantBuffer>                ddgiCB;
 
 float4 RemapDisplayValue(float4 value, float lowBound, float highBound)
 {
@@ -8,24 +12,24 @@ float4 RemapDisplayValue(float4 value, float lowBound, float highBound)
     return (value - lowBound) / distance;
 }
 
-[numthreads(8, 8, 1)]
+[numthreads(4, 4, 4)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
     //if (IsDDGIProbesDebugView(debugViewArgs))
     {
-        uint probeIndex = DTid.x * 8 + DTid.y;
+        uint probeIndex = GetProbeIndex(ddgiCB, DTid);
 
-        if (probeIndex == 0)
-        {
-            indirectArgBuffer[0].vertexCount = 3; // WRITE SPHERES VERTEX COUNT HERE
-            indirectArgBuffer[0].firstVertex = 0;
-            indirectArgBuffer[0].firstInstance = 0;
-        }
+        // cleared by vkCmdFillBuffer
+        //if (probeIndex == 0)
+        //{
+        //    indirectArgBuffer[0].indexCount = 3; // WRITE SPHERES VERTEX COUNT HERE
+        //    indirectArgBuffer[0].instanceCount = 0;
+        //    indirectArgBuffer[0].firstIndex = 0;
+        //    indirectArgBuffer[0].vertexOffset = 0;
+        //    indirectArgBuffer[0].firstInstance = 0;
+        //}
 
-        if (probeIndex < debugViewArgs.probeCount)
-        {
-            atomicAdd(indirectArgBuffer[0].instanceCount, 1u);
-        }
+        InterlockedAdd(indirectArgBuffer[0].instanceCount, 1u);
     }
 
 

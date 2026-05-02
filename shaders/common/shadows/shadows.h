@@ -50,7 +50,6 @@ float ShadowMapSample(float3 wpos, float4x4 shadowViewProj, float2 shadowMapDims
     return result;
 }
 
-#ifndef DRE_VERTEX_SHADER
 float ShadowVisibilityTrace(float3 wpos, float3 shadowDir)
 {
     RayDesc rayDesc;
@@ -79,7 +78,6 @@ float ShadowVisibilityTrace(float3 wpos, float3 shadowDir)
 
     return result;
 }
-#endif // DRE_VERTEX_SHADER
 
 #endif // _SHADOWS_H_
 

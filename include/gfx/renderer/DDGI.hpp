@@ -11,4 +11,6 @@ namespace GFX::DDGI
     DRE::U32    GetProbeDataBufferSize();
 
     DDGIConstantBuffer GetConstantBuffer();
+
+    inline char const* GetProbeDebugSphereGeometryName() { return "dre_sphere"; }
 }

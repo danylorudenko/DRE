@@ -24,9 +24,9 @@ void ShaderDB::CompileSources(bool parallel)
     m_Impl->CompileSources(parallel);
 }
 
-bool ShaderDB::CompileShader(DRE::String64 const& name, VKW::ShaderModuleType type)
+bool ShaderDB::CompileShader(DRE::String64 const& name)
 {
-   return m_Impl->CompileShader(name, type);
+   return m_Impl->CompileShader(name);
 }
 
 ShaderEntry const* ShaderDB::GetShaderEntry(DRE::String64 const& name)

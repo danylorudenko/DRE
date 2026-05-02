@@ -14,7 +14,8 @@
 #include <gfx\pass\AmbientOcclusionPass.hpp>
 #include <gfx\pass\ColorEncodingPass.hpp>
 #include <gfx\pass\ImGuiRenderPass.hpp>
-#include <gfx\pass\DebugPass.hpp>
+#include <gfx\pass\DebugPassTextureView.hpp>
+#include <gfx\pass\DebugPassDDGIProbeDisplay.hpp>
 #include <gfx\pass\EditorPass.hpp>
 #include <gfx\pass\DDGI\DDGIProbeTracePass.hpp>
 #include <gfx\pass\DDGI\DDGIProbeBlendPass.hpp>
@@ -23,6 +24,7 @@
 
 #include <engine\io\IOManager.hpp>
 #include <engine\scene\Scene.hpp>
+#include <engine\data\GeometryLibrary.hpp>
 
 #include <common\global_uniform.h>
 
@@ -39,7 +41,6 @@ GraphicsManager* g_GraphicsManager = nullptr;
 
 GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::IOManager* ioManager, IO::ShaderDB* shaderDB, bool debug)
     : m_MainWindow{ window }
-    , m_IOManager{ ioManager }
     , m_Device{ hInstance, window->NativeHandle(), debug }
     , m_MainContext{ m_Device.GetFuncTable(), m_Device.GetMainQueue(), &DRE::g_FrameScratchAllocator }
     , m_GraphicsFrame{ 0 }
@@ -57,7 +58,7 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::I
 #ifdef DRE_IMGUI_CUSTOM_TEXTURE
     , m_ImGuiSyncQueue{ &DRE::g_PersistentDataAllocator }
 #endif
-    , m_GlobalGeometryManager{ &m_Device, &m_UploadArena }
+    , m_GlobalGeometryManager{ &m_MainContext, &m_Device, &m_UploadArena }
     , m_RayTracingManager{ &m_Device, &m_GlobalGeometryManager }
     , m_MainView{ &DRE::g_MainAllocator }
     , m_SunShadowView{ &DRE::g_MainAllocator }
@@ -77,14 +78,14 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::I
     m_Device.GetDescriptorManager()->AllocateDefaultDescriptors(VKW::CONSTANTS::FRAMES_BUFFERING, m_GlobalUniforms, m_PersistentStorage.GetStorage()->GetResource());
 }
 
-void GraphicsManager::PrecacheAllData(EDITOR::ViewportInputManager* viewportInput)
+void GraphicsManager::PrecacheAllData(EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary)
 {
     m_PipelineDB.CreateDefaultPipelines();
     m_TextureBank.LoadDefaultTextures();
-    CreateAllPasses(viewportInput);
+    CreateAllPasses(viewportInput, geometryLibrary);
 }
 
-void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInput)
+void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary)
 {
     //m_RenderGraph.AddPass<ShadowPass>();
     //m_RenderGraph.AddPass<CausticPass>();
@@ -104,7 +105,8 @@ void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInpu
     m_RenderGraph.AddPass<AmbientOcclusionPass>();
     m_RenderGraph.AddPass<ColorEncodingPass>();
     m_RenderGraph.AddPass<EditorPass>(viewportInput);
-    m_RenderGraph.AddPass<DebugPass>();
+    m_RenderGraph.AddPass<DebugPassTextureView>();
+    m_RenderGraph.AddPass<DebugPassDDGIProbeDisplay>(geometryLibrary);
     m_RenderGraph.AddPass<ImGuiRenderPass>();
     m_RenderGraph.ParseGraph();
     m_RenderGraph.InitGraphResources();

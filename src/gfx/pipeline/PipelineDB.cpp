@@ -36,43 +36,43 @@ void PipelineDB::CreateDefaultPipelines()
 {
     // default plane material shader
     {
-        CreateGraphicsForwardPipeline("forward_pbr");
+        CreateGraphicsForwardPipeline("forward_pbr_main");
 
-        CreateGraphicsGBufferPipeline("gbuffer_pbr");
+        CreateGraphicsGBufferPipeline("gbuffer_pbr_main");
 
-        CreateGraphicsGizmoPipeline("gizmo_3D");
+        CreateGraphicsGizmoPipeline("gizmo_3D_main");
 
-        CreateComputePipeline("lighting_deferred");
-        CreateComputePipeline("color_encode");
-        CreateComputePipeline("ambient_occlusion");
-        CreateComputePipeline("temporal_AA");
-        CreateComputePipeline("gen_butterfly");
-        CreateComputePipeline("gen_h0");
-        CreateComputePipeline("gen_hxt");
-        CreateComputePipeline("fft_iter");
-        CreateComputePipeline("fft_inv_perm");
-        CreateComputePipeline("debug_view_texture");
-        CreateComputePipeline("debug_view_ddgi_probes");
+        CreateComputePipeline("lighting_deferred_main");
+        CreateComputePipeline("color_encode_main");
+        CreateComputePipeline("ambient_occlusion_main");
+        CreateComputePipeline("temporal_AA_main");
+        CreateComputePipeline("gen_butterfly_main");
+        CreateComputePipeline("gen_h0_main");
+        CreateComputePipeline("gen_hxt_main");
+        CreateComputePipeline("fft_iter_main");
+        CreateComputePipeline("fft_inv_perm_main");
+        CreateComputePipeline("debug_view_texture_main");
+        CreateComputePipeline("debug_view_ddgi_probes_main");
 
         // DDGI
-        CreateComputePipeline("ddgi_probe_border_blend");
-        CreateComputePipeline("ddgi_probe_lighting");
-        CreateComputePipeline("ddgi_probe_scatter");
-        CreateComputePipeline("ddgi_probe_trace");
+        CreateComputePipeline("ddgi_probe_border_blend_main");
+        CreateComputePipeline("ddgi_probe_lighting_main");
+        CreateComputePipeline("ddgi_probe_scatter_main");
+        CreateComputePipeline("ddgi_probe_trace_main");
 
         VKW::Pipeline::Descriptor waterCausticDesc;
         waterCausticDesc.SetPipelineType(VKW::PIPELINE_TYPE_GRAPHIC);
         //waterCausticDesc.EnableDepthTest(g_GraphicsManager->GetMainDepthFormat(), false);
         AddDREVertexAttributes(waterCausticDesc);
         waterCausticDesc.AddColorOutput(VKW::FORMAT_R8_UNORM);
-        CreateCustomGraphicsPipeline("water_caustics", waterCausticDesc);
+        CreateCustomGraphicsPipeline("water_caustics_main", waterCausticDesc);
 
         VKW::Pipeline::Descriptor shadowDesc;
         shadowDesc.SetPipelineType(VKW::PIPELINE_TYPE_GRAPHIC);
         shadowDesc.EnableDepthTest(VKW::FORMAT_D16_UNORM);
         shadowDesc.AddColorOutput(VKW::FORMAT_R16G16B16A16_FLOAT);
         AddDREVertexAttributes(shadowDesc);
-        CreateCustomGraphicsPipeline("forward_shadow", shadowDesc);
+        CreateCustomGraphicsPipeline("forward_shadow_main", shadowDesc);
     }
 }
 
@@ -306,7 +306,7 @@ void PipelineDB::ReloadPipeline(char const* name)
     if (vertData != nullptr)
     {
         DRE::String64 vertPath{ "shaders\\" }; vertPath.Append(vertName.GetData());
-        if (!m_ShaderDB->CompileShader(vertPath.GetData(), VKW::SHADER_MODULE_TYPE_VERTEX))
+        if (!m_ShaderDB->CompileShader(vertPath.GetData()/*, VKW::SHADER_MODULE_TYPE_VERTEX*/))
         {
             std::cout << "Failed to recompile shader " << vertPath.GetData() << ". Pipeline was not cecreated." << std::endl;
             return;
@@ -319,7 +319,7 @@ void PipelineDB::ReloadPipeline(char const* name)
     if (fragData != nullptr)
     {
         DRE::String64 fragPath{ "shaders\\" }; fragPath.Append(fragName.GetData());
-        if (!m_ShaderDB->CompileShader(fragPath.GetData(), VKW::SHADER_MODULE_TYPE_FRAGMENT))
+        if (!m_ShaderDB->CompileShader(fragPath.GetData()/*, VKW::SHADER_MODULE_TYPE_FRAGMENT*/))
         {
             std::cout << "Failed to recompile shader " << fragPath.GetData() << ". Pipeline was not cecreated." << std::endl;
             return;
@@ -332,7 +332,7 @@ void PipelineDB::ReloadPipeline(char const* name)
     if (compData != nullptr)
     {
         DRE::String64 compPath{ "shaders\\" }; compPath.Append(compName.GetData());
-        if (!m_ShaderDB->CompileShader(compPath.GetData(), VKW::SHADER_MODULE_TYPE_COMPUTE))
+        if (!m_ShaderDB->CompileShader(compPath.GetData()/*, VKW::SHADER_MODULE_TYPE_COMPUTE*/))
         {
             std::cout << "Failed to recompile shader " << compPath.GetData() << ". Pipeline was not cecreated." << std::endl;
             return;

@@ -2,25 +2,16 @@
 
 #include "AppUtils.hpp"
 
-#include <assimp\Importer.hpp>
 #include <glm\geometric.hpp>
 #include <glm\ext\matrix_transform.hpp>
 #include <glm\glm.hpp>
 #include <imgui.h>
 
-#include <utility>
-#include <cstdio>
 #include <algorithm>
 
 #include <vk_wrapper\Tools.hpp>
-#include <vk_wrapper\Helper.hpp>
-#include <vk_wrapper\resources\Framebuffer.hpp>
-#include <vk_wrapper\pipeline\ShaderModule.hpp>
-
-#include <engine\data\Geometry.hpp>
 #include <engine\ApplicationContext.hpp>
 
-#include <foundation\math\Geometry.hpp>
 
 
 ////////////////
@@ -47,7 +38,6 @@ DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* t
     , m_ImGuiEnabled{ imguiEnabled }
     , m_MainScene{ &DRE::g_MainAllocator }
     , m_RootEditor{ &m_MainScene }
-    , m_WaterGeometry{ sizeof(Data::DREVertex), 4 }
     , m_ViewportInput{ &m_MainScene }
     , m_CameraMoveSpeed{ 25.0f }
 {
@@ -101,13 +91,19 @@ WORLD::Scene& DREApplicationDelegate::GetMainScene()
     return m_MainScene;
 }
 
+IO::IOManager& DREApplicationDelegate::GetIOManager()
+{
+    return m_IOManager;
+}
+
 void DREApplicationDelegate::start()
 {
     if (C_COMPILE_HLSL_SOURCES_ON_START)
     {  
         m_ShaderModuleDB.CompileSources(C_COMPILE_HLSL_PARALLEL);
     }
-    //m_IOManager.LoadShaderBinaries();
+    
+    m_GeometryLibrary.LoadDefaultGeometry();
 
     m_MainScene.GetMainCamera().SetFOV(60.0f);
     //m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 7.28f, 5.57f, -1.07f });
@@ -128,8 +124,7 @@ void DREApplicationDelegate::start()
     if (m_ImGuiEnabled)
         InitImGui();
 
-
-    m_GraphicsManager.PrecacheAllData(&m_ViewportInput);
+    m_GraphicsManager.PrecacheAllData(&m_ViewportInput, &m_GeometryLibrary);
 
 
 

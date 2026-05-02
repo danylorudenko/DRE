@@ -49,6 +49,8 @@ public:
 
     WORLD::Scene& GetMainScene();
 
+    IO::IOManager& GetIOManager();
+
 private:
     void InitImGui();
     void DestroyImGui();
@@ -65,10 +67,6 @@ private:
     Data::GeometryLibrary               m_GeometryLibrary;
     IO::IOManager                       m_IOManager;
     IO::ShaderDB                        m_ShaderModuleDB;
-
-    Data::Geometry                      m_WaterGeometry;
-    //Data::Material                      m_WaterMaterial;
-    //Data::Material                      m_BeachMaterial;
 
     GFX::GraphicsManager                m_GraphicsManager;
 
