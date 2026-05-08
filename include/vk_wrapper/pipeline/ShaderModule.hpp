@@ -1,9 +1,9 @@
 #pragma once
 
 #include <vulkan\vulkan.h>
-#include <string>
 
 #include <foundation\class_features\NonCopyable.hpp>
+#include <foundation\string\InplaceString.hpp>
 
 namespace DRE
 {
@@ -29,7 +29,7 @@ class ShaderModule : public NonCopyable
 {
 public:
     ShaderModule();
-    ShaderModule(ImportTable* table, LogicalDevice* device, DRE::ByteBuffer const& byteBuffer, ShaderModuleType type, char const* entryPoint);
+    ShaderModule(ImportTable* table, LogicalDevice* device, DRE::ByteBuffer const& byteBuffer, ShaderModuleType type, char const* name);
 
     ShaderModule(ShaderModule&& rhs);
     ShaderModule& operator=(ShaderModule&& rhs);
@@ -38,15 +38,16 @@ public:
 
     inline VkShaderModule   GetHandle() const { return handle_; }
     inline ShaderModuleType GetType() const { return type_; }
-    inline char const*      GetEntryPoint() const { return entryPoint_; }
+    inline char const*      GetName() const { return name_.GetData(); }
 
 private:
     ImportTable*        table_;
     LogicalDevice*      device_;
 
+    DRE::String64       name_;
+
     VkShaderModule      handle_;
     ShaderModuleType    type_;
-    char                entryPoint_[32];
 };
 
 }

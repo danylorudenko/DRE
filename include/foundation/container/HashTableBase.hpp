@@ -243,6 +243,36 @@ public:
         }
     }
 
+    template<typename TDelegate>
+    void ForEachConst(TDelegate func) const
+    {
+        Pair pair;
+        TKey defaultKey{};
+        for (U32 i = 0; i < BUCKET_COUNT; i++)
+        {
+            Bucket& bucket = m_Buckets[i];
+            if (!bucket.m_Key.isEmpty)
+            {
+                pair.key = &bucket.m_Key.key;
+                pair.value = bucket.m_Value.Ptr();
+
+                func(pair);
+            }
+
+            U32 nextBucketID = bucket.m_NextID;
+            while (nextBucketID != DRE_U32_MAX)
+            {
+                Bucket& nextBucket = m_CollisionPool[nextBucketID];
+                pair.key = &nextBucket.m_Key.key;
+                pair.value = nextBucket.m_Value.Ptr();
+
+                func(pair);
+
+                nextBucketID = nextBucket.m_NextID;
+            }
+        }
+    }
+
 protected:
     Bucket* FindBaseBucketInternal(TKey const& key)
     {

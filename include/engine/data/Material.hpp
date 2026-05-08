@@ -8,7 +8,7 @@
 
 #include <gfx\texture\Texture.hpp>
 
-#include <common\materials.h>
+#include <common\materials.slang>
 
 namespace GFX
 {

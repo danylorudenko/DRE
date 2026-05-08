@@ -67,7 +67,9 @@ public:
 
     void                    CompileSources(bool parallel);
 
-    bool                    CompileShader(DRE::String64 const& path/*, VKW::ShaderModuleType type*/);
+    bool                    CompileShaderFile(DRE::String64 const& path);
+
+    ShaderFile const*       GetShaderFile(DRE::String64 const& name);
     ShaderEntry const*      GetShaderEntry(DRE::String64 const& name);
 
 
@@ -77,17 +79,21 @@ public:
     void                                    ClearPendingShaders();
     inline bool                             AreNewShadersPending() const { return m_PendingChangesFlag.load(std::memory_order::acquire); }
     // move-returns pending shaders. Pending shaders are automatically "cleared" after this call
-    DRE::InplaceVector<DRE::String64, 12>   GetPendingShaders();
+    DRE::InplaceVector<DRE::String64, 12>   GetPendingShaderFilesCopy();
+
+    DRE::InplaceHashTable<DRE::String64, DRE::String64, 512> const& GetShaderToFileMap() const { return m_ShaderToFileMap; }
 
 private:
     IO::IOManager*                          m_IOManager;
     Slang::ComPtr<slang::IGlobalSession>    m_SlangGlobalSession;
 
-    DRE::InplaceHashTable<DRE::String64, ShaderEntry, 512> m_ShaderMap;
+    DRE::InplaceHashTable<DRE::String64, ShaderFile, 512>       m_ShaderFileMap;
+    DRE::InplaceHashTable<DRE::String64, ShaderEntry, 512>      m_ShaderEntryMap;
+    DRE::InplaceHashTable<DRE::String64, DRE::String64, 512>    m_ShaderToFileMap;
 
 private:
-    DRE::InplaceVector<DRE::String64, 12> m_PendingShaders;
-    std::mutex  m_PendingShadersMutex;
+    DRE::InplaceVector<DRE::String64, 12> m_PendingShaderFiles;
+    std::mutex  m_PendingShaderFilesMutex;
     std::thread m_ShaderObserverThread;
     std::atomic_bool m_PendingChangesFlag;
 

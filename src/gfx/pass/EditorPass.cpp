@@ -5,7 +5,7 @@
 #include <gfx\scheduling\RenderGraph.hpp>
 #include <editor\ViewportInputManager.hpp>
 
-#include <gizmo_3D.h>
+#include <gizmo_3D_shared.slang>
 
 namespace GFX
 {

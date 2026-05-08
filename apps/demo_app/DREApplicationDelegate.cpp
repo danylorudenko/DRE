@@ -317,10 +317,10 @@ void DREApplicationDelegate::ReloadPendingShaders()
 
     m_GraphicsManager.WaitIdle();
 
-    auto names = m_ShaderModuleDB.GetPendingShaders();
-    for (std::uint32_t i = 0; i < names.Size(); i++)
+    auto fileNames = m_ShaderModuleDB.GetPendingShaderFilesCopy();
+    for (DRE::U32 i = 0; i < fileNames.Size(); i++)
     {
-        m_GraphicsManager.GetPipelineDB().ReloadPipeline(names[i].GetData());
+        m_GraphicsManager.GetPipelineDB().ReloadShaderFilePipelines(fileNames[i].GetData());
     }
 }
 

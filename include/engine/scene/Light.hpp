@@ -5,7 +5,7 @@
 #include <engine\scene\ISceneNodeUser.hpp>
 #include <gfx\renderer\GPULightsManager.hpp>
 
-#include <common\lighting\lights.h>
+#include <common\lighting\lights.slang>
 
 namespace VKW
 {

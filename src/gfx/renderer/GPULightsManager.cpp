@@ -3,7 +3,7 @@
 #include <vk_wrapper\descriptor\DescriptorManager.hpp>
 
 #include <gfx\GraphicsManager.hpp>
-#include <common\lighting\lights.h>
+#include <common\lighting\lights.slang>
 
 namespace GFX
 {

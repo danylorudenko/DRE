@@ -4,6 +4,7 @@
 #include <foundation\class_features\NonCopyable.hpp>
 #include <foundation\class_features\NonMovable.hpp>
 #include <foundation\container\InplaceVector.hpp>
+#include <foundation\container\InplaceHashTable.hpp>
 #include <foundation\memory\ByteBuffer.hpp>
 #include <foundation\string\InplaceString.hpp>
 
@@ -48,6 +49,12 @@ struct ShaderEntry
     ShaderInterface         bindingInterface;
 };
 
+struct ShaderFile
+{
+    DRE::String64 fileName;
+    DRE::InplaceVector<DRE::String64, 8> shaderEntries;
+};
+
 /////////////////////////////////
 // ShaderModuleDB
 class ShaderDB
@@ -60,13 +67,18 @@ public:
 
     void                    CompileSources(bool parallel);
 
-    bool                    CompileShader(DRE::String64 const& name);
+    bool                    CompileShaderFile(DRE::String64 const& name);
+
+    ShaderFile const*       GetShaderFile(DRE::String64 const& name);
     ShaderEntry const*      GetShaderEntry(DRE::String64 const& name);
 
     bool                    AreNewShadersPending() const;
     void                    ClearPendingShaders();
+
     // move-returns pending shaders. Pending shaders are automatically "cleared" after this call
-    DRE::InplaceVector<DRE::String64, 12> GetPendingShaders();
+    DRE::InplaceVector<DRE::String64, 12> GetPendingShaderFilesCopy();
+
+    DRE::InplaceHashTable<DRE::String64, DRE::String64, 512> const& GetShaderToFileMap() const;
 
 private:
     ShaderDBImpl* m_Impl;

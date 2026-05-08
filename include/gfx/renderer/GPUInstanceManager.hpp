@@ -13,7 +13,7 @@
 
 #include <gfx\buffer\PersistentStorage.hpp>
 
-#include <common\instances.h>
+#include <common\instances.slang>
 
 #include <glm\vec3.hpp>
 

@@ -12,19 +12,19 @@ namespace VKW
 ShaderModule::ShaderModule()
     : table_{ nullptr }
     , device_{ nullptr }
+    , name_{}
     , handle_{ VK_NULL_HANDLE }
     , type_{ SHADER_MODULE_TYPE_NONE }
 {
-    entryPoint_[0] = '\0';
 }
 
-ShaderModule::ShaderModule(ImportTable* table, LogicalDevice* device, DRE::ByteBuffer const& byteBuffer, ShaderModuleType type, char const* entryPoint)
+ShaderModule::ShaderModule(ImportTable* table, LogicalDevice* device, DRE::ByteBuffer const& byteBuffer, ShaderModuleType type, char const* name)
     : table_{ table}
-    , device_{ device } 
+    , device_{ device }
+    , name_{ name }
     , handle_{ VK_NULL_HANDLE }
     , type_{ type }
 {
-    std::strcpy(entryPoint_, entryPoint);
 
     VkShaderModuleCreateInfo info;
     info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -49,10 +49,9 @@ ShaderModule& ShaderModule::operator=(ShaderModule&& rhs)
 {
     DRE_SWAP_MEMBER(table_);
     DRE_SWAP_MEMBER(device_);
+    DRE_SWAP_MEMBER(name_);
     DRE_SWAP_MEMBER(handle_);
     DRE_SWAP_MEMBER(type_);
-
-    std::strcpy(entryPoint_, rhs.entryPoint_);
 
     return *this;
 }

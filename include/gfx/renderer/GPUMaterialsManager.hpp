@@ -5,7 +5,7 @@
 #include <gfx\renderer\GPUInstanceAllocator.hpp>
 #include <glm\vec4.hpp>
 
-#include <common\materials.h>
+#include <common\materials.slang>
 
 namespace VKW
 {

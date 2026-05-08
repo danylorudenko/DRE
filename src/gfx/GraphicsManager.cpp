@@ -26,7 +26,7 @@
 #include <engine\scene\Scene.hpp>
 #include <engine\data\GeometryLibrary.hpp>
 
-#include <common\global_uniform.h>
+#include <common\global_uniform.slang>
 
 
 namespace GFX

@@ -5,7 +5,7 @@
 
 #include <engine\ApplicationContext.hpp>
 
-#include <debug_view.h>
+#include <debug_view.slang>
 
 namespace GFX
 {

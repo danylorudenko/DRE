@@ -162,28 +162,37 @@ void Pipeline::Descriptor::SetVertexShader(ShaderModule const& vertexModule)
 {
     DRE_ASSERT(type_ == PIPELINE_TYPE_GRAPHIC, "Incompatible state detected in Pipeline::Descriptor - setting vertex shader for non-graphic pipeline.");
 
-    VkPipelineShaderStageCreateInfo& info = shaderStages_[shaderStagesCount_++];
+    VkPipelineShaderStageCreateInfo& info = shaderStages_[shaderStagesCount_];
     info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     info.pNext = nullptr;
     info.flags = VK_FLAGS_NONE;
     info.stage = VK_SHADER_STAGE_VERTEX_BIT;
     info.module = vertexModule.GetHandle();
-    info.pName = vertexModule.GetEntryPoint();
+    info.pName = vertexModule.GetName(); // this is not a reliable place to get name later, so cache it separately
     info.pSpecializationInfo = nullptr;
+
+    shaderStageNames_[shaderStagesCount_] = vertexModule.GetName();
+
+    ++shaderStagesCount_;
 }
 
 void Pipeline::Descriptor::SetFragmentShader(ShaderModule const& fragmentModule)
 {
     DRE_ASSERT(type_ == PIPELINE_TYPE_GRAPHIC, "Incompatible state detected in Pipeline::Descriptor - setting fragment shader for non-graphic pipeline.");
 
-    VkPipelineShaderStageCreateInfo& info = shaderStages_[shaderStagesCount_++];
+    VkPipelineShaderStageCreateInfo& info = shaderStages_[shaderStagesCount_];
     info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     info.pNext = nullptr;
     info.flags = VK_FLAGS_NONE;
     info.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
     info.module = fragmentModule.GetHandle();
-    info.pName = fragmentModule.GetEntryPoint();
+    info.pName = fragmentModule.GetName(); // this is not a reliable place to get name later, so cache it separately
     info.pSpecializationInfo = nullptr;
+
+
+    shaderStageNames_[shaderStagesCount_] = fragmentModule.GetName();
+
+    ++shaderStagesCount_;
 }
 
 void Pipeline::Descriptor::SetComputeShader(ShaderModule const& computeShader)
@@ -196,8 +205,12 @@ void Pipeline::Descriptor::SetComputeShader(ShaderModule const& computeShader)
     info.flags = VK_FLAGS_NONE;
     info.stage = VK_SHADER_STAGE_COMPUTE_BIT;
     info.module = computeShader.GetHandle();
-    info.pName = computeShader.GetEntryPoint();
+    info.pName = computeShader.GetName(); // this is not a reliable place to get name later, so cache it separately
     info.pSpecializationInfo = nullptr;
+
+    shaderStageNames_[shaderStagesCount_] = computeShader.GetName();
+
+    ++shaderStagesCount_;
 }
 
 void Pipeline::Descriptor::SetLayout(PipelineLayout const* layout)

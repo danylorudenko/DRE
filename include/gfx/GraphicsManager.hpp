@@ -32,7 +32,7 @@
 #include <array>
 
 // shaders
-#include <ambient_occlusion_type.h>
+#include <ambient_occlusion_type.slang>
 
 constexpr std::uint32_t C_SHADOW_MAP_WIDTH = 2048;
 constexpr std::uint32_t C_SHADOW_MAP_HEIGHT = 2048;

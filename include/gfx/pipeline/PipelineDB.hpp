@@ -44,7 +44,7 @@ public:
     VKW::Pipeline*              CreatePipeline(char const* name, VKW::Pipeline::Descriptor& descriptor);
     void                        CreateDefaultPipelines();
 
-    void                        ReloadPipeline(char const* name);
+    void                        ReloadShaderFilePipelines(char const* fileName);
     void                        ReloadAllPipelines();
 
 
@@ -63,15 +63,17 @@ public:
         char const* computeName);
 
 private:
-    DRE::String64 const*    CreateGraphicsForwardPipeline(char const* name);
-    DRE::String64 const*    CreateGraphicsGBufferPipeline(char const* name);
-    DRE::String64 const*    CreateGraphicsForwardWaterPipeline(char const* name);
-    DRE::String64 const*    CreateGraphicsForwardShadowPipeline(char const* name);
-    DRE::String64 const*    CreateComputePipeline(char const* name);
-    DRE::String64 const*    CreateCustomGraphicsPipeline(char const* name, VKW::Pipeline::Descriptor& descriptor);
+    DRE::String64 const*    CreateGraphicsForwardPipeline(char const* name, char const* vertName, char const* fragName);
+    DRE::String64 const*    CreateGraphicsGBufferPipeline(char const* name, char const* vertName, char const* fragName);
+    DRE::String64 const*    CreateGraphicsForwardWaterPipeline(char const* name, char const* vertName, char const* fragName);
+    DRE::String64 const*    CreateGraphicsForwardShadowPipeline(char const* name, char const* vertName);
+    DRE::String64 const*    CreateComputePipeline(char const* name, char const* compName);
+    DRE::String64 const*    CreateCustomGraphicsPipeline(char const* name, char const* vertName, char const* fragName, VKW::Pipeline::Descriptor& descriptor);
     DRE::String64 const*    CreateCustomComputePipeline(char const* name, VKW::Pipeline::Descriptor& descriptor);
 
-    DRE::String64 const*    CreateGraphicsGizmoPipeline(char const* name);
+    DRE::String64 const*    CreateGraphicsGizmoPipeline(char const* name, char const* vertName, char const* fragName);
+
+    void                    RecreatePipeline(char const* name);
 
     static void             AddDREVertexAttributes(VKW::Pipeline::Descriptor& descriptor);
 
@@ -86,6 +88,9 @@ private:
     DRE::InplaceHashTable<DRE::String64, VKW::DescriptorSetLayout>  m_SetLayouts;
     DRE::InplaceHashTable<DRE::String64, VKW::PipelineLayout>       m_PipelineLayouts;
     DRE::InplaceHashTable<DRE::String64, VKW::Pipeline>             m_Pipelines;
+
+    // shader entry name -> names of pipelines that use it
+    DRE::InplaceHashTable<DRE::String64, DRE::InplaceVector<DRE::String64, 16>> m_ShaderToPipelines;
 
     DRE::InplaceHashTable<DRE::String64, GFX::Material>             m_Materials;
 };

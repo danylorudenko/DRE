@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vulkan\vulkan.h>
-#include <cstdint>
+#include <foundation\Common.hpp>
 
 #include <foundation\class_features\NonMovable.hpp>
 #include <foundation\class_features\NonCopyable.hpp>
@@ -42,8 +42,8 @@ class Pipeline
     : public NonCopyable
 {
 public:
-    static std::uint32_t constexpr MAX_SHADER_STAGES = 6;
-    static std::uint32_t constexpr MAX_VERTEX_ATTRIBUTES = 6;
+    static DRE::U32 constexpr MAX_SHADER_STAGES = 6;
+    static DRE::U32 constexpr MAX_VERTEX_ATTRIBUTES = 6;
 
 public:
     class Descriptor
@@ -53,6 +53,9 @@ public:
 
         inline PipelineType GetPipelineType() const { return type_; }
         inline PipelineLayout const* GetLayout() const { return pipelineLayout_; }
+
+        inline DRE::U8 GetShaderStageCount() const { return shaderStagesCount_; }
+        inline DRE::String64 const& GetShaderStageName(DRE::U8 i) const { return shaderStageNames_[i]; }
 
         void SetPipelineType        (PipelineType type);
         void SetVertexShader        (ShaderModule const& vertexModule);
@@ -83,18 +86,19 @@ public:
         VkGraphicsPipelineCreateInfo                graphicsCreateInfo_;
         VkComputePipelineCreateInfo                 computeCreateInfo_;
 
-        std::uint8_t                                shaderStagesCount_;
+        DRE::U8                                     shaderStagesCount_;
+        DRE::String64                               shaderStageNames_[MAX_SHADER_STAGES];
         VkPipelineShaderStageCreateInfo             shaderStages_[MAX_SHADER_STAGES];
 
         VkPipelineVertexInputStateCreateInfo        vertexInputState_;
         VkVertexInputBindingDescription             vertexBindingDescription_;
-        std::uint8_t                                vertexAttributeCount_;
+        DRE::U8                                     vertexAttributeCount_;
         VkVertexInputAttributeDescription           vertexAttributeDescriptions_[MAX_VERTEX_ATTRIBUTES];
 
         VkPipelineInputAssemblyStateCreateInfo      inputAssemblyState_;
 
         VkPipelineViewportStateCreateInfo           viewportState_;
-        std::uint8_t                                colorOutputCount_;
+        DRE::U8                                     colorOutputCount_;
 
         VkPipelineRasterizationStateCreateInfo      rasterizationState_;
         VkPipelineMultisampleStateCreateInfo        multisampleState_;

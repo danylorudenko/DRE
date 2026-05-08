@@ -336,16 +336,19 @@ VKW::ShaderModuleType SlangStageToVKWModuleType(SlangStage stage)
     }
 }
 
-bool ShaderDBImpl::CompileShader(DRE::String64 const& path/*, VKW::ShaderModuleType type*/)
+bool ShaderDBImpl::CompileShaderFile(DRE::String64 const& path)
 {
     std::filesystem::path filePath{ path.GetData() };
-    DRE::String64 name { filePath.filename().string().c_str() };
+    DRE::String64 fileName { filePath.filename().string().c_str() };
 
     std::cout << "Compiling shader " << path << std::endl;
 
     DRE::ByteBuffer sourceBlob{};
     std::uint64_t const bytesRead = m_IOManager->ReadFileStringToBuffer(filePath.generic_string().c_str(), &sourceBlob);
-    DRE_ASSERT(bytesRead != 0, "Failed to read GLSL source.");
+    DRE_ASSERT(bytesRead != 0, "Failed to read slang source.");
+
+    ShaderFile& shaderFile =m_ShaderFileMap.Emplace(fileName);
+    shaderFile.fileName = fileName;
 
     //slang::PreprocessorMacroDesc shaderTypeMacro;
     //shaderTypeMacro.name = GetShaderTypeDefineString(type);
@@ -397,7 +400,7 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& path/*, VKW::ShaderModuleT
     {
         Slang::ComPtr<slang::IBlob> diagnosticBlob;
         
-        slangModule = slangCurrentSession->loadModuleFromSourceString(name, nullptr, sourceBlob.As<char const*>(), diagnosticBlob.writeRef());
+        slangModule = slangCurrentSession->loadModuleFromSourceString(fileName, nullptr, sourceBlob.As<char const*>(), diagnosticBlob.writeRef());
         if (diagnosticBlob != nullptr)
         {
             std::cout << (const char*)diagnosticBlob->getBufferPointer() << std::endl;
@@ -405,7 +408,7 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& path/*, VKW::ShaderModuleT
 
         if (slangModule == nullptr)
         {
-            std::cout << "Failed to load slang module:" << name << std::endl;
+            std::cout << "Failed to load slang file:" << fileName << std::endl;
             return false;
         }
     }
@@ -414,8 +417,8 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& path/*, VKW::ShaderModuleT
 
     if (entryPointCount == 0)
     {
-        std::cout << "Failed to find any entry points in slang module " << name << std::endl;
-        return false;
+        std::cout << "Didn't find any entry points in slang file " << fileName << std::endl;
+        return true;
     }
 
     bool allSuccess = true;
@@ -425,7 +428,7 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& path/*, VKW::ShaderModuleT
         slangModule->getDefinedEntryPoint(entryPointId, entryPoint.writeRef());
         if (entryPoint == nullptr)
         {
-            std::cout << "Failed to get slang entry point " << entryPointId << " for module " << name << std::endl;
+            std::cout << "Failed to get slang entry point " << entryPointId << " for file " << fileName << std::endl;
             allSuccess = false;
             continue;
         }
@@ -454,7 +457,7 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& path/*, VKW::ShaderModuleT
 
         if (composedProgram.get() == nullptr)
         {
-            std::cout << "Slang failed to compose a program for module " << name << " entry point " << entryPointName << std::endl;
+            std::cout << "Slang failed to compose a program for file " << fileName << " entry point " << entryPointName << std::endl;
             allSuccess = false;
             continue;
         }
@@ -468,7 +471,7 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& path/*, VKW::ShaderModuleT
 
             if (programLayout == nullptr)
             {
-                std::cout << "Slang failed to get program layout for module " << name << " entry point " << entryPointName << std::endl;
+                std::cout << "Slang failed to get program layout for file " << fileName << " entry point " << entryPointName << std::endl;
                 allSuccess = false;
                 continue;
             }
@@ -488,7 +491,7 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& path/*, VKW::ShaderModuleT
 
             if (result != 0)
             {
-                std::cout << "Slang unknown error when compiling spirv for module " << name << " entry point " << entryPointName << std::endl;
+                std::cout << "Slang unknown error when compiling spirv for file " << fileName << " entry point " << entryPointName << std::endl;
                 allSuccess = false;
                 continue;
             }
@@ -499,14 +502,14 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& path/*, VKW::ShaderModuleT
             DRE::ByteBuffer spvBuffer{ slangSpirv->getBufferSize() };
             DRE::MemCpy(spvBuffer.Data(), slangSpirv->getBufferPointer(), spvBuffer.Size());
 
-            DRE::String64 entryName{ name };
+            DRE::String64 entryName{ fileName };
             entryName.Append("_");
             entryName.Append(entryPointName);
 
             // we force clear the vector inside so we can copy into it later
-            m_ShaderMap[entryName].bindingInterface.m_Members.Clear();
+            m_ShaderEntryMap[entryName].bindingInterface.m_Members.Clear();
 
-            m_ShaderMap[entryName] = ShaderEntry{
+            m_ShaderEntryMap[entryName] = ShaderEntry{
                 .name = entryName,
                 .type = SlangStageToVKWModuleType(shaderStage),
                 .spirv = DRE_MOVE(spvBuffer),
@@ -514,11 +517,14 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& path/*, VKW::ShaderModuleT
                 .bindingInterface = resultInterface
             };
 
-            std::cout << "Successfully compiled module " << name << " entry point " << entryPointName << std::endl;
+            shaderFile.shaderEntries.EmplaceBack(entryName);
+            m_ShaderToFileMap[entryName] = fileName;
+
+            std::cout << "Successfully compiled file " << fileName << ", entry point " << entryPointName << std::endl;
         }
         else
         {
-            std::cout << "Slang failed to extract compilation result object for module " << name << " entry point " << entryPointName << std::endl;
+            std::cout << "Slang failed to extract compilation result object for file " << fileName << ", entry point " << entryPointName << std::endl;
             allSuccess = false;
         }
     }
@@ -528,11 +534,17 @@ bool ShaderDBImpl::CompileShader(DRE::String64 const& path/*, VKW::ShaderModuleT
 
 ShaderEntry const* ShaderDBImpl::GetShaderEntry(DRE::String64 const& name)
 {
-    m_ShaderMap.ForEach([](auto const& pair)
-        {
-            std::cout << *pair.key << std::endl;
-        });
-    auto result = m_ShaderMap.Find(name);
+    //m_ShaderEntryMap.ForEach([](auto const& pair)
+    //    {
+    //        std::cout << *pair.key << std::endl;
+    //    });
+    auto result = m_ShaderEntryMap.Find(name);
+    return result.value;
+}
+
+ShaderFile const* ShaderDBImpl::GetShaderFile(DRE::String64 const& name)
+{
+    auto result = m_ShaderFileMap.Find(name);
     return result.value;
 }
 
@@ -541,7 +553,7 @@ void ShaderDBImpl::CompileSources(bool parallel)
 {
     struct ShaderFile
     {
-        DRE::String64 name;/* VKW::ShaderModuleType type;*/
+        DRE::String128 name;
     };
 
     std::filesystem::recursive_directory_iterator dir_iterator{ "shaders", std::filesystem::directory_options::follow_directory_symlink };
@@ -551,44 +563,35 @@ void ShaderDBImpl::CompileSources(bool parallel)
     {
         if (entry.path().has_extension())
         {
-            if (entry.path().extension() == ".vert")
+            if (entry.path().extension() == ".slang")
             {
-                fileNames.EmplaceBack(entry.path().generic_string().c_str()/*, VKW::SHADER_MODULE_TYPE_VERTEX*/);
-            }
-            else if (entry.path().extension() == ".frag")
-            {
-                fileNames.EmplaceBack(entry.path().generic_string().c_str()/*, VKW::SHADER_MODULE_TYPE_FRAGMENT*/);
-            }
-            else if (entry.path().extension() == ".comp")
-            {
-                fileNames.EmplaceBack(entry.path().generic_string().c_str()/*, VKW::SHADER_MODULE_TYPE_COMPUTE*/);
+                fileNames.EmplaceBack(entry.path().generic_string().c_str());
             }
         }
-        
     }
 
     auto compileTasks = DRE::ParallelFor<8>(fileNames.Size(), [this, &fileNames](DRE::U32 index)
-        {
-            DRE::String64& name = fileNames[index].name;
-            DRE::ByteBuffer spirv = CompileShader(name.GetData()/*, fileNames[index].type*/);
-            DRE_ASSERT(spirv.Size() > 0, "Can't run with invalid shader.");
-        }, parallel);
+    {
+        DRE::String128& name = fileNames[index].name;
+        bool success = CompileShaderFile(name.GetData());
+        DRE_ASSERT(success, "Can't run with invalid shader.");
+    }, parallel);
 
     compileTasks.Wait();
 }
 
-DRE::InplaceVector<DRE::String64, 12> ShaderDBImpl::GetPendingShaders()
+DRE::InplaceVector<DRE::String64, 12> ShaderDBImpl::GetPendingShaderFilesCopy()
 {
-    std::lock_guard guard{ m_PendingShadersMutex };
+    std::lock_guard guard{ m_PendingShaderFilesMutex };
     m_PendingChangesFlag.store(false, std::memory_order::relaxed);
-    return DRE_MOVE(m_PendingShaders);
+    return DRE_MOVE(m_PendingShaderFiles);
 }
 
 void ShaderDBImpl::ClearPendingShaders()
 {
-    std::lock_guard guard{ m_PendingShadersMutex };
+    std::lock_guard guard{ m_PendingShaderFilesMutex };
     m_PendingChangesFlag.store(false, std::memory_order_relaxed);
-    m_PendingShaders.Clear();
+    m_PendingShaderFiles.Clear();
 }
 
 void ShaderDBImpl::ShaderObserver_Thread()
@@ -620,8 +623,8 @@ void ShaderDBImpl::ShaderObserver_Thread()
                 return;
             }
 
-            char fileName[64];
-            int const length = WideCharToMultiByte(CP_UTF8, 0, infoPtr->FileName, infoPtr->FileNameLength / sizeof(WCHAR), fileName, 64, NULL, NULL);
+            char fileName[128];
+            int const length = WideCharToMultiByte(CP_UTF8, 0, infoPtr->FileName, infoPtr->FileNameLength / sizeof(WCHAR), fileName, 128, NULL, NULL);
             if (length == 0)
             {
                 std::cout << "ShaderDB::ShaderObserver: Failed to get ASCII file name from the event." << std::endl;
@@ -630,24 +633,22 @@ void ShaderDBImpl::ShaderObserver_Thread()
 
             char* ExtStart = std::strrchr(fileName, '.');
             if (ExtStart == nullptr || 
-                (std::strcmp(ExtStart, ".vert") != 0 &&
-                std::strcmp(ExtStart, ".frag") != 0 &&
-                std::strcmp(ExtStart, ".comp") != 0))
+                (std::strcmp(ExtStart, ".slang") != 0))
             {
                 infoPtr = infoPtr->NextEntryOffset == 0 ? nullptr : DRE::PtrAdd(infoPtr, infoPtr->NextEntryOffset);
                 continue;
             }
 
-            DRE::String64 stem{ fileName };
+            DRE::String128 stem{ fileName };
             char* stemEnd = std::strchr(fileName, '.');
             stem.Shrink(DRE::PtrDifference(stemEnd, fileName));
 
             {
-                std::lock_guard guard{ m_PendingShadersMutex };
-                if (m_PendingShaders.Find(stem) == m_PendingShaders.Size())
+                std::lock_guard guard{ m_PendingShaderFilesMutex };
+                if (m_PendingShaderFiles.Find(stem) == m_PendingShaderFiles.Size())
                 {
                     std::cout << "ShaderDB::ShaderObserver: Found new change in shader file: " << fileName << std::endl;
-                    m_PendingShaders.EmplaceBack(stem);
+                    m_PendingShaderFiles.EmplaceBack(stem);
                 }
                 m_PendingChangesFlag.store(true, std::memory_order::release);
             }

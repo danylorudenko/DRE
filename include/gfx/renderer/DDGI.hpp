@@ -1,7 +1,7 @@
 #pragma once
 
 #include <foundation\Common.hpp>
-#include <common\global_illumination\ddgi_common.h>
+#include <common\global_illumination\ddgi_common.slang>
 #include <glm\fwd.hpp>
 
 namespace GFX::DDGI

@@ -5,7 +5,7 @@
 #include <gfx\scheduling\RenderGraph.hpp>
 
 
-#include <common\global_illumination\ddgi_common.h>
+#include <common\global_illumination\ddgi_common.slang>
 
 namespace GFX
 {

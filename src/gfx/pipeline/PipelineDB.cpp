@@ -36,43 +36,43 @@ void PipelineDB::CreateDefaultPipelines()
 {
     // default plane material shader
     {
-        CreateGraphicsForwardPipeline("forward_pbr_main");
+        CreateGraphicsForwardPipeline("forward_pbr_main", "forward_pbr_main_vert", "forward_pbr_main_frag");
 
-        CreateGraphicsGBufferPipeline("gbuffer_pbr_main");
+        CreateGraphicsGBufferPipeline("gbuffer_pbr_main", "gbuffer_pbr_main_vert", "gbuffer_pbr_main_frag");
 
-        CreateGraphicsGizmoPipeline("gizmo_3D_main");
+        CreateGraphicsGizmoPipeline("gizmo_3D_main", "gizmo_3D_main_vert", "gizmo_3D_main_frag");
 
-        CreateComputePipeline("lighting_deferred_main");
-        CreateComputePipeline("color_encode_main");
-        CreateComputePipeline("ambient_occlusion_main");
-        CreateComputePipeline("temporal_AA_main");
-        CreateComputePipeline("gen_butterfly_main");
-        CreateComputePipeline("gen_h0_main");
-        CreateComputePipeline("gen_hxt_main");
-        CreateComputePipeline("fft_iter_main");
-        CreateComputePipeline("fft_inv_perm_main");
-        CreateComputePipeline("debug_view_texture_main");
-        CreateComputePipeline("debug_view_ddgi_probes_main");
+        CreateComputePipeline("lighting_deferred_main", "lighting_deferred_main_comp");
+        CreateComputePipeline("color_encode_main", "color_encode_main_comp");
+        CreateComputePipeline("ambient_occlusion_main", "ambient_occlusion_main_comp");
+        CreateComputePipeline("temporal_AA_main", "temporal_AA_main_comp");
+        CreateComputePipeline("gen_butterfly_main", "gen_butterfly_main_comp");
+        CreateComputePipeline("gen_h0_main", "gen_h0_main_comp");
+        CreateComputePipeline("gen_hxt_main", "gen_hxt_main_comp");
+        CreateComputePipeline("fft_iter_main", "fft_iter_main_comp");
+        CreateComputePipeline("fft_inv_perm_main", "fft_inv_perm_main_comp");
+        CreateComputePipeline("debug_view_texture_main", "debug_view_texture_main_comp");
+        CreateComputePipeline("debug_view_ddgi_probes_main", "debug_view_ddgi_probes_main_comp");
 
         // DDGI
-        CreateComputePipeline("ddgi_probe_border_blend_main");
-        CreateComputePipeline("ddgi_probe_lighting_main");
-        CreateComputePipeline("ddgi_probe_scatter_main");
-        CreateComputePipeline("ddgi_probe_trace_main");
+        CreateComputePipeline("ddgi_probe_border_blend_main", "ddgi_probe_border_blend_main_comp");
+        CreateComputePipeline("ddgi_probe_lighting_main", "ddgi_probe_lighting_main_comp");
+        CreateComputePipeline("ddgi_probe_scatter_main", "ddgi_probe_scatter_main_comp");
+        CreateComputePipeline("ddgi_probe_trace_main", "ddgi_probe_trace_main_comp");
 
         VKW::Pipeline::Descriptor waterCausticDesc;
         waterCausticDesc.SetPipelineType(VKW::PIPELINE_TYPE_GRAPHIC);
         //waterCausticDesc.EnableDepthTest(g_GraphicsManager->GetMainDepthFormat(), false);
         AddDREVertexAttributes(waterCausticDesc);
         waterCausticDesc.AddColorOutput(VKW::FORMAT_R8_UNORM);
-        CreateCustomGraphicsPipeline("water_caustics_main", waterCausticDesc);
+        CreateCustomGraphicsPipeline("water_caustics_main", "water_caustics_main_vert", "water_caustics_main_frag", waterCausticDesc);
 
         VKW::Pipeline::Descriptor shadowDesc;
         shadowDesc.SetPipelineType(VKW::PIPELINE_TYPE_GRAPHIC);
         shadowDesc.EnableDepthTest(VKW::FORMAT_D16_UNORM);
         shadowDesc.AddColorOutput(VKW::FORMAT_R16G16B16A16_FLOAT);
         AddDREVertexAttributes(shadowDesc);
-        CreateCustomGraphicsPipeline("forward_shadow_main", shadowDesc);
+        CreateCustomGraphicsPipeline("forward_shadow_main", "forward_shadow_main_vert", "forward_shadow_main_frag", shadowDesc);
     }
 }
 
@@ -85,18 +85,15 @@ void PipelineDB::AddDREVertexAttributes(VKW::Pipeline::Descriptor& desc)
     desc.AddVertexAttribute(VKW::FORMAT_R32G32_FLOAT);    // uv
 }
 
-DRE::String64 const* PipelineDB::CreateCustomGraphicsPipeline(char const* name, VKW::Pipeline::Descriptor& descriptor)
+DRE::String64 const* PipelineDB::CreateCustomGraphicsPipeline(char const* name, char const* vertName, char const* fragName, VKW::Pipeline::Descriptor& descriptor)
 {
-    DRE::String64 vertName{ name };
-    DRE::String64 fragName{ name };
+    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName, fragName, nullptr);
 
-    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName.GetData(), fragName.GetData(), nullptr);
+    DRE::ByteBuffer const& vertData = m_ShaderDB->GetShaderEntry(vertName)->spirv;
+    DRE::ByteBuffer const& fragData = m_ShaderDB->GetShaderEntry(fragName)->spirv;
 
-    DRE::ByteBuffer const& vertData = m_ShaderDB->GetShaderEntry(vertName.GetData())->spirv;
-    DRE::ByteBuffer const& fragData = m_ShaderDB->GetShaderEntry(fragName.GetData())->spirv;
-
-    VKW::ShaderModule vertModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData, VKW::SHADER_MODULE_TYPE_VERTEX, "main" };
-    VKW::ShaderModule fragModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragData, VKW::SHADER_MODULE_TYPE_FRAGMENT, "main" };
+    VKW::ShaderModule vertModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData, VKW::SHADER_MODULE_TYPE_VERTEX, vertName };
+    VKW::ShaderModule fragModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragData, VKW::SHADER_MODULE_TYPE_FRAGMENT, fragName };
 
     descriptor.SetVertexShader(vertModule);
     descriptor.SetFragmentShader(fragModule);
@@ -108,18 +105,15 @@ DRE::String64 const* PipelineDB::CreateCustomGraphicsPipeline(char const* name, 
 
 }
 
-DRE::String64 const* PipelineDB::CreateGraphicsForwardPipeline(char const* name)
+DRE::String64 const* PipelineDB::CreateGraphicsForwardPipeline(char const* name, char const* vertName, char const* fragName)
 {
-    DRE::String64 vertName{ name };
-    DRE::String64 fragName{ name };
+    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName, fragName, nullptr);
 
-    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName.GetData(), fragName.GetData(), nullptr);
+    DRE::ByteBuffer const& vertData = m_ShaderDB->GetShaderEntry(vertName)->spirv;
+    DRE::ByteBuffer const& fragData = m_ShaderDB->GetShaderEntry(fragName)->spirv;
 
-    DRE::ByteBuffer const& vertData = m_ShaderDB->GetShaderEntry(vertName.GetData())->spirv;
-    DRE::ByteBuffer const& fragData = m_ShaderDB->GetShaderEntry(fragName.GetData())->spirv;
-
-    VKW::ShaderModule vertModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData, VKW::SHADER_MODULE_TYPE_VERTEX, "main" };
-    VKW::ShaderModule fragModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragData, VKW::SHADER_MODULE_TYPE_FRAGMENT, "main" };
+    VKW::ShaderModule vertModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData, VKW::SHADER_MODULE_TYPE_VERTEX, vertName };
+    VKW::ShaderModule fragModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragData, VKW::SHADER_MODULE_TYPE_FRAGMENT, fragName };
 
     VKW::Pipeline::Descriptor desc;
 
@@ -140,18 +134,15 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardPipeline(char const* name)
     return m_Pipelines.Find(name).key;
 }
 
-DRE::String64 const* PipelineDB::CreateGraphicsGBufferPipeline(char const* name)
+DRE::String64 const* PipelineDB::CreateGraphicsGBufferPipeline(char const* name, char const* vertName, char const* fragName)
 {
-    DRE::String64 vertName{ name };
-    DRE::String64 fragName{ name };
+    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName, fragName, nullptr);
 
-    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName.GetData(), fragName.GetData(), nullptr);
+    DRE::ByteBuffer const& vertData = m_ShaderDB->GetShaderEntry(vertName)->spirv;
+    DRE::ByteBuffer const& fragData = m_ShaderDB->GetShaderEntry(fragName)->spirv;
 
-    DRE::ByteBuffer const& vertData = m_ShaderDB->GetShaderEntry(vertName.GetData())->spirv;
-    DRE::ByteBuffer const& fragData = m_ShaderDB->GetShaderEntry(fragName.GetData())->spirv;
-
-    VKW::ShaderModule vertModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData, VKW::SHADER_MODULE_TYPE_VERTEX, "main" };
-    VKW::ShaderModule fragModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragData, VKW::SHADER_MODULE_TYPE_FRAGMENT, "main" };
+    VKW::ShaderModule vertModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData, VKW::SHADER_MODULE_TYPE_VERTEX, vertName };
+    VKW::ShaderModule fragModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragData, VKW::SHADER_MODULE_TYPE_FRAGMENT, fragName };
 
     VKW::Pipeline::Descriptor desc;
 
@@ -177,18 +168,15 @@ DRE::String64 const* PipelineDB::CreateGraphicsGBufferPipeline(char const* name)
     return m_Pipelines.Find(name).key;
 }
 
-DRE::String64 const* PipelineDB::CreateGraphicsForwardWaterPipeline(char const* name)
+DRE::String64 const* PipelineDB::CreateGraphicsForwardWaterPipeline(char const* name, char const* vertName, char const* fragName)
 {
-    DRE::String64 vertName{ name };
-    DRE::String64 fragName{ name };
+    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName, fragName, nullptr);
 
-    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName.GetData(), fragName.GetData(), nullptr);
+    DRE::ByteBuffer const& vertData = m_ShaderDB->GetShaderEntry(vertName)->spirv;
+    DRE::ByteBuffer const& fragData = m_ShaderDB->GetShaderEntry(fragName)->spirv;
 
-    DRE::ByteBuffer const& vertData = m_ShaderDB->GetShaderEntry(vertName.GetData())->spirv;
-    DRE::ByteBuffer const& fragData = m_ShaderDB->GetShaderEntry(fragName.GetData())->spirv;
-
-    VKW::ShaderModule vertModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData, VKW::SHADER_MODULE_TYPE_VERTEX, "main" };
-    VKW::ShaderModule fragModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragData, VKW::SHADER_MODULE_TYPE_FRAGMENT, "main" };
+    VKW::ShaderModule vertModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData, VKW::SHADER_MODULE_TYPE_VERTEX, vertName };
+    VKW::ShaderModule fragModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragData, VKW::SHADER_MODULE_TYPE_FRAGMENT, fragName };
 
     VKW::Pipeline::Descriptor desc;
 
@@ -208,14 +196,12 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardWaterPipeline(char const* 
     return m_Pipelines.Find(name).key;
 }
 
-DRE::String64 const* PipelineDB::CreateGraphicsForwardShadowPipeline(char const* name)
+DRE::String64 const* PipelineDB::CreateGraphicsForwardShadowPipeline(char const* name, char const* vertName)
 {
-    DRE::String64 vertName{ name };
+    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName, nullptr, nullptr);
 
-    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName.GetData(), nullptr, nullptr);
-
-    DRE::ByteBuffer const& vertData = m_ShaderDB->GetShaderEntry(vertName.GetData())->spirv;
-    VKW::ShaderModule vertModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData, VKW::SHADER_MODULE_TYPE_VERTEX, "main" };
+    DRE::ByteBuffer const& vertData = m_ShaderDB->GetShaderEntry(vertName)->spirv;
+    VKW::ShaderModule vertModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData, VKW::SHADER_MODULE_TYPE_VERTEX, vertName };
 
     VKW::Pipeline::Descriptor desc;
 
@@ -231,16 +217,14 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardShadowPipeline(char const*
     return m_Pipelines.Find(name).key;
 }
 
-DRE::String64 const* PipelineDB::CreateComputePipeline(char const* name)
+DRE::String64 const* PipelineDB::CreateComputePipeline(char const* name, char const* compName)
 {
-    DRE::String64 compName{ name };
-
-    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, nullptr, nullptr, compName.GetData());
+    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, nullptr, nullptr, compName);
     VKW::PipelineLayout* layout = GetLayout(layoutName->GetData());
     DRE_ASSERT(layout != nullptr, "Can't find pipeline!");
 
-    IO::ShaderEntry const* shaderData = m_ShaderDB->GetShaderEntry(compName.GetData());
-    VKW::ShaderModule compModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), shaderData->spirv, shaderData->type, "main" };
+    IO::ShaderEntry const* shaderData = m_ShaderDB->GetShaderEntry(compName);
+    VKW::ShaderModule compModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), shaderData->spirv, shaderData->type, compName };
 
     VKW::Pipeline::Descriptor desc;
     desc.SetPipelineType(VKW::PIPELINE_TYPE_COMPUTE);
@@ -251,20 +235,15 @@ DRE::String64 const* PipelineDB::CreateComputePipeline(char const* name)
     return m_Pipelines.Find(name).key;
 }
 
-DRE::String64 const* PipelineDB::CreateGraphicsGizmoPipeline(char const* name)
+DRE::String64 const* PipelineDB::CreateGraphicsGizmoPipeline(char const* name, char const* vertName, char const* fragName)
 {
-    VKW::Pipeline::Descriptor pipeDesc;
+    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName, fragName, nullptr);
 
-    DRE::String64 vertName{ name };
-    DRE::String64 fragName{ name };
+    DRE::ByteBuffer const& vertData = m_ShaderDB->GetShaderEntry(vertName)->spirv;
+    DRE::ByteBuffer const& fragData = m_ShaderDB->GetShaderEntry(fragName)->spirv;
 
-    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName.GetData(), fragName.GetData(), nullptr);
-
-    DRE::ByteBuffer const& vertData = m_ShaderDB->GetShaderEntry(vertName.GetData())->spirv;
-    DRE::ByteBuffer const& fragData = m_ShaderDB->GetShaderEntry(fragName.GetData())->spirv;
-
-    VKW::ShaderModule vertModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData, VKW::SHADER_MODULE_TYPE_VERTEX, "main" };
-    VKW::ShaderModule fragModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragData, VKW::SHADER_MODULE_TYPE_FRAGMENT, "main" };
+    VKW::ShaderModule vertModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData, VKW::SHADER_MODULE_TYPE_VERTEX, vertName };
+    VKW::ShaderModule fragModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragData, VKW::SHADER_MODULE_TYPE_FRAGMENT, fragName };
 
     VKW::Pipeline::Descriptor desc;
 
@@ -282,74 +261,76 @@ DRE::String64 const* PipelineDB::CreateGraphicsGizmoPipeline(char const* name)
     return nullptr;
 }
 
-void PipelineDB::ReloadPipeline(char const* name)
+void PipelineDB::ReloadShaderFilePipelines(char const* shaderFileName)
 {
-    DRE::String128 layoutName{ name }; layoutName.Append("_layout");
-    VKW::PipelineLayout* layout = GetLayout(layoutName.GetData());
+    IO::ShaderFile const* shaderFile = m_ShaderDB->GetShaderFile(shaderFileName);
+    DRE_ASSERT(shaderFile != nullptr, "Attempt to reload pipelines for non-existing shader file");
 
-    DRE::String64 vertName{ name };
-    DRE::String64 fragName{ name };
-    DRE::String64 compName{ name };
+    if (!m_ShaderDB->CompileShaderFile(shaderFile->fileName.GetData()))
+    {
+        std::cout << "Failed to recompile shader file" << shaderFile->fileName.GetData() << ". Pipelines were not recreated." << std::endl;
+        return;
+    }
 
-    IO::ShaderEntry const* vertData = m_ShaderDB->GetShaderEntry(vertName.GetData());
-    IO::ShaderEntry const* fragData = m_ShaderDB->GetShaderEntry(fragName.GetData());
-    IO::ShaderEntry const* compData = m_ShaderDB->GetShaderEntry(compName.GetData());
+    DRE::InplaceVector<DRE::String64, 16> pipelinesToReload;
 
-    VKW::ShaderModule vertModule;
-    VKW::ShaderModule fragModule;
-    VKW::ShaderModule compModule;
+    for (DRE::U32 i = 0, count = shaderFile->shaderEntries.Size(); i < count; i++)
+    {
+        DRE::String64 const& shaderEntryName = shaderFile->shaderEntries[i];
 
+        auto pipelinesIt = m_ShaderToPipelines.Find(shaderEntryName);
+        if (pipelinesIt.value == nullptr)
+            continue;
+
+        for (DRE::U32 j = 0, pCount = pipelinesIt.value->Size(); j < pCount; j++)
+        {
+            pipelinesToReload.EmplaceBackUnique((*pipelinesIt.value)[j]);
+        }
+    }
+
+    for (DRE::U32 i = 0, count = pipelinesToReload.Size(); i < count; i++)
+    {
+        RecreatePipeline(pipelinesToReload[i].GetData());
+    }
+}
+
+void PipelineDB::RecreatePipeline(char const* name)
+{
     VKW::Pipeline* pipeline = GetPipeline(name);
-    DRE_ASSERT(pipeline != nullptr, "Attempt to reload pipeline which did not exist.");
+    DRE_ASSERT(pipeline != nullptr, "Attempt to recreate pipeline which did not exist.");
+
+    DRE::U8 const shaderStageCount = pipeline->GetDescriptor().GetShaderStageCount();
+    for (DRE::U8 s = 0; s < shaderStageCount; s++)
+    {
+        DRE::String64 const& stageName = pipeline->GetDescriptor().GetShaderStageName(s);
+        IO::ShaderEntry const* shaderEntry = m_ShaderDB->GetShaderEntry(stageName.GetData());
+        VKW::ShaderModule shaderModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), shaderEntry->spirv, shaderEntry->type, shaderEntry->name.GetData() };
+
+        switch (shaderEntry->type)
+        {
+        case VKW::SHADER_MODULE_TYPE_VERTEX:
+            pipeline->GetDescriptor().SetVertexShader(shaderModule);
+            break;
+        case VKW::SHADER_MODULE_TYPE_FRAGMENT:
+            pipeline->GetDescriptor().SetFragmentShader(shaderModule);
+            break;
+        case VKW::SHADER_MODULE_TYPE_COMPUTE:
+            pipeline->GetDescriptor().SetComputeShader(shaderModule);
+            break;
+        }
+    }
+
     VKW::Pipeline::Descriptor& desc = pipeline->GetDescriptor();
-
-    if (vertData != nullptr)
-    {
-        DRE::String64 vertPath{ "shaders\\" }; vertPath.Append(vertName.GetData());
-        if (!m_ShaderDB->CompileShader(vertPath.GetData()/*, VKW::SHADER_MODULE_TYPE_VERTEX*/))
-        {
-            std::cout << "Failed to recompile shader " << vertPath.GetData() << ". Pipeline was not cecreated." << std::endl;
-            return;
-        }
-
-        vertModule = VKW::ShaderModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertData->spirv, vertData->type, "main" };
-        desc.SetVertexShader(vertModule);
-    }
-    
-    if (fragData != nullptr)
-    {
-        DRE::String64 fragPath{ "shaders\\" }; fragPath.Append(fragName.GetData());
-        if (!m_ShaderDB->CompileShader(fragPath.GetData()/*, VKW::SHADER_MODULE_TYPE_FRAGMENT*/))
-        {
-            std::cout << "Failed to recompile shader " << fragPath.GetData() << ". Pipeline was not cecreated." << std::endl;
-            return;
-        }
-
-        fragModule = VKW::ShaderModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragData->spirv, fragData->type, "main" };
-        desc.SetFragmentShader(fragModule);
-    }
-
-    if (compData != nullptr)
-    {
-        DRE::String64 compPath{ "shaders\\" }; compPath.Append(compName.GetData());
-        if (!m_ShaderDB->CompileShader(compPath.GetData()/*, VKW::SHADER_MODULE_TYPE_COMPUTE*/))
-        {
-            std::cout << "Failed to recompile shader " << compPath.GetData() << ". Pipeline was not cecreated." << std::endl;
-            return;
-        }
-
-        compModule = VKW::ShaderModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), compData->spirv, compData->type, "main" };
-        desc.SetComputeShader(compModule);
-    }
-
-    m_Pipelines[name] = VKW::Pipeline{ m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), desc, name };
+    m_Pipelines[DRE::String64{ name }] = VKW::Pipeline{ m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), desc, name };
 }
 
 void PipelineDB::ReloadAllPipelines()
 {
+    m_ShaderDB->CompileSources(false);
+
     m_Pipelines.ForEach([this](auto pair)
     {
-        ReloadPipeline(pair.key->GetData());
+        RecreatePipeline(pair.key->GetData());
     });
 }
 
@@ -468,6 +449,11 @@ VKW::DescriptorSetLayout* PipelineDB::CreateDescriptorSetLayout(const char* name
 
 VKW::Pipeline* PipelineDB::CreatePipeline(char const* name, VKW::Pipeline::Descriptor& descriptor)
 {
+    for (DRE::U8 i = 0, count = descriptor.GetShaderStageCount(); i < count; i++)
+    {
+        m_ShaderToPipelines[descriptor.GetShaderStageName(i)].EmplaceBackUnique(DRE::String64{ name });
+    }
+
     return &(m_Pipelines.Emplace(name, m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), descriptor, name));
 }
 

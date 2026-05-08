@@ -12,7 +12,7 @@
 #include <gfx\buffer\PersistentStorage.hpp>
 #include <gfx\renderer\GPUInstanceAllocator.hpp>
 
-#include <common\lighting\lights.h>
+#include <common\lighting\lights.slang>
 
 #include <glm\vec3.hpp>
 
