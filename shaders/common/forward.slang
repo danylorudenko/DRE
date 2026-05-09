@@ -4,6 +4,10 @@
 #include "common/shaders_defines.slang"
 #include "common/global_uniform.slang"
 
+#ifndef __cplusplus
+#include "common/lighting/lighting.slang"
+#endif
+
 //////////////
 #ifndef __cplusplus
 [[vk::binding(0, 3)]] Texture2D<float> shadowMap;

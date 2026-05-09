@@ -18,7 +18,7 @@ Pipeline::Descriptor::Descriptor()
     : type_{ PIEPLINE_TYPE_INVALID }
     , depthTestEnabled_{ false }
     , stencilTestEnabled_{ false }
-    , shaderStagesCount_{ 0 }
+    , shaderStageMask_{ 0 }
     , vertexAttributeCount_{ 0 }
     , colorOutputCount_{ 0 }
     , depthAttachmentFormat_{ VK_FORMAT_UNDEFINED }
@@ -162,55 +162,54 @@ void Pipeline::Descriptor::SetVertexShader(ShaderModule const& vertexModule)
 {
     DRE_ASSERT(type_ == PIPELINE_TYPE_GRAPHIC, "Incompatible state detected in Pipeline::Descriptor - setting vertex shader for non-graphic pipeline.");
 
-    VkPipelineShaderStageCreateInfo& info = shaderStages_[shaderStagesCount_];
+    VkPipelineShaderStageCreateInfo& info = shaderStages_[SHADER_STAGE_SLOT_VERTEX].createInfo;
     info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     info.pNext = nullptr;
     info.flags = VK_FLAGS_NONE;
     info.stage = VK_SHADER_STAGE_VERTEX_BIT;
     info.module = vertexModule.GetHandle();
-    info.pName = vertexModule.GetName(); // this is not a reliable place to get name later, so cache it separately
+    info.pName = vertexModule.GetEntryPoint(); // this is not a reliable place to get name later, so cache it separately
     info.pSpecializationInfo = nullptr;
 
-    shaderStageNames_[shaderStagesCount_] = vertexModule.GetName();
-
-    ++shaderStagesCount_;
+    shaderStages_[SHADER_STAGE_SLOT_VERTEX].shaderName = vertexModule.GetName();
+    shaderStages_[SHADER_STAGE_SLOT_VERTEX].entryPoint = vertexModule.GetEntryPoint();
+    shaderStageMask_ |= (1 << SHADER_STAGE_SLOT_VERTEX);
 }
 
 void Pipeline::Descriptor::SetFragmentShader(ShaderModule const& fragmentModule)
 {
     DRE_ASSERT(type_ == PIPELINE_TYPE_GRAPHIC, "Incompatible state detected in Pipeline::Descriptor - setting fragment shader for non-graphic pipeline.");
 
-    VkPipelineShaderStageCreateInfo& info = shaderStages_[shaderStagesCount_];
+    VkPipelineShaderStageCreateInfo& info = shaderStages_[SHADER_STAGE_SLOT_FRAGMENT].createInfo;
     info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     info.pNext = nullptr;
     info.flags = VK_FLAGS_NONE;
     info.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
     info.module = fragmentModule.GetHandle();
-    info.pName = fragmentModule.GetName(); // this is not a reliable place to get name later, so cache it separately
+    info.pName = fragmentModule.GetEntryPoint(); // this is not a reliable place to get name later, so cache it separately
     info.pSpecializationInfo = nullptr;
 
-
-    shaderStageNames_[shaderStagesCount_] = fragmentModule.GetName();
-
-    ++shaderStagesCount_;
+    shaderStages_[SHADER_STAGE_SLOT_FRAGMENT].shaderName = fragmentModule.GetName();
+    shaderStages_[SHADER_STAGE_SLOT_FRAGMENT].entryPoint = fragmentModule.GetEntryPoint();
+    shaderStageMask_ |= (1 << SHADER_STAGE_SLOT_FRAGMENT);
 }
 
 void Pipeline::Descriptor::SetComputeShader(ShaderModule const& computeShader)
 {
     DRE_ASSERT(type_ == PIPELINE_TYPE_COMPUTE, "Incompatible state detected in Pipeline::Descriptor - setting compute shader for non-compute pipeline.");
 
-    VkPipelineShaderStageCreateInfo& info = shaderStages_[shaderStagesCount_++];
+    VkPipelineShaderStageCreateInfo& info = shaderStages_[SHADER_STAGE_SLOT_COMPUTE].createInfo;
     info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     info.pNext = nullptr;
     info.flags = VK_FLAGS_NONE;
     info.stage = VK_SHADER_STAGE_COMPUTE_BIT;
     info.module = computeShader.GetHandle();
-    info.pName = computeShader.GetName(); // this is not a reliable place to get name later, so cache it separately
+    info.pName = computeShader.GetEntryPoint(); // this is not a reliable place to get name later, so cache it separately
     info.pSpecializationInfo = nullptr;
 
-    shaderStageNames_[shaderStagesCount_] = computeShader.GetName();
-
-    ++shaderStagesCount_;
+    shaderStages_[SHADER_STAGE_SLOT_COMPUTE].shaderName = computeShader.GetName();
+    shaderStages_[SHADER_STAGE_SLOT_COMPUTE].entryPoint = computeShader.GetEntryPoint();
+    shaderStageMask_ |= (1 << SHADER_STAGE_SLOT_COMPUTE);
 }
 
 void Pipeline::Descriptor::SetLayout(PipelineLayout const* layout)
@@ -313,11 +312,18 @@ VkGraphicsPipelineCreateInfo const& Pipeline::Descriptor::CompileGraphicPipeline
     renderingCreateInfo_.depthAttachmentFormat = depthAttachmentFormat_;
     renderingCreateInfo_.stencilAttachmentFormat = stencilAttachmentFormat_;
 
+    DRE::U8 compiledCount = 0;
+    for (DRE::U8 i = 0; i < SHADER_STAGE_SLOT_MAX; i++)
+    {
+        if (IsShaderStagePresent(ShaderStageSlot(i)))
+            compiledShaderStages_[compiledCount++] = shaderStages_[i].createInfo;
+    }
+
     graphicsCreateInfo_.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     graphicsCreateInfo_.pNext = &renderingCreateInfo_;
     graphicsCreateInfo_.flags = VK_FLAGS_NONE;
-    graphicsCreateInfo_.stageCount = shaderStagesCount_;
-    graphicsCreateInfo_.pStages = shaderStages_;
+    graphicsCreateInfo_.stageCount = compiledCount;
+    graphicsCreateInfo_.pStages = compiledShaderStages_;
 
     vertexInputState_.pVertexBindingDescriptions = &vertexBindingDescription_;
     vertexInputState_.vertexAttributeDescriptionCount = vertexAttributeCount_;
@@ -349,8 +355,6 @@ VkGraphicsPipelineCreateInfo const& Pipeline::Descriptor::CompileGraphicPipeline
     graphicsCreateInfo_.basePipelineHandle = VK_NULL_HANDLE;
     graphicsCreateInfo_.basePipelineIndex = 0;
 
-    // reset this for easier reuse later
-    shaderStagesCount_ = 0;
 
     return graphicsCreateInfo_;
 }
@@ -362,12 +366,10 @@ VkComputePipelineCreateInfo const& Pipeline::Descriptor::CompileComputePipelineC
     computeCreateInfo_.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
     computeCreateInfo_.pNext = nullptr;
     computeCreateInfo_.flags = VK_FLAGS_NONE;
-    computeCreateInfo_.stage = shaderStages_[0];
+    computeCreateInfo_.stage = shaderStages_[SHADER_STAGE_SLOT_COMPUTE].createInfo;
     computeCreateInfo_.layout = pipelineLayout_->GetHandle();
     computeCreateInfo_.basePipelineHandle = VK_NULL_HANDLE;
     computeCreateInfo_.basePipelineIndex = 0;
-
-    shaderStagesCount_ = 0;
 
     return computeCreateInfo_;
 }

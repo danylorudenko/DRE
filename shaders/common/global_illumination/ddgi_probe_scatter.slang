@@ -7,7 +7,7 @@
 
 [shader("compute")]
 [numthreads(4, 4, 4)]
-void main(uint3 DTid : SV_DispatchThreadID)
+void mainCS(uint3 DTid : SV_DispatchThreadID)
 {
     float3 probesCoordinateStart = -((float3(ddgiCB.probesDimentions) * ddgiCB.probesWorldDistance) / 2);
     if (all(DTid < ddgiCB.probesDimentions))

@@ -7,7 +7,7 @@
 [require(spvRayQueryKHR)]
 [shader("compute")]
 [numthreads(8, 8, 1)]
-void main(uint3 DTid : SV_DispatchThreadID)
+void mainCS(uint3 DTid : SV_DispatchThreadID)
 {
     // 1. read some noise
     // 2. based on noise generate random direction

@@ -1,6 +1,8 @@
 #ifndef _LIGHTING_MODEL_H_
 #define _LIGHTING_MODEL_H_
 
+#include "common/shaders_defines.slang"
+
 float GGX_NDF(float NdotH, float a)
 {
     float a2 = a * a;

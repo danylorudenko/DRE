@@ -67,10 +67,12 @@ public:
 
     void                    CompileSources(bool parallel);
 
-    bool                    CompileShaderFile(DRE::String64 const& path);
+    bool                    CompileShaderFile(DRE::String128 const& path);
 
-    ShaderFile const*       GetShaderFile(DRE::String64 const& name);
-    ShaderEntry const*      GetShaderEntry(DRE::String64 const& name);
+    ShaderFile const*       GetShaderFile(DRE::String128 const& name);
+    ShaderEntry const*      GetShaderEntry(DRE::String128 const& name);
+
+    static DRE::String128   BuildShaderPath(char const* shaderFile);
 
 
     // shader recompilation
@@ -79,20 +81,20 @@ public:
     void                                    ClearPendingShaders();
     inline bool                             AreNewShadersPending() const { return m_PendingChangesFlag.load(std::memory_order::acquire); }
     // move-returns pending shaders. Pending shaders are automatically "cleared" after this call
-    DRE::InplaceVector<DRE::String64, 12>   GetPendingShaderFilesCopy();
+    DRE::InplaceVector<DRE::String128, 12>  GetPendingShaderFilesCopy();
 
-    DRE::InplaceHashTable<DRE::String64, DRE::String64, 512> const& GetShaderToFileMap() const { return m_ShaderToFileMap; }
+    DRE::InplaceHashTable<DRE::String128, DRE::String128, 512> const& GetShaderToFileMap() const { return m_ShaderToFileMap; }
 
 private:
     IO::IOManager*                          m_IOManager;
     Slang::ComPtr<slang::IGlobalSession>    m_SlangGlobalSession;
 
-    DRE::InplaceHashTable<DRE::String64, ShaderFile, 512>       m_ShaderFileMap;
-    DRE::InplaceHashTable<DRE::String64, ShaderEntry, 512>      m_ShaderEntryMap;
-    DRE::InplaceHashTable<DRE::String64, DRE::String64, 512>    m_ShaderToFileMap;
+    DRE::InplaceHashTable<DRE::String128, ShaderFile, 512>       m_ShaderFileMap;
+    DRE::InplaceHashTable<DRE::String128, ShaderEntry, 512>      m_ShaderEntryMap;
+    DRE::InplaceHashTable<DRE::String128, DRE::String128, 512>   m_ShaderToFileMap;
 
 private:
-    DRE::InplaceVector<DRE::String64, 12> m_PendingShaderFiles;
+    DRE::InplaceVector<DRE::String128, 12> m_PendingShaderFiles;
     std::mutex  m_PendingShaderFilesMutex;
     std::thread m_ShaderObserverThread;
     std::atomic_bool m_PendingChangesFlag;

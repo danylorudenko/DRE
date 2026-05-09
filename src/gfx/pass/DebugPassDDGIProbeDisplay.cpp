@@ -44,7 +44,7 @@ void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context
     VKW::BufferResource* ddgiProbeData         = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData))->GetResource();
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeIndirectArgs, VKW::RESOURCE_ACCESS_GENERIC_WRITE, VKW::STAGE_TRANSFER);
-    context.CmdFillBuffer(ddgiProbeIndirectArgs, 0, sizeof(DrawIndexedIndirectCommand), 0);
+    //context.CmdFillBuffer(ddgiProbeIndirectArgs, 0, sizeof(DrawIndexedIndirectCommand), 0);
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeIndirectArgs, VKW::RESOURCE_ACCESS_GENERIC_RW,   VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData,         VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_COMPUTE);
@@ -52,7 +52,7 @@ void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context
     glm::uvec3 const probeDebugGroupSize{ 4, 4, 4 };
     glm::uvec3 const probeDebugDispatchSize = GetComputeGroupCount(DDGI::GetProbeCount3D(), probeDebugGroupSize);
     // find pipeline here!
-    context.CmdDispatch(probeDebugDispatchSize.x, probeDebugDispatchSize.y, probeDebugDispatchSize.z);
+    //context.CmdDispatch(probeDebugDispatchSize.x, probeDebugDispatchSize.y, probeDebugDispatchSize.z);
 
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, graph.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage))->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
@@ -61,7 +61,7 @@ void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context
 
     VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("debug_view_ddgi_probes");
     VKW::DescriptorSet set = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
-    context.CmdBindGraphicsDescriptorSets(graph.GetPassPipelineLayout(GetID()), graph.GetPassSetBinding(), 1, &set);
+    //context.CmdBindGraphicsDescriptorSets(graph.GetPassPipelineLayout(GetID()), graph.GetPassSetBinding(), 1, &set);
 
 }
 

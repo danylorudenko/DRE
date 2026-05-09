@@ -13,15 +13,17 @@ ShaderModule::ShaderModule()
     : table_{ nullptr }
     , device_{ nullptr }
     , name_{}
+    , entryPoint_{}
     , handle_{ VK_NULL_HANDLE }
     , type_{ SHADER_MODULE_TYPE_NONE }
 {
 }
 
-ShaderModule::ShaderModule(ImportTable* table, LogicalDevice* device, DRE::ByteBuffer const& byteBuffer, ShaderModuleType type, char const* name)
+ShaderModule::ShaderModule(ImportTable* table, LogicalDevice* device, DRE::ByteBuffer const& byteBuffer, ShaderModuleType type, char const* name, char const* entryPoint)
     : table_{ table}
     , device_{ device }
     , name_{ name }
+    , entryPoint_{ entryPoint }
     , handle_{ VK_NULL_HANDLE }
     , type_{ type }
 {
@@ -39,6 +41,8 @@ ShaderModule::ShaderModule(ImportTable* table, LogicalDevice* device, DRE::ByteB
 ShaderModule::ShaderModule(ShaderModule&& rhs)
     : table_{ nullptr }
     , device_{ nullptr }
+    , name_{}
+    , entryPoint_{}
     , handle_{ VK_NULL_HANDLE }
     , type_{ SHADER_MODULE_TYPE_NONE }
 {
@@ -50,6 +54,7 @@ ShaderModule& ShaderModule::operator=(ShaderModule&& rhs)
     DRE_SWAP_MEMBER(table_);
     DRE_SWAP_MEMBER(device_);
     DRE_SWAP_MEMBER(name_);
+    DRE_SWAP_MEMBER(entryPoint_);
     DRE_SWAP_MEMBER(handle_);
     DRE_SWAP_MEMBER(type_);
 

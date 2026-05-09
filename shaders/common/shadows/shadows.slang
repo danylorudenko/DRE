@@ -1,5 +1,5 @@
-#include "common/shaders_common.h"
-#include "common/utils/poisson.h"
+#include "common/shaders_common.slang"
+#include "common/utils/poisson.slang"
 
 #ifndef _SHADOWS_H_
 #define _SHADOWS_H_

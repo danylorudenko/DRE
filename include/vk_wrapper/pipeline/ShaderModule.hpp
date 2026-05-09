@@ -29,7 +29,7 @@ class ShaderModule : public NonCopyable
 {
 public:
     ShaderModule();
-    ShaderModule(ImportTable* table, LogicalDevice* device, DRE::ByteBuffer const& byteBuffer, ShaderModuleType type, char const* name);
+    ShaderModule(ImportTable* table, LogicalDevice* device, DRE::ByteBuffer const& byteBuffer, ShaderModuleType type, char const* name, char const* entryPoint);
 
     ShaderModule(ShaderModule&& rhs);
     ShaderModule& operator=(ShaderModule&& rhs);
@@ -39,12 +39,14 @@ public:
     inline VkShaderModule   GetHandle() const { return handle_; }
     inline ShaderModuleType GetType() const { return type_; }
     inline char const*      GetName() const { return name_.GetData(); }
+    inline char const*      GetEntryPoint() const { return entryPoint_.GetData(); }
 
 private:
     ImportTable*        table_;
     LogicalDevice*      device_;
 
     DRE::String64       name_;
+    DRE::String64       entryPoint_;
 
     VkShaderModule      handle_;
     ShaderModuleType    type_;

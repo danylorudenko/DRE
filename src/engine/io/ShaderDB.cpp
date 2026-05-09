@@ -29,14 +29,19 @@ bool ShaderDB::CompileShaderFile(DRE::String64 const& name)
    return m_Impl->CompileShaderFile(name);
 }
 
-ShaderFile const* ShaderDB::GetShaderFile(DRE::String64 const& name)
+ShaderFile const* ShaderDB::GetShaderFile(DRE::String128 const& name)
 {
     return m_Impl->GetShaderFile(name);
 }
 
-ShaderEntry const* ShaderDB::GetShaderEntry(DRE::String64 const& name)
+ShaderEntry const* ShaderDB::GetShaderEntry(DRE::String128 const& name)
 {
     return m_Impl->GetShaderEntry(name);
+}
+
+DRE::String128 ShaderDB::BuildShaderPath(char const* shaderFile)
+{
+    return ShaderDBImpl::BuildShaderPath(shaderFile);
 }
 
 bool ShaderDB::AreNewShadersPending() const
@@ -49,12 +54,12 @@ void ShaderDB::ClearPendingShaders()
     return m_Impl->ClearPendingShaders();
 }
 
-DRE::InplaceVector<DRE::String64, 12> ShaderDB::GetPendingShaderFilesCopy()
+DRE::InplaceVector<DRE::String128, 12> ShaderDB::GetPendingShaderFilesCopy()
 {
     return m_Impl->GetPendingShaderFilesCopy();
 }
 
-DRE::InplaceHashTable<DRE::String64, DRE::String64, 512> const& ShaderDB::GetShaderToFileMap() const
+DRE::InplaceHashTable<DRE::String128, DRE::String128, 512> const& ShaderDB::GetShaderToFileMap() const
 {
     return m_Impl->GetShaderToFileMap();
 }

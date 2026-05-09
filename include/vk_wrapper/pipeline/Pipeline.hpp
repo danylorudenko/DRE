@@ -25,6 +25,14 @@ enum PipelineType
     PIEPLINE_TYPE_INVALID
 };
 
+enum ShaderStageSlot : DRE::U8
+{
+    SHADER_STAGE_SLOT_VERTEX   = 0,
+    SHADER_STAGE_SLOT_FRAGMENT = 1,
+    SHADER_STAGE_SLOT_COMPUTE  = 2,
+    SHADER_STAGE_SLOT_MAX      = 3
+};
+
 enum BlendType
 {
     BLEND_TYPE_NONE,
@@ -42,7 +50,7 @@ class Pipeline
     : public NonCopyable
 {
 public:
-    static DRE::U32 constexpr MAX_SHADER_STAGES = 6;
+    static DRE::U32 constexpr MAX_SHADER_STAGES = SHADER_STAGE_SLOT_MAX;
     static DRE::U32 constexpr MAX_VERTEX_ATTRIBUTES = 6;
 
 public:
@@ -54,8 +62,12 @@ public:
         inline PipelineType GetPipelineType() const { return type_; }
         inline PipelineLayout const* GetLayout() const { return pipelineLayout_; }
 
-        inline DRE::U8 GetShaderStageCount() const { return shaderStagesCount_; }
-        inline DRE::String64 const& GetShaderStageName(DRE::U8 i) const { return shaderStageNames_[i]; }
+        inline bool IsShaderStagePresent(ShaderStageSlot slot) const { return (shaderStageMask_ >> slot) & 1; }
+        inline DRE::String64 const& GetShaderStageName(ShaderStageSlot slot) const { return shaderStages_[slot].shaderName; }
+        inline DRE::String64 const& GetShaderStageEntryPoint(ShaderStageSlot slot) const { return shaderStages_[slot].entryPoint; }
+ 
+
+        //inline void ClearShaderStages() { shaderStagesCount_ = 0; DRE::MemZero(shaderStages_, sizeof(shaderStages_); DRE::MemZero(shaderStageNames_, sizeof(shaderStageNames_)); }
 
         void SetPipelineType        (PipelineType type);
         void SetVertexShader        (ShaderModule const& vertexModule);
@@ -86,9 +98,16 @@ public:
         VkGraphicsPipelineCreateInfo                graphicsCreateInfo_;
         VkComputePipelineCreateInfo                 computeCreateInfo_;
 
-        DRE::U8                                     shaderStagesCount_;
-        DRE::String64                               shaderStageNames_[MAX_SHADER_STAGES];
-        VkPipelineShaderStageCreateInfo             shaderStages_[MAX_SHADER_STAGES];
+        DRE::U8                                     shaderStageMask_;
+
+        struct ShaderStageInfo
+        {
+            DRE::String64                   shaderName;
+            DRE::String64                   entryPoint;
+            VkPipelineShaderStageCreateInfo createInfo;
+        };
+        ShaderStageInfo                             shaderStages_[MAX_SHADER_STAGES];
+        VkPipelineShaderStageCreateInfo             compiledShaderStages_[MAX_SHADER_STAGES];
 
         VkPipelineVertexInputStateCreateInfo        vertexInputState_;
         VkVertexInputBindingDescription             vertexBindingDescription_;

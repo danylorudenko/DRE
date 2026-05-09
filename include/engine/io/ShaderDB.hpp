@@ -43,6 +43,7 @@ struct ShaderInterface
 struct ShaderEntry
 {
     DRE::String64           name;
+    DRE::String64           entryPoint;
     VKW::ShaderModuleType   type;
     DRE::ByteBuffer         spirv;
     DRE::ByteBuffer         source;
@@ -69,16 +70,18 @@ public:
 
     bool                    CompileShaderFile(DRE::String64 const& name);
 
-    ShaderFile const*       GetShaderFile(DRE::String64 const& name);
-    ShaderEntry const*      GetShaderEntry(DRE::String64 const& name);
+    ShaderFile const*       GetShaderFile(DRE::String128 const& name);
+    ShaderEntry const*      GetShaderEntry(DRE::String128 const& name);
+
+    static DRE::String128   BuildShaderPath(char const* shaderFile);
 
     bool                    AreNewShadersPending() const;
     void                    ClearPendingShaders();
 
     // move-returns pending shaders. Pending shaders are automatically "cleared" after this call
-    DRE::InplaceVector<DRE::String64, 12> GetPendingShaderFilesCopy();
+    DRE::InplaceVector<DRE::String128, 12> GetPendingShaderFilesCopy();
 
-    DRE::InplaceHashTable<DRE::String64, DRE::String64, 512> const& GetShaderToFileMap() const;
+    DRE::InplaceHashTable<DRE::String128, DRE::String128, 512> const& GetShaderToFileMap() const;
 
 private:
     ShaderDBImpl* m_Impl;

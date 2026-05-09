@@ -14,7 +14,7 @@ struct PassUniform
 [[vk::binding(0, 3)]] ConstantBuffer<PassUniform> passUniform;
 
 [numthreads(8, 8, 1)]
-void main(int2 DTid : SV_DispatchThreadID)
+void mainCS(int2 DTid : SV_DispatchThreadID)
 {
     int2 coords = DTid;
     float2 uv = (float2(coords) + 0.5) / GetViewportSize();
