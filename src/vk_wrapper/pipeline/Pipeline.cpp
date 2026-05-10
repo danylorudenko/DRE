@@ -259,7 +259,7 @@ void Pipeline::Descriptor::AddVertexAttribute(Format format)
     vertexBindingDescription_.stride += FormatSize(format);
 }
 
-void Pipeline::Descriptor::AddColorOutput(Format format, BlendType blend)
+void Pipeline::Descriptor::AddColorOutput(Format format, BlendType blend, DRE::U8 writeMask)
 {
     DRE_ASSERT(colorOutputCount_ < VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS, "MAX_VIEWPORTS overflow for Graphics pipeline descriptor");
 
@@ -276,11 +276,7 @@ void Pipeline::Descriptor::AddColorOutput(Format format, BlendType blend)
         attachmentBlendState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
         attachmentBlendState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
         attachmentBlendState.alphaBlendOp = VK_BLEND_OP_ADD; // don't care
-        attachmentBlendState.colorWriteMask =
-            VK_COLOR_COMPONENT_R_BIT |
-            VK_COLOR_COMPONENT_G_BIT |
-            VK_COLOR_COMPONENT_B_BIT |
-            VK_COLOR_COMPONENT_A_BIT;
+        attachmentBlendState.colorWriteMask = writeMask;
     }
     else if (blend == BLEND_TYPE_ALPHA_OVER)
     {
@@ -291,11 +287,7 @@ void Pipeline::Descriptor::AddColorOutput(Format format, BlendType blend)
         attachmentBlendState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
         attachmentBlendState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
         attachmentBlendState.alphaBlendOp = VK_BLEND_OP_ADD;
-        attachmentBlendState.colorWriteMask =
-            VK_COLOR_COMPONENT_R_BIT |
-            VK_COLOR_COMPONENT_G_BIT |
-            VK_COLOR_COMPONENT_B_BIT |
-            VK_COLOR_COMPONENT_A_BIT;
+        attachmentBlendState.colorWriteMask = writeMask;
     }
     else
     {

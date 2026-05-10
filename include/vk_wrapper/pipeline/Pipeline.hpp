@@ -82,7 +82,16 @@ public:
         void SetWindingOrder        (WindingOrder order);
 
         void AddVertexAttribute     (Format format);
-        void AddColorOutput         (Format format, BlendType blend = BLEND_TYPE_NONE);
+
+        // mirrors VkColorComponentFlagBits
+        enum ColorComponent : DRE::U8
+        {
+            R_BIT = 0x00000001,
+            G_BIT = 0x00000002,
+            B_BIT = 0x00000004,
+            A_BIT = 0x00000008,
+        };
+        void AddColorOutput         (Format format, BlendType blend = BLEND_TYPE_NONE, DRE::U8 writeMask = 0xF);
 
         VkGraphicsPipelineCreateInfo const& CompileGraphicPipelineCreateInfo();
         VkComputePipelineCreateInfo const& CompileComputePipelineCreateInfo();

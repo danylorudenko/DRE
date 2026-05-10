@@ -189,6 +189,7 @@ void ImportTable::GetDeviceProcAddresses(VkDevice device)
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdClearAttachments);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdDraw);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdDrawIndexed);
+    VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdDrawIndexedIndirect);
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCmdTraceRaysKHR);
 
     VKW_IMPORT_VULKAN_DEVICE_FUNCTION(vkCreateQueryPool);

@@ -13,6 +13,8 @@
 #include <vk_wrapper\descriptor\Descriptor.hpp>
 #include <vk_wrapper\pipeline\Dependency.hpp>
 
+#include <common\shaders_defines.slang>
+
 namespace VKW
 {
 class   ImportTable;
@@ -83,6 +85,7 @@ public:
 public:
     void CmdDraw(std::uint32_t vertexCount, std::uint32_t instanceCount = 1, std::uint32_t firstVertex = 0, std::uint32_t firstInstance = 0);
     void CmdDrawIndexed(std::uint32_t indexCount, std::uint32_t instanceCount = 1, std::uint32_t firstIndex = 0, std::int32_t vertexOffset = 0, std::uint32_t firstInstance = 0);
+    void CmdDrawIndexedIndirect(VKW::BufferResource const* buffer, std::uint32_t offset = 0, std::uint32_t drawCount = 1, std::uint32_t stride = sizeof(DrawIndexedIndirectCommand));
     void CmdDispatch(std::uint32_t x, std::uint32_t y, std::uint32_t z);
 
     void CmdBindPipeline(BindPoint bindPoint, VKW::Pipeline const* pipeline);

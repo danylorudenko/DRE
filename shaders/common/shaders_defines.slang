@@ -1,7 +1,5 @@
-// description
-
-#ifndef _SHADER_DEFINES_H_
-#define _SHADER_DEFINES_H_
+#ifndef _SHADER_DEFINES_SLANG_
+#define _SHADER_DEFINES_SLANG_
 
 #ifdef __cplusplus
 
@@ -45,4 +43,4 @@ struct DrawIndirectCommand
 
 #define PI 3.14159
 
-#endif // _SHADER_DEFINES_H_
+#endif // _SHADER_DEFINES_SLANG_

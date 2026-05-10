@@ -90,24 +90,32 @@ void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInpu
     //m_RenderGraph.AddPass<ShadowPass>();
     //m_RenderGraph.AddPass<CausticPass>();
     m_RenderGraph.AddPass<GBufferPass>();
+
     m_RenderGraph.AddPass<DDGIProbeTracePass>();
     m_RenderGraph.AddPass<DDGIProbeBlendPass>();
     m_RenderGraph.AddPass<DDGIProbeLightingPass>();
     m_RenderGraph.AddPass<DDGIProbeScatterPass>();
+    m_RenderGraph.AddPass<DebugPassDDGIProbeDisplay>(geometryLibrary);
+
     m_RenderGraph.AddPass<LightingPass>();
+
     m_RenderGraph.AddPass<FFTButterflyGenPass>();
     m_RenderGraph.AddPass<FFTWaterH0GenPass>();
     m_RenderGraph.AddPass<FFTWaterHxtGenPass>();
     m_RenderGraph.AddPass<FFTWaterFFTPass>();
     m_RenderGraph.AddPass<FFTInvPermutationPass>();
     m_RenderGraph.AddPass<WaterPass>();
+
     m_RenderGraph.AddPass<AntiAliasingPass>();
     m_RenderGraph.AddPass<AmbientOcclusionPass>();
     m_RenderGraph.AddPass<ColorEncodingPass>();
+
     m_RenderGraph.AddPass<EditorPass>(viewportInput);
+
     m_RenderGraph.AddPass<DebugPassTextureView>();
-    m_RenderGraph.AddPass<DebugPassDDGIProbeDisplay>(geometryLibrary);
+
     m_RenderGraph.AddPass<ImGuiRenderPass>();
+
     m_RenderGraph.ParseGraph();
     m_RenderGraph.InitGraphResources();
 }

@@ -6,7 +6,7 @@
 struct DDGIConstantBuffer
 {
     uint3 probesDimentions;
-    int pad0;
+    float probeDebugScale;
     float3 probesWorldDistance;
     int pad1;
 };

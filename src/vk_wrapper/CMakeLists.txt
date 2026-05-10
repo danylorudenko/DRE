@@ -61,7 +61,8 @@ add_library(vk_wrapper STATIC
 find_package(Vulkan REQUIRED)
 
 target_include_directories(vk_wrapper PUBLIC 
-	"${DRE_SOURCE_DIR}/include")
+	"${DRE_SOURCE_DIR}/include"
+	"${DRE_SOURCE_DIR}/shaders")
 
 target_compile_features(vk_wrapper PUBLIC cxx_std_20)
 # TODO: disable exceptions
@@ -77,6 +78,3 @@ source_group(
 	TREE "${DRE_SOURCE_DIR}/include/vk_wrapper"
 	PREFIX "Header Files"
 	FILES ${VK_WRAPPER_HEADER_LIST})
-	
-	
-	

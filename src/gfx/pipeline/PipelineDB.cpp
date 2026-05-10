@@ -51,12 +51,14 @@ void PipelineDB::CreateDefaultPipelines()
         CreateComputePipeline("fft_iter", "fft_iter.slang_mainCS");
         CreateComputePipeline("fft_inv_perm", "fft_inv_perm.slang_mainCS");
         CreateComputePipeline("debug_view_texture", "debug_view_texture.slang_mainCS");
-        CreateComputePipeline("debug_view_ddgi_probes", "debug_view_ddgi_probes.slang_mainCS");
+
         // DDGI
         CreateComputePipeline("ddgi_probe_border_blend", "ddgi_probe_border_blend.slang_mainCS");
         CreateComputePipeline("ddgi_probe_lighting", "ddgi_probe_lighting.slang_mainCS");
         CreateComputePipeline("ddgi_probe_scatter", "ddgi_probe_scatter.slang_mainCS");
         CreateComputePipeline("ddgi_probe_trace", "ddgi_probe_trace.slang_mainCS");
+        CreateComputePipeline("debug_view_ddgi_probes_args", "debug_view_ddgi_probes.slang_indirectArgsFillCS");
+        CreateGraphicsGBufferDDGIProbePipeline("debug_view_ddgi_probes_draw", "debug_view_ddgi_probes.slang_drawVS", "debug_view_ddgi_probes.slang_drawPS");
 
         VKW::Pipeline::Descriptor waterCausticDesc;
         waterCausticDesc.SetPipelineType(VKW::PIPELINE_TYPE_GRAPHIC);
@@ -159,6 +161,40 @@ DRE::String64 const* PipelineDB::CreateGraphicsGBufferPipeline(char const* name,
     desc.AddColorOutput(gBufferFormats[2]); // velocity
     desc.AddColorOutput(gBufferFormats[3]); // objectID
     desc.AddColorOutput(VKW::FORMAT_R32G32B32A32_FLOAT); // DEBUG_TEXTURE
+
+    AddDREVertexAttributes(desc);
+
+    CreatePipeline(name, desc);
+    return m_Pipelines.Find(name).key;
+}
+
+DRE::String64 const* PipelineDB::CreateGraphicsGBufferDDGIProbePipeline(char const* name, char const* vertName, char const* fragName)
+{
+    DRE::String64 const* layoutName = CreatePipelineLayoutFromShader(name, vertName, fragName, nullptr);
+
+    IO::ShaderEntry const* vertexShaderEntry = m_ShaderDB->GetShaderEntry(vertName);
+    IO::ShaderEntry const* fragmentShaderEntry = m_ShaderDB->GetShaderEntry(fragName);
+
+    VKW::ShaderModule vertModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), vertexShaderEntry->spirv, VKW::SHADER_MODULE_TYPE_VERTEX, vertName, vertexShaderEntry->entryPoint };
+    VKW::ShaderModule fragModule{ g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), fragmentShaderEntry->spirv, VKW::SHADER_MODULE_TYPE_FRAGMENT, fragName, fragmentShaderEntry->entryPoint };
+
+    VKW::Pipeline::Descriptor desc;
+
+    desc.SetPipelineType(VKW::PIPELINE_TYPE_GRAPHIC);
+    desc.SetVertexShader(vertModule);
+    desc.SetFragmentShader(fragModule);
+    desc.SetLayout(GetLayout(layoutName->GetData()));
+    desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
+    desc.EnableDepthTest(g_GraphicsManager->GetMainDepthFormat());
+
+    auto gBufferFormats = g_GraphicsManager->GetGBufferFormats();
+    static_assert(gBufferFormats.size() == 4, "Don't forget this");
+
+    desc.AddColorOutput(gBufferFormats[0]); // diffuse_roughness
+    desc.AddColorOutput(gBufferFormats[1]); // normal_metalness
+    desc.AddColorOutput(gBufferFormats[2]); // velocity
+    desc.AddColorOutput(gBufferFormats[3], VKW::BLEND_TYPE_NONE, 0); // objectID
+    desc.AddColorOutput(VKW::FORMAT_R32G32B32A32_FLOAT, VKW::BLEND_TYPE_NONE, 0); // DEBUG_TEXTURE
 
     AddDREVertexAttributes(desc);
 

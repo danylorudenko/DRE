@@ -65,6 +65,7 @@ public:
         VkPhysicalDeviceExtendedDynamicState3FeaturesEXT extendedDynamicState3FeaturesEXT;
 #endif
         VkPhysicalDeviceFeatures2 features2;
+        VkPhysicalDeviceVulkan11Features vulkan11Features;
         VkPhysicalDeviceVulkan12Features vulkan12Features;
         VkPhysicalDeviceVulkan13Features vulkan13Features;
         VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructureFeatures;

@@ -65,6 +65,7 @@ public:
 private:
     DRE::String64 const*    CreateGraphicsForwardPipeline(char const* name, char const* vertName, char const* fragName);
     DRE::String64 const*    CreateGraphicsGBufferPipeline(char const* name, char const* vertName, char const* fragName);
+    DRE::String64 const*    CreateGraphicsGBufferDDGIProbePipeline(char const* name, char const* vertName, char const* fragName);
     DRE::String64 const*    CreateGraphicsForwardWaterPipeline(char const* name, char const* vertName, char const* fragName);
     DRE::String64 const*    CreateGraphicsForwardShadowPipeline(char const* name, char const* vertName);
     DRE::String64 const*    CreateComputePipeline(char const* name, char const* compName);

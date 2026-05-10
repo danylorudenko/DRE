@@ -99,6 +99,11 @@ void Context::CmdDrawIndexed(std::uint32_t indexCount, std::uint32_t instanceCou
     m_ImportTable->vkCmdDrawIndexed(*m_CurrentCommandList, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }
 
+void Context::CmdDrawIndexedIndirect(VKW::BufferResource const* buffer, std::uint32_t offset, std::uint32_t drawCount, std::uint32_t stride)
+{
+    m_ImportTable->vkCmdDrawIndexedIndirect(*m_CurrentCommandList, buffer->handle_, offset, drawCount, stride);
+}
+
 void Context::CmdDispatch(std::uint32_t x, std::uint32_t y, std::uint32_t z)
 {
     WriteResourceDependencies();

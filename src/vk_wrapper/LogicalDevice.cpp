@@ -301,10 +301,11 @@ bool LogicalDevice::IsPhysicalDeviceValid(
 {
 #ifndef DRE_COMPILE_FOR_RENDERDOC
     VkPhysicalDeviceExtendedDynamicState3FeaturesEXT const& extendedDynamicFeatures = *((VkPhysicalDeviceExtendedDynamicState3FeaturesEXT const*)deviceProperties.features2.pNext);
-    VkPhysicalDeviceVulkan12Features const& vulkan12Features = *((VkPhysicalDeviceVulkan12Features const*)extendedDynamicFeatures.pNext);
+    VkPhysicalDeviceVulkan11Features const& vulkan11Features = *((VkPhysicalDeviceVulkan11Features const*)extendedDynamicFeatures.pNext);
 #else
-    VkPhysicalDeviceVulkan12Features const& vulkan12Features = *((VkPhysicalDeviceVulkan12Features const*)deviceProperties.features2.pNext);
+    VkPhysicalDeviceVulkan11Features const& vulkan11Features = *((VkPhysicalDeviceVulkan11Features const*)deviceProperties.features2.pNext);
 #endif
+    VkPhysicalDeviceVulkan12Features const& vulkan12Features = *((VkPhysicalDeviceVulkan12Features const*)vulkan11Features.pNext);
     VkPhysicalDeviceVulkan13Features const& vulkan13Features = *((VkPhysicalDeviceVulkan13Features const*)vulkan12Features.pNext);
 
     bool supportsGraphics = false;
@@ -419,6 +420,7 @@ void LogicalDevice::RequestDeviceProperties(
     ToolSetMemZero(deviceProperties.accelerationStructureProperties);
     ToolSetMemZero(deviceProperties.rayTracingPipelineProperties);
     ToolSetMemZero(deviceProperties.features2);
+    ToolSetMemZero(deviceProperties.vulkan11Features);
     ToolSetMemZero(deviceProperties.vulkan12Features);
     ToolSetMemZero(deviceProperties.accelerationStructureFeatures);
     ToolSetMemZero(deviceProperties.rayTracingPipelineFeatures);
@@ -459,11 +461,14 @@ void LogicalDevice::RequestDeviceProperties(
     deviceProperties.features2.pNext = &deviceProperties.extendedDynamicState3FeaturesEXT;
 
     deviceProperties.extendedDynamicState3FeaturesEXT.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT;
-    deviceProperties.extendedDynamicState3FeaturesEXT.pNext = &deviceProperties.vulkan12Features;
+    deviceProperties.extendedDynamicState3FeaturesEXT.pNext = &deviceProperties.vulkan11Features;
 #else
     deviceProperties.features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-    deviceProperties.features2.pNext = &deviceProperties.vulkan12Features;
+    deviceProperties.features2.pNext = &deviceProperties.vulkan11Features;
 #endif
+
+    deviceProperties.vulkan11Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+    deviceProperties.vulkan11Features.pNext = &deviceProperties.vulkan12Features;
 
     deviceProperties.vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
     deviceProperties.vulkan12Features.pNext = &deviceProperties.vulkan13Features;
@@ -786,10 +791,11 @@ void LogicalDevice::PrintPhysicalDeviceData(VKW::LogicalDevice::PhysicalDevicePr
 
 #ifndef DRE_COMPILE_FOR_RENDERDOC
     VkPhysicalDeviceExtendedDynamicState3FeaturesEXT const& dynamicStateFeatures = *((VkPhysicalDeviceExtendedDynamicState3FeaturesEXT const*)deviceProperties.features2.pNext);
-    VkPhysicalDeviceVulkan12Features const& vulkan12Features = *((VkPhysicalDeviceVulkan12Features const*)dynamicStateFeatures.pNext);
+    VkPhysicalDeviceVulkan11Features const& vulkan11Features = *((VkPhysicalDeviceVulkan11Features const*)dynamicStateFeatures.pNext);
 #else
-    VkPhysicalDeviceVulkan12Features const& vulkan12Features = *((VkPhysicalDeviceVulkan12Features const*)deviceProperties.features2.pNext);
+    VkPhysicalDeviceVulkan11Features const& vulkan11Features = *((VkPhysicalDeviceVulkan11Features const*)deviceProperties.features2.pNext);
 #endif
+    VkPhysicalDeviceVulkan12Features const& vulkan12Features = *((VkPhysicalDeviceVulkan12Features const*)vulkan11Features.pNext);
     std::cout << "\tDescriptor Indexing Feataures:" << std::endl;
     std::cout << "\t\t" << "shaderInputAttachmentArrayDynamicIndexing: "        << vulkan12Features.shaderInputAttachmentArrayDynamicIndexing << std::endl;
     std::cout << "\t\t" << "shaderUniformTexelBufferArrayDynamicIndexing: "     << vulkan12Features.shaderUniformTexelBufferArrayDynamicIndexing << std::endl;
