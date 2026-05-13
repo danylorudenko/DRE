@@ -28,8 +28,8 @@ void DebugPassDDGIProbeDisplay::Initialize(RenderGraph& graph)
 
 void DebugPassDDGIProbeDisplay::RegisterResources(RenderGraph& graph)
 {
-    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DebugPassDDGIProbeIndirectArgs), sizeof(DrawIndexedIndirectCommand), VKW::RESOURCE_ACCESS_INDIRECT_ARGS, VKW::STAGE_ALL_GLOBAL, 0);
-    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData),                 DDGI::GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_GENERIC_READ,  VKW::STAGE_ALL_GLOBAL, 1);
+    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DebugPassDDGIProbeIndirectArgs), sizeof(DrawIndexedIndirectCommand), VKW::RESOURCE_ACCESS_INDIRECT_ARGS, VKW::STAGE_VERTEX | VKW::STAGE_FRAGMENT | VKW::STAGE_COMPUTE, 0);
+    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData),                 DDGI::GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_VERTEX | VKW::STAGE_FRAGMENT | VKW::STAGE_COMPUTE, 1);
     graph.RegisterUniformBuffer(this, VKW::STAGE_ALL_GLOBAL, 2);
 
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth,
