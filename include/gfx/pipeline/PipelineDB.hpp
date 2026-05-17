@@ -12,6 +12,8 @@
 
 #include <engine\io\ShaderDB.hpp>
 
+#include <gfx\pipeline\PipelineEntry.hpp>
+
 namespace VKW
 {
 class Device;
@@ -27,28 +29,12 @@ namespace GFX
 
 class ShaderDBImpl;
 
+
+///////////////////////////////////////
 class PipelineDB
     : public NonCopyable
     , public NonMovable
 {
-public:
-    class PipelineEntry
-    {
-    public:
-        PipelineEntry(VKW::Pipeline&& pipeline, VKW::PipelineLayout&& layout, IO::ShaderInterface const& shaderInterface, char const* name)
-            : name{ name }
-            , pipeline{ DRE_MOVE(pipeline) }
-            , layout{ DRE_MOVE(layout) }
-            , shaderInterface{ shaderInterface }
-        {
-        }
-
-        DRE::String128          name;
-        VKW::Pipeline           pipeline;
-        VKW::PipelineLayout     layout;
-        IO::ShaderInterface     shaderInterface;
-    };
-
 public:
     PipelineDB(VKW::Device* device, IO::ShaderDB* shaderDB);
     ~PipelineDB();
