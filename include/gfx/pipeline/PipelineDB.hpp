@@ -10,7 +10,7 @@
 #include <vk_wrapper\pipeline\Pipeline.hpp>
 #include <vk_wrapper\descriptor\DescriptorLayout.hpp>
 
-#include <gfx\renderer\Material.hpp>
+#include <engine\io\ShaderDB.hpp>
 
 namespace VKW
 {
@@ -26,14 +26,31 @@ namespace GFX
 {
 
 class ShaderDBImpl;
-class MaterialsManager;
 
 class PipelineDB
     : public NonCopyable
     , public NonMovable
 {
 public:
-    PipelineDB(VKW::Device* device, IO::ShaderDB* shaderDB, MaterialsManager* materialsGPUManager);
+    class PipelineEntry
+    {
+    public:
+        PipelineEntry(VKW::Pipeline&& pipeline, VKW::PipelineLayout&& layout, IO::ShaderInterface const& shaderInterface, char const* name)
+            : name{ name }
+            , pipeline{ DRE_MOVE(pipeline) }
+            , layout{ DRE_MOVE(layout) }
+            , shaderInterface{ shaderInterface }
+        {
+        }
+
+        DRE::String128          name;
+        VKW::Pipeline           pipeline;
+        VKW::PipelineLayout     layout;
+        IO::ShaderInterface     shaderInterface;
+    };
+
+public:
+    PipelineDB(VKW::Device* device, IO::ShaderDB* shaderDB);
     ~PipelineDB();
 
     void                        AddGlobalLayouts(VKW::PipelineLayout::Descriptor& descriptor);
@@ -46,9 +63,6 @@ public:
 
     void                        ReloadShaderFilePipelines(char const* fileName);
     void                        ReloadAllPipelines();
-
-
-    GFX::Material*              CreateMaterial(char const* name, GFX::Material::Type type);
 
 
     VKW::PipelineLayout const*  GetGlobalLayout() const;
@@ -81,7 +95,6 @@ private:
 private:
     VKW::Device*            m_Device;
     IO::ShaderDB*           m_ShaderDB;
-    GFX::MaterialsManager*  m_MaterialsGPUManager;
 
     using ShaderLayoutsMap = DRE::InplaceHashTable<DRE::String64, DRE::InplaceVector<VKW::DescriptorSetLayout, VKW::CONSTANTS::MAX_PIPELINE_LAYOUT_MEMBERS - 3>>;
 
@@ -92,8 +105,6 @@ private:
 
     // shader entry name -> names of pipelines that use it
     DRE::InplaceHashTable<DRE::String64, DRE::InplaceVector<DRE::String64, 16>> m_ShaderToPipelines;
-
-    DRE::InplaceHashTable<DRE::String64, GFX::Material>             m_Materials;
 };
 
 }

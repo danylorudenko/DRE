@@ -415,7 +415,7 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName
 
         {
             std::lock_guard<std::mutex> guard{ materialMutex };
-            GFX::Material* gfxMaterial = GFX::g_GraphicsManager->GetPipelineDB().CreateMaterial(material->GetName(), material->GetRenderingProperties().GetMaterialType());
+            GFX::Material* gfxMaterial = GFX::g_GraphicsManager->CreateMaterial(material->GetName(), material->GetRenderingProperties().GetMaterialType());
             material->FlushToGfxMaterial(gfxMaterial);
         }
     }

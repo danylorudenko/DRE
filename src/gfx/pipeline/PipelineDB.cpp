@@ -17,10 +17,9 @@ namespace GFX
 
 /////////////////////////////////
 // PipelineDB
-PipelineDB::PipelineDB(VKW::Device* device, IO::ShaderDB* shaderDB, MaterialsManager* materialsGPUManager)
+PipelineDB::PipelineDB(VKW::Device* device, IO::ShaderDB* shaderDB)
     : m_Device{ device }
     , m_ShaderDB{ shaderDB }
-    , m_MaterialsGPUManager{ materialsGPUManager }
 {
 }
 
@@ -515,12 +514,6 @@ VKW::Pipeline* PipelineDB::GetPipeline(char const* name)
 VKW::DescriptorSetLayout* PipelineDB::GetSetLayout(char const* name)
 {
     return &m_SetLayouts[name];
-}
-
-GFX::Material* PipelineDB::CreateMaterial(char const* name, GFX::Material::Type type)
-{
-    MaterialsManager::MaterialGPU materialGPU = m_MaterialsGPUManager->AllocateMaterial();
-    return &m_Materials.Emplace(name, type, materialGPU);
 }
 
 }

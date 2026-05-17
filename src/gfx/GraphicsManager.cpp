@@ -54,7 +54,7 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::I
     , m_InstanceDataManager{ &m_PersistentStorage }
     , m_LightsManager{ &m_PersistentStorage }
     , m_TextureBank{ &m_MainContext, m_Device.GetResourcesController(), m_Device.GetDescriptorManager() }
-    , m_PipelineDB{ &m_Device, shaderDB, &m_MaterialsManager }
+    , m_PipelineDB{ &m_Device, shaderDB }
 #ifdef DRE_IMGUI_CUSTOM_TEXTURE
     , m_ImGuiSyncQueue{ &DRE::g_PersistentDataAllocator }
 #endif
@@ -322,6 +322,12 @@ RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* scen
 void GraphicsManager::FreeRenderableObject(RenderableObject* obj)
 {
     m_RenderableObjectPool.Free(obj);
+}
+
+GFX::Material* GraphicsManager::CreateMaterial(char const* name, GFX::Material::Type type)
+{
+    MaterialsManager::MaterialGPU materialGPU = m_MaterialsManager.AllocateMaterial();
+    return &m_Materials.Emplace(name, type, materialGPU);
 }
 
 void GraphicsManager::WaitIdle()
