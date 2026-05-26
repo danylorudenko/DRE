@@ -54,7 +54,7 @@ void AmbientOcclusionPass::Render(RenderGraph& graph, VKW::Context& context)
 
 
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
-    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("ambient_occlusion");
+    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetEntry("ambient_occlusion")->GetPipeline();
 
     VKW::DescriptorSet passDescriptorSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
     context.CmdBindComputeDescriptorSets(layout, graph.GetPassSetBinding(), 1, &passDescriptorSet);

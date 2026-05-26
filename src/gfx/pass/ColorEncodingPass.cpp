@@ -59,7 +59,7 @@ void ColorEncodingPass::Render(RenderGraph& graph, VKW::Context& context)
     g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->WriteDescriptorSet(set,writeDesc);
 
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
-    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("color_encode");
+    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetEntry("color_encode")->GetPipeline();
     context.CmdBindComputeDescriptorSets(layout, graph.GetPassSetBinding(), 1, &set);
     context.CmdBindComputePipeline(pipeline);
 

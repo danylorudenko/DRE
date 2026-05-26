@@ -308,8 +308,8 @@ RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* scen
     {
     case Material::Type::MATERIAL_TYPE_OPAQUE:
     case Material::Type::MATERIAL_TYPE_ALPHA_MASKED:
-        renderable->AddLayerPipeline(RenderableObject::LAYER_FORWARD, m_PipelineDB.GetPipeline("forward_pbr"));
-        renderable->AddLayerPipeline(RenderableObject::LAYER_GBUFFER, m_PipelineDB.GetPipeline("gbuffer_pbr"));
+        renderable->AddLayerPipeline(RenderableObject::LAYER_FORWARD, m_PipelineDB.GetEntry("forward_pbr")->GetPipeline());
+        renderable->AddLayerPipeline(RenderableObject::LAYER_GBUFFER, m_PipelineDB.GetEntry("gbuffer_pbr")->GetPipeline());
         break;
     default:
         DRE_ASSERT(false, "No corresponding pipeline in PipelineDB for this material type.");

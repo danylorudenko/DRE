@@ -68,7 +68,7 @@ void LightingPass::Render(RenderGraph& graph, VKW::Context& context)
     dependencyManager.ResourceBarrier(context, ambientOcclusion->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
 
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
-    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("lighting_deferred");
+    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetEntry("lighting_deferred")->GetPipeline();
     VKW::DescriptorSet set = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
 
     context.CmdBindComputeDescriptorSets(layout, graph.GetPassSetBinding(), 1, &set);

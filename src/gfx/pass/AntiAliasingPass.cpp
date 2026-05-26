@@ -80,7 +80,7 @@ void AntiAliasingPass::Render(RenderGraph& graph, VKW::Context& context)
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
     context.CmdBindComputeDescriptorSets(layout, graph.GetPassSetBinding(), 1, &passSet);
 
-    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("temporal_AA");
+    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetEntry("temporal_AA")->GetPipeline();
     context.CmdBindComputePipeline(pipeline);
 
     glm::uvec2 rtSize{ g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight };

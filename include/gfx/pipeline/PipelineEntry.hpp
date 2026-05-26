@@ -1,6 +1,7 @@
 #pragma once
 
 #include <foundation\String\InplaceString.hpp>
+#include <foundation\container\InplaceVector.hpp>
 
 #include <vk_wrapper\pipeline\Pipeline.hpp>
 
@@ -18,15 +19,21 @@ namespace GFX
 class PipelineEntry
 {
 public:
-    PipelineEntry(VKW::Pipeline&& pipeline, VKW::PipelineLayout&& layout, IO::ShaderEntry* shaderEntry, char const* name);
+    using ShaderEntries = DRE::InplaceVector<IO::ShaderEntry const*, VKW::Pipeline::MAX_SHADER_STAGES>;
 
-    VKW::Pipeline* GetPipeline() { return &pipeline; }
+    PipelineEntry(VKW::Pipeline&& pipeline, VKW::PipelineLayout&& layout, ShaderEntries&& shaderEntries, char const* name);
+
+    VKW::Pipeline*        GetPipeline()      { return &pipeline; }
+    VKW::PipelineLayout*  GetLayout()        { return &layout; }
+    ShaderEntries const&  GetShaderEntries() const { return shaderEntries; }
+
+    void SetPipeline(VKW::Pipeline&& newPipeline);
 
 private:
     DRE::String128          name;
     VKW::Pipeline           pipeline;
     VKW::PipelineLayout     layout;
-    IO::ShaderEntry*        shaderEntry;
+    ShaderEntries           shaderEntries;
 };
 
 }

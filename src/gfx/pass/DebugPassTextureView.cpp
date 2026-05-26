@@ -68,7 +68,7 @@ void DebugPassTextureView::Render(RenderGraph& graph, VKW::Context& context)
 
     VKW::DescriptorSet   set      = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
     VKW::PipelineLayout* layout   = graph.GetPassPipelineLayout(GetID());
-    VKW::Pipeline*       pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("debug_view_texture");
+    VKW::Pipeline*       pipeline = g_GraphicsManager->GetPipelineDB().GetEntry("debug_view_texture")->GetPipeline();
 
     context.CmdBindComputeDescriptorSets(pipeline->GetLayout(), graph.GetPassSetBinding(), 1, &set);
     context.CmdBindComputePipeline(pipeline);

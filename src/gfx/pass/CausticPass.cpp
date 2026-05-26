@@ -98,7 +98,7 @@ void CausticPass::Render(RenderGraph& graph, VKW::Context& context)
 
     std::uint32_t const startSet = graph.GetUserSetBinding(GetID());
 
-    VKW::Pipeline const* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("water_caustics");
+    VKW::Pipeline const* pipeline = g_GraphicsManager->GetPipelineDB().GetEntry("water_caustics")->GetPipeline();
     VKW::PipelineLayout const* layout = pipeline->GetLayout();
 
     auto& draws = batcher.GetDraws();

@@ -25,7 +25,7 @@ PipelineDB::PipelineDB(VKW::Device* device, IO::ShaderDB* shaderDB)
 
 PipelineDB::~PipelineDB()
 {
-    m_Pipelines.Clear();
+    m_PipelineEntries.Clear();
     m_PipelineLayouts.Clear();
     m_SetLayouts.Clear();
     m_ShaderLayouts.Clear();
@@ -99,8 +99,12 @@ DRE::String64 const* PipelineDB::CreateCustomGraphicsPipeline(char const* name, 
     descriptor.SetLayout(GetLayout(layoutName->GetData()));
     descriptor.SetCullMode(VK_CULL_MODE_BACK_BIT);
 
-    CreatePipeline(name, descriptor);
-    return m_Pipelines.Find(name).key;
+    PipelineEntry::ShaderEntries shaderEntries;
+    shaderEntries.EmplaceBack(vertexShaderEntry);
+    shaderEntries.EmplaceBack(fragmentShaderEntry);
+    PipelineEntry* entry = CreatePipeline(name, descriptor, GetLayout(layoutName->GetData()), DRE_MOVE(shaderEntries));
+    (void)entry;
+    return m_PipelineEntries.Find(name).key;
 
 }
 
@@ -129,8 +133,11 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardPipeline(char const* name,
 
     AddDREVertexAttributes(desc);
 
-    CreatePipeline(name, desc);
-    return m_Pipelines.Find(name).key;
+    PipelineEntry::ShaderEntries shaderEntries;
+    shaderEntries.EmplaceBack(vertexShaderEntry);
+    shaderEntries.EmplaceBack(fragmentShaderEntry);
+    CreatePipeline(name, desc, GetLayout(layoutName->GetData()), DRE_MOVE(shaderEntries));
+    return m_PipelineEntries.Find(name).key;
 }
 
 DRE::String64 const* PipelineDB::CreateGraphicsGBufferPipeline(char const* name, char const* vertName, char const* fragName)
@@ -163,8 +170,11 @@ DRE::String64 const* PipelineDB::CreateGraphicsGBufferPipeline(char const* name,
 
     AddDREVertexAttributes(desc);
 
-    CreatePipeline(name, desc);
-    return m_Pipelines.Find(name).key;
+    PipelineEntry::ShaderEntries shaderEntries;
+    shaderEntries.EmplaceBack(vertexShaderEntry);
+    shaderEntries.EmplaceBack(fragmentShaderEntry);
+    CreatePipeline(name, desc, GetLayout(layoutName->GetData()), DRE_MOVE(shaderEntries));
+    return m_PipelineEntries.Find(name).key;
 }
 
 DRE::String64 const* PipelineDB::CreateGraphicsGBufferDDGIProbePipeline(char const* name, char const* vertName, char const* fragName)
@@ -197,8 +207,11 @@ DRE::String64 const* PipelineDB::CreateGraphicsGBufferDDGIProbePipeline(char con
 
     AddDREVertexAttributes(desc);
 
-    CreatePipeline(name, desc);
-    return m_Pipelines.Find(name).key;
+    PipelineEntry::ShaderEntries shaderEntries;
+    shaderEntries.EmplaceBack(vertexShaderEntry);
+    shaderEntries.EmplaceBack(fragmentShaderEntry);
+    CreatePipeline(name, desc, GetLayout(layoutName->GetData()), DRE_MOVE(shaderEntries));
+    return m_PipelineEntries.Find(name).key;
 }
 
 DRE::String64 const* PipelineDB::CreateGraphicsForwardWaterPipeline(char const* name, char const* vertName, char const* fragName)
@@ -225,8 +238,11 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardWaterPipeline(char const* 
 
     AddDREVertexAttributes(desc);
 
-    CreatePipeline(name, desc);
-    return m_Pipelines.Find(name).key;
+    PipelineEntry::ShaderEntries shaderEntries;
+    shaderEntries.EmplaceBack(vertexShaderEntry);
+    shaderEntries.EmplaceBack(fragmentShaderEntry);
+    CreatePipeline(name, desc, GetLayout(layoutName->GetData()), DRE_MOVE(shaderEntries));
+    return m_PipelineEntries.Find(name).key;
 }
 
 DRE::String64 const* PipelineDB::CreateGraphicsForwardShadowPipeline(char const* name, char const* vertName)
@@ -246,8 +262,10 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardShadowPipeline(char const*
 
     AddDREVertexAttributes(desc);
 
-    CreatePipeline(name, desc);
-    return m_Pipelines.Find(name).key;
+    PipelineEntry::ShaderEntries shaderEntries;
+    shaderEntries.EmplaceBack(vertexShaderEntry);
+    CreatePipeline(name, desc, GetLayout(layoutName->GetData()), DRE_MOVE(shaderEntries));
+    return m_PipelineEntries.Find(name).key;
 }
 
 DRE::String64 const* PipelineDB::CreateComputePipeline(char const* name, char const* compName)
@@ -264,8 +282,10 @@ DRE::String64 const* PipelineDB::CreateComputePipeline(char const* name, char co
     desc.SetComputeShader(compModule);
     desc.SetLayout(layout);
 
-    CreatePipeline(name, desc);
-    return m_Pipelines.Find(name).key;
+    PipelineEntry::ShaderEntries shaderEntries;
+    shaderEntries.EmplaceBack(shaderData);
+    CreatePipeline(name, desc, layout, DRE_MOVE(shaderEntries));
+    return m_PipelineEntries.Find(name).key;
 }
 
 DRE::String64 const* PipelineDB::CreateGraphicsGizmoPipeline(char const* name, char const* vertName, char const* fragName)
@@ -289,7 +309,10 @@ DRE::String64 const* PipelineDB::CreateGraphicsGizmoPipeline(char const* name, c
 
     AddDREVertexAttributes(desc);
 
-    CreatePipeline(name, desc);
+    PipelineEntry::ShaderEntries shaderEntries;
+    shaderEntries.EmplaceBack(vertexShaderEntry);
+    shaderEntries.EmplaceBack(fragmentShaderEntry);
+    CreatePipeline(name, desc, GetLayout(layoutName->GetData()), DRE_MOVE(shaderEntries));
 
     return nullptr;
 }
@@ -330,18 +353,20 @@ void PipelineDB::ReloadShaderFilePipelines(char const* shaderFileName)
 
 void PipelineDB::RecreatePipeline(char const* name)
 {
-    VKW::Pipeline* pipeline = GetPipeline(name);
-    DRE_ASSERT(pipeline != nullptr, "Attempt to recreate pipeline which did not exist.");
+    PipelineEntry* entry = GetEntry(name);
+    DRE_ASSERT(entry != nullptr, "Attempt to recreate pipeline which did not exist.");
 
-    DRE::InplaceVector<VKW::ShaderModule, VKW::Pipeline::MAX_SHADER_STAGES> shaderModulesVector; // we need to keep them alive until we create pipeline below
+    VKW::Pipeline* pipeline = entry->GetPipeline();
+    DRE::InplaceVector<VKW::ShaderModule, VKW::Pipeline::MAX_SHADER_STAGES> shaderModulesVector; // keep alive until pipeline is created
 
-    for (DRE::U8 s = 0; s < VKW::SHADER_STAGE_SLOT_MAX; s++)
+    for (DRE::U32 i = 0, count = entry->GetShaderEntries().Size(); i < count; i++)
     {
-        if (!pipeline->GetDescriptor().IsShaderStagePresent(VKW::ShaderStageSlot(s)))
-            continue;
-        DRE::String64 const& stageName = pipeline->GetDescriptor().GetShaderStageName(VKW::ShaderStageSlot(s));
-        IO::ShaderEntry const* shaderEntry = m_ShaderDB->GetShaderEntry(stageName.GetData());
-        VKW::ShaderModule& shaderModule = shaderModulesVector.EmplaceBack(g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice(), shaderEntry->spirv, shaderEntry->type, stageName.GetData(), shaderEntry->entryPoint);
+        IO::ShaderEntry const* shaderEntry = entry->GetShaderEntries()[i];
+        VKW::ShaderModule& shaderModule = shaderModulesVector.EmplaceBack(
+            g_GraphicsManager->GetVulkanTable(),
+            g_GraphicsManager->GetMainDevice()->GetLogicalDevice(),
+            shaderEntry->spirv, shaderEntry->type,
+            shaderEntry->name.GetData(), shaderEntry->entryPoint);
 
         switch (shaderEntry->type)
         {
@@ -358,14 +383,14 @@ void PipelineDB::RecreatePipeline(char const* name)
     }
 
     VKW::Pipeline::Descriptor& desc = pipeline->GetDescriptor();
-    m_Pipelines[DRE::String64{ name }] = VKW::Pipeline{ m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), desc, name };
+    entry->SetPipeline(VKW::Pipeline{ m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), desc, name });
 }
 
 void PipelineDB::ReloadAllPipelines()
 {
     m_ShaderDB->CompileSources(false);
 
-    m_Pipelines.ForEach([this](auto pair)
+    m_PipelineEntries.ForEach([this](auto pair)
     {
         RecreatePipeline(pair.key->GetData());
     });
@@ -484,7 +509,7 @@ VKW::DescriptorSetLayout* PipelineDB::CreateDescriptorSetLayout(const char* name
     return &(m_SetLayouts[name] = VKW::DescriptorSetLayout{ m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), desc });
 }
 
-VKW::Pipeline* PipelineDB::CreatePipeline(char const* name, VKW::Pipeline::Descriptor& descriptor)
+PipelineEntry* PipelineDB::CreatePipeline(char const* name, VKW::Pipeline::Descriptor& descriptor, VKW::PipelineLayout* layout, PipelineEntry::ShaderEntries&& shaderEntries)
 {
     for (DRE::U8 i = 0; i < VKW::SHADER_STAGE_SLOT_MAX; i++)
     {
@@ -493,7 +518,11 @@ VKW::Pipeline* PipelineDB::CreatePipeline(char const* name, VKW::Pipeline::Descr
         m_ShaderToPipelines[descriptor.GetShaderStageName(VKW::ShaderStageSlot(i))].EmplaceBackUnique(DRE::String64{ name });
     }
 
-    return &(m_Pipelines.Emplace(name, m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), descriptor, name));
+    return &m_PipelineEntries.Emplace(name,
+        VKW::Pipeline{ m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), descriptor, name },
+        DRE_MOVE(*layout),
+        DRE_MOVE(shaderEntries),
+        name);
 }
 
 VKW::PipelineLayout const* PipelineDB::GetGlobalLayout() const
@@ -506,9 +535,9 @@ VKW::PipelineLayout* PipelineDB::GetLayout(char const* name)
     return m_PipelineLayouts.Find(name).value;
 }
 
-VKW::Pipeline* PipelineDB::GetPipeline(char const* name)
+PipelineEntry* PipelineDB::GetEntry(char const* name)
 {
-    return m_Pipelines.Find(name).value;
+    return m_PipelineEntries.Find(name).value;
 }
 
 VKW::DescriptorSetLayout* PipelineDB::GetSetLayout(char const* name)

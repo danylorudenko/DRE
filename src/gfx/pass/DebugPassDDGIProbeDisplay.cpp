@@ -92,7 +92,7 @@ void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context
 
     glm::uvec3 const probeDebugGroupSize{ 4, 4, 4 };
     glm::uvec3 const probeDebugDispatchSize = GetComputeGroupCount(DDGI::GetProbeCount3D(), probeDebugGroupSize);
-    VKW::Pipeline* indirectArgsFillPipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("debug_view_ddgi_probes_args");
+    VKW::Pipeline* indirectArgsFillPipeline = g_GraphicsManager->GetPipelineDB().GetEntry("debug_view_ddgi_probes_args")->GetPipeline();
 
     context.CmdBindPipeline(VKW::BindPoint::Compute, indirectArgsFillPipeline);
     context.CmdDispatch(probeDebugDispatchSize.x, probeDebugDispatchSize.y, probeDebugDispatchSize.z);
@@ -105,7 +105,7 @@ void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData, VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_ALL_GRAPHICS);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeIndirectArgs, VKW::RESOURCE_ACCESS_INDIRECT_ARGS, VKW::STAGE_ALL_GRAPHICS);
 
-    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("debug_view_ddgi_probes_draw");
+    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetEntry("debug_view_ddgi_probes_draw")->GetPipeline();
     context.CmdDrawIndexedIndirect(ddgiProbeIndirectArgs);
 
 }

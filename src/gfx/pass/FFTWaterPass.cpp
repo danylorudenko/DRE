@@ -71,7 +71,7 @@ void FFTButterflyGenPass::Render(RenderGraph& graph, VKW::Context& context)
     uniform.WriteMember140(glm::ivec4{ C_WATER_DIM, 0, 0, 0 });
     uniform.WriteMember140(bit_reversed, C_WATER_DIM * sizeof(*bit_reversed));
 
-    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("gen_butterfly");
+    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetEntry("gen_butterfly")->GetPipeline();
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
 
     VKW::ImageResourceView* texture = graph.GetTexture(RESOURCE_ID(TextureID::FFTButterfly))->GetShaderView();
@@ -114,7 +114,7 @@ void FFTWaterH0GenPass::Render(RenderGraph& graph, VKW::Context& context)
     UniformProxy uniform = graph.GetPassUniform(GetID(), context, WATER_UNIFORM_SIZE);
     FillWaterUniform(uniform, *g_GraphicsManager->GetTextureBank().FindTexture("blue_noise_256"));
 
-    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("gen_h0");
+    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetEntry("gen_h0")->GetPipeline();
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
     
     VKW::ImageResourceView* texture = graph.GetTexture(RESOURCE_ID(TextureID::FFTH0))->GetShaderView();
@@ -164,7 +164,7 @@ void FFTWaterHxtGenPass::Render(RenderGraph& graph, VKW::Context& context)
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, fftHxt->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, fftH0->parentResource_, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE);
 
-    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("gen_hxt");
+    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetEntry("gen_hxt")->GetPipeline();
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
 
     VKW::DescriptorSet set = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
@@ -235,7 +235,7 @@ void FFTWaterFFTPass::Render(RenderGraph& graph, VKW::Context& context)
 
     VKW::DescriptorManager* manager = g_GraphicsManager->GetMainDevice()->GetDescriptorManager();
 
-    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("fft_iter");
+    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetEntry("fft_iter")->GetPipeline();
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
 
     auto& setVector = g_GraphicsManager->GetCurrentGraphicsFrame() % 2 == 0 ? m_StageSets0 : m_StageSets1;
@@ -315,7 +315,7 @@ void FFTInvPermutationPass::Render(RenderGraph& graph, VKW::Context& context)
     UniformProxy uniform = graph.GetPassUniform(GetID(), context, WATER_UNIFORM_SIZE);
     FillWaterUniform(uniform, *g_GraphicsManager->GetTextureBank().FindTexture("blue_noise_256"));
 
-    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("fft_inv_perm");
+    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetEntry("fft_inv_perm")->GetPipeline();
     VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
 
     VKW::DescriptorSet set = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());

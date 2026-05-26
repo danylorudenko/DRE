@@ -33,7 +33,7 @@ void DDGIProbeScatterPass::Render(RenderGraph& graph, VKW::Context& context)
     GFX::StorageBuffer* ddgiProbeData = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData));
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData->GetResource(), VKW::RESOURCE_ACCESS_GENERIC_WRITE, VKW::STAGE_COMPUTE);
 
-    context.CmdBindComputePipeline(g_GraphicsManager->GetPipelineDB().GetPipeline("ddgi_probe_scatter"));
+    context.CmdBindComputePipeline(g_GraphicsManager->GetPipelineDB().GetEntry("ddgi_probe_scatter")->GetPipeline());
 
     VKW::DescriptorSet passSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
     context.CmdBindComputeDescriptorSets(graph.GetPassPipelineLayout(GetID()), graph.GetPassSetBinding(), 1, &passSet);

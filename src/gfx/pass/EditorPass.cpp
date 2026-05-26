@@ -336,7 +336,7 @@ void EditorPass::Render(RenderGraph& graph, VKW::Context& context)
 
 
         VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
-        VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetPipeline("gizmo_3D");
+        VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetEntry("gizmo_3D")->GetPipeline();
         VKW::DescriptorSet set = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
         context.CmdBindGraphicsDescriptorSets(pipeline->GetLayout(), graph.GetPassSetBinding(), 1, &set);
         context.CmdBindVertexBuffer(m_GizmoVertices.GetBuffer(), m_GizmoVertices.GetVertexOffset());

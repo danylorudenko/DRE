@@ -44,7 +44,6 @@ public:
 
     VKW::DescriptorSetLayout*   CreateDescriptorSetLayout(const char* name, VKW::DescriptorSetLayout::Descriptor const& desc);
     VKW::PipelineLayout*        CreatePipelineLayout(char const* name, VKW::PipelineLayout::Descriptor const& descriptor);
-    VKW::Pipeline*              CreatePipeline(char const* name, VKW::Pipeline::Descriptor& descriptor);
     void                        CreateDefaultPipelines();
 
     void                        ReloadShaderFilePipelines(char const* fileName);
@@ -52,8 +51,7 @@ public:
 
 
     VKW::PipelineLayout const*  GetGlobalLayout() const;
-    VKW::PipelineLayout*        GetLayout(char const* name);
-    VKW::Pipeline*              GetPipeline(char const* name);
+    PipelineEntry*              GetEntry(char const* name);
     VKW::DescriptorSetLayout*   GetSetLayout(char const* name);
 
     // will find all passed modules and combine all their layouts into one with name "{name}_layout"
@@ -76,6 +74,9 @@ private:
 
     void                    RecreatePipeline(char const* name);
 
+    PipelineEntry*          CreatePipeline(char const* name, VKW::Pipeline::Descriptor& descriptor, VKW::PipelineLayout* layout, PipelineEntry::ShaderEntries&& shaderEntries);
+    VKW::PipelineLayout*    GetLayout(char const* name);
+
     static void             AddDREVertexAttributes(VKW::Pipeline::Descriptor& descriptor);
 
 private:
@@ -86,8 +87,8 @@ private:
 
     ShaderLayoutsMap                                                m_ShaderLayouts;
     DRE::InplaceHashTable<DRE::String64, VKW::DescriptorSetLayout>  m_SetLayouts;
-    DRE::InplaceHashTable<DRE::String64, VKW::PipelineLayout>       m_PipelineLayouts;
-    DRE::InplaceHashTable<DRE::String64, VKW::Pipeline>             m_Pipelines;
+    DRE::InplaceHashTable<DRE::String64, VKW::PipelineLayout>       m_PipelineLayouts;  // staging: layouts owned here until moved into PipelineEntry
+    DRE::InplaceHashTable<DRE::String64, GFX::PipelineEntry>        m_PipelineEntries;
 
     // shader entry name -> names of pipelines that use it
     DRE::InplaceHashTable<DRE::String64, DRE::InplaceVector<DRE::String64, 16>> m_ShaderToPipelines;
