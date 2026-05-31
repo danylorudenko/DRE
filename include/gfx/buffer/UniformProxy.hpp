@@ -33,12 +33,14 @@ public:
         WriteMember140(&data, sizeof(data));
     }
 
+    UniformArena::Allocation const& GetAllocation() const { return m_Allocation; }
+
     ~UniformProxy();
 
 private:
-    VKW::Context*                     m_Context;
-    typename UniformArena::Allocation m_Allocation;
-    void*                             m_WritePtr;
+    VKW::Context*                   m_Context;
+    UniformArena::Allocation        m_Allocation;
+    void*                           m_WritePtr;
     
 };
 

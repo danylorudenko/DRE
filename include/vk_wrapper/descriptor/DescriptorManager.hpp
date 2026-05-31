@@ -53,6 +53,9 @@ class DescriptorManager
     : public NonCopyable
 {
 public:
+    static DRE::U32 constexpr GLOBAL_SET_COUNT = 3u;
+
+
     class WriteDesc
         : public NonCopyable
         , public NonMovable
@@ -98,9 +101,11 @@ public:
     DescriptorSet               AllocateStandaloneSet(DescriptorSetLayout const& layout);
     void                        FreeStandaloneSet(DescriptorSet& set);
 
+    DescriptorSet               AllocatePerFrameSet(DescriptorSetLayout const& layout, DRE::U32 bufferingID);
+    void                        ResetPerFramePool(DRE::U32 bufferingID);
+
     VkDescriptorPool            GetPerTextureDescriptorPool(); // needed for ImGui backend
 
-    std::uint32_t               GetGlobalSetLayoutsCount() const { return 3u; }
     DescriptorSetLayout const*  GetGlobalSetLayouts() const { return globalSetLayouts_; }
     DescriptorSetLayout&        GetGlobalSetLayout(std::uint32_t i) { return globalSetLayouts_[i]; }
     PipelineLayout*             GetGlobalPipelineLayout() { return &globalPipelineLayout_; }
@@ -127,13 +132,15 @@ private:
 
     VkSampler                   defaultSamplers_[(int)SAMPLER_TYPE_MAX];
 
-    DescriptorSetLayout         globalSetLayouts_[3];
+    DescriptorSetLayout         globalSetLayouts_[GLOBAL_SET_COUNT];
     PipelineLayout              globalPipelineLayout_;
 
     VkDescriptorPool            globalSetPool_;
     VkDescriptorPool            globalTexturesPool_;
 
     VkDescriptorPool            perTextureDescriptors_;
+
+    VkDescriptorPool            perFrameDescriptors_[VKW::CONSTANTS::FRAMES_BUFFERING]; // for graph resources
 
     VkDescriptorSet             globalGenericSet_; // samplers + TLAS
     VkDescriptorSet             globalTexturesSet_;

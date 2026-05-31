@@ -20,15 +20,13 @@
 #include <gfx\pipeline\PipelineDB.hpp>
 #include <gfx\renderer\RenderableObject.hpp>
 #include <gfx\view\RenderView.hpp>
+#include <gfx\pipeline\ResourceBinder.hpp>
 #include <gfx\renderer\GPULightsManager.hpp>
 #include <gfx\renderer\GPUInstanceManager.hpp>
 #include <gfx\renderer\GPUMaterialsManager.hpp>
 #include <gfx\renderer\Material.hpp>
 #include <gfx\renderer\GlobalGeometryManager.hpp>
 #include <gfx\renderer\RayTracingManager.hpp>
-
-#include <engine\data\Geometry.hpp>
-#include <engine\data\Material.hpp>
 
 #include <array>
 
@@ -187,6 +185,7 @@ public:
     RenderableObject*                   CreateRenderableObject(WORLD::SceneNode* sceneNode, VKW::Context& context, Data::Geometry* geometry, GFX::Material* material);
     void                                FreeRenderableObject(RenderableObject* obj);
     GFX::Material*                      CreateMaterial(char const* name, GFX::Material::Type type);
+    GFX::ResourceBinder                 CreateResourceBinder(PipelineEntry* pipelineEntry, DRE::U32 setIDAfterGlobalSets);
 
 private:
     void                                CreateAllPasses(EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary);

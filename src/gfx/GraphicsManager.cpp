@@ -224,6 +224,8 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
     if (m_FrameProcessingCompletePoint[GetCurrentFrameID()].GetQueue() != nullptr)
         m_FrameProcessingCompletePoint[GetCurrentFrameID()].Wait();
 
+    m_Device.GetDescriptorManager()->ResetPerFramePool(GetCurrentFrameID());
+
     m_UniformArena.ResetAllocations(GetCurrentFrameID());
     m_UploadArena.ResetAllocations(GetCurrentFrameID());
     m_ReadbackArena.ResetAllocations(GetCurrentFrameID());
@@ -328,6 +330,11 @@ GFX::Material* GraphicsManager::CreateMaterial(char const* name, GFX::Material::
 {
     MaterialsManager::MaterialGPU materialGPU = m_MaterialsManager.AllocateMaterial();
     return &m_Materials.Emplace(name, type, materialGPU);
+}
+
+GFX::ResourceBinder GraphicsManager::CreateResourceBinder(PipelineEntry* pipelineEntry, DRE::U32 setIDAfterGlobalSets)
+{
+    return ResourceBinder(&m_Device, pipelineEntry, setIDAfterGlobalSets, GetCurrentFrameID());
 }
 
 void GraphicsManager::WaitIdle()
