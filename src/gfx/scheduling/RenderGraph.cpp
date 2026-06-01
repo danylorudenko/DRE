@@ -4,7 +4,6 @@
 
 #include <gfx\GraphicsManager.hpp>
 #include <gfx\pass\BasePass.hpp>
-#include <gfx\scheduling\DependencyManager.hpp>
 
 //#define DRE_FLUSH_EVERY_PASS
 
@@ -14,7 +13,6 @@ namespace GFX
 RenderGraph::RenderGraph(GraphicsManager* graphicsManager)
     : m_GraphicsManager{ graphicsManager }
     , m_ResourcesManager{ m_GraphicsManager->GetMainDevice() }
-    , m_DescriptorManager{ m_GraphicsManager->GetMainDevice(), &m_ResourcesManager, &m_GraphicsManager->GetPipelineDB() }
     , m_Passes{}
 {
 }
@@ -27,23 +25,12 @@ RenderGraph::~RenderGraph()
     }
 }
 
-void RenderGraph::RegisterTexture(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access, VKW::Stages stage, DRE::U32 binding)
-{
-    m_ResourcesManager.RegisterTexture(id, format, width, height, access);
-    m_DescriptorManager.RegisterTexture(pass->GetID(), id, access, VKW::StageToDescriptorStage(stage), binding);
-}
-
-void RenderGraph::RegisterStandaloneTexture(char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access)
+void RenderGraph::RegisterTexture(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access)
 {
     m_ResourcesManager.RegisterTexture(id, format, width, height, access);
 }
 
-void RenderGraph::RegisterTextureSlot(BasePass* pass, VKW::ResourceAccess access, VKW::Stages stage, DRE::U32 binding)
-{
-    m_DescriptorManager.RegisterTexture(pass->GetID(), RESOURCE_ID(TextureID::ID_None), access, VKW::StageToDescriptorStage(stage), binding);
-}
-
-void RenderGraph::RegisterRenderTarget(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32)
+void RenderGraph::RegisterRenderTarget(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 binding)
 {
     m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT);
 }
@@ -58,21 +45,10 @@ void RenderGraph::RegisterDepthOnlyTarget(BasePass* pass, char const* id, VKW::F
     m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT);
 }
 
-void RenderGraph::RegisterStorageBuffer(BasePass* pass, char const* id, DRE::U32 size, VKW::ResourceAccess access, VKW::Stages stage, DRE::U32 binding)
+void RenderGraph::RegisterStorageBuffer(BasePass* pass, char const* id, DRE::U32 size, VKW::ResourceAccess access)
 {
     m_ResourcesManager.RegisterBuffer(id, size, access);
-    m_DescriptorManager.RegisterBuffer(pass->GetID(), id, access, VKW::StageToDescriptorStage(stage), binding);
 }
-
-void RenderGraph::RegisterUniformBuffer(BasePass* pass, VKW::Stages stage, DRE::U32 binding)
-{
-    m_DescriptorManager.RegisterUniformBuffer(pass->GetID(), VKW::StageToDescriptorStage(stage), binding);
-}
-
-//void RenderGraph::RegisterPushConstant(BasePass* pass, std::uint32_t size, VKW::DescriptorStage stage)
-//{
-//    m_DescriptorManager.RegisterPushConstant(pass->GetID(), size, stage);
-//}
 
 Texture* RenderGraph::GetTexture(char const* id)
 {
@@ -84,29 +60,10 @@ StorageBuffer* RenderGraph::GetBuffer(char const* id)
     return m_ResourcesManager.GetBuffer(id);
 }
 
-UniformProxy RenderGraph::GetPassUniform(PassID id, VKW::Context& context, DRE::U32 size)
+UniformProxy RenderGraph::AllocateUniform(PassID id, VKW::Context& context, DRE::U32 size)
 {
     UniformArena::Allocation allocation = m_GraphicsManager->GetUniformArena().AllocateTransientRegion(m_GraphicsManager->GetCurrentFrameID(), size, 256);
-
-    VKW::DescriptorManager::WriteDesc writes;
-    writes.AddUniform(allocation.m_Buffer, allocation.m_OffsetInBuffer, allocation.m_Size, m_DescriptorManager.GetPassUniformBinding(id));
-
-    VKW::DescriptorSet passSet = GetPassDescriptorSet(id, m_GraphicsManager->GetCurrentFrameID());
-    
-    m_GraphicsManager->GetMainDevice()->GetDescriptorManager()->WriteDescriptorSet(passSet, writes);
-
     return UniformProxy{ &context, allocation };
-}
-
-DRE::U32 RenderGraph::GetPassSetBinding()
-{
-    return VKW::DescriptorManager::GLOBAL_SET_COUNT;
-}
-
-DRE::U32 RenderGraph::GetUserSetBinding(PassID pass)
-{
-    return VKW::DescriptorManager::GLOBAL_SET_COUNT +
-        (GetPassDescriptorSet(pass, g_GraphicsManager->GetCurrentFrameID()).IsValid() ? 1 : 0);
 }
 
 void RenderGraph::ParseGraph()
@@ -120,7 +77,6 @@ void RenderGraph::ParseGraph()
 void RenderGraph::InitGraphResources()
 {
     m_ResourcesManager.InitResources();
-    m_DescriptorManager.InitDescriptors();
 
     for (DRE::U32 i = 0, size = m_Passes.Size(); i < size; i++)
     {
@@ -130,18 +86,7 @@ void RenderGraph::InitGraphResources()
 
 void RenderGraph::UnloadGraphResources()
 {
-    m_DescriptorManager.DestroyDescriptors();
     m_ResourcesManager.DestroyResources();
-}
-
-VKW::DescriptorSet RenderGraph::GetPassDescriptorSet(PassID pass, FrameID frameID)
-{
-    return m_DescriptorManager.GetPassDescriptorSet(pass, frameID);
-}
-
-VKW::PipelineLayout* RenderGraph::GetPassPipelineLayout(PassID pass)
-{
-    return m_DescriptorManager.GetPassPipelineLayout(pass);
 }
 
 Texture& RenderGraph::Render(VKW::Context& context)

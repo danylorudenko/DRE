@@ -14,8 +14,8 @@ ResourceBinder::ResourceBinder(VKW::Device* device, PipelineEntry* pipelineEntry
     DRE_ASSERT(privateSetCount >= 0, "There're less descriptor bindings in the pipeline than there should be. Not enough global bindings");
 #endif // DRE_DEBUG
 
-    DRE::U32 const targetSet = VKW::DescriptorManager::GLOBAL_SET_COUNT + setIdAfterGlobalSets;
-    VKW::DescriptorSetLayout const* setLayout = pipelineLayout->GetMember(targetSet);
+    m_TargetSetID = VKW::DescriptorManager::GLOBAL_SET_COUNT + setIdAfterGlobalSets;
+    VKW::DescriptorSetLayout const* setLayout = pipelineLayout->GetMember(m_TargetSetID);
 
     m_DescriptorSet = device->GetDescriptorManager()->AllocatePerFrameSet(*setLayout, frameID);
 }
@@ -39,6 +39,16 @@ void ResourceBinder::AddUniform(DRE::U32 binding, UniformProxy* uniform)
 {
     UniformArena::Allocation const& allocation = uniform->GetAllocation();
     m_WriteDesc.AddUniform(allocation.m_Buffer, allocation.m_OffsetInBuffer, allocation.m_Size, binding);
+}
+
+DRE::U32 ResourceBinder::GetTargetSetID() const
+{
+    return m_TargetSetID;
+}
+
+VKW::DescriptorSet& ResourceBinder::GetDescriptorSet()
+{
+    return m_DescriptorSet;
 }
 
 void ResourceBinder::FlushDescriptorWrites()

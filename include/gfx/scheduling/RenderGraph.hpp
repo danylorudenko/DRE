@@ -34,29 +34,17 @@ public:
         m_Passes.EmplaceBack(new TPass{ std::forward<TArgs>(args)... });
     }
 
-
     void RegisterRenderTarget       (BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 binding);
     void RegisterDepthStencilTarget (BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height);
     void RegisterDepthOnlyTarget    (BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height);
 
-    void RegisterTexture            (BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access, VKW::Stages stage, DRE::U32 binding);
-    void RegisterStandaloneTexture  (char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access);
-    void RegisterTextureSlot        (BasePass* pass, VKW::ResourceAccess access, VKW::Stages stage, DRE::U32 binding);
+    void RegisterTexture            (BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access);
 
-    void RegisterStorageBuffer      (BasePass* pass, char const* id, DRE::U32 size, VKW::ResourceAccess access, VKW::Stages stage, DRE::U32 binding);
-    void RegisterUniformBuffer      (BasePass* pass, VKW::Stages stage, DRE::U32 binding);
-
-    //void RegisterPushConstant       (BasePass* pass, std::uint32_t size, VKW::DescriptorStage stage);
-
-    VKW::DescriptorSet              GetPassDescriptorSet(PassID pass, FrameID frameID);
-    VKW::PipelineLayout*            GetPassPipelineLayout(PassID pass);
-
-    DRE::U32                        GetPassSetBinding();
-    DRE::U32                        GetUserSetBinding(PassID pass);
+    void RegisterStorageBuffer      (BasePass* pass, char const* id, DRE::U32 size, VKW::ResourceAccess access);
 
     Texture*                        GetTexture(char const* id);
     StorageBuffer*                  GetBuffer(char const* id);
-    UniformProxy                    GetPassUniform(PassID pass, VKW::Context& context, DRE::U32 size);
+    UniformProxy                    AllocateUniform(PassID pass, VKW::Context& context, DRE::U32 size);
 
     GraphResourcesManager&          GetResourcesManager();
 
@@ -72,7 +60,6 @@ public:
 private:
     GraphicsManager*        m_GraphicsManager;
     GraphResourcesManager   m_ResourcesManager;
-    GraphDescriptorManager  m_DescriptorManager;
 
 
     DRE::InplaceVector<BasePass*, 20>  m_Passes;

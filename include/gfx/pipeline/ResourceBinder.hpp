@@ -27,9 +27,14 @@ public:
 
     void FlushDescriptorWrites();
 
+    DRE::U32                    GetTargetSetID() const;
+    VKW::DescriptorSet&         GetDescriptorSet() { return m_DescriptorSet; }
+
 private:
     PipelineEntry*                      m_PipelineEntry;
     VKW::Device*                        m_Device;
+
+    DRE::U32                            m_TargetSetID;
 
     VKW::DescriptorManager::WriteDesc   m_WriteDesc;
     VKW::DescriptorSet                  m_DescriptorSet;
