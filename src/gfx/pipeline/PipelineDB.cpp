@@ -430,21 +430,21 @@ DRE::String64 const* PipelineDB::CreatePipelineLayoutFromShader(char const* shad
         return (lhs.set <= rhs.set);
     });
 
-    std::uint32_t const globalLayoutsCount = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();
+    DRE::U32 const globalLayoutsCount = VKW::DescriptorManager::GLOBAL_SET_COUNT;
 
     // next used set after global descriptor sets
-    std::uint32_t const startMemberId = shaderInterface.m_Members.FindIf([globalLayoutsCount](auto const& data) { return data.set >= globalLayoutsCount; });
+    DRE::U32 const startMemberId = shaderInterface.m_Members.FindIf([globalLayoutsCount](auto const& data) { return data.set >= globalLayoutsCount; });
 
     auto& layouts = m_ShaderLayouts[shaderName];
     if (startMemberId != shaderInterface.m_Members.Size())
     {
-        std::uint8_t prevSet = shaderInterface.m_Members[startMemberId - 1].set;
-        std::uint8_t currentSet = shaderInterface.m_Members[startMemberId].set;
+        DRE::U8 prevSet = shaderInterface.m_Members[startMemberId - 1].set;
+        DRE::U8 currentSet = shaderInterface.m_Members[startMemberId].set;
         DRE_ASSERT(currentSet == prevSet + 1, "Descriptor sets must be continuous");
 
         VKW::DescriptorSetLayout::Descriptor setLayoutDesc{};
 
-        for (std::uint32_t i = startMemberId, size = shaderInterface.m_Members.Size(); i < size; i++)
+        for (DRE::U32 i = startMemberId, size = shaderInterface.m_Members.Size(); i < size; i++)
         {
             auto const& m = shaderInterface.m_Members[i];
             if (m.set != currentSet)
@@ -467,7 +467,7 @@ DRE::String64 const* PipelineDB::CreatePipelineLayoutFromShader(char const* shad
 
     VKW::PipelineLayout::Descriptor layoutDesc;
     AddGlobalLayouts(layoutDesc);
-    for (std::uint32_t i = 0, size = layouts.Size(); i < size; i++)
+    for (DRE::U32 i = 0, size = layouts.Size(); i < size; i++)
     {
         layoutDesc.Add(&layouts[i]);
     }
@@ -484,7 +484,7 @@ void PipelineDB::AddGlobalLayouts(VKW::PipelineLayout::Descriptor& descriptor)
 
     VKW::DescriptorManager* allocator = m_Device->GetDescriptorManager();
 
-    for (std::uint32_t i = 0, count = allocator->GetGlobalSetLayoutsCount(); i < count; i++)
+    for (DRE::U32 i = 0, count = VKW::DescriptorManager::GLOBAL_SET_COUNT; i < count; i++)
     {
         descriptor.Add(&allocator->GetGlobalSetLayout(i));
     }

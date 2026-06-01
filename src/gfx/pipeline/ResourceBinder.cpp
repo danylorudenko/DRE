@@ -3,16 +3,9 @@
 namespace GFX
 {
 
-ResourceBinder::BindedResource::BindedResource()
-    : binding{ DRE_U32_MAX }
-    , type{ Type::None }
-    , texture{ nullptr }
-{}
-
 ResourceBinder::ResourceBinder(VKW::Device* device, PipelineEntry* pipelineEntry, DRE::U32 setIdAfterGlobalSets, FrameID frameID)
     : m_Device{ device }
     , m_PipelineEntry{ pipelineEntry }
-    , m_BoundResources{}
 {
     VKW::PipelineLayout* pipelineLayout = pipelineEntry->GetLayout();
 

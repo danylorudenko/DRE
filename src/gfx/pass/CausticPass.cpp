@@ -74,7 +74,7 @@ void CausticPass::Render(RenderGraph& graph, VKW::Context& context)
     context.CmdSetScissor(1, 0, 0, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT);
 
     VKW::DescriptorSet passSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
-    std::uint32_t const passSetBinding = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();//
+    std::uint32_t const passSetBinding = VKW::DescriptorManager::GLOBAL_SET_COUNT;
 
     {
         auto uniformBuffer = g_GraphicsManager->GetUniformArena().AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), 256, 256);

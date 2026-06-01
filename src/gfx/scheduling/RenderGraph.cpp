@@ -27,44 +27,44 @@ RenderGraph::~RenderGraph()
     }
 }
 
-void RenderGraph::RegisterTexture(BasePass* pass, char const* id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding)
+void RenderGraph::RegisterTexture(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access, VKW::Stages stage, DRE::U32 binding)
 {
     m_ResourcesManager.RegisterTexture(id, format, width, height, access);
     m_DescriptorManager.RegisterTexture(pass->GetID(), id, access, VKW::StageToDescriptorStage(stage), binding);
 }
 
-void RenderGraph::RegisterStandaloneTexture(char const* id, VKW::Format format, std::uint32_t width, std::uint32_t height, VKW::ResourceAccess access)
+void RenderGraph::RegisterStandaloneTexture(char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access)
 {
     m_ResourcesManager.RegisterTexture(id, format, width, height, access);
 }
 
-void RenderGraph::RegisterTextureSlot(BasePass* pass, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding)
+void RenderGraph::RegisterTextureSlot(BasePass* pass, VKW::ResourceAccess access, VKW::Stages stage, DRE::U32 binding)
 {
     m_DescriptorManager.RegisterTexture(pass->GetID(), RESOURCE_ID(TextureID::ID_None), access, VKW::StageToDescriptorStage(stage), binding);
 }
 
-void RenderGraph::RegisterRenderTarget(BasePass* pass, char const* id, VKW::Format format, std::uint32_t width, std::uint32_t height, std::uint32_t)
+void RenderGraph::RegisterRenderTarget(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32)
 {
     m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT);
 }
 
-void RenderGraph::RegisterDepthStencilTarget(BasePass* pass, char const* id, VKW::Format format, std::uint32_t width, std::uint32_t height)
+void RenderGraph::RegisterDepthStencilTarget(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height)
 {
     m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT);
 }
 
-void RenderGraph::RegisterDepthOnlyTarget(BasePass* pass, char const* id, VKW::Format format, std::uint32_t width, std::uint32_t height)
+void RenderGraph::RegisterDepthOnlyTarget(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height)
 {
     m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT);
 }
 
-void RenderGraph::RegisterStorageBuffer(BasePass* pass, char const* id, std::uint32_t size, VKW::ResourceAccess access, VKW::Stages stage, std::uint32_t binding)
+void RenderGraph::RegisterStorageBuffer(BasePass* pass, char const* id, DRE::U32 size, VKW::ResourceAccess access, VKW::Stages stage, DRE::U32 binding)
 {
     m_ResourcesManager.RegisterBuffer(id, size, access);
     m_DescriptorManager.RegisterBuffer(pass->GetID(), id, access, VKW::StageToDescriptorStage(stage), binding);
 }
 
-void RenderGraph::RegisterUniformBuffer(BasePass* pass, VKW::Stages stage, std::uint32_t binding)
+void RenderGraph::RegisterUniformBuffer(BasePass* pass, VKW::Stages stage, DRE::U32 binding)
 {
     m_DescriptorManager.RegisterUniformBuffer(pass->GetID(), VKW::StageToDescriptorStage(stage), binding);
 }
@@ -84,7 +84,7 @@ StorageBuffer* RenderGraph::GetBuffer(char const* id)
     return m_ResourcesManager.GetBuffer(id);
 }
 
-UniformProxy RenderGraph::GetPassUniform(PassID id, VKW::Context& context, std::uint32_t size)
+UniformProxy RenderGraph::GetPassUniform(PassID id, VKW::Context& context, DRE::U32 size)
 {
     UniformArena::Allocation allocation = m_GraphicsManager->GetUniformArena().AllocateTransientRegion(m_GraphicsManager->GetCurrentFrameID(), size, 256);
 
@@ -98,20 +98,20 @@ UniformProxy RenderGraph::GetPassUniform(PassID id, VKW::Context& context, std::
     return UniformProxy{ &context, allocation };
 }
 
-std::uint32_t RenderGraph::GetPassSetBinding()
+DRE::U32 RenderGraph::GetPassSetBinding()
 {
-    return g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();
+    return VKW::DescriptorManager::GLOBAL_SET_COUNT;
 }
 
-std::uint32_t RenderGraph::GetUserSetBinding(PassID pass)
+DRE::U32 RenderGraph::GetUserSetBinding(PassID pass)
 {
-    return g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount() +
+    return VKW::DescriptorManager::GLOBAL_SET_COUNT +
         (GetPassDescriptorSet(pass, g_GraphicsManager->GetCurrentFrameID()).IsValid() ? 1 : 0);
 }
 
 void RenderGraph::ParseGraph()
 {
-    for (std::uint32_t i = 0, size = m_Passes.Size(); i < size; i++)
+    for (DRE::U32 i = 0, size = m_Passes.Size(); i < size; i++)
     {
         m_Passes[i]->RegisterResources(*this);
     }
@@ -122,7 +122,7 @@ void RenderGraph::InitGraphResources()
     m_ResourcesManager.InitResources();
     m_DescriptorManager.InitDescriptors();
 
-    for (std::uint32_t i = 0, size = m_Passes.Size(); i < size; i++)
+    for (DRE::U32 i = 0, size = m_Passes.Size(); i < size; i++)
     {
         m_Passes[i]->Initialize(*this);
     }
@@ -146,7 +146,7 @@ VKW::PipelineLayout* RenderGraph::GetPassPipelineLayout(PassID pass)
 
 Texture& RenderGraph::Render(VKW::Context& context)
 {
-    for (std::uint32_t i = 0, size = m_Passes.Size(); i < size; i++)
+    for (DRE::U32 i = 0, size = m_Passes.Size(); i < size; i++)
     {
         m_Passes[i]->Render(*this, context);
 

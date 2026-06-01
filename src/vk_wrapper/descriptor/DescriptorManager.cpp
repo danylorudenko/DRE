@@ -111,24 +111,23 @@ DescriptorManager::DescriptorManager(ImportTable* table, LogicalDevice* device)
     std::uint32_t constexpr PER_FRAME_DESCRIPTOR_COUNT  = 2048;
     std::uint32_t constexpr MAX_PER_FRAME_SETS          = 256;
 
-    VkDescriptorPoolSize sizes[4];
     sizes[0].type               = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-    sizes[0].descriptorCount    = STANDALONE_DESCRIPTOR_COUNT;
+    sizes[0].descriptorCount    = PER_FRAME_DESCRIPTOR_COUNT;
 
     sizes[1].type               = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-    sizes[1].descriptorCount    = STANDALONE_DESCRIPTOR_COUNT;
+    sizes[1].descriptorCount    = PER_FRAME_DESCRIPTOR_COUNT;
 
     sizes[2].type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    sizes[2].descriptorCount    = STANDALONE_DESCRIPTOR_COUNT;
+    sizes[2].descriptorCount    = PER_FRAME_DESCRIPTOR_COUNT;
 
     sizes[3].type               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    sizes[3].descriptorCount    = STANDALONE_DESCRIPTOR_COUNT;
+    sizes[3].descriptorCount    = PER_FRAME_DESCRIPTOR_COUNT;
 
     VkDescriptorPoolCreateInfo perFrameDescriptorPoolInfo;
     perFrameDescriptorPoolInfo.sType            = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     perFrameDescriptorPoolInfo.pNext            = nullptr;
     perFrameDescriptorPoolInfo.flags            = VK_FLAGS_NONE;
-    perFrameDescriptorPoolInfo.maxSets          = VKW::CONSTANTS::PER_FRAME_DESCRIPTOR_SET_COUNT;
+    perFrameDescriptorPoolInfo.maxSets          = MAX_PER_FRAME_SETS;
     perFrameDescriptorPoolInfo.poolSizeCount    = 4;
     perFrameDescriptorPoolInfo.pPoolSizes       = sizes;
 

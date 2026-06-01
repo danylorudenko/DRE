@@ -132,7 +132,7 @@ void WaterPass::Render(RenderGraph& graph, VKW::Context& context)
     }
 
     VKW::DescriptorSet passSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
-    std::uint32_t const passSetBinding = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalSetLayoutsCount();
+    std::uint32_t const passSetBinding = VKW::DescriptorManager::GLOBAL_SET_COUNT;
 
     context.CmdBindGraphicsDescriptorSets(passLayout, passSetBinding, 1, &passSet);
 
