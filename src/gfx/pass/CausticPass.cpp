@@ -20,12 +20,7 @@ void CausticPass::Initialize(RenderGraph& graph)
 
 void CausticPass::RegisterResources(RenderGraph& graph)
 {
-    graph.RegisterTexture(this,
-        RESOURCE_ID(TextureID::CausticEnvMap),
-        VKW::FORMAT_R16G16B16A16_FLOAT, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_VERTEX,
-        1);
-
-    graph.RegisterUniformBuffer(this, VKW::STAGE_VERTEX, 0);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::CausticEnvMap), VKW::FORMAT_R16G16B16A16_FLOAT, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
 
     graph.RegisterRenderTarget(this,
         RESOURCE_ID(TextureID::CausticMap),
@@ -61,45 +56,42 @@ void CausticPass::Render(RenderGraph& graph, VKW::Context& context)
 {
     DRE_GPU_SCOPE(Caustic);
 
-    VKW::ImageResourceView* causticAttachment = graph.GetTexture(RESOURCE_ID(TextureID::CausticMap))->GetShaderView();
-    VKW::ImageResourceView* shadowAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ShadowMap))->GetShaderView();
-    VKW::ImageResourceView* envMapAttachment = graph.GetTexture(RESOURCE_ID(TextureID::CausticEnvMap))->GetShaderView();
+    Texture* causticAttachment = graph.GetTexture(RESOURCE_ID(TextureID::CausticMap));
+    Texture* shadowAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ShadowMap));
+    Texture* envMapAttachment = graph.GetTexture(RESOURCE_ID(TextureID::CausticEnvMap));
 
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, causticAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, shadowAttachment->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_ALL_GRAPHICS);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, envMapAttachment->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_ALL_GRAPHICS);
+    VKW::ImageResourceView* causticView = causticAttachment->GetShaderView();
 
-    context.CmdBeginRendering(1, &causticAttachment, nullptr, nullptr);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, causticAttachment->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, shadowAttachment->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_ALL_GRAPHICS);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, envMapAttachment->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_ALL_GRAPHICS);
+
+    context.CmdBeginRendering(1, &causticView, nullptr, nullptr);
     context.CmdSetViewport(1, 0, 0, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT);
     context.CmdSetScissor(1, 0, 0, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT);
 
-    VKW::DescriptorSet passSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
-    std::uint32_t const passSetBinding = VKW::DescriptorManager::GLOBAL_SET_COUNT;
-
+    PipelineEntry* pipelineEntry = g_GraphicsManager->GetPipelineDB().GetEntry("water_caustics");
+    ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(pipelineEntry, 0);
     {
         auto uniformBuffer = g_GraphicsManager->GetUniformArena().AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), 256, 256);
         UniformProxy uniformProxy{ &context, uniformBuffer };
         uniformProxy.WriteMember140(g_GraphicsManager->GetSunShadowRenderView().GetViewProjectionM());
         uniformProxy.WriteMember140(g_GraphicsManager->GetSunShadowRenderView().GetInvViewProjectionM());
 
-        VKW::DescriptorManager::WriteDesc uniformWriteDesc;
-        uniformWriteDesc.AddUniform(uniformBuffer.m_Buffer, uniformBuffer.m_OffsetInBuffer, uniformBuffer.m_Size, 0);
-        g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->WriteDescriptorSet(passSet, uniformWriteDesc);
+        binder.AddUniform(0, &uniformProxy);
+        binder.AddSampledTexture(1, shadowAttachment);
+        binder.FlushDescriptorWrites();
+
+        context.CmdBindGraphicsDescriptorSets(pipelineEntry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
     }
 
-    VKW::PipelineLayout* passLayout = graph.GetPassPipelineLayout(GetID());
-    context.CmdBindGraphicsDescriptorSets(passLayout, passSetBinding, 1, &passSet);
+    context.CmdBindGraphicsPipeline(pipelineEntry->GetPipeline());
 
 
     // 1. take all RenderableObject's in main scene
     DrawBatcher batcher{ &DRE::g_FrameScratchAllocator, g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), &g_GraphicsManager->GetUniformArena() };
 
     batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), passLayout, RenderableObject::LAYER_WATER, GFX::WaterCausticDelegate);
-
-    std::uint32_t const startSet = graph.GetUserSetBinding(GetID());
-
-    VKW::Pipeline const* pipeline = g_GraphicsManager->GetPipelineDB().GetEntry("water_caustics")->GetPipeline();
-    VKW::PipelineLayout const* layout = pipeline->GetLayout();
 
     auto& draws = batcher.GetDraws();
     for (std::uint32_t i = 0, size = draws.Size(); i < size; i++)
@@ -108,11 +100,10 @@ void CausticPass::Render(RenderGraph& graph, VKW::Context& context)
         // ignore default water pipeline, use caustic projection pipeline instead
         //context.CmdBindGraphicsPipeline(atom.pipeline);
         //context.CmdBindGraphicsDescriptorSets(atom.pipeline->GetLayout(), startSet, 1, &atom.descriptorSet);
-        context.CmdBindGraphicsPipeline(pipeline);
         //context.CmdBindGraphicsDescriptorSets(layout, startSet, 1, &atom.descriptorSet);
-        context.CmdBindVertexBuffer(atom.vertexBuffer, atom.vertexOffset);
-        context.CmdBindIndexBuffer(atom.indexBuffer, atom.indexOffset);
-        context.CmdDrawIndexed(atom.indexCount);
+        //context.CmdBindVertexBuffer(atom.vertexBuffer, atom.vertexOffset);
+        //context.CmdBindIndexBuffer(atom.indexBuffer, atom.indexOffset);
+        //context.CmdDrawIndexed(atom.indexCount);
     }
 
     // 2. feed all RenderableObject's to DrawBatcher
