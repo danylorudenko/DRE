@@ -2,9 +2,6 @@
 
 #include <gfx\GraphicsManager.hpp>
 #include <gfx\scheduling\RenderGraph.hpp>
-#include <gfx\renderer\DrawBatcher.hpp>
-
-#include <engine\scene\Scene.hpp>
 
 namespace GFX
 {
@@ -22,14 +19,11 @@ void ColorEncodingPass::RegisterResources(RenderGraph& graph)
 {
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
-    graph.RegisterTextureSlot(this, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE, 0);
-    graph.RegisterStandaloneTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer0), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_READ);
-    graph.RegisterStandaloneTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer1), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_READ);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::ColorHistoryBuffer0), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_READ);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::ColorHistoryBuffer1), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_READ);
 
     graph.RegisterTexture(this, RESOURCE_ID(TextureID::DisplayEncodedImage),
-        g_GraphicsManager->GetFinalImageFormat(), renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 1);
-
-    graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 2);
+        g_GraphicsManager->GetFinalImageFormat(), renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_WRITE);
 }
 
 void ColorEncodingPass::Render(RenderGraph& graph, VKW::Context& context)
@@ -41,27 +35,28 @@ void ColorEncodingPass::Render(RenderGraph& graph, VKW::Context& context)
         graph.GetTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer1))
     };
 
-    VKW::ImageResourceView* taaOutput = historyBuffers[g_GraphicsManager->GetCurrentFrameID()]->GetShaderView();
-    VKW::ImageResourceView* encodedImage = graph.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage))->GetShaderView();
+    Texture* taaOutput = historyBuffers[g_GraphicsManager->GetCurrentFrameID()];
+    Texture* encodedImage = graph.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage));
 
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, taaOutput->parentResource_, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, encodedImage->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, taaOutput->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, encodedImage->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
 
-    UniformProxy uniform = graph.GetPassUniform(GetID(), context, sizeof(glm::vec4));
+    UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(glm::vec4));
     float const useACES = g_GraphicsManager->GetGraphicsSettings().m_UseACESEncoding ? 1.0f : 0.0f;
     float const exposure = glm::exp2(-g_GraphicsManager->GetGraphicsSettings().m_ExposureEV);
     uniform.WriteMember140(glm::vec4{ useACES, exposure, 0.0f, 0.0f });
+    uniform.FlushWrites();
 
-    VKW::DescriptorSet set = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
+    PipelineEntry* pipelineEntry = g_GraphicsManager->GetPipelineDB().GetEntry("color_encode");
 
-    VKW::DescriptorManager::WriteDesc writeDesc;
-    writeDesc.AddStorageImage(taaOutput, 0);
-    g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->WriteDescriptorSet(set,writeDesc);
+    ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(pipelineEntry, 0);
+    binder.AddSampledTexture(0, taaOutput);
+    binder.AddStorageTexture(1, encodedImage);
+    binder.AddUniform(2, &uniform);
+    binder.FlushDescriptorWrites();
 
-    VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
-    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetEntry("color_encode")->GetPipeline();
-    context.CmdBindComputeDescriptorSets(layout, graph.GetPassSetBinding(), 1, &set);
-    context.CmdBindComputePipeline(pipeline);
+    context.CmdBindComputeDescriptorSets(pipelineEntry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
+    context.CmdBindComputePipeline(pipelineEntry->GetPipeline());
 
     glm::uvec2 rtSize{ g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight };
     glm::uvec2 const groupSize{ 8, 8 };

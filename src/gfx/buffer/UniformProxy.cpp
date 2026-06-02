@@ -12,11 +12,15 @@ UniformProxy::UniformProxy(VKW::Context* context, UniformArena::Allocation const
     : m_Context{ context }
     , m_Allocation{ allocation }
     , m_WritePtr{ m_Allocation.m_MappedRange }
+    , m_HasPendingWrites{ true }
 {
 }
 
-UniformProxy::~UniformProxy()
+void UniformProxy::FlushWrites()
 {
+    if (!m_HasPendingWrites)
+        return;
+
     m_Allocation.FlushCaches();
 
     //std::uint32_t const queueFamily = m_Context->GetParentQueue()->GetQueueFamily(); // TODO
@@ -32,6 +36,13 @@ UniformProxy::~UniformProxy()
     m_Context->CmdResourceDependency(m_Allocation.m_Buffer, m_Allocation.m_OffsetInBuffer, m_Allocation.m_Size,
         VKW::RESOURCE_ACCESS_HOST_WRITE,    VKW::STAGE_HOST,
         VKW::RESOURCE_ACCESS_SHADER_READ,   VKW::STAGE_VERTEX | VKW::STAGE_COMPUTE);
+
+    m_HasPendingWrites = false;
+}
+
+UniformProxy::~UniformProxy()
+{
+    FlushWrites();
 }
 
 

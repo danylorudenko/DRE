@@ -35,6 +35,7 @@ private:
     VKW::Device*                        m_Device;
 
     DRE::U32                            m_TargetSetID;
+    bool                                m_HasPendingWrites;
 
     VKW::DescriptorManager::WriteDesc   m_WriteDesc;
     VKW::DescriptorSet                  m_DescriptorSet;

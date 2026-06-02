@@ -33,6 +33,8 @@ public:
         WriteMember140(&data, sizeof(data));
     }
 
+    void FlushWrites();
+
     UniformArena::Allocation const& GetAllocation() const { return m_Allocation; }
 
     ~UniformProxy();
@@ -41,6 +43,7 @@ private:
     VKW::Context*                   m_Context;
     UniformArena::Allocation        m_Allocation;
     void*                           m_WritePtr;
+    bool                            m_HasPendingWrites;
     
 };
 

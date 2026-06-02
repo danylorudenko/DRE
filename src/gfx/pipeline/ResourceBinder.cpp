@@ -6,6 +6,8 @@ namespace GFX
 ResourceBinder::ResourceBinder(VKW::Device* device, PipelineEntry* pipelineEntry, DRE::U32 setIdAfterGlobalSets, FrameID frameID)
     : m_Device{ device }
     , m_PipelineEntry{ pipelineEntry }
+    , m_TargetSetID{ DRE_U32_MAX }
+    , m_HasPendingWrites{ true }
 {
     VKW::PipelineLayout* pipelineLayout = pipelineEntry->GetLayout();
 
@@ -53,7 +55,11 @@ VKW::DescriptorSet& ResourceBinder::GetDescriptorSet()
 
 void ResourceBinder::FlushDescriptorWrites()
 {
-    m_Device->GetDescriptorManager()->WriteDescriptorSet(m_DescriptorSet, m_WriteDesc);
+    if (m_HasPendingWrites)
+    {
+        m_Device->GetDescriptorManager()->WriteDescriptorSet(m_DescriptorSet, m_WriteDesc);
+        m_HasPendingWrites = false;
+    }
 }
 
 ResourceBinder::~ResourceBinder()
