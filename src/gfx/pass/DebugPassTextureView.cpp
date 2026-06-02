@@ -26,10 +26,7 @@ void DebugPassTextureView::RegisterResources(RenderGraph& graph)
 
     graph.RegisterTexture(this, RESOURCE_ID(TextureID::DisplayEncodedImage), g_GraphicsManager->GetFinalImageFormat(),
         renderWidth, renderHeight,
-        VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE,
-        0);
-
-    graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 1);
+        VKW::RESOURCE_ACCESS_SHADER_WRITE);
 }
 
 void DebugPassTextureView::Render(RenderGraph& graph, VKW::Context& context)
@@ -50,11 +47,11 @@ void DebugPassTextureView::Render(RenderGraph& graph, VKW::Context& context)
 
     glm::uvec2 outputImageSize{ g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight };
 
-    VKW::ImageResourceView* output               = graph.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage))->GetShaderView();
-    VKW::ImageResourceView* displayedTextureView = displayedTexture->GetShaderView();
+    Texture* output               = graph.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage));
+    Texture* displayedTextureView = displayedTexture;
 
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, output->parentResource_,               VKW::RESOURCE_ACCESS_SHADER_WRITE,  VKW::STAGE_COMPUTE);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, displayedTextureView->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, output->GetShaderView()->parentResource_,               VKW::RESOURCE_ACCESS_SHADER_WRITE,  VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, displayedTextureView->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
 
     DebugViewArgs args{};
     args.textureID   = displayedTexture->GetShaderGlobalDescriptor().id_;
@@ -63,15 +60,19 @@ void DebugPassTextureView::Render(RenderGraph& graph, VKW::Context& context)
     args.highBound   = viewContext.m_UpperEnd;
     args.channelMask = (viewContext.m_ShowX ? 0x1 : 0) | (viewContext.m_ShowY ? 0x2 : 0) | (viewContext.m_ShowZ ? 0x4 : 0) | (viewContext.m_ShowW ? 0x8 : 0);
 
-    UniformProxy uniform = graph.GetPassUniform(GetID(), context, sizeof(DebugViewArgs));
+    UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(DebugViewArgs));
     uniform.WriteMember140(args);
+    uniform.FlushWrites();
 
-    VKW::DescriptorSet   set      = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
-    VKW::PipelineLayout* layout   = graph.GetPassPipelineLayout(GetID());
-    VKW::Pipeline*       pipeline = g_GraphicsManager->GetPipelineDB().GetEntry("debug_view_texture")->GetPipeline();
+    PipelineEntry* pipelineEntry = g_GraphicsManager->GetPipelineDB().GetEntry("debug_view_texture");
 
-    context.CmdBindComputeDescriptorSets(pipeline->GetLayout(), graph.GetPassSetBinding(), 1, &set);
-    context.CmdBindComputePipeline(pipeline);
+    ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(pipelineEntry, 0);
+    binder.AddStorageTexture(0, output);
+    binder.AddUniform(1, &uniform);
+    binder.FlushDescriptorWrites();
+
+    context.CmdBindComputeDescriptorSets(pipelineEntry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
+    context.CmdBindComputePipeline(pipelineEntry->GetPipeline());
 
     glm::uvec3 const textureViewerGroupSize{ 8, 8, 1 };
     glm::uvec3 const dispatchSize = GetComputeGroupCount(glm::uvec3(outputImageSize, 1), textureViewerGroupSize);
