@@ -20,68 +20,55 @@ void AntiAliasingPass::Initialize(RenderGraph& graph)
 
 void AntiAliasingPass::RegisterResources(RenderGraph& graph)
 {
-    graph.RegisterUniformBuffer(this, VKW::STAGE_COMPUTE, 0);
-
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
-    graph.RegisterTexture(this, 
-        RESOURCE_ID(TextureID::GBufferC_Velocity),
-        g_GraphicsManager->GetVelocityBufferFormat(), renderWidth, renderHeight,
-        VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 1);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::GBufferC_Velocity), g_GraphicsManager->GetVelocityBufferFormat(), renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
 
-    graph.RegisterTexture(this,
-        RESOURCE_ID(TextureID::WaterColor),
-        g_GraphicsManager->GetMainColorFormat(), renderWidth, renderHeight,
-        VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 2);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::WaterColor), g_GraphicsManager->GetMainColorFormat(), renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
 
     VKW::ResourceAccess historyAccess = VKW::ResourceAccess(VKW::RESOURCE_ACCESS_SHADER_SAMPLE | std::uint64_t(VKW::RESOURCE_ACCESS_SHADER_WRITE));
-    graph.RegisterStandaloneTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer0), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, historyAccess);
-    graph.RegisterStandaloneTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer1), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, historyAccess);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::ColorHistoryBuffer0), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, historyAccess);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::ColorHistoryBuffer1), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, historyAccess);
 
-    graph.RegisterTextureSlot(this, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 3);
-    graph.RegisterTextureSlot(this, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE, 4);
-
-    graph.RegisterTexture(this,
-        RESOURCE_ID(TextureID::MainDepth), g_GraphicsManager->GetMainDepthFormat(), renderWidth, renderHeight,
-        VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE, 5);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::MainDepth), g_GraphicsManager->GetMainDepthFormat(), renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
 }
 
 
 void AntiAliasingPass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    DRE_GPU_SCOPE(AtniAliasing);
+    DRE_GPU_SCOPE(AntiAliasing);
 
     Texture* historyBuffers[2] = { graph.GetTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer0)), graph.GetTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer1)) };
 
-    VKW::ImageResourceView* colorInput = graph.GetTexture(RESOURCE_ID(TextureID::WaterColor))->GetShaderView();
-    VKW::ImageResourceView* velocity = graph.GetTexture(RESOURCE_ID(TextureID::GBufferC_Velocity))->GetShaderView();
-    VKW::ImageResourceView* history = historyBuffers[g_GraphicsManager->GetPrevFrameID()]->GetShaderView();
-    VKW::ImageResourceView* taaOutput = historyBuffers[g_GraphicsManager->GetCurrentFrameID()]->GetShaderView();
-    VKW::ImageResourceView* mainDepth = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth))->GetShaderView();
+    Texture* colorInput = graph.GetTexture(RESOURCE_ID(TextureID::WaterColor));
+    Texture* velocity = graph.GetTexture(RESOURCE_ID(TextureID::GBufferC_Velocity));
+    Texture* history = historyBuffers[g_GraphicsManager->GetPrevFrameID()];
+    Texture* taaOutput = historyBuffers[g_GraphicsManager->GetCurrentFrameID()];
+    Texture* mainDepth = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth));
 
-    VKW::DescriptorSet passSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
-    VKW::DescriptorManager::WriteDesc writeDesc;
-    writeDesc.AddSampledImage(history, 3);      // input
-    writeDesc.AddStorageImage(taaOutput, 4);    // output
-    g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->WriteDescriptorSet(passSet, writeDesc);
+    glm::vec4 taaSettings{ g_GraphicsManager->GetGraphicsSettings().m_AlphaTAA, g_GraphicsManager->GetGraphicsSettings().m_VarianceGammaTAA, 0.0f, 0.0f };
+    UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(taaSettings));
+    uniform.WriteMember140(taaSettings);
 
-    {
-        glm::vec4 taaSettings{ g_GraphicsManager->GetGraphicsSettings().m_AlphaTAA, g_GraphicsManager->GetGraphicsSettings().m_VarianceGammaTAA, 0.0f, 0.0f };
-        UniformProxy uniform = graph.GetPassUniform(GetID(), context, sizeof(taaSettings));
-        uniform.WriteMember140(taaSettings);
-    }
+    PipelineEntry* pipelineEntry = g_GraphicsManager->GetPipelineDB().GetEntry("temporal_AA");
 
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, colorInput->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, velocity->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, history->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, taaOutput->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, mainDepth->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
+    ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(pipelineEntry, 0);
+    binder.AddUniform(0, &uniform);
+    binder.AddSampledTexture(1, velocity);
+    binder.AddSampledTexture(2, colorInput);
+    binder.AddSampledTexture(3, history);
+    binder.AddStorageTexture(4, taaOutput);
+    binder.AddSampledTexture(5, mainDepth);
+    binder.FlushDescriptorWrites();
 
-    VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
-    context.CmdBindComputeDescriptorSets(layout, graph.GetPassSetBinding(), 1, &passSet);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, colorInput->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, velocity->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, history->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, taaOutput->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, mainDepth->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
 
-    VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetEntry("temporal_AA")->GetPipeline();
-    context.CmdBindComputePipeline(pipeline);
+    context.CmdBindComputeDescriptorSets(pipelineEntry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
+    context.CmdBindComputePipeline(pipelineEntry->GetPipeline());
 
     glm::uvec2 rtSize{ g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight };
     glm::uvec2 const groupSize{ 8, 8 };

@@ -30,15 +30,15 @@ void AmbientOcclusionPass::Render(RenderGraph& graph, VKW::Context& context)
 {
     DRE_GPU_SCOPE(AmbientOcclusion);
 
-    VKW::ImageResourceView* aoOutput = graph.GetTexture(RESOURCE_ID(TextureID::AmbientOcclusion))->GetShaderView();
-    VKW::ImageResourceView* depth = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth))->GetShaderView();
-    VKW::ImageResourceView* gBufferNormal_Metalness = graph.GetTexture(RESOURCE_ID(TextureID::GBufferB_NormalMetalness))->GetShaderView();
-    VKW::ImageResourceView* DEBUG_TEXTURE = graph.GetTexture(RESOURCE_ID(TextureID::DEBUG_TEXTURE))->GetShaderView();
+    Texture* aoOutput = graph.GetTexture(RESOURCE_ID(TextureID::AmbientOcclusion));
+    Texture* depth = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth));
+    Texture* gBufferNormal_Metalness = graph.GetTexture(RESOURCE_ID(TextureID::GBufferB_NormalMetalness));
+    Texture* DEBUG_TEXTURE = graph.GetTexture(RESOURCE_ID(TextureID::DEBUG_TEXTURE));
 
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, aoOutput->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depth->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, gBufferNormal_Metalness->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, DEBUG_TEXTURE->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, aoOutput->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depth->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, gBufferNormal_Metalness->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, DEBUG_TEXTURE->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
 
     UniformProxy uniform = graph.AllocateUniform(GetID(), context, 128);
 
@@ -52,6 +52,12 @@ void AmbientOcclusionPass::Render(RenderGraph& graph, VKW::Context& context)
     PipelineEntry* pipelineEntry = g_GraphicsManager->GetPipelineDB().GetEntry("ambient_occlusion");
 
     ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(pipelineEntry, 0);
+    binder.AddStorageTexture(0, aoOutput);
+    binder.AddSampledTexture(1, depth);
+    binder.AddSampledTexture(2, gBufferNormal_Metalness);
+    binder.AddUniform(3, &uniform);
+    binder.AddStorageTexture(4, DEBUG_TEXTURE);
+    binder.FlushDescriptorWrites();
 
     context.CmdBindComputeDescriptorSets(pipelineEntry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
     context.CmdBindComputePipeline(pipelineEntry->GetPipeline());
