@@ -5,8 +5,6 @@
 #include <gfx\renderer\DrawBatcher.hpp>
 
 #include <engine\ApplicationContext.hpp>
-#include <engine\io\IOManager.hpp>
-#include <engine\scene\Scene.hpp>
 
 
 namespace GFX
@@ -65,31 +63,37 @@ void GBufferPass::Render(RenderGraph& graph, VKW::Context& context)
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth,
         renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
-    VKW::ImageResourceView* attachmentA = graph.GetTexture(RESOURCE_ID(TextureID::GBufferA_DiffuseRoughness))->GetShaderView();
-    VKW::ImageResourceView* attachmentB = graph.GetTexture(RESOURCE_ID(TextureID::GBufferB_NormalMetalness))->GetShaderView();
-    VKW::ImageResourceView* attachmentC = graph.GetTexture(RESOURCE_ID(TextureID::GBufferC_Velocity))->GetShaderView();
-    VKW::ImageResourceView* attachmentD = graph.GetTexture(RESOURCE_ID(TextureID::GBufferD_ObjectIDBuffer))->GetShaderView();
-    VKW::ImageResourceView* attachmentDEBUG = graph.GetTexture(RESOURCE_ID(TextureID::DEBUG_TEXTURE))->GetShaderView();
-    VKW::ImageResourceView* depthAttachment = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth))->GetShaderView();
+    Texture* attachmentA = graph.GetTexture(RESOURCE_ID(TextureID::GBufferA_DiffuseRoughness));
+    Texture* attachmentB = graph.GetTexture(RESOURCE_ID(TextureID::GBufferB_NormalMetalness));
+    Texture* attachmentC = graph.GetTexture(RESOURCE_ID(TextureID::GBufferC_Velocity));
+    Texture* attachmentD = graph.GetTexture(RESOURCE_ID(TextureID::GBufferD_ObjectIDBuffer));
+    Texture* attachmentDEBUG = graph.GetTexture(RESOURCE_ID(TextureID::DEBUG_TEXTURE));
+    Texture* depthAttachment = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth));
 
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentA->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentB->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentC->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentD->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentDEBUG->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->parentResource_, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentA->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentB->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentC->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentD->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentDEBUG->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
 
-    std::uint32_t constexpr attachmentsCount = 5;
-    VKW::ImageResourceView* attachments[attachmentsCount] = { attachmentA, attachmentB, attachmentC, attachmentD, attachmentDEBUG };
+    DRE::U32 constexpr attachmentsCount = 5;
+    VKW::ImageResourceView* attachments[attachmentsCount] = {
+        attachmentA->GetShaderView(),
+        attachmentB->GetShaderView(),
+        attachmentC->GetShaderView(),
+        attachmentD->GetShaderView(),
+        attachmentDEBUG->GetShaderView()
+    };
 
-    //VKW::PipelineLayout* passLayout = graph.GetPassPipelineLayout(GetID());
-    VKW::PipelineLayout* passLayout = g_GraphicsManager->GetMainDevice()->GetDescriptorManager()->GetGlobalPipelineLayout();
+    PipelineEntry* entry = g_GraphicsManager->GetPipelineDB().GetEntry("gbuffer_pbr");
+
     DrawBatcher batcher{ &DRE::g_FrameScratchAllocator, g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), &g_GraphicsManager->GetUniformArena() };
 
     // WARNING!!!!!!!!!!!!!!!
-    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), passLayout, RenderableObject::LAYER_GBUFFER, nullptr/*GFX::ForwardObjectDelegate*/);
+    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), entry->GetLayout(), RenderableObject::LAYER_GBUFFER, nullptr/*GFX::ForwardObjectDelegate*/);
 
-    context.CmdBeginRendering(attachmentsCount, attachments, depthAttachment, nullptr);
+    context.CmdBeginRendering(attachmentsCount, attachments, depthAttachment->GetShaderView(), nullptr);
     float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_0 | VKW::ATTACHMENT_MASK_COLOR_1 |
                                  VKW::ATTACHMENT_MASK_COLOR_2 | VKW::ATTACHMENT_MASK_COLOR_3, clearColor);
@@ -102,13 +106,8 @@ void GBufferPass::Render(RenderGraph& graph, VKW::Context& context)
 #endif // DRE_COMPILE_FOR_RENDERDOC
 
 
-
-    //VKW::DescriptorSet passSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
-    //context.CmdBindDescriptorSets(passLayout, VKW::BindPoint::Graphics, graph.GetPassSetBinding(), 1, &passSet);
-
     auto& draws = batcher.GetDraws();
 
-    std::uint32_t const userSetBinding = graph.GetUserSetBinding(GetID());
     VKW::Pipeline* prevPipeline = nullptr;
     for (std::uint32_t i = 0, size = draws.Size(); i < size; i++)
     {
@@ -119,19 +118,17 @@ void GBufferPass::Render(RenderGraph& graph, VKW::Context& context)
             prevPipeline = atom.pipeline;
         }
 
-        // push constant here?
-        //context.CmdBindGraphicsDescriptorSets(atom.pipeline->GetLayout(), userSetBinding, 1, &atom.descriptorSet);
         context.CmdBindVertexBuffer(atom.vertexBuffer, atom.vertexOffset);
         context.CmdBindIndexBuffer(atom.indexBuffer, atom.indexOffset);
-        context.CmdPushConstants(passLayout, VKW::DESCRIPTOR_STAGE_ALL, 0, sizeof(std::uint32_t), &atom.instanceID);
+        context.CmdPushConstants(entry->GetLayout(), VKW::DESCRIPTOR_STAGE_ALL, 0, sizeof(DRE::U32), &atom.instanceID);
         context.CmdDrawIndexed(atom.indexCount);
     }
 
     context.CmdEndRendering();
 
     ReadbackScheduler readback(g_GraphicsManager->GetCurrentFrameID(), &g_GraphicsManager->GetReadbackArena(), renderWidth * renderHeight * 4);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentD->parentResource_, VKW::RESOURCE_ACCESS_TRANSFER_SRC, VKW::STAGE_TRANSFER);
-    context.CmdCopyImageToBuffer(readback.GetDstBuffer(), attachmentD->parentResource_, readback.GetDstOffset());
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, attachmentD->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_TRANSFER_SRC, VKW::STAGE_TRANSFER);
+    context.CmdCopyImageToBuffer(readback.GetDstBuffer(), attachmentD->GetShaderView()->parentResource_, readback.GetDstOffset());
 
     ReadbackFuture tempFuture = readback.CreateReadbackFuture(context.SyncPoint());
 
