@@ -49,10 +49,6 @@ public:
     virtual void    RegisterResources(RenderGraph& graph) override;
     virtual void    Initialize(RenderGraph& graph) override;
     virtual void    Render(RenderGraph& graph, VKW::Context& context) override;
-
-private:
-    DRE::InplaceVector<VKW::DescriptorSet, 24> m_StageSets0;
-    DRE::InplaceVector<VKW::DescriptorSet, 24> m_StageSets1;
 };
 
 class FFTInvPermutationPass : public BasePass
