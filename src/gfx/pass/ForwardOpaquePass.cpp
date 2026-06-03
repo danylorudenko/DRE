@@ -27,13 +27,11 @@ void ForwardOpaquePass::RegisterResources(RenderGraph& graph)
 
     graph.RegisterTexture(this,
         RESOURCE_ID(TextureID::ShadowMap),
-        VKW::FORMAT_D16_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_VERTEX | VKW::STAGE_FRAGMENT, 0);
-
-    graph.RegisterUniformBuffer(this, VKW::STAGE_VERTEX | VKW::STAGE_FRAGMENT, 1);
+        VKW::FORMAT_D16_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
 
     graph.RegisterTexture(this,
         RESOURCE_ID(TextureID::CausticMap),
-        VKW::FORMAT_R8_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_VERTEX | VKW::STAGE_FRAGMENT, 2);
+        VKW::FORMAT_R8_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
 
 
     graph.RegisterRenderTarget(this,
@@ -66,30 +64,35 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
 
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
-    VKW::ImageResourceView* colorAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ForwardColor))->GetShaderView();
-    VKW::ImageResourceView* velocityAttachment = graph.GetTexture(RESOURCE_ID(TextureID::Velocity))->GetShaderView();
-    VKW::ImageResourceView* objectIDAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ObjectIDBuffer))->GetShaderView();
-    VKW::ImageResourceView* depthAttachment = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth))->GetShaderView();
-    VKW::ImageResourceView* shadowMap       = graph.GetTexture(RESOURCE_ID(TextureID::ShadowMap))->GetShaderView();
-    VKW::ImageResourceView* causticMap      = graph.GetTexture(RESOURCE_ID(TextureID::CausticMap))->GetShaderView();
+    Texture* colorAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ForwardColor));
+    Texture* velocityAttachment = graph.GetTexture(RESOURCE_ID(TextureID::Velocity));
+    Texture* objectIDAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ObjectIDBuffer));
+    Texture* depthAttachment = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth));
+    Texture* shadowMap       = graph.GetTexture(RESOURCE_ID(TextureID::ShadowMap));
+    Texture* causticMap      = graph.GetTexture(RESOURCE_ID(TextureID::CausticMap));
 
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, colorAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, velocityAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, objectIDAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->parentResource_, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, shadowMap->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, causticMap->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, colorAttachment->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, velocityAttachment->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, objectIDAttachment->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, shadowMap->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, causticMap->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT);
 
     std::uint32_t constexpr attachmentsCount = 3;
     static_assert(FORWARD_PASS_OUTPUT_COUNT == attachmentsCount, "Don't forget to modify PipelineDB and ForwardOpaquePass");
-    VKW::ImageResourceView* attachments[attachmentsCount] = { colorAttachment, velocityAttachment, objectIDAttachment };
+    VKW::ImageResourceView* attachments[attachmentsCount] = { 
+        colorAttachment->GetShaderView(),
+        velocityAttachment->GetShaderView(),
+        objectIDAttachment->GetShaderView()
+    };
 
-    VKW::PipelineLayout* passLayout = graph.GetPassPipelineLayout(GetID());
+    PipelineEntry* pipelineEntry = g_GraphicsManager->GetPipelineDB().GetEntry("forward_opaque");
+
     DrawBatcher batcher{ &DRE::g_FrameScratchAllocator, g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), &g_GraphicsManager->GetUniformArena() };
-    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), passLayout, RenderableObject::LAYER_FORWARD, nullptr/*GFX::ForwardObjectDelegate*/);
+    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), pipelineEntry->GetLayout(), RenderableObject::LAYER_FORWARD, nullptr/*GFX::ForwardObjectDelegate*/);
 
 
-    context.CmdBeginRendering(attachmentsCount, attachments, depthAttachment, nullptr);
+    context.CmdBeginRendering(attachmentsCount, attachments, depthAttachment->GetShaderView(), nullptr);
     float clearColors[4] = { 0.9f, 0.9f, 0.9f, 0.0f };
     float clearVelocity[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     std::uint32_t clearID[4] = { 0, 0, 0, 0 };
@@ -103,46 +106,45 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
     context.CmdSetPolygonMode(VKW::POLYGON_FILL);
 #endif // DRE_COMPILE_FOR_RENDERDOC
 
-    {
-        glm::mat4 const shadow_ViewProj = g_GraphicsManager->GetSunShadowRenderView().GetViewProjectionM();
-        glm::vec4 const shadow_Size = glm::vec4{ C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, 0.0f, 0.0f };
 
-        std::uint32_t constexpr passUniformSize = sizeof(shadow_ViewProj) + sizeof(shadow_Size);
+    glm::mat4 const shadow_ViewProj = g_GraphicsManager->GetSunShadowRenderView().GetViewProjectionM();
+    glm::vec4 const shadow_Size = glm::vec4{ C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, 0.0f, 0.0f };
 
-        UniformProxy passUniformProxy = graph.GetPassUniform(GetID(), context, passUniformSize);
-        ForwardUniform passData;
-        passData.shadow_VP = shadow_ViewProj;
-        passData.shadow_size = shadow_Size;
-        passUniformProxy.WriteMember140(passData);
-    }
+    DRE::U32 constexpr passUniformSize = sizeof(shadow_ViewProj) + sizeof(shadow_Size);
 
-    VKW::DescriptorSet passSet = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
-    context.CmdBindDescriptorSets(passLayout, VKW::BindPoint::Graphics, graph.GetPassSetBinding(), 1, &passSet);
+    UniformProxy uniform = graph.AllocateUniform(GetID(), context, passUniformSize);
+    ForwardUniform passData;
+    passData.shadow_VP = shadow_ViewProj;
+    passData.shadow_size = shadow_Size;
+    uniform.WriteMember140(passData);
+
+    ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(pipelineEntry, 0);
+    binder.AddSampledTexture(0, shadowMap);
+    binder.AddUniform(1, &uniform);
+    binder.AddSampledTexture(2, causticMap);
+    binder.FlushDescriptorWrites();
+
+    context.CmdBindDescriptorSets(pipelineEntry->GetLayout(), VKW::BindPoint::Graphics, binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
+    context.CmdBindPipeline(VKW::BindPoint::Graphics, pipelineEntry->GetPipeline());
 
     auto& draws = batcher.GetDraws();
 
-    std::uint32_t const userSetBinding = graph.GetUserSetBinding(GetID());
     VKW::Pipeline* prevPipeline = nullptr;
-    for (std::uint32_t i = 0, size = draws.Size(); i < size; i++)
+    for (DRE::U32 i = 0, size = draws.Size(); i < size; i++)
     {
         AtomDraw const& atom = draws[i];
-        if (prevPipeline != atom.pipeline)
-        {
-            context.CmdBindGraphicsPipeline(atom.pipeline);
-            prevPipeline = atom.pipeline;
-        }
 
         context.CmdBindVertexBuffer(atom.vertexBuffer, atom.vertexOffset);
         context.CmdBindIndexBuffer(atom.indexBuffer, atom.indexOffset);
-        context.CmdPushConstants(passLayout, VKW::DESCRIPTOR_STAGE_ALL, 0, sizeof(std::uint32_t), &atom.instanceID);
+        context.CmdPushConstants(pipelineEntry->GetLayout(), VKW::DESCRIPTOR_STAGE_ALL, 0, sizeof(DRE::U32), &atom.instanceID);
         context.CmdDrawIndexed(atom.indexCount);
     }
 
     context.CmdEndRendering();
 
     ReadbackScheduler readback(g_GraphicsManager->GetCurrentFrameID(), &g_GraphicsManager->GetReadbackArena(), renderWidth * renderHeight * 4);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, objectIDAttachment->parentResource_, VKW::RESOURCE_ACCESS_TRANSFER_SRC, VKW::STAGE_TRANSFER);
-    context.CmdCopyImageToBuffer(readback.GetDstBuffer(), objectIDAttachment->parentResource_, readback.GetDstOffset());
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, objectIDAttachment->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_TRANSFER_SRC, VKW::STAGE_TRANSFER);
+    context.CmdCopyImageToBuffer(readback.GetDstBuffer(), objectIDAttachment->GetShaderView()->parentResource_, readback.GetDstOffset());
 
     // queue submit!!!
     ReadbackFuture tempFuture = readback.CreateReadbackFuture(context.SyncPoint());
