@@ -29,38 +29,21 @@ void ShadowPass::RegisterResources(RenderGraph& graph)
         VKW::FORMAT_D16_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_WIDTH);
 }
 
-
-void ShadowObjectDelegate(RenderableObject& obj, VKW::Context& context, VKW::DescriptorManager& descriptorManager, UniformArena& arena, RenderView const& view, VKW::PipelineLayout const* passLayout)
-{
-    /*
-    std::uint32_t constexpr uniformSize = sizeof(glm::mat4) * 2;
-
-    auto uniformAllocation = arena.AllocateTransientRegion(g_GraphicsManager->GetCurrentFrameID(), uniformSize, 256);
-    VKW::DescriptorManager::WriteDesc writeDesc;
-    writeDesc.AddUniform(uniformAllocation.m_Buffer, uniformAllocation.m_OffsetInBuffer, uniformAllocation.m_Size, 0);
-    descriptorManager.WriteDescriptorSet(obj.GetShadowDescriptorSet(g_GraphicsManager->GetCurrentFrameID()), writeDesc);
-
-    UniformProxy uniformProxy{ &context, uniformAllocation };
-
-    glm::mat4 const world = obj.GetSceneNode()->GetGlobalMatrix();
-    glm::mat4 const mvp = view.GetViewProjectionM() * world;
-    uniformProxy.WriteMember140(mvp);
-    uniformProxy.WriteMember140(world);
-    */
-}
-
-
 void ShadowPass::Render(RenderGraph& graph, VKW::Context& context)
 {
+    // not functional
+    return;
+
     DRE_GPU_SCOPE(Shadow);
 
-    VKW::ImageResourceView* wposAttachment = graph.GetTexture(RESOURCE_ID(TextureID::CausticEnvMap))->GetShaderView();
-    VKW::ImageResourceView* depthAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ShadowMap))->GetShaderView();
+    Texture* wposAttachment = graph.GetTexture(RESOURCE_ID(TextureID::CausticEnvMap));
+    Texture* depthAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ShadowMap));
 
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, wposAttachment->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->parentResource_, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, wposAttachment->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthAttachment->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
 
-    context.CmdBeginRendering(1, &wposAttachment, depthAttachment, nullptr);
+    VKW::ImageResourceView* wposAttachmentView = wposAttachment->GetShaderView();
+    context.CmdBeginRendering(1, &wposAttachmentView, depthAttachment->GetShaderView(), nullptr);
     float clearValues[] = { 0.0f, 0.0f, 0.0f, 0.0f };
     context.CmdClearAttachments(VKW::ATTACHMENT_MASK_COLOR_0, clearValues);
     context.CmdClearAttachments(VKW::ATTACHMENT_MASK_DEPTH, 0.0f, 0);
@@ -71,12 +54,14 @@ void ShadowPass::Render(RenderGraph& graph, VKW::Context& context)
     context.CmdSetPolygonMode(VKW::POLYGON_FILL);
 #endif // DRE_COMPILE_FOR_RENDERDOC
 
+    PipelineEntry* entry = g_GraphicsManager->GetPipelineDB().GetEntry("forward_shadow");
+
     // 1. take all RenderableObject's in main scene
     DrawBatcher batcher{ &DRE::g_FrameScratchAllocator, g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), &g_GraphicsManager->GetUniformArena() };
 
-    batcher.Batch(context, g_GraphicsManager->GetSunShadowRenderView(), graph.GetPassPipelineLayout(GetID()), RenderableObject::LAYER_SHADOW, GFX::ShadowObjectDelegate);
+    //batcher.Batch(context, g_GraphicsManager->GetSunShadowRenderView(), graph.GetPassPipelineLayout(GetID()), RenderableObject::LAYER_SHADOW, nullptr);
 
-    std::uint32_t const startSet = graph.GetUserSetBinding(GetID());
+    //std::uint32_t const startSet = graph.GetUserSetBinding(GetID());
 
     auto& draws = batcher.GetDraws();
     for (std::uint32_t i = 0, size = draws.Size(); i < size; i++)

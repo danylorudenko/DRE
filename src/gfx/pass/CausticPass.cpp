@@ -91,7 +91,7 @@ void CausticPass::Render(RenderGraph& graph, VKW::Context& context)
     // 1. take all RenderableObject's in main scene
     DrawBatcher batcher{ &DRE::g_FrameScratchAllocator, g_GraphicsManager->GetMainDevice()->GetDescriptorManager(), &g_GraphicsManager->GetUniformArena() };
 
-    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), passLayout, RenderableObject::LAYER_WATER, GFX::WaterCausticDelegate);
+    batcher.Batch(context, g_GraphicsManager->GetMainRenderView(), pipelineEntry->GetLayout(), RenderableObject::LAYER_WATER, GFX::WaterCausticDelegate);
 
     auto& draws = batcher.GetDraws();
     for (std::uint32_t i = 0, size = draws.Size(); i < size; i++)
