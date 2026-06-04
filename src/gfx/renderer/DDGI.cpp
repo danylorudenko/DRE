@@ -24,15 +24,19 @@ DRE::U32 GetProbeDataBufferSize()
     return sizeof(DDGIProbeData) * GetProbeTotalCount();
 }
 
-DDGIConstantBuffer GetConstantBuffer()
+DDGIConstantBuffer GetConstantBuffer(DRE::U32 probeSphereVertexCount, DRE::U32 probeSphereIndexCount)
 {
     auto const& settings = g_GraphicsManager->GetGraphicsSettings();
+
     glm::uvec3 const ddgiProbeDimentions = GetProbeCount3D();
     glm::vec3 const ddgiProbeWorldDistance = glm::vec3(1.0f); // TODO: make this a setting
 
     DDGIConstantBuffer cb{};
     cb.probesDimentions = ddgiProbeDimentions;
     cb.probesWorldDistance = ddgiProbeWorldDistance;
+
+    cb.probeGeometryVertexCount = probeSphereVertexCount;
+    cb.probeGeometryIndexCount = probeSphereIndexCount;
     return cb;
 }
 

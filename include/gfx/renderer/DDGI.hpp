@@ -10,7 +10,7 @@ namespace GFX::DDGI
     DRE::U32    GetProbeTotalCount();
     DRE::U32    GetProbeDataBufferSize();
 
-    DDGIConstantBuffer GetConstantBuffer();
+    DDGIConstantBuffer GetConstantBuffer(DRE::U32 probeSphereVertexCount, DRE::U32 probeSphereIndexCount);
 
     inline char const* GetProbeDebugSphereGeometryName() { return "dre_sphere"; }
 }

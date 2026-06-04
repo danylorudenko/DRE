@@ -7,8 +7,12 @@ struct DDGIConstantBuffer
 {
     uint3 probesDimentions;
     float probeDebugScale;
+    
     float3 probesWorldDistance;
     int pad1;
+
+    int probeGeometryVertexCount;
+    int probeGeometryIndexCount;
 };
 
 struct DDGIProbeData

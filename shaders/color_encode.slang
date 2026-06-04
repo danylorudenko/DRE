@@ -1,6 +1,6 @@
 #include "common/shaders_common.slang"
 
-[[vk::binding(0, 3)]] RWTexture2D<float4>      linearRT;
+[[vk::binding(0, 3)]] RWTexture2D<float4>    linearRT;
 [[vk::binding(1, 3)]] RWTexture2D<float4>    encodedOutput;
 
 struct PassUniform

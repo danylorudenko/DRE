@@ -84,7 +84,7 @@ void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context
 
 
     UniformProxy ddgiUniform = graph.AllocateUniform(GetID(), context, sizeof(DDGIConstantBuffer));
-    ddgiUniform.WriteMember140(DDGI::GetConstantBuffer());
+    ddgiUniform.WriteMember140(DDGI::GetConstantBuffer(m_ProbeDebugSphereGPU->GetVertexCount(), m_ProbeDebugSphereGPU->GetIndexCount()));
     ddgiUniform.FlushWrites();
 
     PipelineEntry* indirectFillEntry = g_GraphicsManager->GetPipelineDB().GetEntry("debug_view_ddgi_probes_args");
