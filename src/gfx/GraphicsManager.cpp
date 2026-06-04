@@ -56,6 +56,7 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::I
 #endif
     , m_GlobalGeometryManager{ &m_MainContext, &m_Device, &m_UploadArena }
     , m_RayTracingManager{ &m_Device, &m_GlobalGeometryManager }
+    , m_DDGI{ }
     , m_MainView{ &DRE::g_MainAllocator }
     , m_SunShadowView{ &DRE::g_MainAllocator }
     , m_Settings{}
@@ -78,6 +79,7 @@ void GraphicsManager::PrecacheAllData(EDITOR::ViewportInputManager* viewportInpu
 {
     m_PipelineDB.CreateDefaultPipelines();
     m_TextureBank.LoadDefaultTextures();
+    m_DDGI.Initialize(geometryLibrary);
     CreateAllPasses(viewportInput, geometryLibrary);
 }
 
@@ -91,7 +93,7 @@ void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInpu
     m_RenderGraph.AddPass<DDGIProbeBlendPass>();
     m_RenderGraph.AddPass<DDGIProbeLightingPass>();
     m_RenderGraph.AddPass<DDGIProbeScatterPass>();
-    m_RenderGraph.AddPass<DebugPassDDGIProbeDisplay>(geometryLibrary);
+    m_RenderGraph.AddPass<DebugPassDDGIProbeDisplay>();
 
     m_RenderGraph.AddPass<LightingPass>();
 

@@ -27,6 +27,7 @@
 #include <gfx\renderer\Material.hpp>
 #include <gfx\renderer\GlobalGeometryManager.hpp>
 #include <gfx\renderer\RayTracingManager.hpp>
+#include <gfx\pass\DDGI.hpp>
 
 #include <array>
 
@@ -154,6 +155,8 @@ public:
     inline InstanceDataManager&         GetInstanceDataManager() { return m_InstanceDataManager; }
     inline MaterialsManager&            GetMaterialsManager() { return m_MaterialsManager; }
     inline RayTracingManager&           GetRayTracignManager() { return m_RayTracingManager; }
+    inline DDGI&                        GetDDGI() { return m_DDGI; }
+    inline DDGI const&                  GetDDGI() const { return m_DDGI; }
     inline DependencyManager&           GetDependencyManager() { return m_DependencyManager; }
     inline RenderGraph&                 GetMainRenderGraph() { return m_RenderGraph; }
 
@@ -227,6 +230,7 @@ private:
 
     GlobalGeometry              m_GlobalGeometryManager;
     RayTracingManager           m_RayTracingManager;
+    DDGI                        m_DDGI;
 
     RenderView                  m_MainView;
     RenderView                  m_SunShadowView;

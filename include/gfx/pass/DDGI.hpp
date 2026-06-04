@@ -1,6 +1,8 @@
 #pragma once
 
 #include <foundation\Common.hpp>
+#include <foundation\class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonMovable.hpp>
 #include <common\global_illumination\ddgi_common.slang>
 #include <glm\fwd.hpp>
 
@@ -12,19 +14,33 @@ namespace Data
 class GeometryLibrary;
 }
 
-namespace GFX::DDGI
-{
-    glm::uvec3  GetProbeCount3D();
-    DRE::U32    GetProbeTotalCount();
-    DRE::U32    GetProbeDataBufferSize();
-
-    DDGIConstantBuffer GetConstantBuffer(DRE::U32 probeSphereVertexCount, DRE::U32 probeSphereIndexCount);
-
-    inline char const* GetProbeDebugSphereGeometryName() { return "dre_sphere"; }
-}
-
 namespace GFX
 {
+
+struct GraphicsSettings;
+
+class DDGI final
+    : public NonCopyable
+    , public NonMovable
+{
+public:
+    DDGI();
+
+    void Initialize(Data::GeometryLibrary* geometryLibrary);
+
+    glm::uvec3          GetProbeCount3D          () const;
+    DRE::U32            GetProbeTotalCount       () const;
+    DRE::U32            GetProbeDataBufferSize   () const;
+
+    GlobalGeometry::GeometryGPU* GetSphereGeometry() const { return m_ProbeDebugSphereGPU; }
+
+    DDGIConstantBuffer  GetConstantBuffer        () const;
+
+    static char const*  GetProbeDebugSphereGeometryName() { return "dre_sphere"; }
+
+private:
+    GlobalGeometry::GeometryGPU* m_ProbeDebugSphereGPU;
+};
 
 class DDGIProbeTracePass : public BasePass
 {
@@ -69,18 +85,11 @@ public:
 class DebugPassDDGIProbeDisplay : public BasePass
 {
 public:
-    DebugPassDDGIProbeDisplay(Data::GeometryLibrary* geometryLibrary);
-
     virtual PassID  GetID               () const override;
 
     virtual void    RegisterResources   (RenderGraph& graph) override;
     virtual void    Initialize          (RenderGraph& graph) override;
     virtual void    Render              (RenderGraph& graph, VKW::Context& context) override;
-
-private:
-    Data::GeometryLibrary* m_GeometryLibrary;
-
-    GlobalGeometry::GeometryGPU* m_ProbeDebugSphereGPU;
 };
 
 }

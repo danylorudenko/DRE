@@ -7,30 +7,39 @@
 
 #include <common\global_illumination\ddgi_common.slang>
 
-namespace GFX::DDGI
+namespace GFX
 {
 
-glm::uvec3 GetProbeCount3D()
+DDGI::DDGI()
+    : m_ProbeDebugSphereGPU{ nullptr }
 {
-    auto const& settings = g_GraphicsManager->GetGraphicsSettings();
+}
+
+void DDGI::Initialize(Data::GeometryLibrary* geometryLibrary)
+{
+    Data::Geometry* ddgiProbeGeometry = geometryLibrary->GetGeometry(DDGI::GetProbeDebugSphereGeometryName());
+    m_ProbeDebugSphereGPU = g_GraphicsManager->GetGlobalGeometryManager().FindOrUploadGeometry(ddgiProbeGeometry);
+}
+
+glm::uvec3 DDGI::GetProbeCount3D() const
+{
+    GraphicsSettings& settings = g_GraphicsManager->GetGraphicsSettings();
     return glm::uvec3(settings.m_DDGIProbeCountX, settings.m_DDGIProbeCountY, settings.m_DDGIProbeCountZ);
 }
 
-DRE::U32 GetProbeTotalCount()
+DRE::U32 DDGI::GetProbeTotalCount() const
 {
     glm::uvec3 const ddgiProbeDimentions = GetProbeCount3D();
     return ddgiProbeDimentions.x * ddgiProbeDimentions.y * ddgiProbeDimentions.z;
 }
 
-DRE::U32 GetProbeDataBufferSize()
+DRE::U32 DDGI::GetProbeDataBufferSize() const
 {
     return sizeof(DDGIProbeData) * GetProbeTotalCount();
 }
 
-DDGIConstantBuffer GetConstantBuffer(DRE::U32 probeSphereVertexCount, DRE::U32 probeSphereIndexCount)
+DDGIConstantBuffer DDGI::GetConstantBuffer() const
 {
-    auto const& settings = g_GraphicsManager->GetGraphicsSettings();
-
     glm::uvec3 const ddgiProbeDimentions = GetProbeCount3D();
     glm::vec3 const ddgiProbeWorldDistance = glm::vec3(1.0f); // TODO: make this a setting
 
@@ -38,15 +47,11 @@ DDGIConstantBuffer GetConstantBuffer(DRE::U32 probeSphereVertexCount, DRE::U32 p
     cb.probesDimentions = ddgiProbeDimentions;
     cb.probesWorldDistance = ddgiProbeWorldDistance;
 
-    cb.probeGeometryVertexCount = probeSphereVertexCount;
-    cb.probeGeometryIndexCount = probeSphereIndexCount;
+    cb.probeGeometryVertexCount = m_ProbeDebugSphereGPU->GetVertexCount();
+    cb.probeGeometryIndexCount = m_ProbeDebugSphereGPU->GetIndexCount();
     return cb;
 }
 
-}
-
-namespace GFX
-{
 
 PassID DDGIProbeTracePass::GetID() const
 {
@@ -109,7 +114,7 @@ PassID DDGIProbeScatterPass::GetID() const
 
 void DDGIProbeScatterPass::RegisterResources(RenderGraph& graph)
 {
-    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData), GFX::DDGI::GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_GENERIC_WRITE);
+    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData), g_GraphicsManager->GetDDGI().GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_GENERIC_WRITE);
 
 }
 
@@ -127,7 +132,7 @@ void DDGIProbeScatterPass::Render(RenderGraph& graph, VKW::Context& context)
     PipelineEntry* entry = g_GraphicsManager->GetPipelineDB().GetEntry("ddgi_probe_scatter");
     UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(DDGIConstantBuffer));
 
-    uniform.WriteMember140(GFX::DDGI::GetConstantBuffer());
+    uniform.WriteMember140(g_GraphicsManager->GetDDGI().GetConstantBuffer());
     uniform.FlushWrites();
 
     context.CmdBindComputePipeline(entry->GetPipeline());
@@ -138,18 +143,10 @@ void DDGIProbeScatterPass::Render(RenderGraph& graph, VKW::Context& context)
 
     context.CmdBindComputeDescriptorSets(entry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
 
-    auto& settings = g_GraphicsManager->GetGraphicsSettings();
-    glm::uvec3 const ddgiProbeDimentions = glm::uvec3(settings.m_DDGIProbeCountX, settings.m_DDGIProbeCountY, settings.m_DDGIProbeCountZ);
+    glm::uvec3 const ddgiProbeDimentions = g_GraphicsManager->GetDDGI().GetProbeCount3D();
 
     glm::uvec3 dispatchSize = (ddgiProbeDimentions + GROUP_SIZE - 1u) / GROUP_SIZE;
     context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
-}
-
-
-DebugPassDDGIProbeDisplay::DebugPassDDGIProbeDisplay(Data::GeometryLibrary* geometryLibrary)
-    : m_GeometryLibrary{ geometryLibrary }
-    , m_ProbeDebugSphereGPU{ nullptr }
-{
 }
 
 PassID DebugPassDDGIProbeDisplay::GetID() const
@@ -159,14 +156,12 @@ PassID DebugPassDDGIProbeDisplay::GetID() const
 
 void DebugPassDDGIProbeDisplay::Initialize(RenderGraph& graph)
 {
-    Data::Geometry* ddgiProbeGeometry = m_GeometryLibrary->GetGeometry(DDGI::GetProbeDebugSphereGeometryName());
-    m_ProbeDebugSphereGPU = g_GraphicsManager->GetGlobalGeometryManager().FindOrUploadGeometry(ddgiProbeGeometry);
 }
 
 void DebugPassDDGIProbeDisplay::RegisterResources(RenderGraph& graph)
 {
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DebugPassDDGIProbeIndirectArgs), sizeof(DrawIndexedIndirectCommand), VKW::RESOURCE_ACCESS_INDIRECT_ARGS);
-    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData),                 DDGI::GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_GENERIC_READ);
+    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData),                 g_GraphicsManager->GetDDGI().GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_GENERIC_READ);
 
     DRE::U32 renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth;
     DRE::U32 renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
@@ -221,7 +216,7 @@ void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context
 
 
     UniformProxy ddgiUniform = graph.AllocateUniform(GetID(), context, sizeof(DDGIConstantBuffer));
-    ddgiUniform.WriteMember140(DDGI::GetConstantBuffer(m_ProbeDebugSphereGPU->GetVertexCount(), m_ProbeDebugSphereGPU->GetIndexCount()));
+    ddgiUniform.WriteMember140(g_GraphicsManager->GetDDGI().GetConstantBuffer());
     ddgiUniform.FlushWrites();
 
     PipelineEntry* indirectFillEntry = g_GraphicsManager->GetPipelineDB().GetEntry("debug_view_ddgi_probes_args");
@@ -234,7 +229,7 @@ void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context
     context.CmdBindComputeDescriptorSets(indirectFillEntry->GetLayout(), indirectBinder.GetTargetSetID(), 1, &indirectBinder.GetDescriptorSet());
 
     glm::uvec3 const probeDebugGroupSize{ 4, 4, 4 };
-    glm::uvec3 const probeDebugDispatchSize = GetComputeGroupCount(DDGI::GetProbeCount3D(), probeDebugGroupSize);
+    glm::uvec3 const probeDebugDispatchSize = GetComputeGroupCount(g_GraphicsManager->GetDDGI().GetProbeCount3D(), probeDebugGroupSize);
     context.CmdBindPipeline(VKW::BindPoint::Compute, indirectFillEntry->GetPipeline());
     context.CmdDispatch(probeDebugDispatchSize.x, probeDebugDispatchSize.y, probeDebugDispatchSize.z);
 
@@ -283,9 +278,11 @@ void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context
     context.CmdSetPolygonMode(VKW::POLYGON_FILL);
 #endif // DRE_COMPILE_FOR_RENDERDOC
 
-    context.CmdBindVertexBuffer(m_ProbeDebugSphereGPU->GetBuffer(), m_ProbeDebugSphereGPU->GetVertexOffset());
-    context.CmdBindIndexBuffer(m_ProbeDebugSphereGPU->GetBuffer(), m_ProbeDebugSphereGPU->GetIndexOffset(), VK_INDEX_TYPE_UINT32);
+    GlobalGeometry::GeometryGPU* probeDebugSphereGPU = g_GraphicsManager->GetDDGI().GetSphereGeometry();
+    context.CmdBindVertexBuffer(probeDebugSphereGPU->GetBuffer(), probeDebugSphereGPU->GetVertexOffset());
+    context.CmdBindIndexBuffer(probeDebugSphereGPU->GetBuffer(), probeDebugSphereGPU->GetIndexOffset(), VK_INDEX_TYPE_UINT32);
     context.CmdDrawIndexedIndirect(ddgiProbeIndirectArgs->GetResource());
+
     context.CmdEndRendering();
 
 }

@@ -16,7 +16,12 @@ float4 RemapDisplayValue(float4 value, float lowBound, float highBound)
 [numthreads(4, 4, 4)]
 void indirectArgsFillCS(uint3 DTid : SV_DispatchThreadID)
 {
-    //if (IsDDGIProbesDebugView(debugViewArgs))
+    if (all(DTid == uint3(0, 0, 0)))
+    {
+        indirectArgBuffer[0].indexCount = ddgiCB.probeGeometryIndexCount;
+        // everything else is zeroed from CPU
+    }
+
     {
         uint probeIndex = GetProbeIndex(ddgiCB, DTid);
         InterlockedAdd(indirectArgBuffer[0].instanceCount, 1u);
