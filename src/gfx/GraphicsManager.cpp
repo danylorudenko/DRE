@@ -15,12 +15,8 @@
 #include <gfx\pass\ColorEncodingPass.hpp>
 #include <gfx\pass\ImGuiRenderPass.hpp>
 #include <gfx\pass\DebugPassTextureView.hpp>
-#include <gfx\pass\DebugPassDDGIProbeDisplay.hpp>
 #include <gfx\pass\EditorPass.hpp>
-#include <gfx\pass\DDGI\DDGIProbeTracePass.hpp>
-#include <gfx\pass\DDGI\DDGIProbeBlendPass.hpp>
-#include <gfx\pass\DDGI\DDGIProbeLightingPass.hpp>
-#include <gfx\pass\DDGI\DDGIProbeScatterPass.hpp>
+#include <gfx\pass\DDGI.hpp>
 
 #include <engine\io\IOManager.hpp>
 #include <engine\scene\Scene.hpp>

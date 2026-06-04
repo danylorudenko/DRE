@@ -1,13 +1,150 @@
-#include <gfx\pass\DebugPassDDGIProbeDisplay.hpp>
+#include <gfx\pass\DDGI.hpp>
 
 #include <gfx\GraphicsManager.hpp>
 #include <gfx\scheduling\RenderGraph.hpp>
-#include <gfx\renderer\DDGI.hpp>
 
 #include <engine\data\GeometryLibrary.hpp>
 
+#include <common\global_illumination\ddgi_common.slang>
+
+namespace GFX::DDGI
+{
+
+glm::uvec3 GetProbeCount3D()
+{
+    auto const& settings = g_GraphicsManager->GetGraphicsSettings();
+    return glm::uvec3(settings.m_DDGIProbeCountX, settings.m_DDGIProbeCountY, settings.m_DDGIProbeCountZ);
+}
+
+DRE::U32 GetProbeTotalCount()
+{
+    glm::uvec3 const ddgiProbeDimentions = GetProbeCount3D();
+    return ddgiProbeDimentions.x * ddgiProbeDimentions.y * ddgiProbeDimentions.z;
+}
+
+DRE::U32 GetProbeDataBufferSize()
+{
+    return sizeof(DDGIProbeData) * GetProbeTotalCount();
+}
+
+DDGIConstantBuffer GetConstantBuffer(DRE::U32 probeSphereVertexCount, DRE::U32 probeSphereIndexCount)
+{
+    auto const& settings = g_GraphicsManager->GetGraphicsSettings();
+
+    glm::uvec3 const ddgiProbeDimentions = GetProbeCount3D();
+    glm::vec3 const ddgiProbeWorldDistance = glm::vec3(1.0f); // TODO: make this a setting
+
+    DDGIConstantBuffer cb{};
+    cb.probesDimentions = ddgiProbeDimentions;
+    cb.probesWorldDistance = ddgiProbeWorldDistance;
+
+    cb.probeGeometryVertexCount = probeSphereVertexCount;
+    cb.probeGeometryIndexCount = probeSphereIndexCount;
+    return cb;
+}
+
+}
+
 namespace GFX
 {
+
+PassID DDGIProbeTracePass::GetID() const
+{
+    return PassID::DDGIProbeTrace;
+}
+
+void DDGIProbeTracePass::RegisterResources(RenderGraph& graph)
+{
+}
+
+void DDGIProbeTracePass::Initialize(RenderGraph& graph)
+{
+}
+
+void DDGIProbeTracePass::Render(RenderGraph& graph, VKW::Context& context)
+{
+}
+
+
+PassID DDGIProbeBlendPass::GetID() const
+{
+    return PassID::DDGIProbeBlend;
+}
+
+void DDGIProbeBlendPass::RegisterResources(RenderGraph& graph)
+{
+}
+
+void DDGIProbeBlendPass::Initialize(RenderGraph& graph)
+{
+}
+
+void DDGIProbeBlendPass::Render(RenderGraph& graph, VKW::Context& context)
+{
+}
+
+
+PassID DDGIProbeLightingPass::GetID() const
+{
+    return PassID::DDGIProbeLighting;
+}
+
+void DDGIProbeLightingPass::RegisterResources(RenderGraph& graph)
+{
+}
+
+void DDGIProbeLightingPass::Initialize(RenderGraph& graph)
+{
+}
+
+void DDGIProbeLightingPass::Render(RenderGraph& graph, VKW::Context& context)
+{
+}
+
+
+PassID DDGIProbeScatterPass::GetID() const
+{
+    return PassID::DDGIProbeScatter;
+}
+
+void DDGIProbeScatterPass::RegisterResources(RenderGraph& graph)
+{
+    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData), GFX::DDGI::GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_GENERIC_WRITE);
+
+}
+
+void DDGIProbeScatterPass::Initialize(RenderGraph& graph)
+{
+}
+
+void DDGIProbeScatterPass::Render(RenderGraph& graph, VKW::Context& context)
+{
+    glm::uvec3 GROUP_SIZE{ 4, 4, 4, };
+
+    StorageBuffer* ddgiProbeData = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData));
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData->GetResource(), VKW::RESOURCE_ACCESS_GENERIC_WRITE, VKW::STAGE_COMPUTE);
+
+    PipelineEntry* entry = g_GraphicsManager->GetPipelineDB().GetEntry("ddgi_probe_scatter");
+    UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(DDGIConstantBuffer));
+
+    uniform.WriteMember140(GFX::DDGI::GetConstantBuffer());
+    uniform.FlushWrites();
+
+    context.CmdBindComputePipeline(entry->GetPipeline());
+    ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(entry, 0);
+    binder.AddUniform(0, &uniform);
+    binder.AddStorageBuffer(1, ddgiProbeData);
+    binder.FlushDescriptorWrites();
+
+    context.CmdBindComputeDescriptorSets(entry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
+
+    auto& settings = g_GraphicsManager->GetGraphicsSettings();
+    glm::uvec3 const ddgiProbeDimentions = glm::uvec3(settings.m_DDGIProbeCountX, settings.m_DDGIProbeCountY, settings.m_DDGIProbeCountZ);
+
+    glm::uvec3 dispatchSize = (ddgiProbeDimentions + GROUP_SIZE - 1u) / GROUP_SIZE;
+    context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
+}
+
 
 DebugPassDDGIProbeDisplay::DebugPassDDGIProbeDisplay(Data::GeometryLibrary* geometryLibrary)
     : m_GeometryLibrary{ geometryLibrary }
