@@ -294,20 +294,19 @@ void EditorPass::RegisterResources(RenderGraph& graph)
     graph.RegisterRenderTarget(this, RESOURCE_ID(TextureID::DisplayEncodedImage),
         g_GraphicsManager->GetFinalImageFormat(), renderWidth, renderHeight,
         0);
-
-    graph.RegisterUniformBuffer(this, VKW::STAGE_VERTEX | VKW::STAGE_FRAGMENT, 0);
 }
 
 void EditorPass::Render(RenderGraph& graph, VKW::Context& context)
 {
     DRE_GPU_SCOPE(EditorPass);
 
-    VKW::ImageResourceView* colorBuffer = graph.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage))->GetShaderView();
-    VKW::ImageResourceView* objectIDBuffer = graph.GetTexture(RESOURCE_ID(TextureID::GBufferD_ObjectIDBuffer))->GetShaderView();
+    Texture* colorBuffer = graph.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage));
+    Texture* objectIDBuffer = graph.GetTexture(RESOURCE_ID(TextureID::GBufferD_ObjectIDBuffer));
 
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, colorBuffer->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, colorBuffer->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
 
-    context.CmdBeginRendering(1, &colorBuffer, nullptr, nullptr);
+    VKW::ImageResourceView* const renderTargets[] = { colorBuffer->GetShaderView() };
+    context.CmdBeginRendering(1, renderTargets, nullptr, nullptr);
 
     DRE::U32 renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
     context.CmdSetViewport(1, 0, 0, renderWidth, renderHeight);
@@ -331,16 +330,19 @@ void EditorPass::Render(RenderGraph& graph, VKW::Context& context)
         GizmoPassBuffer uniformData;
         uniformData.m_Model = gizmoTransform;
 
-        UniformProxy uniform = graph.GetPassUniform(GetID(), context, sizeof(GizmoPassBuffer));
+        UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(GizmoPassBuffer));
         uniform.WriteMember140(uniformData);
+        uniform.FlushWrites();
+
+        PipelineEntry* pipelineEntry = g_GraphicsManager->GetPipelineDB().GetEntry("gizmo_3D");
+        ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(pipelineEntry, 0);
+        binder.AddUniform(0, &uniform);
+        binder.FlushDescriptorWrites();
 
 
-        VKW::PipelineLayout* layout = graph.GetPassPipelineLayout(GetID());
-        VKW::Pipeline* pipeline = g_GraphicsManager->GetPipelineDB().GetEntry("gizmo_3D")->GetPipeline();
-        VKW::DescriptorSet set = graph.GetPassDescriptorSet(GetID(), g_GraphicsManager->GetCurrentFrameID());
-        context.CmdBindGraphicsDescriptorSets(pipeline->GetLayout(), graph.GetPassSetBinding(), 1, &set);
+        context.CmdBindGraphicsDescriptorSets(pipelineEntry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
         context.CmdBindVertexBuffer(m_GizmoVertices.GetBuffer(), m_GizmoVertices.GetVertexOffset());
-        context.CmdBindGraphicsPipeline(pipeline);
+        context.CmdBindGraphicsPipeline(pipelineEntry->GetPipeline());
         context.CmdDraw(m_GizmoGeometry->GetVertexCount());
     }
     context.CmdEndRendering();

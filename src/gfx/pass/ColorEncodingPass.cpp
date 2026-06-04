@@ -50,7 +50,7 @@ void ColorEncodingPass::Render(RenderGraph& graph, VKW::Context& context)
     PipelineEntry* pipelineEntry = g_GraphicsManager->GetPipelineDB().GetEntry("color_encode");
 
     ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(pipelineEntry, 0);
-    binder.AddSampledTexture(0, taaOutput);
+    binder.AddStorageTexture(0, taaOutput);
     binder.AddStorageTexture(1, encodedImage);
     binder.AddUniform(2, &uniform);
     binder.FlushDescriptorWrites();

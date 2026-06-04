@@ -31,8 +31,8 @@ void DebugPassDDGIProbeDisplay::RegisterResources(RenderGraph& graph)
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DebugPassDDGIProbeIndirectArgs), sizeof(DrawIndexedIndirectCommand), VKW::RESOURCE_ACCESS_INDIRECT_ARGS);
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData),                 DDGI::GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_GENERIC_READ);
 
-    std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth,
-        renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
+    DRE::U32 renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth;
+    DRE::U32 renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
     auto gBufferFormats = g_GraphicsManager->GetGBufferFormats();
 
@@ -70,6 +70,9 @@ void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context
 {
     DRE_GPU_SCOPE(DebugPassDDGIProbeDisplay);
 
+    DRE::U32 renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth;
+    DRE::U32 renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
+
     StorageBuffer* ddgiProbeIndirectArgs = graph.GetBuffer(RESOURCE_ID(BufferID::DebugPassDDGIProbeIndirectArgs));
     StorageBuffer* ddgiProbeData         = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData));
 
@@ -100,10 +103,20 @@ void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context
 
 
 
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, graph.GetTexture(RESOURCE_ID(TextureID::GBufferA_DiffuseRoughness))->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, graph.GetTexture(RESOURCE_ID(TextureID::GBufferB_NormalMetalness))->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, graph.GetTexture(RESOURCE_ID(TextureID::GBufferC_Velocity))->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, graph.GetTexture(RESOURCE_ID(TextureID::GBufferD_ObjectIDBuffer))->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+
+    Texture* GBufferA = graph.GetTexture(RESOURCE_ID(TextureID::GBufferA_DiffuseRoughness));
+    Texture* GBufferB = graph.GetTexture(RESOURCE_ID(TextureID::GBufferB_NormalMetalness));
+    Texture* GBufferC = graph.GetTexture(RESOURCE_ID(TextureID::GBufferC_Velocity));
+    Texture* GBufferD = graph.GetTexture(RESOURCE_ID(TextureID::GBufferD_ObjectIDBuffer));
+    Texture* DEBUGTEXTURE = graph.GetTexture(RESOURCE_ID(TextureID::DEBUG_TEXTURE));
+    Texture* depthBuffer = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth));
+
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, GBufferA->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, GBufferB->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, GBufferC->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, GBufferD->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, DEBUGTEXTURE->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthBuffer->GetResource(), VKW::RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData->GetResource(), VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_ALL_GRAPHICS);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeIndirectArgs->GetResource(), VKW::RESOURCE_ACCESS_INDIRECT_ARGS, VKW::STAGE_ALL_GRAPHICS);
 
@@ -115,7 +128,28 @@ void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context
     drawBinder.FlushDescriptorWrites();
 
     context.CmdBindGraphicsDescriptorSets(drawSpheresEntry->GetLayout(), drawBinder.GetTargetSetID(), 1, &drawBinder.GetDescriptorSet());
+    context.CmdBindGraphicsPipeline(drawSpheresEntry->GetPipeline());
+
+    DRE::U32 constexpr attachmentsCount = 5;
+    VKW::ImageResourceView* renderTargets[attachmentsCount] = {
+        GBufferA->GetShaderView(),
+        GBufferB->GetShaderView(),
+        GBufferC->GetShaderView(),
+        GBufferD->GetShaderView(),
+        DEBUGTEXTURE->GetShaderView()
+    };
+
+    context.CmdBeginRendering(attachmentsCount, renderTargets, depthBuffer->GetShaderView(), nullptr);
+    context.CmdSetViewport(attachmentsCount, 0, 0, renderWidth, renderHeight);
+    context.CmdSetScissor(attachmentsCount, 0, 0, renderWidth, renderHeight);
+#ifndef DRE_COMPILE_FOR_RENDERDOC
+    context.CmdSetPolygonMode(VKW::POLYGON_FILL);
+#endif // DRE_COMPILE_FOR_RENDERDOC
+
+    context.CmdBindVertexBuffer(m_ProbeDebugSphereGPU->GetBuffer(), m_ProbeDebugSphereGPU->GetVertexOffset());
+    context.CmdBindIndexBuffer(m_ProbeDebugSphereGPU->GetBuffer(), m_ProbeDebugSphereGPU->GetIndexOffset(), VK_INDEX_TYPE_UINT32);
     context.CmdDrawIndexedIndirect(ddgiProbeIndirectArgs->GetResource());
+    context.CmdEndRendering();
 
 }
 

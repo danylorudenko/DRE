@@ -79,7 +79,7 @@ GBuffer drawPS(PSInput input)
     Output.Normal_Metalness = float4(encodedNormal, 0.0);
 
     Output.Velocity = CalculateVelocity(input.ndc_pos, input.wpos);
-    //Output.ObjectID = GlobalID2Color();
+    //Output.ObjectID = GlobalID2Color(); disabled by color write mask in pipeline
 
     //Output.DEBUG_TEXTURE = float4(input.TBN[2], 1);
     //Output.DEBUG_TEXTURE = float4(frac(input.uv), 0, 1);

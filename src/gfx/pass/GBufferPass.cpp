@@ -60,8 +60,8 @@ void GBufferPass::Render(RenderGraph& graph, VKW::Context& context)
 {
     DRE_GPU_SCOPE(GBuffer);
 
-    std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth,
-        renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
+    DRE::U32 renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth;
+    DRE::U32 renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
     Texture* attachmentA = graph.GetTexture(RESOURCE_ID(TextureID::GBufferA_DiffuseRoughness));
     Texture* attachmentB = graph.GetTexture(RESOURCE_ID(TextureID::GBufferB_NormalMetalness));

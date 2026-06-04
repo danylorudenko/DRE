@@ -162,7 +162,7 @@ void FFTWaterHxtGenPass::Render(RenderGraph& graph, VKW::Context& context)
     PipelineEntry* pipelineEntry = g_GraphicsManager->GetPipelineDB().GetEntry("gen_hxt");
     ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(pipelineEntry, 0);
     binder.AddStorageTexture(0, fftHxt);
-    binder.AddSampledTexture(1, fftH0);
+    binder.AddStorageTexture(1, fftH0);
     binder.AddUniform(2, &uniform);
     binder.FlushDescriptorWrites();
 

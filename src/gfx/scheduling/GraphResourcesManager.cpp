@@ -110,8 +110,12 @@ void GraphResourcesManager::InitResources()
 
         DRE_ASSERT(info.access | VKW::RESOURCE_ACCESS_SHADER_RW, "If there's no shader access, why we need this buffer?");
 
-        // create storage buffer
-        VKW::BufferResource* buffer = m_Device->GetResourcesController()->CreateBuffer(info.size0, VKW::BufferUsage::STORAGE, *pair.key);
+        VKW::BufferUsage usage = VKW::BufferUsage::STORAGE;
+        if (info.access & VKW::RESOURCE_ACCESS_INDIRECT_ARGS)
+            usage = VKW::BufferUsage::INDIRECT_ARGS;
+
+        // create buffer
+        VKW::BufferResource* buffer = m_Device->GetResourcesController()->CreateBuffer(info.size0, usage, *pair.key);
         m_StorageBuffers.Emplace(*pair.key, GraphBuffer{ StorageBuffer{ m_Device, buffer }, info });
     });
 }

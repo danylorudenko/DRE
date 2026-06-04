@@ -118,6 +118,10 @@ BufferResource* ResourcesController::CreateBuffer(DRE::U32 size, BufferUsage usa
         regionDesc.memoryClass_ = MemoryClass::CpuStaging;
         vkBufferCreateInfo.usage |= VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
         break;
+    case BufferUsage::INDIRECT_ARGS:
+        regionDesc.memoryClass_ = MemoryClass::CpuStaging;
+        vkBufferCreateInfo.usage |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+        break;
     default:
         DRE_ASSERT(false, "Unsupported VKW::BufferUsage");
     }
