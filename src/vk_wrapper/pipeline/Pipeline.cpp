@@ -429,6 +429,8 @@ Pipeline& Pipeline::operator=(Pipeline&& rhs)
     DRE_SWAP_MEMBER(device_);
     DRE_SWAP_MEMBER(handle_);
     DRE_SWAP_MEMBER(layout_);
+    DRE_SWAP_MEMBER(descriptor_);
+    DRE_SWAP_MEMBER(name_);
 
     return *this;
 }

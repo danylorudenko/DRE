@@ -520,7 +520,7 @@ PipelineEntry* PipelineDB::CreatePipeline(char const* name, VKW::Pipeline::Descr
 
     return &m_PipelineEntries.Emplace(name,
         VKW::Pipeline{ m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), descriptor, name },
-        DRE_MOVE(*layout),
+        layout,
         DRE_MOVE(shaderEntries),
         name);
 }

@@ -87,7 +87,7 @@ private:
 
     ShaderLayoutsMap                                                m_ShaderLayouts;
     DRE::InplaceHashTable<DRE::String64, VKW::DescriptorSetLayout>  m_SetLayouts;
-    DRE::InplaceHashTable<DRE::String64, VKW::PipelineLayout>       m_PipelineLayouts;  // staging: layouts owned here until moved into PipelineEntry
+    DRE::InplaceHashTable<DRE::String64, VKW::PipelineLayout>       m_PipelineLayouts;
     DRE::InplaceHashTable<DRE::String64, GFX::PipelineEntry>        m_PipelineEntries;
 
     // shader entry name -> names of pipelines that use it
