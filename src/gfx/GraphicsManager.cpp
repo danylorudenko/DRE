@@ -93,7 +93,6 @@ void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInpu
     m_RenderGraph.AddPass<DDGIProbeBlendPass>();
     m_RenderGraph.AddPass<DDGIProbeLightingPass>();
     m_RenderGraph.AddPass<DDGIProbeScatterPass>();
-    m_RenderGraph.AddPass<DebugPassDDGIProbeDisplay>();
 
     m_RenderGraph.AddPass<LightingPass>();
 
@@ -110,6 +109,7 @@ void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInpu
 
     m_RenderGraph.AddPass<EditorPass>(viewportInput);
 
+    m_RenderGraph.AddPass<DebugPassDDGIProbeDisplay>();
     m_RenderGraph.AddPass<DebugPassTextureView>();
 
     m_RenderGraph.AddPass<ImGuiRenderPass>();

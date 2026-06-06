@@ -1,7 +1,6 @@
 #include "common/shaders_common.slang"
 #include "common/global_illumination/ddgi_common.slang"
 #include "common/vertex/dre_vertex_layout.slang"
-#include "common/gbuffer.slang"
 
 [[vk::binding(0, 3)]] RWStructuredBuffer<DrawIndexedIndirectCommand>    indirectArgBuffer;
 [[vk::binding(1, 3)]] StructuredBuffer<DDGIProbeData>                   probeData;
@@ -73,22 +72,10 @@ static const float3 debugColors[8] =
 };
 
 [shader("pixel")]
-GBuffer drawPS(PSInput input)
+float4 drawPS(PSInput input) : SV_Target0
 {
-
-    GBuffer Output;
     float3 probeColor = debugColors[input.instanceID % 8];
-    Output.Diffuse_Roughness = float4(probeColor, 0.0);
 
-    float3 encodedNormal = normalize(input.norm) * 0.5 + 0.5;
-    Output.Normal_Metalness = float4(encodedNormal, 0.0);
-
-    Output.Velocity = CalculateVelocity(input.ndc_pos, input.wpos);
-    //Output.ObjectID = GlobalID2Color(); disabled by color write mask in pipeline
-
-    //Output.DEBUG_TEXTURE = float4(input.TBN[2], 1);
-    //Output.DEBUG_TEXTURE = float4(frac(input.uv), 0, 1);
-    Output.DEBUG_TEXTURE = float4(1, 0, 0, 1);
-    
-    return Output;
+    float3 encodedNormal = normalize(input.norm) * 0.5 + 0.5;  
+    return float4(encodedNormal, 1.0);
 }

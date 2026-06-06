@@ -172,29 +172,9 @@ void DebugPassDDGIProbeDisplay::RegisterResources(RenderGraph& graph)
     auto gBufferFormats = g_GraphicsManager->GetGBufferFormats();
 
     graph.RegisterRenderTarget(this,
-        RESOURCE_ID(TextureID::GBufferA_DiffuseRoughness),
+        RESOURCE_ID(TextureID::DisplayEncodedImage),
         gBufferFormats[0], renderWidth, renderHeight,
         0);
-
-    graph.RegisterRenderTarget(this,
-        RESOURCE_ID(TextureID::GBufferB_NormalMetalness),
-        gBufferFormats[1], renderWidth, renderHeight,
-        1);
-
-    graph.RegisterRenderTarget(this,
-        RESOURCE_ID(TextureID::GBufferC_Velocity),
-        gBufferFormats[2], renderWidth, renderHeight,
-        2);
-
-    graph.RegisterRenderTarget(this,
-        RESOURCE_ID(TextureID::GBufferD_ObjectIDBuffer),
-        gBufferFormats[3], renderWidth, renderHeight,
-        3);
-
-    graph.RegisterRenderTarget(this,
-        RESOURCE_ID(TextureID::DEBUG_TEXTURE),
-        VKW::FORMAT_R32G32B32A32_FLOAT, renderWidth, renderHeight,
-        4);
 
     graph.RegisterDepthOnlyTarget(this,
         RESOURCE_ID(TextureID::MainDepth),
@@ -203,91 +183,81 @@ void DebugPassDDGIProbeDisplay::RegisterResources(RenderGraph& graph)
 
 void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context)
 {
-    DRE_GPU_SCOPE(DebugPassDDGIProbeDisplay);
-
     DRE::U32 renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth;
     DRE::U32 renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
     StorageBuffer* ddgiProbeIndirectArgs = graph.GetBuffer(RESOURCE_ID(BufferID::DebugPassDDGIProbeIndirectArgs));
     StorageBuffer* ddgiProbeData         = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData));
-
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeIndirectArgs->GetResource(), VKW::RESOURCE_ACCESS_GENERIC_WRITE, VKW::STAGE_TRANSFER);
-    context.CmdFillBuffer(ddgiProbeIndirectArgs->GetResource(), 0, sizeof(DrawIndexedIndirectCommand), 0);
-
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeIndirectArgs->GetResource(), VKW::RESOURCE_ACCESS_GENERIC_RW,   VKW::STAGE_COMPUTE);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData->GetResource(),         VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_COMPUTE);
-
-
     UniformProxy ddgiUniform = graph.AllocateUniform(GetID(), context, sizeof(DDGIConstantBuffer));
-    ddgiUniform.WriteMember140(g_GraphicsManager->GetDDGI().GetConstantBuffer());
-    ddgiUniform.FlushWrites();
 
-    PipelineEntry* indirectFillEntry = g_GraphicsManager->GetPipelineDB().GetEntry("debug_view_ddgi_probes_args");
-    ResourceBinder indirectBinder = g_GraphicsManager->CreateResourceBinder(indirectFillEntry, 0);
-    indirectBinder.AddStorageBuffer(0, ddgiProbeIndirectArgs);
-    indirectBinder.AddStorageBuffer(1, ddgiProbeData);
-    indirectBinder.AddUniform(2, &ddgiUniform);
-    indirectBinder.FlushDescriptorWrites();
+    {
+        DRE_GPU_SCOPE(DebugPassDDGIProbeDisplayArgs);
 
-    context.CmdBindComputeDescriptorSets(indirectFillEntry->GetLayout(), indirectBinder.GetTargetSetID(), 1, &indirectBinder.GetDescriptorSet());
+        g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeIndirectArgs->GetResource(), VKW::RESOURCE_ACCESS_GENERIC_WRITE, VKW::STAGE_TRANSFER);
+        context.CmdFillBuffer(ddgiProbeIndirectArgs->GetResource(), 0, sizeof(DrawIndexedIndirectCommand), 0);
 
-    glm::uvec3 const probeDebugGroupSize{ 4, 4, 4 };
-    glm::uvec3 const probeDebugDispatchSize = GetComputeGroupCount(g_GraphicsManager->GetDDGI().GetProbeCount3D(), probeDebugGroupSize);
-    context.CmdBindPipeline(VKW::BindPoint::Compute, indirectFillEntry->GetPipeline());
-    context.CmdDispatch(probeDebugDispatchSize.x, probeDebugDispatchSize.y, probeDebugDispatchSize.z);
+        g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeIndirectArgs->GetResource(), VKW::RESOURCE_ACCESS_GENERIC_RW,   VKW::STAGE_COMPUTE);
+        g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData->GetResource(),         VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_COMPUTE);
 
 
+        ddgiUniform.WriteMember140(g_GraphicsManager->GetDDGI().GetConstantBuffer());
+        ddgiUniform.FlushWrites();
 
+        PipelineEntry* indirectFillEntry = g_GraphicsManager->GetPipelineDB().GetEntry("debug_view_ddgi_probes_args");
+        ResourceBinder indirectBinder = g_GraphicsManager->CreateResourceBinder(indirectFillEntry, 0);
+        indirectBinder.AddStorageBuffer(0, ddgiProbeIndirectArgs);
+        indirectBinder.AddStorageBuffer(1, ddgiProbeData);
+        indirectBinder.AddUniform(2, &ddgiUniform);
+        indirectBinder.FlushDescriptorWrites();
 
-    Texture* GBufferA = graph.GetTexture(RESOURCE_ID(TextureID::GBufferA_DiffuseRoughness));
-    Texture* GBufferB = graph.GetTexture(RESOURCE_ID(TextureID::GBufferB_NormalMetalness));
-    Texture* GBufferC = graph.GetTexture(RESOURCE_ID(TextureID::GBufferC_Velocity));
-    Texture* GBufferD = graph.GetTexture(RESOURCE_ID(TextureID::GBufferD_ObjectIDBuffer));
-    Texture* DEBUGTEXTURE = graph.GetTexture(RESOURCE_ID(TextureID::DEBUG_TEXTURE));
-    Texture* depthBuffer = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth));
+        context.CmdBindComputeDescriptorSets(indirectFillEntry->GetLayout(), indirectBinder.GetTargetSetID(), 1, &indirectBinder.GetDescriptorSet());
 
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, GBufferA->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, GBufferB->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, GBufferC->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, GBufferD->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, DEBUGTEXTURE->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthBuffer->GetResource(), VKW::RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData->GetResource(), VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_ALL_GRAPHICS);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeIndirectArgs->GetResource(), VKW::RESOURCE_ACCESS_INDIRECT_ARGS, VKW::STAGE_ALL_GRAPHICS);
+        glm::uvec3 const probeDebugGroupSize{ 4, 4, 4 };
+        glm::uvec3 const probeDebugDispatchSize = GetComputeGroupCount(g_GraphicsManager->GetDDGI().GetProbeCount3D(), probeDebugGroupSize);
+        context.CmdBindPipeline(VKW::BindPoint::Compute, indirectFillEntry->GetPipeline());
+        context.CmdDispatch(probeDebugDispatchSize.x, probeDebugDispatchSize.y, probeDebugDispatchSize.z);
+    }
 
-    PipelineEntry* drawSpheresEntry = g_GraphicsManager->GetPipelineDB().GetEntry("debug_view_ddgi_probes_draw");
-    ResourceBinder drawBinder = g_GraphicsManager->CreateResourceBinder(drawSpheresEntry, 0);
-    drawBinder.AddStorageBuffer(0, ddgiProbeIndirectArgs);
-    drawBinder.AddStorageBuffer(1, ddgiProbeData);
-    drawBinder.AddUniform(2, &ddgiUniform);
-    drawBinder.FlushDescriptorWrites();
+    {
+        DRE_GPU_SCOPE(DebugPassDDGIProbeDisplayDraw);
 
-    context.CmdBindGraphicsDescriptorSets(drawSpheresEntry->GetLayout(), drawBinder.GetTargetSetID(), 1, &drawBinder.GetDescriptorSet());
-    context.CmdBindGraphicsPipeline(drawSpheresEntry->GetPipeline());
+        Texture* output = graph.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage));
+        Texture* depthBuffer = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth));
 
-    DRE::U32 constexpr attachmentsCount = 5;
-    VKW::ImageResourceView* renderTargets[attachmentsCount] = {
-        GBufferA->GetShaderView(),
-        GBufferB->GetShaderView(),
-        GBufferC->GetShaderView(),
-        GBufferD->GetShaderView(),
-        DEBUGTEXTURE->GetShaderView()
-    };
+        g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, output->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
+        g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthBuffer->GetResource(), VKW::RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
+        g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData->GetResource(), VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_ALL_GRAPHICS);
+        g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeIndirectArgs->GetResource(), VKW::RESOURCE_ACCESS_INDIRECT_ARGS, VKW::STAGE_ALL_GRAPHICS);
 
-    context.CmdBeginRendering(attachmentsCount, renderTargets, depthBuffer->GetShaderView(), nullptr);
-    context.CmdSetViewport(attachmentsCount, 0, 0, renderWidth, renderHeight);
-    context.CmdSetScissor(attachmentsCount, 0, 0, renderWidth, renderHeight);
-#ifndef DRE_COMPILE_FOR_RENDERDOC
-    context.CmdSetPolygonMode(VKW::POLYGON_FILL);
-#endif // DRE_COMPILE_FOR_RENDERDOC
+        PipelineEntry* drawSpheresEntry = g_GraphicsManager->GetPipelineDB().GetEntry("debug_view_ddgi_probes_draw");
+        ResourceBinder drawBinder = g_GraphicsManager->CreateResourceBinder(drawSpheresEntry, 0);
+        drawBinder.AddStorageBuffer(0, ddgiProbeIndirectArgs);
+        drawBinder.AddStorageBuffer(1, ddgiProbeData);
+        drawBinder.AddUniform(2, &ddgiUniform);
+        drawBinder.FlushDescriptorWrites();
 
-    GlobalGeometry::GeometryGPU* probeDebugSphereGPU = g_GraphicsManager->GetDDGI().GetSphereGeometry();
-    context.CmdBindVertexBuffer(probeDebugSphereGPU->GetBuffer(), probeDebugSphereGPU->GetVertexOffset());
-    context.CmdBindIndexBuffer(probeDebugSphereGPU->GetBuffer(), probeDebugSphereGPU->GetIndexOffset());
-    context.CmdDrawIndexedIndirect(ddgiProbeIndirectArgs->GetResource());
+        context.CmdBindGraphicsDescriptorSets(drawSpheresEntry->GetLayout(), drawBinder.GetTargetSetID(), 1, &drawBinder.GetDescriptorSet());
+        context.CmdBindGraphicsPipeline(drawSpheresEntry->GetPipeline());
 
-    context.CmdEndRendering();
+        DRE::U32 constexpr attachmentsCount = 1;
+        VKW::ImageResourceView* renderTargets[attachmentsCount] = {
+            output->GetShaderView()
+        };
 
+        context.CmdBeginRendering(attachmentsCount, renderTargets, depthBuffer->GetShaderView(), nullptr);
+        context.CmdSetViewport(attachmentsCount, 0, 0, renderWidth, renderHeight);
+        context.CmdSetScissor(attachmentsCount, 0, 0, renderWidth, renderHeight);
+    #ifndef DRE_COMPILE_FOR_RENDERDOC
+        context.CmdSetPolygonMode(VKW::POLYGON_FILL);
+    #endif // DRE_COMPILE_FOR_RENDERDOC
+
+        GlobalGeometry::GeometryGPU* probeDebugSphereGPU = g_GraphicsManager->GetDDGI().GetSphereGeometry();
+        context.CmdBindVertexBuffer(probeDebugSphereGPU->GetBuffer(), probeDebugSphereGPU->GetVertexOffset());
+        context.CmdBindIndexBuffer(probeDebugSphereGPU->GetBuffer(), probeDebugSphereGPU->GetIndexOffset());
+        context.CmdDrawIndexedIndirect(ddgiProbeIndirectArgs->GetResource());
+
+        context.CmdEndRendering();
+    }
 }
 
 }

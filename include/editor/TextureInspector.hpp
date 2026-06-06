@@ -40,10 +40,10 @@ private:
     float m_TextureLowerEnd;
     float m_TextureUpperEnd;
 
-    bool m_ShowX = true;
-    bool m_ShowY = true;
-    bool m_ShowZ = true;
-    bool m_ShowW = true;
+    bool m_ShowX;
+    bool m_ShowY;
+    bool m_ShowZ;
+    bool m_ShowW;
 };
 
 }

@@ -8,8 +8,6 @@
 
 #include <gfx\GraphicsManager.hpp>
 
-#include <glm\gtc\type_ptr.hpp>
-
 #include <imgui.h>
 
 namespace EDITOR
@@ -19,13 +17,28 @@ TextureInspector::TextureInspector(BaseEditor* rootEditor, EditorFlags flags, GF
     : BaseEditor{ rootEditor, flags }
     , m_TextureBank{ bank }
     , m_GraphResources{ graphResources }
+    , m_DisplayedTexture{ nullptr }
     , m_TextureSizeMultiplier{ 0.75f }
+    , m_TextureLowerEnd{ 0.0f }
+    , m_TextureUpperEnd{ 1.0f }
+    , m_ShowX{ true }
+    , m_ShowY{ true }
+    , m_ShowZ{ true }
+    , m_ShowW{ true }
 {}
 
 TextureInspector::TextureInspector(TextureInspector&& rhs)
     : BaseEditor{ DRE_MOVE(rhs) }
     , m_TextureBank{ nullptr }
+    , m_GraphResources{ nullptr }
+    , m_DisplayedTexture{ nullptr }
     , m_TextureSizeMultiplier{ 0.75f }
+    , m_TextureLowerEnd{ 0.0f }
+    , m_TextureUpperEnd{ 1.0f }
+    , m_ShowX{ true }
+    , m_ShowY{ true }
+    , m_ShowZ{ true }
+    , m_ShowW{ true }
 {
     operator=(DRE_MOVE(rhs));
 }
@@ -37,6 +50,13 @@ TextureInspector& TextureInspector::operator=(TextureInspector&& rhs)
     DRE_SWAP_MEMBER(m_TextureBank);
     DRE_SWAP_MEMBER(m_GraphResources);
     DRE_SWAP_MEMBER(m_TextureSizeMultiplier);
+    DRE_SWAP_MEMBER(m_TextureLowerEnd);
+    DRE_SWAP_MEMBER(m_TextureUpperEnd);
+    DRE_SWAP_MEMBER(m_ShowX);
+    DRE_SWAP_MEMBER(m_ShowY);
+    DRE_SWAP_MEMBER(m_ShowZ);
+    DRE_SWAP_MEMBER(m_ShowW);
+    DRE_SWAP_MEMBER(m_DisplayedTexture);
 
     return *this;
 }
@@ -136,45 +156,6 @@ void TextureInspector::Render()
             ImGui::Checkbox("Y Channel", &ctx.m_ShowY);
             ImGui::Checkbox("Z Channel", &ctx.m_ShowZ);
             ImGui::Checkbox("W Channel", &ctx.m_ShowW);
-
-
-            /*
-            DRE::InplaceVector<GFX::Texture*, 2> deleteQueue;
-            for(std::uint32_t i = 0, size = m_DisplayedTextures.Size(); i < size; i++)
-            {
-                ////////////////////////////
-                // Texture View BEGIN
-                ////////////////////////////
-                ImVec2 imageSize{ float(m_DisplayedTextures[i]->GetWidth()), float(m_DisplayedTextures[i]->GetHeight()) };
-                imageSize.x *= m_TextureSizeMultiplier;
-                imageSize.y *= m_TextureSizeMultiplier;
-
-
-
-                DRE::String128 window_id{ m_DisplayedTextures[i]->GetResource()->name_ };
-                window_id.Append("##wnd");
-
-                ImGui::BeginChild(window_id.GetData(), ImVec2{}, ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Border, ImGuiWindowFlags_NoMove);
-                ImGui::Text(m_DisplayedTextures[i]->GetResource()->name_);
-                auto handle = m_DisplayedTextures[i]->GetImGuiDescriptor().GetHandle();
-                if (ImGui::ImageButton(m_DisplayedTextures[i]->GetResource()->name_.GetData(), handle, imageSize))
-                {
-                    deleteQueue.EmplaceBack(m_DisplayedTextures[i]);
-                }
-                ImGui::EndChild();
-
-                ////////////////////////////
-                // Texture View END
-                ////////////////////////////
-                GFX::g_GraphicsManager->GetImGuiSyncQueue().EmplaceBack(m_DisplayedTextures[i]);
-            }
-
-            for (std::uint32_t i = 0, size = deleteQueue.Size(); i < size; i++)
-            {
-                m_DisplayedTextures.RemoveValue(deleteQueue[i]);
-            }
-
-            */
 #endif
         }
         ImGui::EndChild();

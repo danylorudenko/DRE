@@ -33,6 +33,20 @@ struct TextureViewState
     bool m_ShowW = true;
 };
 
+struct DDGIDebugState
+{
+    enum VisMode
+    {
+        Color,
+        Normal,
+        UV,
+    };
+
+    bool m_DrawProbes = false;
+    float m_SphereScale = 1.0f;
+    VisMode m_VisMode = VisMode::Color;
+};
+
 struct ApplicationContext
 {
     // Time
@@ -53,6 +67,9 @@ struct ApplicationContext
 
     // Texture Inspector
     TextureViewState m_TextureInspectorViewState;
+
+    // DDGI Debug
+    DDGIDebugState m_DDGIDebugState;
 };
 
 extern ApplicationContext g_AppContext;
