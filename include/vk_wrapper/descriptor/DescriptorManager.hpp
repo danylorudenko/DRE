@@ -138,9 +138,9 @@ private:
     VkDescriptorPool            globalSetPool_;
     VkDescriptorPool            globalTexturesPool_;
 
-    VkDescriptorPool            perTextureDescriptors_;
+    VkDescriptorPool            perTextureDescriptorPool_;
 
-    VkDescriptorPool            perFrameDescriptors_[VKW::CONSTANTS::FRAMES_BUFFERING]; // for graph resources
+    VkDescriptorPool            perFrameDescriptorPools_[VKW::CONSTANTS::FRAMES_BUFFERING]; // for graph resources
 
     VkDescriptorSet             globalGenericSet_; // samplers + TLAS
     VkDescriptorSet             globalTexturesSet_;

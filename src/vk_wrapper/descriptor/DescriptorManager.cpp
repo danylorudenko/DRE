@@ -16,7 +16,7 @@ DescriptorManager::DescriptorManager(ImportTable* table, LogicalDevice* device)
     , globalSetPool_{ VK_NULL_HANDLE }
     , globalTexturesPool_{ VK_NULL_HANDLE }
 #ifdef DRE_IMGUI_CUSTOM_TEXTURE
-    , perTextureDescriptors_{ VK_NULL_HANDLE }
+    , perTextureDescriptorPool_{ VK_NULL_HANDLE }
 #endif
 {
     std::uint32_t constexpr STANDALONE_DESCRIPTOR_COUNT = 128;
@@ -105,7 +105,7 @@ DescriptorManager::DescriptorManager(ImportTable* table, LogicalDevice* device)
     perTextureDescriptorPoolInfo.poolSizeCount  = 1;
     perTextureDescriptorPoolInfo.pPoolSizes     = sizes;
 
-    VK_ASSERT(table_->vkCreateDescriptorPool(device_->Handle(), &perTextureDescriptorPoolInfo, nullptr, &perTextureDescriptors_));
+    VK_ASSERT(table_->vkCreateDescriptorPool(device_->Handle(), &perTextureDescriptorPoolInfo, nullptr, &perTextureDescriptorPool_));
 
 
     std::uint32_t constexpr PER_FRAME_DESCRIPTOR_COUNT  = 2048;
@@ -133,7 +133,7 @@ DescriptorManager::DescriptorManager(ImportTable* table, LogicalDevice* device)
 
     for (DRE::U32 i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
     {
-        VK_ASSERT(table_->vkCreateDescriptorPool(device_->Handle(), &perFrameDescriptorPoolInfo, nullptr, perFrameDescriptors_ + i));
+        VK_ASSERT(table_->vkCreateDescriptorPool(device_->Handle(), &perFrameDescriptorPoolInfo, nullptr, perFrameDescriptorPools_ + i));
     }
 
     CreateGlobalDescriptorLayouts();
@@ -162,7 +162,8 @@ DescriptorManager& DescriptorManager::operator=(DescriptorManager&& rhs)
     DRE_SWAP_MEMBER(globalTexturesPool_);
     DRE_SWAP_MEMBER(globalTexturesSet_);
 
-    DRE_SWAP_MEMBER(perTextureDescriptors_);
+    DRE_SWAP_MEMBER(perTextureDescriptorPool_);
+    DRE_SWAP_MEMBER(perFrameDescriptorPools_);
 
     DRE_SWAP_MEMBER(standalonePool_);
 
@@ -173,7 +174,12 @@ DescriptorManager::~DescriptorManager()
 {
     VkDevice device = device_->Handle();
 
-    table_->vkDestroyDescriptorPool(device, perTextureDescriptors_, nullptr);
+    for (DRE::U32 i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
+    {
+        table_->vkDestroyDescriptorPool(device, perFrameDescriptorPools_[i], nullptr);
+    }
+
+    table_->vkDestroyDescriptorPool(device, perTextureDescriptorPool_, nullptr);
     table_->vkDestroyDescriptorPool(device, standalonePool_, nullptr);
     table_->vkDestroyDescriptorPool(device, globalTexturesPool_, nullptr);
     table_->vkDestroyDescriptorPool(device, globalSetPool_, nullptr);
@@ -507,7 +513,7 @@ DescriptorSet DescriptorManager::AllocatePerFrameSet(DescriptorSetLayout const& 
     VkDescriptorSetAllocateInfo info;
     info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     info.pNext = nullptr;
-    info.descriptorPool = perFrameDescriptors_[bufferingID];
+    info.descriptorPool = perFrameDescriptorPools_[bufferingID];
     info.descriptorSetCount = 1;
     info.pSetLayouts = &vkLayout;
 
@@ -519,12 +525,12 @@ DescriptorSet DescriptorManager::AllocatePerFrameSet(DescriptorSetLayout const& 
 
 void DescriptorManager::ResetPerFramePool(DRE::U32 bufferingID)
 {
-    VK_ASSERT(table_->vkResetDescriptorPool(device_->Handle(), perFrameDescriptors_[bufferingID], 0));
+    VK_ASSERT(table_->vkResetDescriptorPool(device_->Handle(), perFrameDescriptorPools_[bufferingID], 0));
 }
 
 VkDescriptorPool DescriptorManager::GetPerTextureDescriptorPool()
 {
-    return perTextureDescriptors_;
+    return perTextureDescriptorPool_;
 }
 
 DescriptorManager::WriteDesc::WriteDesc()
