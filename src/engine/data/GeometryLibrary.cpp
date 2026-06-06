@@ -113,12 +113,12 @@ void GeometryLibrary::GeneratePlaneMesh(DRE::U32 width, DRE::U32 height, DRE::By
 
         DRE::U32 ids[6];
         ids[0] = v0;
-        ids[1] = v1;
-        ids[2] = v2;
+        ids[1] = v2;
+        ids[2] = v1;
 
         ids[3] = v2;
-        ids[4] = v1;
-        ids[5] = v3;
+        ids[4] = v3;
+        ids[5] = v1;
 
         DRE::WriteMemorySequence(indexMemory, ids, sizeof(ids));
     }
@@ -208,12 +208,12 @@ void GeometryLibrary::GenerateSphereMesh(DRE::U32 verticalResolution, DRE::U32 h
 
             DRE::U32 ids[6];
             ids[0] = v0;
-            ids[1] = v1;
-            ids[2] = v2;
+            ids[1] = v2;
+            ids[2] = v1;
 
             ids[3] = v2;
-            ids[4] = v1;
-            ids[5] = v3;
+            ids[4] = v3;
+            ids[5] = v1;
 
             DRE::WriteMemorySequence(indexMemory, ids, sizeof(ids));
         }
