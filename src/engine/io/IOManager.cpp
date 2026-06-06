@@ -182,6 +182,9 @@ void IOManager::ParseMaterialTexture_Parallel(aiScene const* scene, aiMaterial c
                 dataTexture.GetFormat(),
                 dataTexture.GetBuffer()
             );
+
+            // WARNING: WE MUST DO THIS, OTHERWISE UPLOAD ARENA IS OVERFLOWN
+            GFX::g_GraphicsManager->GetUploadArena().ResetAllocations(GFX::g_GraphicsManager->GetCurrentFrameID());
         }
 
         material.AssignTextureToSlot(slot, DRE_MOVE(dataTexture), gfxTexture);

@@ -131,6 +131,7 @@ void DREApplicationDelegate::start()
     /////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////
+    // WARNING: ParseModelFile will invoke LoadTexture2DSync which will reset the UploadArena
 #if 1
     WORLD::SceneNode* sponzaNode = m_IOManager.ParseModelFile("data\\gltf_samples\\Sponza\\glTF\\Sponza.gltf", m_MainScene);
     sponzaNode->SetScale(5.0f);
@@ -159,29 +160,6 @@ void DREApplicationDelegate::start()
 
     glm::mat spheresTransform = glm::rotate(glm::identity<glm::mat4>(), glm::radians(180.0f), glm::vec3{ 1.0f, 0.0, 0.0f });
     WORLD::SceneNode* spheresNode = m_IOManager.ParseModelFile("data\\gltf_samples\\MetalRoughSpheres\\glTF\\MetalRoughSpheres.gltf", m_MainScene, spheresTransform);
-    //spheresNode->ForEachChild([this](WORLD::SceneNode* node)
-    //{
-    //    WORLD::ISceneNodeUser* nodeUser = node->GetNodeUser();
-    //    if (nodeUser == nullptr)
-    //        return;
-    //
-    //    if (nodeUser->GetType() == WORLD::ISceneNodeUser::Type::Entity)
-    //    {
-    //        WORLD::Entity* entity = reinterpret_cast<WORLD::Entity*>(nodeUser);
-    //        Data::Material* material = entity->GetMaterial();
-    //        Data::Material::RenderingProperties& props = material->GetRenderingProperties();
-    //
-    //        props.EnableMaterialTexturesDefault(false);
-    //        props.EnableNormalTexture(false);
-    //
-    //        props.EnableMaterialTexturesGLTFSpheres(true);
-    //        props.EnableNormalTBN(false);
-    //
-    //        GFX::Material* gfxMaterial = material->GetGfxMaterial();
-    //        gfxMaterial->SetFlagsNoUpdate(props.GetMaterialFlags());
-    //        gfxMaterial->FlushDataToMaterialGPU();
-    //    }
-    //});
 
     m_GraphicsManager.GetMainContext().FlushAll();
 

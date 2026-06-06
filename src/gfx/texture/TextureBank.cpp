@@ -92,7 +92,6 @@ Texture* TextureBank::LoadTexture2DSync(DRE::String128 const& name, DRE::U32 wid
     VKW::QueueExecutionPoint syncPoint = m_LoadingContext->SyncPoint();
     m_LoadingContext->FlushAll();
     syncPoint.Wait();
-    transientArena.ResetAllocations(g_GraphicsManager->GetCurrentFrameID());
 
     VKW::ImageResourceView* imageView = m_ResourcesController->ViewImageAs(imageResource);
     VKW::TextureDescriptorIndex descriptorHandle = m_DescriptorAllocator->AllocateTextureDescriptor(imageView);

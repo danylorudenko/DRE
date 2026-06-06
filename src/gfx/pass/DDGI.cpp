@@ -41,11 +41,12 @@ DRE::U32 DDGI::GetProbeDataBufferSize() const
 DDGIConstantBuffer DDGI::GetConstantBuffer() const
 {
     glm::uvec3 const ddgiProbeDimentions = GetProbeCount3D();
-    glm::vec3 const ddgiProbeWorldDistance = glm::vec3(1.0f); // TODO: make this a setting
+    glm::vec3 const ddgiProbeWorldDistance = glm::vec3(2.0f); // TODO: make this a setting
 
     DDGIConstantBuffer cb{};
     cb.probesDimentions = ddgiProbeDimentions;
     cb.probesWorldDistance = ddgiProbeWorldDistance;
+    cb.probeDebugScale = 0.25f; // TODO: make this a setting
 
     cb.probeGeometryVertexCount = m_ProbeDebugSphereGPU->GetVertexCount();
     cb.probeGeometryIndexCount = m_ProbeDebugSphereGPU->GetIndexCount();
@@ -280,7 +281,7 @@ void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context
 
     GlobalGeometry::GeometryGPU* probeDebugSphereGPU = g_GraphicsManager->GetDDGI().GetSphereGeometry();
     context.CmdBindVertexBuffer(probeDebugSphereGPU->GetBuffer(), probeDebugSphereGPU->GetVertexOffset());
-    context.CmdBindIndexBuffer(probeDebugSphereGPU->GetBuffer(), probeDebugSphereGPU->GetIndexOffset(), VK_INDEX_TYPE_UINT32);
+    context.CmdBindIndexBuffer(probeDebugSphereGPU->GetBuffer(), probeDebugSphereGPU->GetIndexOffset());
     context.CmdDrawIndexedIndirect(ddgiProbeIndirectArgs->GetResource());
 
     context.CmdEndRendering();

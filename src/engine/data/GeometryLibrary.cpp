@@ -232,7 +232,6 @@ void GeometryLibrary::LoadDefaultGeometry()
         planeGeometry.SetIndexData(DRE_MOVE(planeIndices));
 
         AddGeometry("dre_plane", DRE_MOVE(planeGeometry));
-        GFX::g_GraphicsManager->GetGlobalGeometryManager().ScheduleGeometryUpload(GetGeometry("dre_plane"));
     }
 
     {
@@ -245,8 +244,8 @@ void GeometryLibrary::LoadDefaultGeometry()
         sphereGeometry.SetIndexData(DRE_MOVE(sphereIndices));
 
         AddGeometry("dre_sphere", DRE_MOVE(sphereGeometry));
-        GFX::g_GraphicsManager->GetGlobalGeometryManager().ScheduleGeometryUpload(GetGeometry("dre_sphere"));
     }
+
 }
 
 }
