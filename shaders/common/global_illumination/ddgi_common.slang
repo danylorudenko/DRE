@@ -24,7 +24,7 @@ struct DDGIProbeData
 uint GetProbeIndex(DDGIConstantBuffer ddgiCB, uint3 DTid)
 {
     uint sliceStart = ddgiCB.probesDimentions.x * ddgiCB.probesDimentions.y * DTid.z;
-    uint columnStart = sliceStart + ddgiCB.probesDimentions.y * DTid.y;
+    uint columnStart = sliceStart + ddgiCB.probesDimentions.x * DTid.y;
     uint probeIndex = columnStart + DTid.x;
     return probeIndex;
 }

@@ -125,6 +125,8 @@ void DDGIProbeScatterPass::Initialize(RenderGraph& graph)
 
 void DDGIProbeScatterPass::Render(RenderGraph& graph, VKW::Context& context)
 {
+    DRE_GPU_SCOPE(DDGIProbeScatter);
+
     glm::uvec3 GROUP_SIZE{ 4, 4, 4, };
 
     StorageBuffer* ddgiProbeData = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData));
