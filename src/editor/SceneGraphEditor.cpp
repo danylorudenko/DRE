@@ -190,6 +190,9 @@ void SceneGraphEditor::RenderEntityProperties(RenderingContext& context)
     ImGui::NewLine();
     ImGui::SeparatorText("Entity");
     WORLD::Entity* entity = reinterpret_cast<WORLD::Entity*>(DRE::g_AppContext.m_FocusedObject);
+    ImGui::Text("Name: %s", entity->GetSceneNode()->GetName());
+    ImGui::Text("Global ID: %d", entity->GetSceneNode()->GetGlobalID());
+
     if (GFX::RenderableObject* renderable = entity->GetRenderableObject())
     {
         ImGui::SeparatorText("Renderable Object");

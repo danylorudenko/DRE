@@ -4,6 +4,7 @@
 #include <gfx\scheduling\RenderGraph.hpp>
 
 #include <engine\data\GeometryLibrary.hpp>
+#include <engine\ApplicationContext.hpp>
 
 #include <common\global_illumination\ddgi_common.slang>
 
@@ -38,76 +39,56 @@ DRE::U32 DDGI::GetProbeDataBufferSize() const
     return sizeof(DDGIProbeData) * GetProbeTotalCount();
 }
 
+DRE::U32 DDGI::GetProbeResolutionGBuffer() const
+{
+    return 6;
+}
+
+glm::uvec2 DDGI::GetProbeAtlasGBufferDimentions() const
+{
+    glm::uvec3 const probeCounts = GetProbeCount3D();
+    glm::uvec2 atlasResolution = glm::uvec2(probeCounts) * GetProbeResolutionGBuffer();
+    atlasResolution.x *= probeCounts.z;
+
+    return atlasResolution;
+}
+
+DRE::U32 DDGI::GetProbeResolutionVisibility() const
+{
+    return 16;
+}
+
+glm::uvec2 DDGI::GetProbeAtlasVisibilityDimentions() const
+{
+    glm::uvec3 const probeCounts = GetProbeCount3D();
+    glm::uvec2 atlasResolution = glm::uvec2(probeCounts) * GetProbeResolutionVisibility();
+    atlasResolution.x *= probeCounts.z;
+
+    return atlasResolution;
+}
+
 DDGIConstantBuffer DDGI::GetConstantBuffer() const
 {
+    auto& ddgiDebugState = DRE::g_AppContext.m_DDGIDebugState;
+
     glm::uvec3 const ddgiProbeDimentions = GetProbeCount3D();
-    glm::vec3 const ddgiProbeWorldDistance = glm::vec3(2.0f); // TODO: make this a setting
+    glm::vec3 const ddgiProbeWorldDistance = glm::vec3(g_GraphicsManager->GetGraphicsSettings().m_DDGIProbeWorldDistance);
 
     DDGIConstantBuffer cb{};
     cb.probesDimentions = ddgiProbeDimentions;
     cb.probesWorldDistance = ddgiProbeWorldDistance;
-    cb.probeDebugScale = 0.25f; // TODO: make this a setting
+    cb.probeDebugScale = ddgiDebugState.m_SphereScale;
+    cb.visualizationMode = static_cast<int>(ddgiDebugState.m_VisMode);
 
     cb.probeGeometryVertexCount = m_ProbeDebugSphereGPU->GetVertexCount();
     cb.probeGeometryIndexCount = m_ProbeDebugSphereGPU->GetIndexCount();
+    cb.probeGBufferResolution = GetProbeResolutionGBuffer();
+    cb.probeVisibilityResolution = GetProbeResolutionVisibility();
     return cb;
 }
 
 
-PassID DDGIProbeTracePass::GetID() const
-{
-    return PassID::DDGIProbeTrace;
-}
-
-void DDGIProbeTracePass::RegisterResources(RenderGraph& graph)
-{
-}
-
-void DDGIProbeTracePass::Initialize(RenderGraph& graph)
-{
-}
-
-void DDGIProbeTracePass::Render(RenderGraph& graph, VKW::Context& context)
-{
-}
-
-
-PassID DDGIProbeBlendPass::GetID() const
-{
-    return PassID::DDGIProbeBlend;
-}
-
-void DDGIProbeBlendPass::RegisterResources(RenderGraph& graph)
-{
-}
-
-void DDGIProbeBlendPass::Initialize(RenderGraph& graph)
-{
-}
-
-void DDGIProbeBlendPass::Render(RenderGraph& graph, VKW::Context& context)
-{
-}
-
-
-PassID DDGIProbeLightingPass::GetID() const
-{
-    return PassID::DDGIProbeLighting;
-}
-
-void DDGIProbeLightingPass::RegisterResources(RenderGraph& graph)
-{
-}
-
-void DDGIProbeLightingPass::Initialize(RenderGraph& graph)
-{
-}
-
-void DDGIProbeLightingPass::Render(RenderGraph& graph, VKW::Context& context)
-{
-}
-
-
+////////////////////////////////////////////////
 PassID DDGIProbeScatterPass::GetID() const
 {
     return PassID::DDGIProbeScatter;
@@ -115,13 +96,12 @@ PassID DDGIProbeScatterPass::GetID() const
 
 void DDGIProbeScatterPass::RegisterResources(RenderGraph& graph)
 {
-    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData), g_GraphicsManager->GetDDGI().GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_GENERIC_WRITE);
-
+    DDGI& ddgi = g_GraphicsManager->GetDDGI();
+    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData), ddgi.GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_SHADER_WRITE);
 }
 
 void DDGIProbeScatterPass::Initialize(RenderGraph& graph)
-{
-}
+{}
 
 void DDGIProbeScatterPass::Render(RenderGraph& graph, VKW::Context& context)
 {
@@ -152,6 +132,107 @@ void DDGIProbeScatterPass::Render(RenderGraph& graph, VKW::Context& context)
     context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
 }
 
+
+////////////////////////////////////////////////
+PassID DDGIProbeTracePass::GetID() const
+{
+    return PassID::DDGIProbeTrace;
+}
+
+void DDGIProbeTracePass::RegisterResources(RenderGraph& graph)
+{
+    DDGI& ddgi = g_GraphicsManager->GetDDGI();
+
+    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData), ddgi.GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_SHADER_RW);
+
+    {
+        glm::uvec2 dims = ddgi.GetProbeAtlasGBufferDimentions();
+        graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_AtlasGBufferA), VKW::FORMAT_R16G16B16A16_FLOAT, dims.x, dims.y, VKW::RESOURCE_ACCESS_SHADER_WRITE);
+        graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_AtlasGBufferB), VKW::FORMAT_R16G16B16A16_FLOAT, dims.x, dims.y, VKW::RESOURCE_ACCESS_SHADER_WRITE);
+    }
+    {
+        glm::uvec2 dims = ddgi.GetProbeAtlasVisibilityDimentions();
+        graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_AtlasVisibility), VKW::FORMAT_R16_FLOAT, dims.x, dims.y, VKW::RESOURCE_ACCESS_SHADER_WRITE);
+    }
+}
+
+void DDGIProbeTracePass::Render(RenderGraph& graph, VKW::Context& context)
+{
+    DDGI& ddgi = g_GraphicsManager->GetDDGI();
+
+    StorageBuffer* ddgiProbeData = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData));
+    Texture* atlasGBufferA = graph.GetTexture(RESOURCE_ID(TextureID::DDGI_AtlasGBufferA));
+    Texture* atlasGBufferB = graph.GetTexture(RESOURCE_ID(TextureID::DDGI_AtlasGBufferB));
+    Texture* atlasVisibility = graph.GetTexture(RESOURCE_ID(TextureID::DDGI_AtlasVisibility));
+
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData->GetResource(), VKW::RESOURCE_ACCESS_SHADER_RW, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, atlasGBufferA->GetResource(), VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, atlasGBufferB->GetResource(), VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, atlasVisibility->GetResource(), VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
+
+    UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(DDGIConstantBuffer));
+    uniform.WriteMember140(ddgi.GetConstantBuffer());
+    uniform.FlushWrites();
+
+    PipelineEntry* entry = g_GraphicsManager->GetPipelineDB().GetEntry("ddgi_probe_trace");
+    ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(entry, 0);
+    binder.AddUniform(0, &uniform);
+    binder.AddStorageBuffer(1, ddgiProbeData);
+    binder.AddStorageTexture(2, atlasGBufferA);
+    binder.AddStorageTexture(3, atlasGBufferB);
+    binder.AddStorageTexture(4, atlasVisibility);
+    binder.FlushDescriptorWrites();
+
+    context.CmdBindComputePipeline(entry->GetPipeline());
+    context.CmdBindComputeDescriptorSets(entry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
+
+    glm::uvec3 GROUP_SIZE{ 4, 4, 4, };
+    glm::uvec3 const ddgiProbeDimentions = g_GraphicsManager->GetDDGI().GetProbeCount3D();
+
+    glm::uvec3 dispatchSize = (ddgiProbeDimentions + GROUP_SIZE - 1u) / GROUP_SIZE;
+    context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
+}
+
+
+////////////////////////////////////////////////
+PassID DDGIProbeBlendPass::GetID() const
+{
+    return PassID::DDGIProbeBlend;
+}
+
+void DDGIProbeBlendPass::RegisterResources(RenderGraph& graph)
+{
+}
+
+void DDGIProbeBlendPass::Initialize(RenderGraph& graph)
+{
+}
+
+void DDGIProbeBlendPass::Render(RenderGraph& graph, VKW::Context& context)
+{
+}
+
+
+////////////////////////////////////////////////
+PassID DDGIProbeLightingPass::GetID() const
+{
+    return PassID::DDGIProbeLighting;
+}
+
+void DDGIProbeLightingPass::RegisterResources(RenderGraph& graph)
+{
+}
+
+void DDGIProbeLightingPass::Initialize(RenderGraph& graph)
+{
+}
+
+void DDGIProbeLightingPass::Render(RenderGraph& graph, VKW::Context& context)
+{
+}
+
+
+/////////////////////////////////////////////////
 PassID DebugPassDDGIProbeDisplay::GetID() const
 {
     return PassID::DebugDDGIProbeDisplay;
@@ -164,7 +245,7 @@ void DebugPassDDGIProbeDisplay::Initialize(RenderGraph& graph)
 void DebugPassDDGIProbeDisplay::RegisterResources(RenderGraph& graph)
 {
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DebugPassDDGIProbeIndirectArgs), sizeof(DrawIndexedIndirectCommand), VKW::RESOURCE_ACCESS_INDIRECT_ARGS);
-    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData),                 g_GraphicsManager->GetDDGI().GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_GENERIC_READ);
+    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData),                 g_GraphicsManager->GetDDGI().GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_SHADER_READ);
 
     DRE::U32 renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth;
     DRE::U32 renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
@@ -183,6 +264,10 @@ void DebugPassDDGIProbeDisplay::RegisterResources(RenderGraph& graph)
 
 void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context)
 {
+    auto& ddgiDebugState = DRE::g_AppContext.m_DDGIDebugState;
+    if (!ddgiDebugState.m_DrawProbes)
+        return;
+
     DRE::U32 renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth;
     DRE::U32 renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 

@@ -61,7 +61,7 @@ ForwardPassOutput OutputForwardPass(in S_LIGHTING_RESULT Result, in S_SURFACE Su
     float2 vel_uv = vel * 0.5f;
 
     outp.velocity = vel_uv;
-    outp.id = GlobalID2Color();
+    outp.id = SceneNodeID2Color();
 
     return outp;
 }

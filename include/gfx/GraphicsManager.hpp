@@ -89,6 +89,9 @@ struct GraphicsSettings
     float           m_AOMaxOcclusionDistance= 0.5f;
     AOVersion       m_AOVersion             = AO_GTAO;
 
+    // DDGI
+    float           m_DDGIProbeWorldDistance = 2.0f;
+
     DRE::U32        m_ShadowMapWidth        = 1024;
     DRE::U32        m_ShadowMapHeight       = 1024;
 
@@ -106,9 +109,9 @@ struct GraphicsSettings
 
     // DDGI COMPILE_TIME_SETTINGS BEGIN
 
-    DRE::U32        m_DDGIProbeCountX = 64;
-    DRE::U32        m_DDGIProbeCountY = 32;
-    DRE::U32        m_DDGIProbeCountZ = 64;
+    DRE::U32        m_DDGIProbeCountX = 32;
+    DRE::U32        m_DDGIProbeCountY = 16;
+    DRE::U32        m_DDGIProbeCountZ = 32;
 
     // DDGI COMPILE_TIME_SETTINGS END
 

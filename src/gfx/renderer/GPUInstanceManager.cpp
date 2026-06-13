@@ -1,9 +1,5 @@
 #include <gfx\renderer\GPUInstanceManager.hpp>
 
-#include <vk_wrapper\descriptor\DescriptorManager.hpp>
-
-#include <gfx\GraphicsManager.hpp>
-
 namespace GFX
 {
 
@@ -37,11 +33,15 @@ InstanceDataManager::InstanceGPU::InstanceGPU(InstanceDataManager* manager, DRE:
     m_InstanceDataCPU.material = reinterpret_cast<S_MATERIAL*>(m_MaterialGPU.GetAddressGPU());
 }
 
-void InstanceDataManager::InstanceGPU::ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform, DRE::U32 globalID, InstanceFlags instanceFlags)
+void InstanceDataManager::InstanceGPU::ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform, DRE::U32 sceneNodeID, InstanceFlags instanceFlags, DRE::U32 indexOffset, DRE::U32 vertexOffset)
 {
     m_InstanceDataCPU.world_space = transform;
     m_InstanceDataCPU.inv_world_space = invTransform;
-    m_InstanceDataCPU.globalID_instanceFlags = glm::uvec4{ globalID, DRE::U32(instanceFlags), 0, 0 };
+    m_InstanceDataCPU.sceneNodeID = sceneNodeID;
+    m_InstanceDataCPU.instanceFlags = DRE::U32(instanceFlags);
+    m_InstanceDataCPU.indexOffset = indexOffset;
+    m_InstanceDataCPU.vertexOffset = vertexOffset;
+
     Base::Payload::ScheduleUpdate(m_InstanceDataCPU);
 }
 
@@ -56,16 +56,16 @@ void InstanceDataManager::InstanceGPU::ScheduleUpdate(glm::mat4 transform, glm::
 void InstanceDataManager::InstanceGPU::ScheduleUpdate(InstanceFlags flags, bool addFlags)
 {
     if (addFlags)
-        m_InstanceDataCPU.globalID_instanceFlags.y |= DRE::U32(flags);
+        m_InstanceDataCPU.instanceFlags |= DRE::U32(flags);
     else
-        m_InstanceDataCPU.globalID_instanceFlags.y &= ~DRE::U32(flags);
+        m_InstanceDataCPU.instanceFlags &= ~DRE::U32(flags);
 
     Base::Payload::ScheduleUpdate(m_InstanceDataCPU);
 }
 
 void InstanceDataManager::InstanceGPU::ScheduleUpdate(InstanceFlags flags)
 {
-    m_InstanceDataCPU.globalID_instanceFlags.y = DRE::U32(flags);
+    m_InstanceDataCPU.instanceFlags = DRE::U32(flags);
     Base::Payload::ScheduleUpdate(m_InstanceDataCPU);
 }
 

@@ -17,7 +17,7 @@ struct PSInput
 
 
 [shader("vertex")]
-PSInput mainVS(VSInput input)
+PSInput mainVS(DREVertex input)
 {
     PSInput out;
 

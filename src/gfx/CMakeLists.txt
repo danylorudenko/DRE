@@ -97,6 +97,7 @@ set(GFX_SHADER_LIST
 	"${DRE_SOURCE_DIR}/shaders/common/lighting/lighting.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/lighting/lights.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/shadows/shadows.slang"
+	"${DRE_SOURCE_DIR}/shaders/common/utils/octahedron.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/utils/poisson.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/vertex/dre_vertex_layout.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/forward.slang"
@@ -126,6 +127,7 @@ set(GFX_SHADER_LIST
 	"${DRE_SOURCE_DIR}/shaders/lighting_deferred.slang"
 	"${DRE_SOURCE_DIR}/shaders/temporal_AA.slang"
 	"${DRE_SOURCE_DIR}/shaders/water_caustics.slang"
+	"${DRE_SOURCE_DIR}/shaders/water_shadow.slang"
 	"${DRE_SOURCE_DIR}/shaders/water.slang")
 
 add_library(gfx STATIC ${GFX_HEADER_LIST} ${GFX_SOURCE_LIST})

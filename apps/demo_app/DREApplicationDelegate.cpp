@@ -167,6 +167,9 @@ void DREApplicationDelegate::start()
     Data::Texture2D blueNoise256 = m_IOManager.ReadTexture2D("textures\\blue_noise_rgba.png", Data::TEXTURE_CHANNELS_RGBA);
     m_GraphicsManager.GetTextureBank().LoadTexture2DSync("blue_noise_256", 256, 256, VKW::FORMAT_R8G8B8A8_UNORM, blueNoise256.GetBuffer());
 
+    Data::Texture2D whiteNoise256 = m_IOManager.ReadTexture2D("textures\\white_noise.png", Data::TEXTURE_CHANNELS_GRAY);
+    m_GraphicsManager.GetTextureBank().LoadTexture2DSync("white_noise_256", 256, 256, VKW::FORMAT_R8_UNORM, whiteNoise256.GetBuffer());
+
     ////////////
     m_GraphicsManager.BuildMainSceneTLAS();
 

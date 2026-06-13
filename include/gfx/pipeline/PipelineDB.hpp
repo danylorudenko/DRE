@@ -67,7 +67,6 @@ private:
     DRE::String64 const*    CreateGraphicsForwardShadowPipeline(char const* name, char const* vertName);
     DRE::String64 const*    CreateComputePipeline(char const* name, char const* compName);
     DRE::String64 const*    CreateCustomGraphicsPipeline(char const* name, char const* vertName, char const* fragName, VKW::Pipeline::Descriptor& descriptor);
-    DRE::String64 const*    CreateCustomComputePipeline(char const* name, VKW::Pipeline::Descriptor& descriptor);
 
     DRE::String64 const*    CreateGraphicsGizmoPipeline(char const* name, char const* vertName, char const* fragName);
 

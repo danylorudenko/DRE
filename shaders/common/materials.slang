@@ -41,31 +41,73 @@ struct S_MATERIAL_PROPERTIES
     float opacity = 1;
 };
 
-S_MATERIAL_PROPERTIES ReadMaterialProperties(S_MATERIAL* material, float2 UV, float3x3 TBN)
+interface IMaterialTextureSampler
+{
+    float4 SampleTextureNearest(uint textureID, float2 UV);
+    float4 SampleTextureLinear(uint textureID, float2 UV);
+    float4 SampleTextureAnisotropic(uint textureID, float2 UV);
+};
+
+struct MaterialTextureSampler : IMaterialTextureSampler
+{
+    float4 SampleTextureNearest(uint textureID, float2 UV)
+    {
+        return SampleGlobalTextureNearest(textureID, UV);
+    }
+    float4 SampleTextureLinear(uint textureID, float2 UV)
+    {
+        return SampleGlobalTextureLinear(textureID, UV);
+    }
+    float4 SampleTextureAnisotropic(uint textureID, float2 UV)
+    {
+        return SampleGlobalTextureAnisotropic(textureID, UV);
+    }
+};
+
+struct ComputeMaterialTextureSampler : IMaterialTextureSampler
+{
+    float mipLevel;
+
+    float4 SampleTextureNearest(uint textureID, float2 UV)
+    {
+        return SampleGlobalTextureNearest(textureID, UV, mipLevel);
+    }
+    float4 SampleTextureLinear(uint textureID, float2 UV)
+    {
+        return SampleGlobalTextureLinear(textureID, UV, mipLevel);
+    }
+    float4 SampleTextureAnisotropic(uint textureID, float2 UV)
+    {
+        return SampleGlobalTextureAnisotropic(textureID, UV, mipLevel);
+    }
+};
+
+
+S_MATERIAL_PROPERTIES ReadMaterialProperties<TSampler : IMaterialTextureSampler>(S_MATERIAL* material, float2 UV, float3x3 TBN, TSampler sampler)
 {
     S_MATERIAL_PROPERTIES result = {};
 
     if (IsMaterialPBR(material))
     {
-        ReadMaterialPropertiesPBR(material, UV, TBN, result);
+        ReadMaterialPropertiesPBR(material, UV, TBN, result, sampler);
     }
     else if (IsMaterialSpecGloss(material))
     {
-        ReadMaterialPropertiesSpecGloss(material, UV, TBN, result);
+        ReadMaterialPropertiesSpecGloss(material, UV, TBN, result, sampler);
     }
     else
     {
-        ReadMaterialPropertiesDiffuseOnly(material, UV, TBN, result);
+        ReadMaterialPropertiesDiffuseOnly(material, UV, TBN, result, sampler);
     }
 
     return result;
 }
 
-void ReadMaterialPropertiesNormalsHELPER(S_MATERIAL* material, in float2 UV, in float3x3 TBN, inout S_MATERIAL_PROPERTIES result)
+void ReadMaterialPropertiesNormalsHELPER<TSampler : IMaterialTextureSampler>(S_MATERIAL* material, in float2 UV, in float3x3 TBN, inout S_MATERIAL_PROPERTIES result, TSampler sampler)
 {
     if (IsMaterialNormalTextureEnabled(material))
     {
-        result.normal = SampleGlobalTextureAnisotropic(GetNormalTextureID(material), UV).rgb;
+        result.normal = sampler.SampleTextureAnisotropic(GetNormalTextureID(material), UV).rgb;
         result.normal = result.normal * 2.0f - 1.0f;
 
         if (IsMaterialNormalTextureInvertY(material))
@@ -77,16 +119,16 @@ void ReadMaterialPropertiesNormalsHELPER(S_MATERIAL* material, in float2 UV, in 
     }
     else if (IsMaterialBumpTextureEnabled(material))
     {
-        result.height = SampleGlobalTextureAnisotropic(GetBumpTextureID(material), UV).r;
+        result.height = sampler.SampleTextureAnisotropic(GetBumpTextureID(material), UV).r;
         float2 dims;
         GetGlobalTextureObject(GetBumpTextureID(material)).GetDimensions(dims.x, dims.y);
         float2 pixelSize = rcp(dims);
 
-        float rightHeight = SampleGlobalTextureAnisotropic(GetBumpTextureID(material), UV + float2(pixelSize.x, 0)).r - result.height;
+        float rightHeight = sampler.SampleTextureAnisotropic(GetBumpTextureID(material), UV + float2(pixelSize.x, 0)).r - result.height;
         float rightDistance = sqrt(1 - rightHeight * rightHeight);
         float3 tanVector = float3(rightDistance, 0, rightHeight);
 
-        float upperHeight = SampleGlobalTextureAnisotropic(GetBumpTextureID(material), UV + float2(0, pixelSize.y)).r - result.height;
+        float upperHeight = sampler.SampleTextureAnisotropic(GetBumpTextureID(material), UV + float2(0, pixelSize.y)).r - result.height;
         float upperDistance = sqrt(1 - upperHeight * upperHeight);
         float3 bitanVector = float3(0, upperDistance, upperHeight);
 
@@ -99,106 +141,106 @@ void ReadMaterialPropertiesNormalsHELPER(S_MATERIAL* material, in float2 UV, in 
     }
 }
 
-void ReadMaterialPropertiesPBR(S_MATERIAL* material, in float2 UV, in float3x3 TBN, inout S_MATERIAL_PROPERTIES result)
+void ReadMaterialPropertiesPBR<TSampler : IMaterialTextureSampler>(S_MATERIAL* material, in float2 UV, in float3x3 TBN, inout S_MATERIAL_PROPERTIES result, TSampler sampler)
 {
-    result.diffuse = SampleGlobalTextureAnisotropic(GetDiffuseTextureID(material), UV).rgb;
+    result.diffuse = sampler.SampleTextureAnisotropic(GetDiffuseTextureID(material), UV).rgb;
     if (IsMaterialAlphaMasked(material))
     {
-        result.opacity = SampleGlobalTextureAnisotropic(GetOpacityTextureID(material), UV).r;
+        result.opacity = sampler.SampleTextureAnisotropic(GetOpacityTextureID(material), UV).r;
     }
 
-    ReadMaterialPropertiesNormalsHELPER(material, UV, TBN, result);
+    ReadMaterialPropertiesNormalsHELPER(material, UV, TBN, result, sampler);
 
     if (IsMaterialMetallicRoughnessCombined(material))
     {
-        float2 metalness_roughness = SampleGlobalTextureAnisotropic(GetMetalnessTextureID(material), UV).bg;
+        float2 metalness_roughness = sampler.SampleTextureAnisotropic(GetMetalnessTextureID(material), UV).bg;
         result.metalness = metalness_roughness.x;
         result.roughness = metalness_roughness.y;
     }
     else
     {
-        result.metalness = SampleGlobalTextureAnisotropic(GetMetalnessTextureID(material), UV).r;
-        result.roughness = SampleGlobalTextureAnisotropic(GetRoughnessTextureID(material), UV).r;
+        result.metalness = sampler.SampleTextureAnisotropic(GetMetalnessTextureID(material), UV).r;
+        result.roughness = sampler.SampleTextureAnisotropic(GetRoughnessTextureID(material), UV).r;
     }
 }
 
-void ReadMaterialPropertiesSpecGloss(S_MATERIAL* material, in float2 UV, in float3x3 TBN, inout S_MATERIAL_PROPERTIES result)
+void ReadMaterialPropertiesSpecGloss<TSampler : IMaterialTextureSampler>(S_MATERIAL* material, in float2 UV, in float3x3 TBN, inout S_MATERIAL_PROPERTIES result, TSampler sampler)
 {
-    result.diffuse = SampleGlobalTextureAnisotropic(GetDiffuseTextureID(material), UV).rgb;
+    result.diffuse = sampler.SampleTextureAnisotropic(GetDiffuseTextureID(material), UV).rgb;
     if (IsMaterialAlphaMasked(material))
     {
-        result.opacity = SampleGlobalTextureAnisotropic(GetOpacityTextureID(material), UV).r;
+        result.opacity = sampler.SampleTextureAnisotropic(GetOpacityTextureID(material), UV).r;
     }
 
-    ReadMaterialPropertiesNormalsHELPER(material, UV, TBN, result);
+    ReadMaterialPropertiesNormalsHELPER(material, UV, TBN, result, sampler);
 
-    float3 glossiness = SampleGlobalTextureAnisotropic(GetGlossinessTextureID(material), UV).rgb;
+    float3 glossiness = sampler.SampleTextureAnisotropic(GetGlossinessTextureID(material), UV).rgb;
     float glossinessAverage = max(glossiness.r, max(glossiness.g, glossiness.b));
     result.roughness = 1.0f - glossinessAverage;
     result.roughness = result.roughness * result.roughness; // perceptual mapping
 
-    float3 specular = SampleGlobalTextureAnisotropic(GetSpecularTextureID(material), UV).rgb;
+    float3 specular = sampler.SampleTextureAnisotropic(GetSpecularTextureID(material), UV).rgb;
     specular = specular * specular; // perceptual mapping
     result.metalness = dot(specular, float3(0.2126, 0.7152, 0.0722));
 }
 
-void ReadMaterialPropertiesDiffuseOnly(S_MATERIAL* material, in float2 UV, in float3x3 TBN, inout S_MATERIAL_PROPERTIES result)
+void ReadMaterialPropertiesDiffuseOnly<TSampler : IMaterialTextureSampler>(S_MATERIAL* material, in float2 UV, in float3x3 TBN, inout S_MATERIAL_PROPERTIES result, TSampler sampler)
 {
-    result.diffuse = SampleGlobalTextureAnisotropic(GetDiffuseTextureID(material), UV).rgb;
+    result.diffuse = sampler.SampleTextureAnisotropic(GetDiffuseTextureID(material), UV).rgb;
     if (IsMaterialAlphaMasked(material))
     {
-        result.opacity = SampleGlobalTextureAnisotropic(GetOpacityTextureID(material), UV).r;
+        result.opacity = sampler.SampleTextureAnisotropic(GetOpacityTextureID(material), UV).r;
     }
 
-    ReadMaterialPropertiesNormalsHELPER(material, UV, TBN, result);
+    ReadMaterialPropertiesNormalsHELPER(material, UV, TBN, result, sampler);
 }
 
-int GetDiffuseTextureID(S_MATERIAL* material)
+uint GetDiffuseTextureID(S_MATERIAL* material)
 {
     return material->texture_ids0.x;
 }
 
-int GetNormalTextureID(S_MATERIAL* material)
+uint GetNormalTextureID(S_MATERIAL* material)
 {
     return material->texture_ids0.y;
 }
 
-int GetMetalnessTextureID(S_MATERIAL* material)
+uint GetMetalnessTextureID(S_MATERIAL* material)
 {
     return material->texture_ids0.z;
 }
 
-int GetRoughnessTextureID(S_MATERIAL* material)
+uint GetRoughnessTextureID(S_MATERIAL* material)
 {
     return material->texture_ids0.w;
 }
 
-int GetOcclusionTextureID(S_MATERIAL* material)
+uint GetOcclusionTextureID(S_MATERIAL* material)
 {
     return material->texture_ids1.x;
 }
 
-int GetBentNormalTextureID(S_MATERIAL* material)
+uint GetBentNormalTextureID(S_MATERIAL* material)
 {
     return material->texture_ids1.y;
 }
 
-int GetOpacityTextureID(S_MATERIAL* material)
+uint GetOpacityTextureID(S_MATERIAL* material)
 {
     return material->texture_ids1.z;
 }
 
-int GetGlossinessTextureID(S_MATERIAL* material)
+uint GetGlossinessTextureID(S_MATERIAL* material)
 {
     return material->texture_ids1.w;
 }
 
-int GetSpecularTextureID(S_MATERIAL* material)
+uint GetSpecularTextureID(S_MATERIAL* material)
 {
     return material->texture_ids2.x;
 }
 
-int GetBumpTextureID(S_MATERIAL* material)
+uint GetBumpTextureID(S_MATERIAL* material)
 {
     return material->texture_ids2.y;
 }

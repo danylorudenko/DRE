@@ -56,7 +56,7 @@ struct PSInput
 };
 
 [shader("vertex")]
-PSInput mainVS(VSInput input)
+PSInput mainVS(DREVertex input)
 {
     float REF_INDEX = GetGenericScalar();
 

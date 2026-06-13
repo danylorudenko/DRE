@@ -41,7 +41,7 @@ S_SURFACE InitSurface(float3 wpos)
     return Surface;
 }
 
-S_LIGHTING_RESULT CalculateLighting(S_SURFACE surface, ShaderStage shaderStage)
+S_LIGHTING_RESULT CalculateDirectLighting(S_SURFACE surface, ShaderStage shaderStage)
 {
     S_LIGHTING_RESULT Result;
     Result.finalRadiance = float3(0.0f, 0.0f, 0.0f);

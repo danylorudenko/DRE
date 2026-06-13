@@ -35,15 +35,16 @@ struct TextureViewState
 
 struct DDGIDebugState
 {
+    // keep in sync with ddgi_common.slang
     enum VisMode
     {
-        Color,
-        Normal,
-        UV,
+        Color     = 0,
+        Normal    = 1,
+        UV        = 2,
     };
 
     bool m_DrawProbes = false;
-    float m_SphereScale = 1.0f;
+    float m_SphereScale = 0.25f;
     VisMode m_VisMode = VisMode::Color;
 };
 

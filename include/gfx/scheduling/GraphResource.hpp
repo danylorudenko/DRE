@@ -29,7 +29,9 @@ enum class TextureID
     GBufferB_NormalMetalness,
     GBufferC_Velocity,
     GBufferD_ObjectIDBuffer,
-    DDGI_ProbeGBuffer,
+    DDGI_AtlasGBufferA,
+    DDGI_AtlasGBufferB,
+    DDGI_AtlasVisibility,
     DDGI_ProbeIrradiance,
     DEBUG_TEXTURE,
     ID_MAX

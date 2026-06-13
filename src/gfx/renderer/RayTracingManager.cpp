@@ -5,8 +5,6 @@
 #include <gfx\GraphicsManager.hpp>
 #include <engine\data\Geometry.hpp>
 
-//#include <engine\scene\Scene.hpp>
-
 namespace GFX
 {
 
@@ -126,7 +124,7 @@ RayTracingManager::TLAS* RayTracingManager::BuildSceneAccelerationStructure(Rend
              m[0][1], m[1][1], m[2][1], m[3][0],
              m[0][2], m[1][2], m[2][2], m[3][0]
         };
-        instancesStart[i].instanceCustomIndex = i;
+        instancesStart[i].instanceCustomIndex = renderableObjects[i]->GetInstanceGPU().GetID();
         instancesStart[i].mask = 0xFFFFFFFF;
         instancesStart[i].instanceShaderBindingTableRecordOffset = 0; // hmm
         instancesStart[i].flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FRONT_COUNTERCLOCKWISE_BIT_KHR;

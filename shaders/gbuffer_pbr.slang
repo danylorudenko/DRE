@@ -17,7 +17,7 @@ struct PSInput
 };
 
 [shader("vertex")]
-PSInput mainVS(VSInput input)
+PSInput mainVS(DREVertex input)
 {
     S_INSTANCE* InstancePtr = GetInstance();
 
@@ -75,7 +75,7 @@ GBuffer mainPS(PSInput input)
     S_INSTANCE* InstancePtr = GetInstance();
     S_MATERIAL* MaterialPtr = GetMaterial(InstancePtr);
 
-    S_MATERIAL_PROPERTIES MaterialProperties = ReadMaterialProperties(MaterialPtr, input.uv, input.TBN);
+    S_MATERIAL_PROPERTIES MaterialProperties = ReadMaterialProperties(MaterialPtr, input.uv, input.TBN, MaterialTextureSampler());
 
     if (MaterialProperties.opacity < 1.0f)
     {
@@ -87,7 +87,7 @@ GBuffer mainPS(PSInput input)
     float3 encodedNormal = MaterialProperties.normal * 0.5f + 0.5f;
     Output.Normal_Metalness = float4(encodedNormal, MaterialProperties.metalness);
     Output.Velocity = CalculateVelocity(input.ndc_pos, input.prev_wpos);
-    Output.ObjectID = GlobalID2Color();
+    Output.ObjectID = SceneNodeID2Color();
 
     //Output.DEBUG_TEXTURE = float4(input.TBN[2], 1);
     //Output.DEBUG_TEXTURE = float4(frac(input.uv), 0, 1);

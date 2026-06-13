@@ -1,7 +1,7 @@
 #ifndef __DRE_VERTEX_LAYOUT_H__
 #define __DRE_VERTEX_LAYOUT_H__
 
-struct VSInput
+struct DREVertex
 {
     [[vk::location(0)]] float3 pos  : POSITION;
     [[vk::location(1)]] float3 norm : NORMAL;

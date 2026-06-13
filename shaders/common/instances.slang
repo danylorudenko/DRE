@@ -17,7 +17,12 @@ struct S_INSTANCE
 {
     float4x4    world_space;
     float4x4    inv_world_space;
-    uint4       globalID_instanceFlags;
+
+    uint        sceneNodeID;
+    uint        instanceFlags;
+    uint        indexOffset;
+    uint        vertexOffset;
+
     S_MATERIAL* material;
 };
 
@@ -38,25 +43,15 @@ float3 GetInstanceWorldPos(S_INSTANCE* instance)
     return instance.world_space[3].xyz;
 }
 
-uint GetGlobalID(S_INSTANCE* instance)
-{
-    return instance.globalID_instanceFlags.x;
-}
-
-float4 GlobalID2Color()
+float4 SceneNodeID2Color()
 {
     S_INSTANCE* Instance = GetInstance();
 
-    float r = (GetGlobalID(Instance) & 0xFF000000) >> 24;
-    float g = (GetGlobalID(Instance) & 0x00FF0000) >> 16;
-    float b = (GetGlobalID(Instance) & 0x0000FF00) >> 8;
-    float a = (GetGlobalID(Instance) & 0x000000FF) >> 0;
+    float r = (Instance.sceneNodeID & 0xFF000000) >> 24;
+    float g = (Instance.sceneNodeID & 0x00FF0000) >> 16;
+    float b = (Instance.sceneNodeID & 0x0000FF00) >> 8;
+    float a = (Instance.sceneNodeID & 0x000000FF) >> 0;
     return float4(r,g,b,a) / 255.0f;
-}
-
-uint GetInstanceFlags(S_INSTANCE* instance)
-{
-    return instance.globalID_instanceFlags.y;
 }
 
 S_MATERIAL* GetMaterial(S_INSTANCE* instance)

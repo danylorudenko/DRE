@@ -39,7 +39,7 @@ SceneNode::SceneNode(SceneNode* parent, ISceneNodeUser* user)
     , m_Children{ &DRE::g_MainAllocator }
 {
     // don't use last 8 bits, it's easeir to see in ImGui :P
-    // shaders/forward.h -> GlobalID2Color()
+    // shaders/forward.h -> SceneNodeID2Color()
     DRE_ASSERT(s_GlobalID < (DRE_U32_MAX >> 8), "SceneNode ID overflow.");
 
     m_GlobalID = ++s_GlobalID;

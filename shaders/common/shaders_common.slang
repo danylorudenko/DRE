@@ -53,6 +53,26 @@ float4 ReadGlobalTexture(uint id, int2 coords)
     return g_GlobalTextures[id][coords];
 }
 
+float4 SampleGlobalTextureNearest(uint id, float2 uv)
+{
+    return g_GlobalTextures[id].Sample(GetSamplerNearest(), uv);
+}
+
+float4 SampleGlobalTextureNearest(uint id, float2 uv, float mipLevel)
+{
+    return g_GlobalTextures[id].SampleLevel(GetSamplerNearest(), uv, mipLevel);
+}
+
+float4 SampleGlobalTextureNearestClamp(uint id, float2 uv)
+{
+    return g_GlobalTextures[id].Sample(GetSamplerNearestClamp(), uv);
+}
+
+float4 SampleGlobalTextureNearestClamp(uint id, float2 uv, float mipLevel)
+{
+    return g_GlobalTextures[id].SampleLevel(GetSamplerNearestClamp(), uv, mipLevel);
+}
+
 float4 SampleGlobalTextureLinear(uint id, float2 uv)
 {
     return g_GlobalTextures[id].Sample(GetSamplerLinear(), uv);
@@ -63,9 +83,19 @@ float4 SampleGlobalTextureLinear(uint id, float2 uv, float mipLevel)
     return g_GlobalTextures[id].SampleLevel(GetSamplerLinear(), uv, mipLevel);
 }
 
+float4 SampleGlobalTextureLinearClamp(uint id, float2 uv)
+{
+    return g_GlobalTextures[id].Sample(GetSamplerLinearClamp(), uv);
+}
+
 float4 SampleGlobalTextureAnisotropic(uint id, float2 uv)
 {
     return g_GlobalTextures[id].Sample(GetSamplerAnisotropic(), uv);
+}
+
+float4 SampleGlobalTextureAnisotropic(uint id, float2 uv, float mipLevel)
+{
+    return g_GlobalTextures[id].SampleLevel(GetSamplerAnisotropic(), uv, mipLevel);
 }
 
 Texture2D<float4> GetGlobalTextureObject(uint id)
@@ -202,6 +232,27 @@ float2 RadialKernel(float2 center, float angleRadians, float2 extent)
     sincos(angleRadians, xy[0], xy[1]);
 
     return xy * extent + center;
+}
+
+float3 PolarToCartesian(float elevationAngle, float azimuthAngle)
+{
+    float4 paSinCos;
+    sincos(elevationAngle, paSinCos[0], paSinCos[1]);
+    sincos(azimuthAngle, paSinCos[2], paSinCos[3]);
+
+    float x = paSinCos[0] * paSinCos[3];
+    float y = paSinCos[1];
+    float z = paSinCos[0] * paSinCos[2];
+
+    return float3(x, y, z);
+}
+
+float2 CartesianToPolar(float3 cartesian)
+{
+    float elevation = asin(cartesian.y);
+    float azimuth = atan2(cartesian.z, cartesian.x);
+
+    return float2(elevation, azimuth);
 }
 
 #endif // !__cplusplus

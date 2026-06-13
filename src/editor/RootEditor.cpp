@@ -5,6 +5,7 @@
 #include <engine\scene\Scene.hpp>
 #include <editor\CameraEditor.hpp>
 #include <editor\RenderingSettingsEditor.hpp>
+#include <editor\DebugViewEditor.hpp>
 #include <editor\SceneGraphEditor.hpp>
 #include <editor\StatsEditor.hpp>
 #include <editor\TextureInspector.hpp>
@@ -82,6 +83,15 @@ void RootEditor::Render()
             {
                 RenderingSettingsEditor* renderingEditor = DRE::g_MainAllocator.Alloc<RenderingSettingsEditor>(this, EDITOR_FLAGS_NONE);
                 m_Editors.EmplaceBack(renderingEditor);
+            }
+        }
+
+        if (ImGui::MenuItem("Debug View"))
+        {
+            if (GetEditorByType(BaseEditor::Type::DebugView) == nullptr)
+            {
+                DebugViewEditor* debugViewEditor = DRE::g_MainAllocator.Alloc<DebugViewEditor>(this, EDITOR_FLAGS_NONE);
+                m_Editors.EmplaceBack(debugViewEditor);
             }
         }
 

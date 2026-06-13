@@ -17,7 +17,7 @@ struct PSInput
 };
 
 [shader("vertex")]
-PSInput mainVS(VSInput input)
+PSInput mainVS(DREVertex input)
 {
     S_INSTANCE* InstancePtr = GetInstance();
 
@@ -49,7 +49,7 @@ ForwardPassOutput mainPS(PSInput input)
     S_INSTANCE* InstancePtr = GetInstance();
     S_MATERIAL* MaterialPtr = GetMaterial(InstancePtr);
     
-    S_MATERIAL_PROPERTIES MaterialProperties = ReadMaterialProperties(MaterialPtr, input.uv, input.TBN);
+    S_MATERIAL_PROPERTIES MaterialProperties = ReadMaterialProperties(MaterialPtr, input.uv, input.TBN, MaterialTextureSampler());
 
     S_SURFACE surface;
     surface.wpos = input.wpos;
@@ -59,7 +59,7 @@ ForwardPassOutput mainPS(PSInput input)
     surface.metalness = MaterialProperties.metalness;
     surface.prevWpos = input.prev_wpos;
 
-    S_LIGHTING_RESULT lighting = CalculateLighting(surface, ShaderStage::Pixel);
+    S_LIGHTING_RESULT lighting = CalculateDirectLighting(surface, ShaderStage::Pixel);
 
     return OutputForwardPass(lighting, surface, input.ndc_pos);
 }

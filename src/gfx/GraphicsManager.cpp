@@ -89,10 +89,10 @@ void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInpu
     //m_RenderGraph.AddPass<CausticPass>();
     m_RenderGraph.AddPass<GBufferPass>();
 
+    m_RenderGraph.AddPass<DDGIProbeScatterPass>();
     m_RenderGraph.AddPass<DDGIProbeTracePass>();
     m_RenderGraph.AddPass<DDGIProbeBlendPass>();
     m_RenderGraph.AddPass<DDGIProbeLightingPass>();
-    m_RenderGraph.AddPass<DDGIProbeScatterPass>();
 
     m_RenderGraph.AddPass<LightingPass>();
 
@@ -170,33 +170,34 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     globalUniform.viewportSize_deltaMS_timeS[2] = static_cast<float>(static_cast<double>(deltaTimeUS) / 1000.0);
     globalUniform.viewportSize_deltaMS_timeS[3] = timeS;
 
-    globalUniform.main_CameraPos_GenericScalar = glm::vec4{ scene.GetMainCamera().GetPosition(), GetGraphicsSettings().m_GenericScalar };
-    globalUniform.main_CameraDir        = glm::vec4{ scene.GetMainCamera().GetForward(), 0.0f };
-    globalUniform.main_Jitter           = glm::vec4{ taaJitter, 0.0f, 0.0f };
+    globalUniform.CameraPos_GenericScalar = glm::vec4{ scene.GetMainCamera().GetPosition(), GetGraphicsSettings().m_GenericScalar };
+    globalUniform.CameraDir        = glm::vec3{ scene.GetMainCamera().GetForward() };
+    globalUniform.FrameNumber      = DRE::U32(GetCurrentGraphicsFrame());
+    globalUniform.Jitter           = glm::vec4{ taaJitter, 0.0f, 0.0f };
 
-    globalUniform.main_ViewM            = m_MainView.GetViewM();
-    globalUniform.main_iViewM           = m_MainView.GetInvViewM();
-    globalUniform.main_ProjM            = m_MainView.GetProjectionM();
-    globalUniform.main_iProjM           = m_MainView.GetInvProjectionM();
-    globalUniform.main_ViewProjM        = m_MainView.GetViewProjectionM();
-    globalUniform.main_iViewProjM       = m_MainView.GetInvViewProjectionM();
+    globalUniform.ViewM            = m_MainView.GetViewM();
+    globalUniform.iViewM           = m_MainView.GetInvViewM();
+    globalUniform.ProjM            = m_MainView.GetProjectionM();
+    globalUniform.iProjM           = m_MainView.GetInvProjectionM();
+    globalUniform.ViewProjM        = m_MainView.GetViewProjectionM();
+    globalUniform.iViewProjM       = m_MainView.GetInvViewProjectionM();
 
-    globalUniform.main_PrevViewM        = m_MainView.GetPrevViewM();
-    globalUniform.main_PreviViewM       = m_MainView.GetPrevInvViewM();
-    globalUniform.main_PrevProjM        = m_MainView.GetPrevProjectionM();
-    globalUniform.main_PreviProjM       = m_MainView.GetPrevInvProjectionM();
-    globalUniform.main_PrevViewProjM    = m_MainView.GetPrevViewProjectionM();
-    globalUniform.main_PreviViewProjM   = m_MainView.GetPrevInvViewProjectionM();
+    globalUniform.PrevViewM        = m_MainView.GetPrevViewM();
+    globalUniform.PreviViewM       = m_MainView.GetPrevInvViewM();
+    globalUniform.PrevProjM        = m_MainView.GetPrevProjectionM();
+    globalUniform.PreviProjM       = m_MainView.GetPrevInvProjectionM();
+    globalUniform.PrevViewProjM    = m_MainView.GetPrevViewProjectionM();
+    globalUniform.PreviViewProjM   = m_MainView.GetPrevInvViewProjectionM();
 
-    globalUniform.main_ShadowVP         = m_SunShadowView.GetViewProjectionM();
-    globalUniform.main_ShadowSize       = glm::vec4{ C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, 0.0f, 0.0f };
-    globalUniform.TEX_ID_shadow         = glm::uvec4{ /*m_RenderGraph.GetTexture(RESOURCE_ID(TextureID::ShadowMap))->GetShaderGlobalDescriptor().id_*/0, 0, 0, 0 };
+    globalUniform.blueNoiseTextureID    = m_TextureBank.FindTexture("blue_noise_256")->GetShaderGlobalDescriptor().id_;
+    globalUniform.whiteNoiseTextureID   = m_TextureBank.FindTexture("white_noise_256")->GetShaderGlobalDescriptor().id_;
 
-    globalUniform.main_SunLightDir      = glm::vec4{ sunLight.GetForward(), 0.0f };
+    globalUniform.SunLightDir      = glm::vec4{ sunLight.GetForward(), 0.0f };
 
     globalUniform.lightsCount           = glm::uvec4{ m_LightsManager.GetCount(), 0u, 0u, 0u};
     globalUniform.LightBuffer           = reinterpret_cast<S_LIGHT*>(m_LightsManager.GetBufferAddress());
     globalUniform.InstanceBuffer        = reinterpret_cast<S_INSTANCE*>(m_InstanceDataManager.GetBufferAddress());
+    globalUniform.GlobalGeometryBuffer  = m_GlobalGeometryManager.GetMainBufferAddress();
 
     std::memcpy(dst, &globalUniform, sizeof(globalUniform));
 
@@ -299,7 +300,9 @@ RenderableObject* GraphicsManager::CreateRenderableObject(WORLD::SceneNode* scen
         sceneNode->GetGlobalMatrix(),
         glm::inverse(sceneNode->GetGlobalMatrix()),
         sceneNode->GetGlobalID(),
-        InstanceFlags{ 0 }
+        InstanceFlags{ 0 },
+        geometryGPU->GetIndexOffset(),
+        geometryGPU->GetVertexOffset()
     );
 
     RenderableObject* renderable = m_RenderableObjectPool.Alloc(sceneNode, instanceGPU, *geometryGPU, m_RayTracingManager.GetGeometryBLAS(geometry)->m_LogicalHandle);

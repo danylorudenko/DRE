@@ -32,6 +32,12 @@ public:
     DRE::U32            GetProbeTotalCount       () const;
     DRE::U32            GetProbeDataBufferSize   () const;
 
+    DRE::U32            GetProbeResolutionGBuffer() const;
+    glm::uvec2          GetProbeAtlasGBufferDimentions() const;
+
+    DRE::U32            GetProbeResolutionVisibility() const;
+    glm::uvec2          GetProbeAtlasVisibilityDimentions() const;
+
     GlobalGeometry::GeometryGPU* GetSphereGeometry() const { return m_ProbeDebugSphereGPU; }
 
     DDGIConstantBuffer  GetConstantBuffer        () const;
@@ -48,7 +54,7 @@ public:
     virtual PassID  GetID               () const override;
 
     virtual void    RegisterResources   (RenderGraph& graph) override;
-    virtual void    Initialize          (RenderGraph& graph) override;
+    virtual void    Initialize          (RenderGraph& graph) override {};
     virtual void    Render              (RenderGraph& graph, VKW::Context& context) override;
 };
 

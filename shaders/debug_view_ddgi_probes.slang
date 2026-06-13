@@ -1,6 +1,7 @@
 #include "common/shaders_common.slang"
 #include "common/global_illumination/ddgi_common.slang"
 #include "common/vertex/dre_vertex_layout.slang"
+#include "common/global_illumination/ddgi_common.slang"
 
 [[vk::binding(0, 3)]] RWStructuredBuffer<DrawIndexedIndirectCommand>    indirectArgBuffer;
 [[vk::binding(1, 3)]] StructuredBuffer<DDGIProbeData>                   probeData;
@@ -38,7 +39,7 @@ struct PSInput
 };
 
 [shader("vertex")]
-PSInput drawVS(VSInput input, uint instanceID : SV_InstanceID)
+PSInput drawVS(DREVertex input, uint instanceID : SV_InstanceID)
 {
     PSInput output;
     output.wpos = input.pos * ddgiCB.probeDebugScale;
@@ -76,6 +77,20 @@ float4 drawPS(PSInput input) : SV_Target0
 {
     float3 probeColor = debugColors[input.instanceID % 8];
 
-    float3 encodedNormal = normalize(input.norm) * 0.5 + 0.5;  
-    return float4(encodedNormal, 1.0);
+    //uint probeIndex = GetProbeIndex(ddgiCB, 
+
+    if (ddgiCB.visualizationMode == DDGI_VISUALIZATION_MODE_COLOR)
+    {
+        return float4(probeColor, 1.0);
+    }
+    else if (ddgiCB.visualizationMode == DDGI_VISUALIZATION_MODE_UV)
+    {
+        return float4(input.uv, 0.0, 1.0);
+    }
+    else if (ddgiCB.visualizationMode == DDGI_VISUALIZATION_MODE_NORMAL)
+    {
+        return float4(input.norm * 0.5 + 0.5, 1.0);
+    }
+    
+    return float4(1,1,1, 1.0);
 }

@@ -162,7 +162,7 @@ float2 CalculateWaterHeightUV(float3 local_pos)
 }
 
 [shader("vertex")]
-PSInput mainVS(VSInput input)
+PSInput mainVS(DREVertex input)
 {
     PSInput output;
 

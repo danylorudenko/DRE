@@ -20,7 +20,7 @@ struct InstanceUniform
 [[vk::binding(0, 3)]] ConstantBuffer<InstanceUniform> instanceUniform;
 
 [shader("vertex")]
-PSInput mainVS(VSInput input)
+PSInput mainVS(DREVertex input)
 {
     PSInput out;
     float4 pos = mul(instanceUniform.mvp_mat, float4(input.pos, 1.0));

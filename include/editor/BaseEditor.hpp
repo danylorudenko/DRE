@@ -30,6 +30,7 @@ public:
         Stats,
         TextureInspector,
         RenderingSettings,
+        DebugView,
         MAX
     };
 
@@ -39,16 +40,6 @@ public:
     BaseEditor& operator=(BaseEditor&& rhs);
 
     virtual ~BaseEditor() {};
-
-
-    //inline void SetPosition(glm::uvec2 pos) { m_Position = pos; }
-    //inline void SetPosition(std::uint32_t xPos, std::uint32_t yPos) { m_Position.x = xPos; m_Position.y = yPos; }
-    //
-    //inline void SetSize(glm::uvec2 size) { m_Size = size; }
-    //inline void SetSize(std::uint32_t xSize, std::uint32_t ySize) { m_Size.x = xSize; m_Size.y = ySize; }
-    //
-    //inline glm::uvec2 GetPosition() const { return m_Position; }
-    //inline glm::uvec2 GetSize() const { return m_Size; }
 
     virtual Type GetType() const = 0;
 

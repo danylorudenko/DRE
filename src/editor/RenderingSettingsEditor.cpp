@@ -95,6 +95,10 @@ void RenderingSettingsEditor::Render()
             ImGui::SliderFloat("AO Strength", &settings.m_AOStrength, 0.0f, 2.0f);
             ImGui::SliderFloat("AO Kernel Scale", &settings.m_AOKernelScale, 0.0f, 10.0f);
             ImGui::SliderFloat("AO Max Occlusion Dist", &settings.m_AOMaxOcclusionDistance, 0.0f, 10.0f);
+
+            ImGui::Separator();
+            ImGui::TextUnformatted("DDGI");
+            ImGui::SliderFloat("DDGI Probe World Distance", &settings.m_DDGIProbeWorldDistance, 0.1f, 10.0f);
         }
         else
         {

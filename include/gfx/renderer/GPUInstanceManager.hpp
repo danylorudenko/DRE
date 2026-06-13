@@ -49,7 +49,7 @@ public:
     public:
         InstanceGPU(InstanceDataManager* manager, DRE::U64 addressGPU, DRE::U32 id, InstanceFlags flags, MaterialsManager::MaterialGPU const& material);
 
-        void ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform, DRE::U32 globalID, InstanceFlags instanceFlags);
+        void ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform, DRE::U32 sceneNodeID, InstanceFlags instanceFlags, DRE::U32 indexOffset, DRE::U32 vertexOffset);
         void ScheduleUpdate(glm::mat4 transform, glm::mat4 invTransform);
         void ScheduleUpdate(InstanceFlags flags, bool addFlags);
         void ScheduleUpdate(InstanceFlags flags);
@@ -57,7 +57,8 @@ public:
 
         glm::mat4 const& GetTransform() const { return m_InstanceDataCPU.world_space; }
         MaterialsManager::MaterialGPU& GetMaterialGPU() { return m_MaterialGPU; }
-        InstanceFlags GetFlags() const { return InstanceFlags{ m_InstanceDataCPU.globalID_instanceFlags.y }; }
+        InstanceFlags GetFlags() const { return InstanceFlags{ m_InstanceDataCPU.instanceFlags }; }
+        DRE::U32 GetSceneNodeID() const { return m_InstanceDataCPU.sceneNodeID; }
 
     private:
         S_INSTANCE m_InstanceDataCPU;
