@@ -9,7 +9,8 @@ struct DebugViewArgs
 
     // texture
     uint textureID;
-    float size;
+    float sizeX;
+    float sizeY;
     float lowBound;
     float highBound;
     uint channelMask;

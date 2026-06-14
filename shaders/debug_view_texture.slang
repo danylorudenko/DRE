@@ -15,7 +15,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
     {
         int2 coords = int2(DTid.xy);
         float2 uv = float2(coords - 50) / GetViewportSize();
-        uv /= debugViewArgs.size;
+        uv /= float2(debugViewArgs.sizeX, debugViewArgs.sizeY);
 
         if (all(uv <= 1.0) && all(uv >= 0.0))
         {

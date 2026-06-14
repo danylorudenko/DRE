@@ -55,7 +55,8 @@ void DebugPassTextureView::Render(RenderGraph& graph, VKW::Context& context)
 
     DebugViewArgs args{};
     args.textureID   = displayedTexture->GetShaderGlobalDescriptor().id_;
-    args.size        = viewContext.m_Size;
+    args.sizeX        = viewContext.m_SizeX;
+    args.sizeY        = viewContext.m_SizeY;
     args.lowBound    = viewContext.m_LowerEnd;
     args.highBound   = viewContext.m_UpperEnd;
     args.channelMask = (viewContext.m_ShowX ? 0x1 : 0) | (viewContext.m_ShowY ? 0x2 : 0) | (viewContext.m_ShowZ ? 0x4 : 0) | (viewContext.m_ShowW ? 0x8 : 0);

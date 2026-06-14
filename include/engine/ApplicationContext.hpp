@@ -22,7 +22,8 @@ struct TextureViewState
 {
     bool m_DrawTexture = false;
     DRE::String128 m_TextureName;
-    float m_Size = 0.5f;
+    float m_SizeX = 0.5f;
+    float m_SizeY = 0.5f;
 
     float m_LowerEnd = 0.0f;
     float m_UpperEnd = 1.0f;

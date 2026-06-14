@@ -147,10 +147,11 @@ void TextureInspector::Render()
                 m_DisplayedTexture = nullptr;
             }
 
-            ImGui::SliderFloat("Size", &ctx.m_Size, 0.0f, 1.0f);
+            ImGui::SliderFloat("Size X", &ctx.m_SizeX, 0.0f, 5.0f);
+            ImGui::SliderFloat("Size Y", &ctx.m_SizeY, 0.0f, 5.0f);
 
-            ImGui::SliderFloat("Lower", &ctx.m_LowerEnd, 0.0f, 1.0f);
-            ImGui::SliderFloat("Upper", &ctx.m_UpperEnd, 0.0f, 1.0f);
+            ImGui::SliderFloat("Lower", &ctx.m_LowerEnd, -5.0f, 5.0f);
+            ImGui::SliderFloat("Upper", &ctx.m_UpperEnd, -5.0f, 5.0f);
 
             ImGui::Checkbox("X Channel", &ctx.m_ShowX);
             ImGui::Checkbox("Y Channel", &ctx.m_ShowY);
