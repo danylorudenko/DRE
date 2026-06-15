@@ -70,15 +70,18 @@ glm::uvec2 DDGI::GetProbeAtlasVisibilityDimentions() const
 DDGIConstantBuffer DDGI::GetConstantBuffer() const
 {
     auto& ddgiDebugState = DRE::g_AppContext.m_DDGIDebugState;
+    auto& settings = g_GraphicsManager->GetGraphicsSettings();
 
     glm::uvec3 const ddgiProbeDimentions = GetProbeCount3D();
-    glm::vec3 const ddgiProbeWorldDistance = glm::vec3(g_GraphicsManager->GetGraphicsSettings().m_DDGIProbeWorldDistance);
+    glm::vec3 const ddgiProbeWorldDistance = glm::vec3(settings.m_DDGIProbeWorldDistance);
 
     DDGIConstantBuffer cb{};
     cb.probesDimentions = ddgiProbeDimentions;
     cb.probesWorldDistance = ddgiProbeWorldDistance;
     cb.probeDebugScale = ddgiDebugState.m_SphereScale;
     cb.visualizationMode = static_cast<int>(ddgiDebugState.m_VisMode);
+
+    cb.probeWorldOffset = settings.m_DDGIProbeWorldOffset;
 
     cb.probeGeometryVertexCount = m_ProbeDebugSphereGPU->GetVertexCount();
     cb.probeGeometryIndexCount = m_ProbeDebugSphereGPU->GetIndexCount();

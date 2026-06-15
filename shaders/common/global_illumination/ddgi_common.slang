@@ -15,6 +15,9 @@ struct DDGIConstantBuffer
     float3 probesWorldDistance;
     int visualizationMode;
 
+    float3 probeWorldOffset;
+    float pad0;
+
     int probeGeometryVertexCount;
     int probeGeometryIndexCount;
     uint probeGBufferResolution; // hight and width of 1 probe in atlas

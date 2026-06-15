@@ -90,7 +90,8 @@ struct GraphicsSettings
     AOVersion       m_AOVersion             = AO_GTAO;
 
     // DDGI
-    float           m_DDGIProbeWorldDistance = 2.0f;
+    float           m_DDGIProbeWorldDistance = 5.0f;
+    glm::vec3       m_DDGIProbeWorldOffset  = glm::vec3{ 0.0f, 30.0f, 0.0f };
 
     DRE::U32        m_ShadowMapWidth        = 1024;
     DRE::U32        m_ShadowMapHeight       = 1024;
@@ -111,7 +112,7 @@ struct GraphicsSettings
 
     DRE::U32        m_DDGIProbeCountX = 32;
     DRE::U32        m_DDGIProbeCountY = 16;
-    DRE::U32        m_DDGIProbeCountZ = 32;
+    DRE::U32        m_DDGIProbeCountZ = 24;
 
     // DDGI COMPILE_TIME_SETTINGS END
 

@@ -99,6 +99,7 @@ void RenderingSettingsEditor::Render()
             ImGui::Separator();
             ImGui::TextUnformatted("DDGI");
             ImGui::SliderFloat("DDGI Probe World Distance", &settings.m_DDGIProbeWorldDistance, 0.1f, 10.0f);
+            ImGui::SliderFloat3("DDGI Probe World Offset", &settings.m_DDGIProbeWorldOffset.x, -50.0f, 50.0f);
         }
         else
         {

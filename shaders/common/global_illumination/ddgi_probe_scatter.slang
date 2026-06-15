@@ -9,7 +9,7 @@
 [numthreads(4, 4, 4)]
 void mainCS(uint3 DTid : SV_DispatchThreadID)
 {
-    float3 probesCoordinateStart = -((float3(ddgiCB.probesDimentions) * ddgiCB.probesWorldDistance) / 2);
+    float3 probesCoordinateStart = -((float3(ddgiCB.probesDimentions) * ddgiCB.probesWorldDistance) / 2) + ddgiCB.probeWorldOffset;
     if (all(DTid < ddgiCB.probesDimentions))
     {
         uint probeIndex = GetProbeIndex(ddgiCB, DTid);
