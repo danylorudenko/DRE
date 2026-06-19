@@ -30,8 +30,8 @@ glm::uvec3 DDGI::GetProbeCount3D() const
 
 DRE::U32 DDGI::GetProbeTotalCount() const
 {
-    glm::uvec3 const ddgiProbeDimentions = GetProbeCount3D();
-    return ddgiProbeDimentions.x * ddgiProbeDimentions.y * ddgiProbeDimentions.z;
+    glm::uvec3 const ddgiProbeGridDimentions = GetProbeCount3D();
+    return ddgiProbeGridDimentions.x * ddgiProbeGridDimentions.y * ddgiProbeGridDimentions.z;
 }
 
 DRE::U32 DDGI::GetProbeDataBufferSize() const
@@ -72,11 +72,11 @@ DDGIConstantBuffer DDGI::GetConstantBuffer() const
     auto& ddgiDebugState = DRE::g_AppContext.m_DDGIDebugState;
     auto& settings = g_GraphicsManager->GetGraphicsSettings();
 
-    glm::uvec3 const ddgiProbeDimentions = GetProbeCount3D();
+    glm::uvec3 const ddgiProbeGridDimentions = GetProbeCount3D();
     glm::vec3 const ddgiProbeWorldDistance = glm::vec3(settings.m_DDGIProbeWorldDistance);
 
     DDGIConstantBuffer cb{};
-    cb.probesDimentions = ddgiProbeDimentions;
+    cb.probeGridDimentions = ddgiProbeGridDimentions;
     cb.probesWorldDistance = ddgiProbeWorldDistance;
     cb.probeDebugScale = ddgiDebugState.m_SphereScale;
     cb.visualizationMode = static_cast<int>(ddgiDebugState.m_VisMode);
@@ -87,6 +87,8 @@ DDGIConstantBuffer DDGI::GetConstantBuffer() const
     cb.probeGeometryIndexCount = m_ProbeDebugSphereGPU->GetIndexCount();
     cb.probeGBufferResolution = GetProbeResolutionGBuffer();
     cb.probeVisibilityResolution = GetProbeResolutionVisibility();
+
+    cb.irradianceUpdateRate = settings.m_DDGIIrradianceUpdateRate;
     return cb;
 }
 
@@ -197,24 +199,6 @@ void DDGIProbeTracePass::Render(RenderGraph& graph, VKW::Context& context)
 }
 
 
-////////////////////////////////////////////////
-PassID DDGIProbeBlendPass::GetID() const
-{
-    return PassID::DDGIProbeBlend;
-}
-
-void DDGIProbeBlendPass::RegisterResources(RenderGraph& graph)
-{
-}
-
-void DDGIProbeBlendPass::Initialize(RenderGraph& graph)
-{
-}
-
-void DDGIProbeBlendPass::Render(RenderGraph& graph, VKW::Context& context)
-{
-}
-
 
 ////////////////////////////////////////////////
 PassID DDGIProbeLightingPass::GetID() const
@@ -231,6 +215,24 @@ void DDGIProbeLightingPass::Initialize(RenderGraph& graph)
 }
 
 void DDGIProbeLightingPass::Render(RenderGraph& graph, VKW::Context& context)
+{
+}
+
+////////////////////////////////////////////////
+PassID DDGIProbeBlendPass::GetID() const
+{
+    return PassID::DDGIProbeBlend;
+}
+
+void DDGIProbeBlendPass::RegisterResources(RenderGraph& graph)
+{
+}
+
+void DDGIProbeBlendPass::Initialize(RenderGraph& graph)
+{
+}
+
+void DDGIProbeBlendPass::Render(RenderGraph& graph, VKW::Context& context)
 {
 }
 

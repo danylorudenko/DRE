@@ -34,7 +34,7 @@ S_SURFACE InitSurface(float3 wpos)
     Surface.diffuseSpectrum = float3(1,1,1);
     Surface.roughness = 1;
     Surface.metalness = 0;
-    Surface.ao = 0;
+    Surface.ao = 1;
 
     Surface.prevWpos = wpos;
 

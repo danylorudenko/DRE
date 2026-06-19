@@ -30,7 +30,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
     float alpha = whiteNoise0 * PI;
     float theta = whiteNoise1 * PI * 2.0;
 
-    DDGIProbeData probeData = ddgiProbeData[GetProbeIndex(ddgiCB, DTid)];
+    DDGIProbeData probeData = ddgiProbeData[GetProbeIndex(ddgiCB.probeGridDimentions, DTid)];
     float3 rayOrigin = probeData.position.xyz;
     float3 rayDir = PolarToCartesian(alpha, theta);
 
@@ -85,7 +85,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
         float2 probeLocalUV = OctahedronEncode(rayDir);
 
         {
-            uint4 probeGBufferRect = GetDDGIProbeRect(GetProbeIndex(ddgiCB, DTid), ddgiCB.probeGBufferResolution, ddgiCB.probesDimentions);
+            uint4 probeGBufferRect = GetDDGIProbeRect(GetProbeIndex(ddgiCB.probeGridDimentions, DTid), ddgiCB.probeGBufferResolution, ddgiCB.probeGridDimentions);
             uint2 probeInnerRes = ddgiCB.probeGBufferResolution.xx - 2;
             uint2 innerStart = probeGBufferRect.xy + 1;
             uint2 targetPixel = innerStart + uint2(probeLocalUV * probeInnerRes); // maybe needs a clamp to innerRes
@@ -93,11 +93,11 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
             ComputeMaterialTextureSampler sampler = { 0.0f };
             S_MATERIAL_PROPERTIES MaterialProperties = ReadMaterialProperties(material, hitUV, TBN, sampler);
             ddgiGBufferA[targetPixel] = float4(MaterialProperties.diffuse, MaterialProperties.roughness);
-            ddgiGBufferB[targetPixel] = float4(MaterialProperties.normal, MaterialProperties.metalness);
+            ddgiGBufferB[targetPixel] = float4(MaterialProperties.normal * 0.5 + 0.5, MaterialProperties.metalness);
         }
 
         {
-            uint4 probeVisibilityRect = GetDDGIProbeRect(GetProbeIndex(ddgiCB, DTid), ddgiCB.probeVisibilityResolution, ddgiCB.probesDimentions);
+            uint4 probeVisibilityRect = GetDDGIProbeRect(GetProbeIndex(ddgiCB.probeGridDimentions, DTid), ddgiCB.probeVisibilityResolution, ddgiCB.probeGridDimentions);
             uint2 probeInnerRes = ddgiCB.probeVisibilityResolution.xx - 2;
             uint2 innerStart = probeVisibilityRect.xy + 1;
             uint2 targetPixel = innerStart + uint2(probeLocalUV * probeInnerRes); // maybe needs a clamp to innerRes

@@ -92,6 +92,7 @@ struct GraphicsSettings
     // DDGI
     float           m_DDGIProbeWorldDistance = 5.0f;
     glm::vec3       m_DDGIProbeWorldOffset  = glm::vec3{ 0.0f, 30.0f, 0.0f };
+    float           m_DDGIIrradianceUpdateRate = 0.9f;
 
     DRE::U32        m_ShadowMapWidth        = 1024;
     DRE::U32        m_ShadowMapHeight       = 1024;

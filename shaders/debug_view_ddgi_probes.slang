@@ -22,7 +22,7 @@ void indirectArgsFillCS(uint3 DTid : SV_DispatchThreadID)
     }
 
     {
-        uint probeIndex = GetProbeIndex(ddgiCB, DTid);
+        uint probeIndex = GetProbeIndex(ddgiCB.probeGridDimentions, DTid);
         InterlockedAdd(indirectArgBuffer[0].instanceCount, 1u);
     }
 }
