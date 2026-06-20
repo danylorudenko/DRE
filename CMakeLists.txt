@@ -53,9 +53,11 @@ target_include_directories(stb_image INTERFACE "extern/stb")
 
 #==========
 #disable exceptions and rtti, cmake doesn't have built-in vars for this, so only ugly way
+#enable multithreaded compilation
 if(MSVC)
 	string(REGEX REPLACE "/GR" "/GR-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 	string(REGEX REPLACE "/EHsc" "/EHs-c-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+	add_compile_options(/MP)
 	add_compile_definitions(_HAS_EXCEPTIONS=0)
 endif()
 #==========
