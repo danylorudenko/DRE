@@ -208,6 +208,13 @@ PassID DDGIProbeLightingPass::GetID() const
 
 void DDGIProbeLightingPass::RegisterResources(RenderGraph& graph)
 {
+    DDGI& ddgi = g_GraphicsManager->GetDDGI();
+    glm::uvec2 const dims = ddgi.GetProbeAtlasGBufferDimentions();
+
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_AtlasGBufferA), VKW::FORMAT_R16G16B16A16_FLOAT, dims.x, dims.y, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_AtlasGBufferB), VKW::FORMAT_R16G16B16A16_FLOAT, dims.x, dims.y, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_ProbeIrradiance), VKW::FORMAT_R16G16B16A16_FLOAT, dims.x, dims.y, VKW::RESOURCE_ACCESS_SHADER_WRITE);
+    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData), ddgi.GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_SHADER_READ);
 }
 
 void DDGIProbeLightingPass::Initialize(RenderGraph& graph)
@@ -216,6 +223,41 @@ void DDGIProbeLightingPass::Initialize(RenderGraph& graph)
 
 void DDGIProbeLightingPass::Render(RenderGraph& graph, VKW::Context& context)
 {
+    DRE_GPU_SCOPE(DDGIProbeLighting);
+
+    DDGI& ddgi = g_GraphicsManager->GetDDGI();
+
+    Texture* atlasGBufferA    = graph.GetTexture(RESOURCE_ID(TextureID::DDGI_AtlasGBufferA));
+    Texture* atlasGBufferB    = graph.GetTexture(RESOURCE_ID(TextureID::DDGI_AtlasGBufferB));
+    Texture* atlasIrradiance  = graph.GetTexture(RESOURCE_ID(TextureID::DDGI_ProbeIrradiance));
+    StorageBuffer* probeData  = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData));
+
+    auto& dependencyManager = g_GraphicsManager->GetDependencyManager();
+    dependencyManager.ResourceBarrier(context, atlasGBufferA->GetResource(),   VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
+    dependencyManager.ResourceBarrier(context, atlasGBufferB->GetResource(),   VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
+    dependencyManager.ResourceBarrier(context, atlasIrradiance->GetResource(), VKW::RESOURCE_ACCESS_SHADER_WRITE,  VKW::STAGE_COMPUTE);
+    dependencyManager.ResourceBarrier(context, probeData->GetResource(),       VKW::RESOURCE_ACCESS_SHADER_READ,   VKW::STAGE_COMPUTE);
+
+    UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(DDGIConstantBuffer));
+    uniform.WriteMember140(ddgi.GetConstantBuffer());
+    uniform.FlushWrites();
+
+    PipelineEntry* entry = g_GraphicsManager->GetPipelineDB().GetEntry("ddgi_probe_lighting");
+    ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(entry, 0);
+    binder.AddUniform(0, &uniform);
+    binder.AddSampledTexture(1, atlasGBufferA);
+    binder.AddSampledTexture(2, atlasGBufferB);
+    binder.AddStorageTexture(3, atlasIrradiance);
+    binder.AddStorageBuffer(4, probeData);
+    binder.FlushDescriptorWrites();
+
+    context.CmdBindComputePipeline(entry->GetPipeline());
+    context.CmdBindComputeDescriptorSets(entry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
+
+    glm::uvec2 const atlasDims = ddgi.GetProbeAtlasGBufferDimentions();
+    glm::uvec2 const groupSize{ 8, 8 };
+    glm::uvec2 const dispatchSize = (atlasDims + groupSize - 1u) / groupSize;
+    context.CmdDispatch(dispatchSize.x, dispatchSize.y, 1);
 }
 
 ////////////////////////////////////////////////
@@ -252,6 +294,9 @@ void DebugPassDDGIProbeDisplay::RegisterResources(RenderGraph& graph)
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DebugPassDDGIProbeIndirectArgs), sizeof(DrawIndexedIndirectCommand), VKW::RESOURCE_ACCESS_INDIRECT_ARGS);
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData),                 g_GraphicsManager->GetDDGI().GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_SHADER_READ);
 
+    glm::uvec2 ddgiAtlasDims = g_GraphicsManager->GetDDGI().GetProbeAtlasGBufferDimentions();
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_ProbeIrradiance), VKW::FORMAT_R16G16B16A16_FLOAT, ddgiAtlasDims.x, ddgiAtlasDims.y, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
+
     DRE::U32 renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth;
     DRE::U32 renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
@@ -269,6 +314,8 @@ void DebugPassDDGIProbeDisplay::RegisterResources(RenderGraph& graph)
 
 void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context)
 {
+    DRE_GPU_SCOPE(DebugPassDDGIProbeDisplay);
+
     auto& ddgiDebugState = DRE::g_AppContext.m_DDGIDebugState;
     if (!ddgiDebugState.m_DrawProbes)
         return;
@@ -313,17 +360,20 @@ void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context
 
         Texture* output = graph.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage));
         Texture* depthBuffer = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth));
+        Texture* ddgiProbeIrradiance = graph.GetTexture(RESOURCE_ID(TextureID::DDGI_ProbeIrradiance));
 
         g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, output->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
         g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthBuffer->GetResource(), VKW::RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);
         g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData->GetResource(), VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_ALL_GRAPHICS);
         g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeIndirectArgs->GetResource(), VKW::RESOURCE_ACCESS_INDIRECT_ARGS, VKW::STAGE_ALL_GRAPHICS);
+        g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeIrradiance->GetResource(), VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_FRAGMENT);
 
         PipelineEntry* drawSpheresEntry = g_GraphicsManager->GetPipelineDB().GetEntry("debug_view_ddgi_probes_draw");
         ResourceBinder drawBinder = g_GraphicsManager->CreateResourceBinder(drawSpheresEntry, 0);
         drawBinder.AddStorageBuffer(0, ddgiProbeIndirectArgs);
         drawBinder.AddStorageBuffer(1, ddgiProbeData);
         drawBinder.AddUniform(2, &ddgiUniform);
+        drawBinder.AddSampledTexture(3, ddgiProbeIrradiance);
         drawBinder.FlushDescriptorWrites();
 
         context.CmdBindGraphicsDescriptorSets(drawSpheresEntry->GetLayout(), drawBinder.GetTargetSetID(), 1, &drawBinder.GetDescriptorSet());

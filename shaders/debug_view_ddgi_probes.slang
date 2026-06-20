@@ -5,6 +5,7 @@
 [[vk::binding(0, 3)]] RWStructuredBuffer<DrawIndexedIndirectCommand>    indirectArgBuffer;
 [[vk::binding(1, 3)]] StructuredBuffer<DDGIProbeData>                   probeData;
 [[vk::binding(2, 3)]] ConstantBuffer<DDGIConstantBuffer>                ddgiCB;
+[[vk::binding(3, 3)]] Texture2D                                         probeIrradianceAtlas;
 
 float4 RemapDisplayValue(float4 value, float lowBound, float highBound)
 {
@@ -21,6 +22,7 @@ void indirectArgsFillCS(uint3 DTid : SV_DispatchThreadID)
         // everything else is zeroed from CPU
     }
 
+    if (all(DTid < ddgiCB.probeGridDimentions))
     {
         uint probeIndex = GetProbeIndex(ddgiCB.probeGridDimentions, DTid);
         InterlockedAdd(indirectArgBuffer[0].instanceCount, 1u);
@@ -75,12 +77,11 @@ static const float3 debugColors[8] =
 float4 drawPS(PSInput input) : SV_Target0
 {
     float3 probeColor = debugColors[input.instanceID % 8];
-
-    //GetDDGIProbeRect(input.instanceID, ddgiCB.
+    float3 radiance = SampleProbeRadiance(input.instanceID, normalize(input.norm), probeIrradianceAtlas, ddgiCB.probeGBufferResolution, ddgiCB.probeGridDimentions);
 
     if (ddgiCB.visualizationMode == DDGI_VISUALIZATION_MODE_COLOR)
     {
-        return float4(probeColor, 1.0);
+        return float4(radiance, 1.0);
     }
     else if (ddgiCB.visualizationMode == DDGI_VISUALIZATION_MODE_UV)
     {

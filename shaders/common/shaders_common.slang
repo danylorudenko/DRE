@@ -2,9 +2,9 @@
 #ifndef _SHADERS_COMMON_H_
 #define _SHADERS_COMMON_H_
 
-#ifndef __cplusplus
-
 #include "common/shaders_defines.slang"
+
+#ifndef __cplusplus
 #include "common/global_uniform.slang"
 
 

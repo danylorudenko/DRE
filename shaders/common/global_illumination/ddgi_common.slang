@@ -1,7 +1,11 @@
 #ifndef _DDGI_COMMON_H_
 #define _DDGI_COMMON_H_
 
-#include "common/shaders_defines.slang"
+#include "common/shaders_common.slang"
+
+#ifndef __cplusplus
+#include "common/utils/octahedron.slang"
+#endif // __cplusplus
 
 #define DDGI_VISUALIZATION_MODE_COLOR 0
 #define DDGI_VISUALIZATION_MODE_NORMAL 1
@@ -33,7 +37,6 @@ struct DDGIProbeData
 
 
 #ifndef __cplusplus
-
 
 uint GetProbeIndex(uint3 probeGridDimentions, uint3 DTid)
 {
@@ -85,6 +88,25 @@ uint GetProbeIndexFromPixel(uint2 atlasPixel, uint2 probeResolution, uint3 probe
     uint3 probe3DIndex = GetProbe3DIndexFromPixel(atlasPixel, probeResolution, probeGridDimentions);
     return GetProbeIndex(probeGridDimentions, probe3DIndex);
 }
+
+float4 GetProbeAtlasUVRect(uint probeIndex, uint2 probeResolution, uint3 probeGridDimentions)
+{
+    uint4 probeRect = GetDDGIProbeRect(probeIndex, probeResolution, probeGridDimentions);
+    uint2 atlasSize = probeResolution * uint2(probeGridDimentions.x, probeGridDimentions.y) * uint2(probeGridDimentions.z, 1);
+    float2 uvStart = probeRect.xy / (float2)atlasSize;
+    float2 uvEnd = probeRect.zw / (float2)atlasSize;
+    return float4(uvStart, uvEnd);
+}
+
+float3 SampleProbeRadiance(uint probeIndex, float3 direction, Texture2D probeAtlasIrradiance, uint2 probeResolution, uint3 probeGridDimentions)
+{
+    float2 probeUV = OctahedronEncode(direction);
+    float4 uvRect = GetProbeAtlasUVRect(probeIndex, probeResolution, probeGridDimentions);
+
+    float2 samplingUV = uvRect.xy + probeUV * (uvRect.zw - uvRect.xy);
+    return probeAtlasIrradiance.SampleLevel(GetSamplerLinear(), samplingUV, 0).rgb;
+}
+
 
 #endif // !__cplusplus
 
