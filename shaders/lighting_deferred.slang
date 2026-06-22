@@ -44,7 +44,8 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
     surface.ao = ao;
     surface.prevWpos = surface.wpos;
 
-    S_LIGHTING_RESULT lighting = CalculateDirectLighting(surface, ShaderStage::Compute);
+    S_LIGHTING_RESULT directLighting = CalculateDirectLighting(surface, ShaderStage::Compute);
+    S_LIGHTING_RESULT indirectLighting = CalculateIndirectLighting(surface);
 
-    lightingOutput[pixel] = float4(lighting.finalRadiance, 1.0f);
+    lightingOutput[pixel] = float4(directLighting.finalRadiance + indirectLighting.finalRadiance, 1.0f);
 }

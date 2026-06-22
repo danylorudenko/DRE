@@ -1,7 +1,7 @@
 #ifndef _DDGI_COMMON_H_
 #define _DDGI_COMMON_H_
 
-#include "common/shaders_common.slang"
+#include "common/shaders_defines.slang"
 
 #ifndef __cplusplus
 #include "common/utils/octahedron.slang"
@@ -27,6 +27,7 @@ struct DDGIConstantBuffer
     uint probeGBufferResolution; // hight and width of 1 probe in atlas
     uint probeVisibilityResolution; // hight and width of 1 probe in visibility atlas
 
+    uint irradianceAtlasTextureID;
     float irradianceUpdateRate;
 };
 
@@ -98,13 +99,41 @@ float4 GetProbeAtlasUVRect(uint probeIndex, uint2 probeResolution, uint3 probeGr
     return float4(uvStart, uvEnd);
 }
 
-float3 SampleProbeRadiance(uint probeIndex, float3 direction, Texture2D probeAtlasIrradiance, uint2 probeResolution, uint3 probeGridDimentions)
+float3 SampleProbeRadiance(uint probeIndex, float3 direction, Texture2D probeAtlasIrradiance, SamplerState sampler, uint2 probeResolution, uint3 probeGridDimentions)
 {
     float2 probeUV = OctahedronEncode(direction);
     float4 uvRect = GetProbeAtlasUVRect(probeIndex, probeResolution, probeGridDimentions);
 
     float2 samplingUV = uvRect.xy + probeUV * (uvRect.zw - uvRect.xy);
-    return probeAtlasIrradiance.SampleLevel(GetSamplerLinear(), samplingUV, 0).rgb;
+    return probeAtlasIrradiance.SampleLevel(sampler, samplingUV, 0).rgb;
+}
+
+
+struct DDGIProbeNeighborhood
+{
+    static const uint ProbeCount = 8;
+
+    uint indices[ProbeCount];
+    float weights[ProbeCount];
+};
+
+DDGIProbeNeighborhood GetProbeNeighborhood(float3 worldPosition, in DDGIConstantBuffer cb)
+{
+    float3 gridSpaceCoord = (worldPosition - cb.probeWorldOffset) / max(cb.probesWorldDistance, 0.001f);
+    uint3 baseProbeIndex = (uint3)floor(gridSpaceCoord);
+
+    DDGIProbeNeighborhood neighborhood;
+    for (int i = 0; i < DDGIProbeNeighborhood::ProbeCount; i++)
+    {
+        uint3 offset = uint3(i & 1, (i >> 1) & 1, (i >> 2) & 1);
+        uint3 probeIndex = baseProbeIndex + offset;
+        neighborhood.indices[i] = GetProbeIndex(cb.probeGridDimentions, probeIndex);
+        neighborhood.weights[i] = (1.0f - abs(gridSpaceCoord.x - probeIndex.x)) *
+                                  (1.0f - abs(gridSpaceCoord.y - probeIndex.y)) *
+                                  (1.0f - abs(gridSpaceCoord.z - probeIndex.z));
+    }
+
+    return neighborhood;
 }
 
 

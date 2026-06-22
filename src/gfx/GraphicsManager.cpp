@@ -137,7 +137,7 @@ glm::vec2 constexpr s_HaltonSequence[16] = {
     glm::vec2{ 0.031250, 0.592593 }
 };
 
-void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, std::uint64_t deltaTimeUS, float timeS)
+void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, RenderGraph& graph, std::uint64_t deltaTimeUS, float timeS)
 {
     m_MainView.UpdatePreviosFrame();
     m_SunShadowView.UpdatePreviosFrame();
@@ -199,6 +199,8 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     globalUniform.InstanceBuffer        = reinterpret_cast<S_INSTANCE*>(m_InstanceDataManager.GetBufferAddress());
     globalUniform.GlobalGeometryBuffer  = m_GlobalGeometryManager.GetMainBufferAddress();
 
+    globalUniform.ddgiCB            = m_DDGI.GetConstantBuffer(graph);
+
     std::memcpy(dst, &globalUniform, sizeof(globalUniform));
 
     buffer->memory_.FlushCaches(g_GraphicsManager->GetVulkanTable(), g_GraphicsManager->GetMainDevice()->GetLogicalDevice());
@@ -234,7 +236,7 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
     DRE_GPU_SCOPE(FRAME);
 
     context.ResetDependenciesVectors(&DRE::g_FrameScratchAllocator);
-    PrepareGlobalData(context, *WORLD::g_MainScene, deltaTimeUS, globalTimeS);
+    PrepareGlobalData(context, *WORLD::g_MainScene, m_RenderGraph, deltaTimeUS, globalTimeS);
 
     // maybe I should do these earlier?
     m_GlobalGeometryManager.UpdateGPUGeometry(context);

@@ -6,6 +6,7 @@
 #include "common/lighting/lighting_model.slang"
 #include "common/lighting/lights.slang"
 #include "common/shadows/shadows.slang"
+#include "common/global_illumination/ddgi_common.slang"
 
 struct S_LIGHTING_RESULT
 {
@@ -82,6 +83,29 @@ S_LIGHTING_RESULT CalculateDirectLighting(S_SURFACE surface, ShaderStage shaderS
     }
 
     Result.finalRadiance += float3(0.15f, 0.15f, 0.15f) * surface.diffuseSpectrum * surface.ao; // simple ambient
+
+    return Result;
+}
+
+S_LIGHTING_RESULT CalculateIndirectLighting(S_SURFACE surface)
+{
+    S_LIGHTING_RESULT Result;
+    Result.finalRadiance = float3(0.0f, 0.0f, 0.0f);
+
+    DDGIProbeNeighborhood probes = GetProbeNeighborhood(surface.wpos, GetDDGI());
+    for (int i = 0; i < DDGIProbeNeighborhood::ProbeCount; i++)
+    {
+        uint probeIndex = probes.indices[i];
+        float3 probeRadiance = SampleProbeRadiance(
+            probeIndex,
+            surface.normal,
+            GetGlobalTextureObject(GetDDGI().irradianceAtlasTextureID),
+            GetSamplerLinear(),
+            GetDDGI().probeGBufferResolution,
+            GetDDGI().probeGridDimentions);
+
+        Result.finalRadiance += probeRadiance * probes.weights[i];
+    }
 
     return Result;
 }

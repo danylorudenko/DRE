@@ -198,7 +198,7 @@ public:
 private:
     void                                CreateAllPasses(EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary);
 
-    void                                PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, std::uint64_t deltaTimeUS, float globalTimeS);
+    void                                PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, RenderGraph& graph, std::uint64_t deltaTimeUS, float globalTimeS);
     VKW::QueueExecutionPoint            TransferToSwapchainAndPresent(Texture& src);
 
 

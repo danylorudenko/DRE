@@ -40,7 +40,7 @@ public:
 
     GlobalGeometry::GeometryGPU* GetSphereGeometry() const { return m_ProbeDebugSphereGPU; }
 
-    DDGIConstantBuffer  GetConstantBuffer        () const;
+    DDGIConstantBuffer  GetConstantBuffer        (RenderGraph& graph) const;
 
     static char const*  GetProbeDebugSphereGeometryName() { return "dre_sphere"; }
 

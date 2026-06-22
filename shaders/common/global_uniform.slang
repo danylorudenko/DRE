@@ -4,6 +4,7 @@
 #include "common/shaders_defines.slang"
 #include "common/lighting/lights.slang"
 #include "common/instances.slang"
+#include "common/global_illumination/ddgi_common.slang"
 
 struct GlobalUniforms
 {
@@ -42,6 +43,8 @@ struct GlobalUniforms
 
     S_INSTANCE*         InstanceBuffer;
     uint64_t            GlobalGeometryBuffer;
+
+    DDGIConstantBuffer  ddgiCB;
 };
 
 #ifndef __cplusplus
@@ -84,6 +87,8 @@ S_INSTANCE* GetInstance(uint i) { return g_GlobalUniforms.InstanceBuffer + i; }
 S_INSTANCE* GetInstance() { return GetInstance(GetInstanceID()); }
 
 uint64_t    GetGlobalGeometry(uint64_t offset) { return g_GlobalUniforms.GlobalGeometryBuffer + offset; }
+
+DDGIConstantBuffer GetDDGI() { return g_GlobalUniforms.ddgiCB; }
 
 #endif // !__cplusplus
 

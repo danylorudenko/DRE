@@ -77,7 +77,13 @@ static const float3 debugColors[8] =
 float4 drawPS(PSInput input) : SV_Target0
 {
     float3 probeColor = debugColors[input.instanceID % 8];
-    float3 radiance = SampleProbeRadiance(input.instanceID, normalize(input.norm), probeIrradianceAtlas, ddgiCB.probeGBufferResolution, ddgiCB.probeGridDimentions);
+    float3 radiance = SampleProbeRadiance(
+        input.instanceID,
+        normalize(input.norm),
+        probeIrradianceAtlas,
+        GetSamplerLinear(),
+        ddgiCB.probeGBufferResolution,
+        ddgiCB.probeGridDimentions);
 
     if (ddgiCB.visualizationMode == DDGI_VISUALIZATION_MODE_COLOR)
     {

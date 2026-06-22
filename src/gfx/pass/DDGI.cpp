@@ -67,7 +67,7 @@ glm::uvec2 DDGI::GetProbeAtlasVisibilityDimentions() const
     return atlasResolution;
 }
 
-DDGIConstantBuffer DDGI::GetConstantBuffer() const
+DDGIConstantBuffer DDGI::GetConstantBuffer(RenderGraph& graph) const
 {
     auto& ddgiDebugState = DRE::g_AppContext.m_DDGIDebugState;
     auto& settings = g_GraphicsManager->GetGraphicsSettings();
@@ -88,6 +88,7 @@ DDGIConstantBuffer DDGI::GetConstantBuffer() const
     cb.probeGBufferResolution = GetProbeResolutionGBuffer();
     cb.probeVisibilityResolution = GetProbeResolutionVisibility();
 
+    cb.irradianceAtlasTextureID = graph.GetTexture(RESOURCE_ID(TextureID::DDGI_ProbeIrradiance))->GetShaderGlobalDescriptor().id_;
     cb.irradianceUpdateRate = settings.m_DDGIIrradianceUpdateRate;
     return cb;
 }
@@ -120,7 +121,7 @@ void DDGIProbeScatterPass::Render(RenderGraph& graph, VKW::Context& context)
     PipelineEntry* entry = g_GraphicsManager->GetPipelineDB().GetEntry("ddgi_probe_scatter");
     UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(DDGIConstantBuffer));
 
-    uniform.WriteMember140(g_GraphicsManager->GetDDGI().GetConstantBuffer());
+    uniform.WriteMember140(g_GraphicsManager->GetDDGI().GetConstantBuffer(graph));
     uniform.FlushWrites();
 
     context.CmdBindComputePipeline(entry->GetPipeline());
@@ -163,6 +164,8 @@ void DDGIProbeTracePass::RegisterResources(RenderGraph& graph)
 
 void DDGIProbeTracePass::Render(RenderGraph& graph, VKW::Context& context)
 {
+    DRE_GPU_SCOPE(DDGIProbeTrace);
+
     DDGI& ddgi = g_GraphicsManager->GetDDGI();
 
     StorageBuffer* ddgiProbeData = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData));
@@ -176,7 +179,7 @@ void DDGIProbeTracePass::Render(RenderGraph& graph, VKW::Context& context)
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, atlasVisibility->GetResource(), VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
 
     UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(DDGIConstantBuffer));
-    uniform.WriteMember140(ddgi.GetConstantBuffer());
+    uniform.WriteMember140(ddgi.GetConstantBuffer(graph));
     uniform.FlushWrites();
 
     PipelineEntry* entry = g_GraphicsManager->GetPipelineDB().GetEntry("ddgi_probe_trace");
@@ -239,7 +242,7 @@ void DDGIProbeLightingPass::Render(RenderGraph& graph, VKW::Context& context)
     dependencyManager.ResourceBarrier(context, probeData->GetResource(),       VKW::RESOURCE_ACCESS_SHADER_READ,   VKW::STAGE_COMPUTE);
 
     UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(DDGIConstantBuffer));
-    uniform.WriteMember140(ddgi.GetConstantBuffer());
+    uniform.WriteMember140(ddgi.GetConstantBuffer(graph));
     uniform.FlushWrites();
 
     PipelineEntry* entry = g_GraphicsManager->GetPipelineDB().GetEntry("ddgi_probe_lighting");
@@ -337,7 +340,7 @@ void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context
         g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData->GetResource(),         VKW::RESOURCE_ACCESS_GENERIC_READ, VKW::STAGE_COMPUTE);
 
 
-        ddgiUniform.WriteMember140(g_GraphicsManager->GetDDGI().GetConstantBuffer());
+        ddgiUniform.WriteMember140(g_GraphicsManager->GetDDGI().GetConstantBuffer(graph));
         ddgiUniform.FlushWrites();
 
         PipelineEntry* indirectFillEntry = g_GraphicsManager->GetPipelineDB().GetEntry("debug_view_ddgi_probes_args");
