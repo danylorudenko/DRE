@@ -119,7 +119,7 @@ struct DDGIProbeNeighborhood
 
 DDGIProbeNeighborhood GetProbeNeighborhood(float3 worldPosition, in DDGIConstantBuffer cb)
 {
-    float3 gridSpaceCoord = (worldPosition - cb.probeWorldOffset) / max(cb.probesWorldDistance, 0.001f);
+    float3 gridSpaceCoord = (worldPosition - cb.probeWorldOffset) / max(cb.probesWorldDistance, 0.001f) + float3(cb.probeGridDimentions) * 0.5f;
     uint3 baseProbeIndex = (uint3)floor(gridSpaceCoord);
 
     DDGIProbeNeighborhood neighborhood;

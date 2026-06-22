@@ -39,10 +39,13 @@ struct GlobalUniforms
     uint pad2;
 
     uint4               lightsCount;
-    S_LIGHT*            LightBuffer;
 
+    S_LIGHT*            LightBuffer;
     S_INSTANCE*         InstanceBuffer;
-    uint64_t            GlobalGeometryBuffer;
+
+    uint64_t GlobalGeometryBuffer;
+    float pad3;
+    float pad4;
 
     DDGIConstantBuffer  ddgiCB;
 };
