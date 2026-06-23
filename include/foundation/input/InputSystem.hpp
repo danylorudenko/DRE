@@ -1,6 +1,7 @@
 #pragma once
 
 #include <foundation\class_features\NonCopyable.hpp>
+#include <foundation\class_features\NonMovable.hpp>
 
 #include <foundation\Common.hpp>
 #include <foundation\memory\MemoryOps.hpp>
@@ -12,6 +13,8 @@ namespace SYS
 {
 
 class InputSystem
+    : public NonCopyable
+    , public NonMovable
 {
 public:
     struct MouseState
@@ -58,12 +61,12 @@ private:
     KeyboardState prevKeyboardState_;
     KeyboardState keyboardState_;
 
+    bool m_MouseRegistered;
+    bool m_KeyboardRegistered;
+
 
 public:
-    InputSystem();
     InputSystem(HWND windowHandle);
-    InputSystem(InputSystem&& rhs);
-    InputSystem& operator=(InputSystem&& rhs);
 
     ~InputSystem();
 
@@ -87,7 +90,7 @@ public:
     bool GetKeyboardButtonJustPressed(Keys key) const;
     bool GetKeyboardButtonJustReleased(Keys key) const;
 
-    static std::uint32_t GetCharFromKeys(Keys key);
+    static DRE::U32 GetCharFromKeys(Keys key);
 
 private:
     static void SetKeysBitflagValue(DRE::U64* bitflag, Keys key, bool value);

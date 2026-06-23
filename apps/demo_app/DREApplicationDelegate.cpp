@@ -63,11 +63,12 @@ LRESULT DREApplicationDelegate::WinProc(HWND handle, UINT message, WPARAM wparam
     case WM_INPUT:
     {
         UINT code = GET_RAWINPUT_CODE_WPARAM(wparam);
+        appDelegate->GetInputSystem().ProcessSystemInput(handle, wparam, lparam);
+
         LRESULT result{};
         if (code == RIM_INPUTSINK || code == RIM_INPUT)
             result = ::DefWindowProc(handle, message, wparam, lparam);
 
-        appDelegate->GetInputSystem().ProcessSystemInput(handle, wparam, lparam); 
         return result;
     }
     case WM_DESTROY:

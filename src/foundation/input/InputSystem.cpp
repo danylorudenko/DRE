@@ -2,9 +2,6 @@
 
 #include <foundation\memory\Memory.hpp>
 
-#include <utility>
-#include <cstdint>
-#include <cstring>
 #include <iostream>
 
 namespace SYS
@@ -14,23 +11,6 @@ namespace SYS
 InputSystem* g_InputSystem = nullptr;
 #endif
 
-InputSystem::InputSystem()
-    : pendingMouseState_{}
-    , mouseState_{}
-    , prevMouseState_{}
-    , pendingKeyboardState_{}
-    , prevKeyboardState_{}
-    , keyboardState_{}
-{
-    DRE::MemZero(&pendingMouseState_, sizeof(pendingMouseState_));
-    DRE::MemZero(&mouseState_, sizeof(mouseState_));
-    DRE::MemZero(&prevMouseState_, sizeof(prevMouseState_));
-
-    DRE::MemZero(&pendingKeyboardState_, sizeof(pendingKeyboardState_));
-    DRE::MemZero(&prevKeyboardState_, sizeof(prevKeyboardState_));
-    DRE::MemZero(&keyboardState_, sizeof(keyboardState_));
-}
-
 InputSystem::InputSystem(HWND windowHandle)
     : pendingMouseState_{}
     , mouseState_{}
@@ -38,15 +18,9 @@ InputSystem::InputSystem(HWND windowHandle)
     , pendingKeyboardState_{}
     , prevKeyboardState_{}
     , keyboardState_{}
+    , m_MouseRegistered{ false }
+    , m_KeyboardRegistered{ false }
 {
-    DRE::MemZero(&pendingMouseState_, sizeof(pendingMouseState_));
-    DRE::MemZero(&mouseState_, sizeof(mouseState_));
-    DRE::MemZero(&prevMouseState_, sizeof(prevMouseState_));
-
-    DRE::MemZero(&pendingKeyboardState_, sizeof(pendingKeyboardState_));
-    DRE::MemZero(&prevKeyboardState_, sizeof(prevKeyboardState_));
-    DRE::MemZero(&keyboardState_, sizeof(keyboardState_));
-
     UINT inputDeviceCount = 0;
     {
         UINT err = GetRawInputDeviceList(NULL, &inputDeviceCount, sizeof(RAWINPUTDEVICELIST));
@@ -74,7 +48,7 @@ InputSystem::InputSystem(HWND windowHandle)
     bool keyboardConnected = false;
     bool mouseConnected = false;
 
-    for (std::uint32_t i = 0; i < inputDeviceCount; ++i) {
+    for (DRE::U32 i = 0; i < inputDeviceCount; ++i) {
         if (list[i].dwType == RIM_TYPEMOUSE) {
             mouseConnected = true;
         }
@@ -89,7 +63,7 @@ InputSystem::InputSystem(HWND windowHandle)
         rawDevices[rawDevicesCount].usUsagePage = 1;
         rawDevices[rawDevicesCount].usUsage = 2;
         rawDevices[rawDevicesCount].dwFlags = 0;
-        rawDevices[rawDevicesCount].hwndTarget = windowHandle; // TODO: let's check how that works
+        rawDevices[rawDevicesCount].hwndTarget = windowHandle;
 
         rawDevicesCount += 1;
     }
@@ -98,7 +72,7 @@ InputSystem::InputSystem(HWND windowHandle)
         rawDevices[rawDevicesCount].usUsagePage = 1;
         rawDevices[rawDevicesCount].usUsage = 6;
         rawDevices[rawDevicesCount].dwFlags = 0;
-        rawDevices[rawDevicesCount].hwndTarget = windowHandle; // TODO: let's check how that works
+        rawDevices[rawDevicesCount].hwndTarget = windowHandle;
 
         rawDevicesCount += 1;
     }
@@ -107,27 +81,41 @@ InputSystem::InputSystem(HWND windowHandle)
         UINT err = GetLastError();
         std::cerr << "Input System: Failed to register raw input devices. Error code: " << err << std::endl;
     }
+    else {
+        m_MouseRegistered = mouseConnected;
+        m_KeyboardRegistered = keyboardConnected;
+    }
 
 #ifdef DRE_DEBUG
     g_InputSystem = this;
 #endif
 }
 
-InputSystem::InputSystem(InputSystem&& rhs)
-{
-    operator=(std::move(rhs));
-}
-
-InputSystem& InputSystem::operator=(InputSystem&& rhs)
-{
-    // wtf?
-
-    return *this;
-}
-
 InputSystem::~InputSystem()
 {
+    UINT removeCount = 0;
+    RAWINPUTDEVICE remove[2];
 
+    if (m_MouseRegistered) {
+        remove[removeCount].usUsagePage = 1;
+        remove[removeCount].usUsage = 2;
+        remove[removeCount].dwFlags = RIDEV_REMOVE;
+        remove[removeCount].hwndTarget = NULL;
+        removeCount += 1;
+    }
+
+    if (m_KeyboardRegistered) {
+        remove[removeCount].usUsagePage = 1;
+        remove[removeCount].usUsage = 6;
+        remove[removeCount].dwFlags = RIDEV_REMOVE;
+        remove[removeCount].hwndTarget = NULL;
+        removeCount += 1;
+    }
+
+    if (removeCount > 0)
+        RegisterRawInputDevices(remove, removeCount, sizeof(*remove));
+
+    DRE_DEBUG_ONLY(g_InputSystem = nullptr);
 }
 
 InputSystem::MouseState const& InputSystem::GetMouseState() const
@@ -137,52 +125,52 @@ InputSystem::MouseState const& InputSystem::GetMouseState() const
 
 bool InputSystem::GetLeftMouseButtonPressed() const
 {
-    return mouseState_.mouseButtonStates_ & 1 << (int)MouseState::Left;
+    return mouseState_.mouseButtonStates_ & 1 << static_cast<DRE::U32>(MouseState::Left);
 }
 
 bool InputSystem::GetRightMouseButtonPressed() const
 {
-    return mouseState_.mouseButtonStates_ & 1 << (int)MouseState::Right;
+    return mouseState_.mouseButtonStates_ & 1 << static_cast<DRE::U32>(MouseState::Right);
 }
 
 bool InputSystem::GetMiddleMouseButtonPressed() const
 {
-    return mouseState_.mouseButtonStates_ & 1 << (int)MouseState::Middle;
+    return mouseState_.mouseButtonStates_ & 1 << static_cast<DRE::U32>(MouseState::Middle);
 }
 
 bool InputSystem::GetLeftMouseButtonJustPressed() const
 {
-    bool prevValue = prevMouseState_.mouseButtonStates_ & 1 << (int)MouseState::Left;
+    bool prevValue = prevMouseState_.mouseButtonStates_ & 1 << static_cast<DRE::U32>(MouseState::Left);
     return !prevValue && GetLeftMouseButtonPressed();
 }
 
 bool InputSystem::GetRightMouseButtonJustPressed() const
 {
-    bool prevValue = prevMouseState_.mouseButtonStates_ & 1 << (int)MouseState::Right;
+    bool prevValue = prevMouseState_.mouseButtonStates_ & 1 << static_cast<DRE::U32>(MouseState::Right);
     return !prevValue && GetRightMouseButtonPressed();
 }
 
 bool InputSystem::GetMiddleMouseButtonJustPressed() const
 {
-    bool prevValue = prevMouseState_.mouseButtonStates_ & 1 << (int)MouseState::Middle;
+    bool prevValue = prevMouseState_.mouseButtonStates_ & 1 << static_cast<DRE::U32>(MouseState::Middle);
     return !prevValue && GetMiddleMouseButtonPressed();
 }
 
 bool InputSystem::GetLeftMouseButtonJustReleased() const
 {
-    bool prevValue = prevMouseState_.mouseButtonStates_ & 1 << (int)MouseState::Left;
+    bool prevValue = prevMouseState_.mouseButtonStates_ & 1 << static_cast<DRE::U32>(MouseState::Left);
     return prevValue && !GetLeftMouseButtonPressed();
 }
 
 bool InputSystem::GetRightMouseButtonJustReleased() const
 {
-    bool prevValue = prevMouseState_.mouseButtonStates_ & 1 << (int)MouseState::Right;
+    bool prevValue = prevMouseState_.mouseButtonStates_ & 1 << static_cast<DRE::U32>(MouseState::Right);
     return prevValue && !GetRightMouseButtonPressed();
 }
 
 bool InputSystem::GetMiddleMouseButtonJustReleased() const
 {
-    bool prevValue = prevMouseState_.mouseButtonStates_ & 1 << (int)MouseState::Middle;
+    bool prevValue = prevMouseState_.mouseButtonStates_ & 1 << static_cast<DRE::U32>(MouseState::Middle);
     return prevValue && !GetMiddleMouseButtonPressed();
 }
 
@@ -203,10 +191,10 @@ bool InputSystem::GetKeyboardButtonJustReleased(Keys key) const
     return prevValue && !GetKeyboardButtonDown(key);
 }
 
-void InputSystem::SetKeysBitflagValue(std::uint64_t* bitflag, Keys key, bool value)
+void InputSystem::SetKeysBitflagValue(DRE::U64* bitflag, Keys key, bool value)
 {
-    std::uint32_t member = (std::uint32_t)key / 64;
-    std::uint32_t bitOffset = (std::uint32_t)key - 64 * member;
+    DRE::U32 member = (DRE::U32)key / 64;
+    DRE::U32 bitOffset = (DRE::U32)key - 64 * member;
 
     if (value) {
         bitflag[member] |= 1ULL << bitOffset;
@@ -217,15 +205,15 @@ void InputSystem::SetKeysBitflagValue(std::uint64_t* bitflag, Keys key, bool val
 
 }
 
-bool InputSystem::GetKeysBitflagValue(std::uint64_t const* bitflag, Keys key)
+bool InputSystem::GetKeysBitflagValue(DRE::U64 const* bitflag, Keys key)
 {
-    std::uint32_t member = (std::uint32_t)key / 64;
-    std::uint32_t bitOffset = (std::uint32_t)key - 64 * member;
+    DRE::U32 member = (DRE::U32)key / 64;
+    DRE::U32 bitOffset = (DRE::U32)key - 64 * member;
 
     return bitflag[member] & (1ULL << bitOffset);
 }
 
-std::uint32_t InputSystem::GetCharFromKeys(Keys key)
+DRE::U32 InputSystem::GetCharFromKeys(Keys key)
 {
     return MapVirtualKeyW(KeysToVKey(key), MAPVK_VK_TO_CHAR);
 }
@@ -257,11 +245,12 @@ void InputSystem::ProcessSystemInput(HWND handle, WPARAM wparam, LPARAM lparam)
 
     void* data = DRE::g_FrameScratchAllocator.Alloc(dataSize, alignof(RAWINPUT));
     result = GetRawInputData((HRAWINPUT)lparam, RID_INPUT, data, &dataSize, sizeof(RAWINPUTHEADER));
-    if (result < 0 || result != dataSize) {
+    if (result == (UINT)-1 || result != dataSize) {
         DWORD err = GetLastError();
         std::cerr <<
             "InputSystem::ProcessSystemInput: GetRawInputData failed. Can't retrieve system input. "
             "Error code: " << err << std::endl;
+        return;
     }
 
     RAWINPUT* rawInput = (RAWINPUT*)data;
@@ -271,27 +260,27 @@ void InputSystem::ProcessSystemInput(HWND handle, WPARAM wparam, LPARAM lparam)
 
         //if (mouse.usFlags & MOUSE_MOVE_RELATIVE)
         {
-            pendingMouseState_.xDelta_ = static_cast<float>(mouse.lLastX);
-            pendingMouseState_.yDelta_ = static_cast<float>(mouse.lLastY);
+            pendingMouseState_.xDelta_ += static_cast<float>(mouse.lLastX);
+            pendingMouseState_.yDelta_ += static_cast<float>(mouse.lLastY);
         }
 
         if (mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN)
-            pendingMouseState_.mouseButtonStates_ |= 1 << static_cast<std::uint32_t>(MouseState::MouseButtonOffsets::Left);
+            pendingMouseState_.mouseButtonStates_ |= 1 << static_cast<DRE::U32>(MouseState::MouseButtonOffsets::Left);
 
         if (mouse.usButtonFlags & RI_MOUSE_RIGHT_BUTTON_DOWN)
-            pendingMouseState_.mouseButtonStates_ |= 1 << static_cast<std::uint32_t>(MouseState::MouseButtonOffsets::Right);
+            pendingMouseState_.mouseButtonStates_ |= 1 << static_cast<DRE::U32>(MouseState::MouseButtonOffsets::Right);
 
         if (mouse.usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_DOWN)
-            pendingMouseState_.mouseButtonStates_ |= 1 << static_cast<std::uint32_t>(MouseState::MouseButtonOffsets::Middle);
+            pendingMouseState_.mouseButtonStates_ |= 1 << static_cast<DRE::U32>(MouseState::MouseButtonOffsets::Middle);
 
         if (mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_UP)
-            pendingMouseState_.mouseButtonStates_ &= ~(1 << static_cast<std::uint32_t>(MouseState::MouseButtonOffsets::Left));
+            pendingMouseState_.mouseButtonStates_ &= ~(1 << static_cast<DRE::U32>(MouseState::MouseButtonOffsets::Left));
 
         if (mouse.usButtonFlags & RI_MOUSE_RIGHT_BUTTON_UP)
-            pendingMouseState_.mouseButtonStates_ &= ~(1 << static_cast<std::uint32_t>(MouseState::MouseButtonOffsets::Right));
+            pendingMouseState_.mouseButtonStates_ &= ~(1 << static_cast<DRE::U32>(MouseState::MouseButtonOffsets::Right));
 
         if (mouse.usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_UP)
-            pendingMouseState_.mouseButtonStates_ &= ~(1 << static_cast<std::uint32_t>(MouseState::MouseButtonOffsets::Middle));
+            pendingMouseState_.mouseButtonStates_ &= ~(1 << static_cast<DRE::U32>(MouseState::MouseButtonOffsets::Middle));
 
         if (mouse.usButtonFlags & RI_MOUSE_WHEEL)
             pendingMouseState_.mouseWheelPos_ += static_cast<short>(mouse.usButtonData) / WHEEL_DELTA;
