@@ -63,7 +63,8 @@ InputSystem::InputSystem(HWND windowHandle)
         rawDevices[rawDevicesCount].usUsagePage = 1;
         rawDevices[rawDevicesCount].usUsage = 2;
         rawDevices[rawDevicesCount].dwFlags = 0;
-        rawDevices[rawDevicesCount].hwndTarget = windowHandle;
+        //rawDevices[rawDevicesCount].hwndTarget = windowHandle;
+        rawDevices[rawDevicesCount].hwndTarget = NULL;
 
         rawDevicesCount += 1;
     }
@@ -72,8 +73,8 @@ InputSystem::InputSystem(HWND windowHandle)
         rawDevices[rawDevicesCount].usUsagePage = 1;
         rawDevices[rawDevicesCount].usUsage = 6;
         rawDevices[rawDevicesCount].dwFlags = 0;
-        rawDevices[rawDevicesCount].hwndTarget = windowHandle;
-
+        //rawDevices[rawDevicesCount].hwndTarget = windowHandle;
+        rawDevices[rawDevicesCount].hwndTarget = NULL;
         rawDevicesCount += 1;
     }
 
