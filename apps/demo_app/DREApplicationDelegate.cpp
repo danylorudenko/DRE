@@ -144,6 +144,11 @@ void DREApplicationDelegate::start()
 #endif
 
 #if 0
+    WORLD::SceneNode* palaceNode = m_IOManager.ParseModelFile("data\\downloadable\\mcguire_cornell\\CornellBox-Original.obj", m_MainScene);
+    palaceNode->SetScale(2.0f);
+#endif
+
+#if 0
     WORLD::SceneNode* sponzaNode = m_IOManager.ParseModelFile("data\\downloadable\\mcguire_sponza\\sponza.obj", m_MainScene);
     sponzaNode->SetScale(0.1f);
 #endif

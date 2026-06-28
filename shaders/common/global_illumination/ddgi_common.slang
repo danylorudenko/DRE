@@ -99,6 +99,13 @@ float4 GetProbeAtlasUVRect(uint probeIndex, uint2 probeResolution, uint3 probeGr
     return float4(uvStart, uvEnd);
 }
 
+float3 GetProbeWorldPosition(uint probeIndex, float3 probeWorldOffset, float3 probesWorldDistance, uint3 probeGridDimentions)
+{
+    uint3 probe3DIndex = GetProbe3DIndex(probeGridDimentions, probeIndex);
+    float3 probesCoordinateStart = -((float3(probeGridDimentions) * probesWorldDistance) / 2.0f) + probeWorldOffset;
+    return probesCoordinateStart + probesWorldDistance * float3(probe3DIndex);
+}
+
 float3 SampleProbeRadiance(uint probeIndex, float3 direction, Texture2D probeAtlasIrradiance, SamplerState sampler, uint2 probeResolution, uint3 probeGridDimentions)
 {
     float2 probeUV = OctahedronEncode(direction);

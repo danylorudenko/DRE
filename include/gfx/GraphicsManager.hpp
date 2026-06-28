@@ -91,8 +91,12 @@ struct GraphicsSettings
 
     // DDGI
     float           m_DDGIProbeWorldDistance = 5.0f;
-    glm::vec3       m_DDGIProbeWorldOffset  = glm::vec3{ 0.0f, 30.0f, 0.0f };
-    float           m_DDGIIrradianceUpdateRate = 0.9f;
+    glm::vec3       m_DDGIProbeWorldOffset   = glm::vec3{ 0.0f, 30.0f, 0.0f };
+    float           m_DDGIIrradianceUpdateRate = 0.05f;
+
+    DRE::U32        m_DDGIProbeCountX = 32;
+    DRE::U32        m_DDGIProbeCountY = 16;
+    DRE::U32        m_DDGIProbeCountZ = 24;
 
     DRE::U32        m_ShadowMapWidth        = 1024;
     DRE::U32        m_ShadowMapHeight       = 1024;
@@ -108,15 +112,6 @@ struct GraphicsSettings
     float           m_WindDirectionX = 0.0f;
     float           m_WindSpeed = 1.0f;
     float           m_WindDirFactor = 2.0f;
-
-    // DDGI COMPILE_TIME_SETTINGS BEGIN
-
-    DRE::U32        m_DDGIProbeCountX = 32;
-    DRE::U32        m_DDGIProbeCountY = 16;
-    DRE::U32        m_DDGIProbeCountZ = 24;
-
-    // DDGI COMPILE_TIME_SETTINGS END
-
 };
 
 class GraphicsManager final

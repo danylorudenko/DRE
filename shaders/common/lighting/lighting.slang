@@ -82,7 +82,7 @@ S_LIGHTING_RESULT CalculateDirectLighting(S_SURFACE surface, ShaderStage shaderS
         Result.finalRadiance += directRadiance;
     }
 
-    Result.finalRadiance += float3(0.15f, 0.15f, 0.15f) * surface.diffuseSpectrum * surface.ao; // simple ambient
+    //Result.finalRadiance += float3(0.15f, 0.15f, 0.15f) * surface.diffuseSpectrum * surface.ao; // simple ambient
 
     return Result;
 }
@@ -104,7 +104,11 @@ S_LIGHTING_RESULT CalculateIndirectLighting(S_SURFACE surface)
             GetDDGI().probeGBufferResolution,
             GetDDGI().probeGridDimentions);
 
-        Result.finalRadiance += probeRadiance * probes.weights[i];
+        float finalWeight = probes.weights[i];
+
+        float3 pixelToProbe = surface.wpos - GetProbeWorldPosition(probeIndex, GetDDGI().probeWorldOffset, GetDDGI().probesWorldDistance, GetDDGI().probeGridDimentions);
+        finalWeight *= saturate(dot(surface.normal, pixelToProbe));
+        Result.finalRadiance += probeRadiance * finalWeight;
     }
 
     return Result;
