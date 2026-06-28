@@ -12,7 +12,6 @@ update_git_submodule(assimp)
 update_git_submodule(glm)
 update_git_submodule(glTF-Sample-Models)
 update_git_submodule(imgui)
-update_git_submodule(SPIRV-Cross)
 update_git_submodule(stb)
 update_git_submodule(Vulkan-Headers)
 
@@ -44,7 +43,6 @@ add_custom_target(SlangExtensionConfig SOURCES
 
 add_subdirectory(extern/glm)
 add_subdirectory(extern/Vulkan-Headers)
-add_subdirectory(extern/SPIRV-Cross)
 
 #imgui and stb have no CMakeLists
 #==========

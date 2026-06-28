@@ -15,6 +15,7 @@
 #include <gfx\pass\ColorEncodingPass.hpp>
 #include <gfx\pass\ImGuiRenderPass.hpp>
 #include <gfx\pass\DebugPassTextureView.hpp>
+#include <gfx\pass\DebugPrimitivesPass.hpp>
 #include <gfx\pass\EditorPass.hpp>
 #include <gfx\pass\DDGI.hpp>
 
@@ -111,6 +112,7 @@ void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInpu
 
     m_RenderGraph.AddPass<EditorPass>(viewportInput);
 
+    m_RenderGraph.AddPass<DebugPrimitivesPass>();
     m_RenderGraph.AddPass<DebugPassDDGIProbeDisplay>();
     m_RenderGraph.AddPass<DebugPassTextureView>();
 

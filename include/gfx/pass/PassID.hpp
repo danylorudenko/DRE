@@ -28,6 +28,7 @@ enum class PassID
     DDGIProbeBlend,
     DDGIProbeLighting,
     DDGIProbeScatter,
+    DebugPrimitives,
     MAX
 };
 
