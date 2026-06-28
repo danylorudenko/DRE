@@ -5,6 +5,7 @@
 #include "common/lighting/lights.slang"
 #include "common/instances.slang"
 #include "common/global_illumination/ddgi_common.slang"
+#include "common/debug_draw.slang"
 
 struct GlobalUniforms
 {
@@ -43,9 +44,8 @@ struct GlobalUniforms
     S_LIGHT*            LightBuffer;
     S_INSTANCE*         InstanceBuffer;
 
-    uint64_t GlobalGeometryBuffer;
-    float pad3;
-    float pad4;
+    uint64_t            GlobalGeometryBuffer;
+    DebugDrawBuffer*    DebugDrawBuffer;
 
     DDGIConstantBuffer  ddgiCB;
 };

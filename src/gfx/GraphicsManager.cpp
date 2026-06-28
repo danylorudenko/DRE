@@ -23,6 +23,7 @@
 #include <engine\data\GeometryLibrary.hpp>
 
 #include <common\global_uniform.slang>
+#include <common\debug_draw.slang>
 
 
 namespace GFX
@@ -54,6 +55,7 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::I
 #ifdef DRE_IMGUI_CUSTOM_TEXTURE
     , m_ImGuiSyncQueue{ &DRE::g_PersistentDataAllocator }
 #endif
+    , m_DebugDrawBuffer{ m_PersistentStorage.AllocateRegion(sizeof(DebugDrawBuffer)) }
     , m_GlobalGeometryManager{ &m_MainContext, &m_Device, &m_UploadArena }
     , m_RayTracingManager{ &m_Device, &m_GlobalGeometryManager }
     , m_DDGI{ }
@@ -198,6 +200,8 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     globalUniform.LightBuffer           = reinterpret_cast<S_LIGHT*>(m_LightsManager.GetBufferAddress());
     globalUniform.InstanceBuffer        = reinterpret_cast<S_INSTANCE*>(m_InstanceDataManager.GetBufferAddress());
     globalUniform.GlobalGeometryBuffer  = m_GlobalGeometryManager.GetMainBufferAddress();
+
+    globalUniform.DebugDrawBuffer       = reinterpret_cast<DebugDrawBuffer*>(m_DebugDrawBuffer.GetGPUAddress());
 
     globalUniform.ddgiCB            = m_DDGI.GetConstantBuffer(graph);
 

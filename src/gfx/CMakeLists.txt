@@ -100,6 +100,7 @@ set(GFX_SHADER_LIST
 	"${DRE_SOURCE_DIR}/shaders/common/utils/octahedron.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/utils/poisson.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/vertex/dre_vertex_layout.slang"
+	"${DRE_SOURCE_DIR}/shaders/common/debug_draw.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/forward.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/global_uniform.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/instances.slang"

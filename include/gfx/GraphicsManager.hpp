@@ -228,6 +228,8 @@ private:
     ImGuiSyncQueue              m_ImGuiSyncQueue;
 #endif
 
+    PersistentStorage::Allocation m_DebugDrawBuffer;
+
     GlobalGeometry              m_GlobalGeometryManager;
     RayTracingManager           m_RayTracingManager;
     DDGI                        m_DDGI;
