@@ -2,7 +2,7 @@
 
 ## Project Overview
 DRE is a C++20 Vulkan real-time rendering engine targeting Windows only (MSVC, Visual Studio 2022).
-Third-party dependencies: GLM (math), Assimp (asset import), Dear ImGui (UI), DXC (HLSL compilation).
+Third-party dependencies: GLM (math), Assimp (asset import), Dear ImGui (UI), slang shader language (for shaders).
 The Vulkan API is fully wrapped under the `VKW` namespace � never call Vulkan directly.
 
 ---
@@ -164,7 +164,7 @@ Group order: standard library ? third-party (glm, assimp, imgui) ? engine header
 - Dependency tracking via `GFX::DependencyManager`
 
 ## Shader System
-- HLSL shaders compiled at startup: `IO::ShaderDB::CompileSources(bool parallel)`
+- slang shaders compiled at startup: `IO::ShaderDB::CompileSources(bool parallel)`
 - Shader entries retrieved via `ShaderDB::GetShaderEntry(String64 const& name)`
 - Shader binding interface described by `IO::ShaderInterface` (members, push constants)
 - Hot-reload pending: `GFX::PipelineDB::ReloadPipeline(char const* name)`
