@@ -259,7 +259,7 @@ float2 CartesianToPolar(float3 cartesian)
 // Debug Draw
 void DrawDebugLine(float3 pos0, float3 pos1, float3 color)
 {
-    if (g_GlobalUniforms.DebugDrawBuffer->debugDrawEnabled == 0)
+    if (g_GlobalUniforms.debugDrawEnabled == 0)
         return;
 
     uint commandIndex;

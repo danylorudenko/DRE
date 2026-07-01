@@ -7,9 +7,10 @@
 
 enum DebugDrawCommandType : uint
 {
-    Line        = 0, // p0->p1
-    Sphere      = 1, // p0.xyz=center, p0.w=radius
-    AABB        = 2, // p0.xyz=min, p1.xyz=max
+    Line,           // p0->p1
+    Sphere,         // p0.xyz=center, p0.w=radius
+    AABB,           // p0.xyz=min, p1.xyz=max
+    COUNT
 };
 
 struct S_DEBUG_DRAW_COMMAND
@@ -25,12 +26,18 @@ struct S_DEBUG_DRAW_COMMAND
 
 struct DebugDrawBuffer
 {
-    uint debugDrawEnabled;
     uint commandCount;
     uint commandCapacity;
     uint pad0;
+    uint pad1;
 
     S_DEBUG_DRAW_COMMAND commands[DEBUG_DRAW_COMMAND_CAPACITY];
+};
+
+struct DebugDrawCounters
+{
+    uint totalTypeCount[uint(DebugDrawCommandType::COUNT)];
+    uint localSortingCounter[uint(DebugDrawCommandType::COUNT)];
 };
 
 #endif // _DEBUG_DRAW_SLANG_

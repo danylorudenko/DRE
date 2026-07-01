@@ -195,6 +195,7 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
 
     globalUniform.blueNoiseTextureID    = m_TextureBank.FindTexture("blue_noise_256")->GetShaderGlobalDescriptor().id_;
     globalUniform.whiteNoiseTextureID   = m_TextureBank.FindTexture("white_noise_256")->GetShaderGlobalDescriptor().id_;
+    globalUniform.debugDrawEnabled      = m_Settings.m_DebugDrawEnabled ? 1u : 0u;
 
     globalUniform.SunLightDir      = glm::vec4{ sunLight.GetForward(), 0.0f };
 

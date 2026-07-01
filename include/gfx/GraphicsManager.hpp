@@ -73,6 +73,8 @@ namespace GFX
 
 struct GraphicsSettings
 {
+    bool            m_DebugDrawEnabled      = true;
+
     // Tonemapping
     bool            m_UseACESEncoding       = true;
     float           m_ExposureEV            = 0.0f;

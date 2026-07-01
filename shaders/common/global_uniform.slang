@@ -36,7 +36,7 @@ struct GlobalUniforms
 
     uint blueNoiseTextureID;
     uint whiteNoiseTextureID;
-    uint pad1;
+    uint debugDrawEnabled;
     uint pad2;
 
     uint4               lightsCount;
