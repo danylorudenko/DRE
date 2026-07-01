@@ -55,14 +55,8 @@ void fillIndirectArgsCS(uint3 DTid: SV_DispatchThreadID)
         indirectArgs[i].firstInstance = firstInstance;
         firstInstance += counterBuffer[0].totalTypeCount[i];
     }
-
 }
 
-struct VSInput
-{
-    uint vertexID   : SV_VertexID;
-    uint instanceID : SV_InstanceID;
-};
 
 struct VSOutput
 {
@@ -72,7 +66,6 @@ struct VSOutput
 
 [shader("vertex")]
 VSOutput mainVS(
-    VSInput input,
     uint instanceID : SV_InstanceID,
     uint vertexID : SV_VertexID) // in vulkan instanceID starts from firstInstance, but in dx12 it's always from 0
 {
@@ -97,8 +90,8 @@ VSOutput mainVS(
 [shader("fragment")]
 float4 mainPS(VSOutput input) : SV_Target0
 {
-    // TODO: output debug primitive color
     return unpackUnorm4x8ToFloat(input.color);
 }
+
 
 #endif // _DEBUG_PRIMITIVES_SLANG_
