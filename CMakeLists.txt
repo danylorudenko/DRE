@@ -33,9 +33,9 @@ add_subdirectory(extern/assimp)
 #==========
 add_library(slang SHARED IMPORTED GLOBAL)
 set_target_properties(slang PROPERTIES
-	IMPORTED_IMPLIB "${DRE_SOURCE_DIR}/slang-2025.14.3-windows-x86_64/lib/slang.lib"
-	IMPORTED_LOCATION "${DRE_SOURCE_DIR}/slang-2025.14.3-windows-x86_64/bin/slang.dll"
-	INTERFACE_INCLUDE_DIRECTORIES "${DRE_SOURCE_DIR}/slang-2025.14.3-windows-x86_64/include/")
+	IMPORTED_IMPLIB "${DRE_SOURCE_DIR}/slang-2026.12.2-windows-x86_64/lib/slang.lib"
+	IMPORTED_LOCATION "${DRE_SOURCE_DIR}/slang-2026.12.2-windows-x86_64/bin/slang.dll"
+	INTERFACE_INCLUDE_DIRECTORIES "${DRE_SOURCE_DIR}/slang-2026.12.2-windows-x86_64/include/")
 
 add_custom_target(SlangExtensionConfig SOURCES
     slangdconfig.json
