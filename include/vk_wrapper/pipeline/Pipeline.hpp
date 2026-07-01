@@ -80,6 +80,7 @@ public:
         void SetCullMode            (VkCullModeFlags mode);
         void SetPolygonMode         (VkPolygonMode mode);
         void SetWindingOrder        (WindingOrder order);
+        void SetPrimitiveTopology   (VkPrimitiveTopology topology);
 
         void AddVertexAttribute     (Format format);
 

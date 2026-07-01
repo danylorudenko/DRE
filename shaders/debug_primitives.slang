@@ -50,6 +50,7 @@ void fillIndirectArgsCS(uint3 DTid: SV_DispatchThreadID)
     uint firstInstance = 0;
     for (uint i = 0; i < uint(DebugDrawCommandType::COUNT); ++i)
     {
+        indirectArgs[i].indexCount    = (i == uint(DebugDrawCommandType::Line)) ? 2 : 0;
         indirectArgs[i].instanceCount = counterBuffer[0].totalTypeCount[i];
         indirectArgs[i].firstInstance = firstInstance;
         firstInstance += counterBuffer[0].totalTypeCount[i];

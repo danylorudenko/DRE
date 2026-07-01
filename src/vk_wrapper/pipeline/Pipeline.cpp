@@ -244,6 +244,11 @@ void Pipeline::Descriptor::SetWindingOrder(WindingOrder face)
     rasterizationState_.frontFace = VkFrontFace(face);
 }
 
+void Pipeline::Descriptor::SetPrimitiveTopology(VkPrimitiveTopology topology)
+{
+    inputAssemblyState_.topology = topology;
+}
+
 void Pipeline::Descriptor::AddVertexAttribute(Format format)
 {
     DRE_ASSERT(type_ != PIPELINE_TYPE_COMPUTE, "Incompatible state detected in Pipeline::Descritor - adding vertex to compute state.");

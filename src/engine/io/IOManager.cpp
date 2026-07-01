@@ -29,8 +29,6 @@
 #include <engine\io\ShaderDB.hpp>
 #include <engine\scene\Scene.hpp>
 
-#include <spirv_cross.hpp>
-
 namespace IO
 {
 

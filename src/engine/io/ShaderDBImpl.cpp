@@ -6,7 +6,6 @@
 #include <engine\io\IOManager.hpp>
 #include <foundation\system\Parallel.hpp>
 
-#include <spirv_cross.hpp>
 #include <wrl\client.h>
 #include <dxcapi.h>
 

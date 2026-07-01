@@ -58,6 +58,20 @@ void PipelineDB::CreateDefaultPipelines()
         CreateComputePipeline("ddgi_probe_trace", "ddgi_probe_trace.slang_mainCS");
         CreateComputePipeline("debug_view_ddgi_probes_args", "debug_view_ddgi_probes.slang_indirectArgsFillCS");
 
+        CreateComputePipeline("debug_primitives_count",     "debug_primitives.slang_countCommandsCS");
+        CreateComputePipeline("debug_primitives_sort",      "debug_primitives.slang_sortCommandsCS");
+        CreateComputePipeline("debug_primitives_fill_args", "debug_primitives.slang_fillIndirectArgsCS");
+
+        {
+            VKW::Pipeline::Descriptor debugPrimitivesDrawDesc;
+            debugPrimitivesDrawDesc.SetPipelineType(VKW::PIPELINE_TYPE_GRAPHIC);
+            debugPrimitivesDrawDesc.SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_LINE_LIST);
+            debugPrimitivesDrawDesc.SetCullMode(VK_CULL_MODE_NONE);
+            debugPrimitivesDrawDesc.EnableDepthTest(g_GraphicsManager->GetMainDepthFormat(), false);
+            debugPrimitivesDrawDesc.AddColorOutput(g_GraphicsManager->GetFinalImageFormat());
+            CreateCustomGraphicsPipeline("debug_primitives_draw", "debug_primitives.slang_mainVS", "debug_primitives.slang_mainPS", debugPrimitivesDrawDesc);
+        }
+
         VKW::Pipeline::Descriptor ddgiDrawDesc;
         ddgiDrawDesc.SetPipelineType(VKW::PIPELINE_TYPE_GRAPHIC);
         ddgiDrawDesc.EnableDepthTest(g_GraphicsManager->GetMainDepthFormat(), true);
