@@ -52,7 +52,7 @@ enum PolygonModeBits
     POLYGON_WIREFRAME
 };
 
-using AttachmentMask = std::uint32_t;
+using AttachmentMask = DRE::U32;
 
 ////////////////////////////////////////
 ////////////////////////////////////////
@@ -79,15 +79,15 @@ public:
     void FlushWaitSwapchain(PresentationContext& presentContext);
     void Present(PresentationContext& presentContext);
 
-    VKW::QueueExecutionPoint SyncPoint(std::uint8_t waitCount = 0, VKW::QueueExecutionPoint const* waits = nullptr);
+    VKW::QueueExecutionPoint SyncPoint(DRE::U8 waitCount = 0, VKW::QueueExecutionPoint const* waits = nullptr);
     VKW::QueueExecutionPoint SyncPoint(VKW::QueueExecutionPoint const& wait);
 
 public:
-    void CmdDraw(std::uint32_t vertexCount, std::uint32_t instanceCount = 1, std::uint32_t firstVertex = 0, std::uint32_t firstInstance = 0);
-    void CmdDrawIndirect(VKW::BufferResource const* buffer, std::uint32_t offset = 0, std::uint32_t drawCount = 1, std::uint32_t stride = sizeof(DrawIndirectCommand));
-    void CmdDrawIndexed(std::uint32_t indexCount, std::uint32_t instanceCount = 1, std::uint32_t firstIndex = 0, std::int32_t vertexOffset = 0, std::uint32_t firstInstance = 0);
-    void CmdDrawIndexedIndirect(VKW::BufferResource const* buffer, std::uint32_t offset = 0, std::uint32_t drawCount = 1, std::uint32_t stride = sizeof(DrawIndexedIndirectCommand));
-    void CmdDispatch(std::uint32_t x, std::uint32_t y, std::uint32_t z);
+    void CmdDraw(DRE::U32 vertexCount, DRE::U32 instanceCount = 1, DRE::U32 firstVertex = 0, DRE::U32 firstInstance = 0);
+    void CmdDrawIndirect(VKW::BufferResource const* buffer, DRE::U32 offset = 0, DRE::U32 drawCount = 1, DRE::U32 stride = sizeof(DrawIndirectCommand));
+    void CmdDrawIndexed(DRE::U32 indexCount, DRE::U32 instanceCount = 1, DRE::U32 firstIndex = 0, DRE::S32 vertexOffset = 0, DRE::U32 firstInstance = 0);
+    void CmdDrawIndexedIndirect(VKW::BufferResource const* buffer, DRE::U32 offset = 0, DRE::U32 drawCount = 1, DRE::U32 stride = sizeof(DrawIndexedIndirectCommand));
+    void CmdDispatch(DRE::U32 x, DRE::U32 y, DRE::U32 z);
 
     void CmdBindPipeline(BindPoint bindPoint, VKW::Pipeline const* pipeline);
     void CmdBindGraphicsPipeline(VKW::Pipeline const* pipeline);
@@ -95,29 +95,29 @@ public:
 
     void CmdBindDescriptorSets(
         VKW::PipelineLayout const* layout, BindPoint bindPoint,
-        std::uint32_t firstSet, std::uint32_t descriptorSetCount, VKW::DescriptorSet const* sets,
-        std::uint32_t dynamicOffsetCount = 0, std::uint32_t const* pDynamicOffsets = nullptr);
+        DRE::U32 firstSet, DRE::U32 descriptorSetCount, VKW::DescriptorSet const* sets,
+        DRE::U32 dynamicOffsetCount = 0, DRE::U32 const* pDynamicOffsets = nullptr);
 
     void CmdBindGraphicsDescriptorSets(
         VKW::PipelineLayout const* layout, 
-        std::uint32_t firstSet, std::uint32_t descriptorSetCount, VKW::DescriptorSet const* sets,
-        std::uint32_t dynamicOffsetCount = 0, std::uint32_t const* pDynamicOffsets = nullptr);
+        DRE::U32 firstSet, DRE::U32 descriptorSetCount, VKW::DescriptorSet const* sets,
+        DRE::U32 dynamicOffsetCount = 0, DRE::U32 const* pDynamicOffsets = nullptr);
 
     void CmdBindComputeDescriptorSets(
         VKW::PipelineLayout const* layout,
-        std::uint32_t firstSet, std::uint32_t descriptorSetCount, VKW::DescriptorSet const* sets,
-        std::uint32_t dynamicOffsetCount = 0, std::uint32_t const* pDynamicOffsets = nullptr);
+        DRE::U32 firstSet, DRE::U32 descriptorSetCount, VKW::DescriptorSet const* sets,
+        DRE::U32 dynamicOffsetCount = 0, DRE::U32 const* pDynamicOffsets = nullptr);
 
-    void CmdBindGlobalDescriptorSets(VKW::DescriptorManager& descriptorManager, std::uint8_t frameID);
+    void CmdBindGlobalDescriptorSets(VKW::DescriptorManager& descriptorManager, DRE::U8 frameID);
 
-    void CmdSetViewport(std::uint32_t viewportCount, std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height);
-    void CmdSetScissor(std::uint32_t scissorCount, std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height);
+    void CmdSetViewport(DRE::U32 viewportCount, DRE::U32 x, DRE::U32 y, DRE::U32 width, DRE::U32 height);
+    void CmdSetScissor(DRE::U32 scissorCount, DRE::U32 x, DRE::U32 y, DRE::U32 width, DRE::U32 height);
 
 #ifndef DRE_COMPILE_FOR_RENDERDOC
     void CmdSetPolygonMode(PolygonModeBits mode);
 #endif // DRE_COMPILE_FOR_RENDERDOC
 
-    void CmdPushConstants(VKW::PipelineLayout const* layout, VKW::DescriptorStage stages, std::uint32_t offset, std::uint32_t size, void const* pValues);
+    void CmdPushConstants(VKW::PipelineLayout const* layout, VKW::DescriptorStage stages, DRE::U32 offset, DRE::U32 size, void const* pValues);
 
     // very heavy
     //void CmdPipelineBarrier(VKW::Dependency& dependency);
@@ -136,44 +136,44 @@ public:
         ResourceAccess dstAccess, Stages dstStage);
 
     void CmdResourceDependency(VKW::BufferResource const* resource,
-        std::uint32_t offset, std::uint32_t size, // offset is added to the base offset of the VKW::BufferResource
+        DRE::U32 offset, DRE::U32 size, // offset is added to the base offset of the VKW::BufferResource
         ResourceAccess srcAccess, Stages srcStage,
         ResourceAccess dstAccess, Stages dstStage);
 
 
-    void CmdBeginRendering(std::uint32_t attachmentCount, VKW::ImageResourceView* const* attachments, VKW::ImageResourceView const* depthAttachment, VKW::ImageResourceView const* stencilAttachment);
+    void CmdBeginRendering(DRE::U32 attachmentCount, VKW::ImageResourceView* const* attachments, VKW::ImageResourceView const* depthAttachment, VKW::ImageResourceView const* stencilAttachment);
     void CmdClearAttachments(AttachmentMask attachments, float* color);
-    void CmdClearAttachments(AttachmentMask attachments, std::uint32_t* value);
-    void CmdClearAttachments(AttachmentMask attachments, float depth, std::uint32_t stencil);
+    void CmdClearAttachments(AttachmentMask attachments, DRE::U32* value);
+    void CmdClearAttachments(AttachmentMask attachments, float depth, DRE::U32 stencil);
     void CmdEndRendering();
 
-    void CmdBindVertexBuffer(VKW::BufferResource const* vertexBuffer, std::uint32_t offset = 0);
-    void CmdBindIndexBuffer(VKW::BufferResource const* indexBuffer, std::uint32_t offset = 0, std::uint8_t indexSize = 32);
+    void CmdBindVertexBuffer(VKW::BufferResource const* vertexBuffer, DRE::U32 offset = 0);
+    void CmdBindIndexBuffer(VKW::BufferResource const* indexBuffer, DRE::U32 offset = 0, DRE::U8 indexSize = 32);
 
     void CmdClearColorImage(VKW::ImageResource const* image, float color[4]);
-    void CmdClearDepthStencilImage(VKW::ImageResource const* image, float depth, std::uint32_t stencil);
+    void CmdClearDepthStencilImage(VKW::ImageResource const* image, float depth, DRE::U32 stencil);
 
     void CmdCopyImageToImage(VKW::ImageResource const* dst, VKW::ImageResource const* src);
-    void CmdCopyImageToBuffer(VKW::BufferResource const* dst, VKW::ImageResource const* src, std::uint32_t bufferOffset);
-    void CmdCopyBufferToImage(VKW::ImageResource const* dst, VKW::BufferResource const* src, std::uint32_t bufferOffset);
-    void CmdCopyBufferToBuffer(VKW::BufferResource const* dst, std::uint32_t dstOffset, VKW::BufferResource const* scr, std::uint32_t srcOffset, std::uint32_t size);
+    void CmdCopyImageToBuffer(VKW::BufferResource const* dst, VKW::ImageResource const* src, DRE::U32 bufferOffset);
+    void CmdCopyBufferToImage(VKW::ImageResource const* dst, VKW::BufferResource const* src, DRE::U32 bufferOffset);
+    void CmdCopyBufferToBuffer(VKW::BufferResource const* dst, DRE::U32 dstOffset, VKW::BufferResource const* scr, DRE::U32 srcOffset, DRE::U32 size);
     void CmdFillBuffer(VKW::BufferResource const* dst, DRE::U32 dstOffset, DRE::U32 size, DRE::U32 data);
     void CmdUpdateBuffer(VKW::BufferResource const* dst, DRE::U32 dstOffset, DRE::U32 size, void const* pData);
 
     void CmdBuildBLAS(
         VKW::AccelerationStructureResource const* blas,
-        std::uint64_t scratchBufferAddress,
-        std::uint64_t vertexBufferAddress,
-        std::uint64_t vertexStride,
-        std::uint64_t vertexCount,
-        std::uint64_t indexBufferAddress,
-        std::uint64_t indexCount);
+        DRE::U64 scratchBufferAddress,
+        DRE::U64 vertexBufferAddress,
+        DRE::U64 vertexStride,
+        DRE::U64 vertexCount,
+        DRE::U64 indexBufferAddress,
+        DRE::U64 indexCount);
 
     void CmdBuildTLAS(
         VKW::AccelerationStructureResource const* tlas,
-        std::uint64_t scratchBufferAddress,
-        std::uint32_t instanceCount,
-        std::uint64_t instanceBufferAddress);
+        DRE::U64 scratchBufferAddress,
+        DRE::U32 instanceCount,
+        DRE::U64 instanceBufferAddress);
 
     void CmdBeginDebugLabel(char const* label);
     void CmdEndDebugLabel();

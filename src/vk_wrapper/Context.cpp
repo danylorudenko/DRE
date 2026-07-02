@@ -14,7 +14,7 @@
 namespace VKW
 {
 
-std::uint32_t constexpr BARRIER_MEM_SIZE = 256 * 1024;
+DRE::U32 constexpr BARRIER_MEM_SIZE = 256 * 1024;
 
 Context::Context(VKW::ImportTable* table, VKW::Queue* queue, DRE::AllocatorLinear* barrierAllocator)
     : m_ImportTable{ table }
@@ -72,7 +72,7 @@ void Context::Present(PresentationContext& presentContext)
     presentContext.Present(m_ParentQueue);
 }
 
-VKW::QueueExecutionPoint Context::SyncPoint(std::uint8_t waitCount, VKW::QueueExecutionPoint const* waits)
+VKW::QueueExecutionPoint Context::SyncPoint(DRE::U8 waitCount, VKW::QueueExecutionPoint const* waits)
 {
     DRE_ASSERT(m_CurrentCommandList != nullptr, "Failed to submit CommandLists, current CmdList is nullptr.");
 
@@ -89,27 +89,27 @@ VKW::QueueExecutionPoint Context::SyncPoint(VKW::QueueExecutionPoint const& wait
     return SyncPoint(1, &wait);
 }
 
-void Context::CmdDraw(std::uint32_t vertexCount, std::uint32_t instanceCount, std::uint32_t firstVertex, std::uint32_t firstInstance)
+void Context::CmdDraw(DRE::U32 vertexCount, DRE::U32 instanceCount, DRE::U32 firstVertex, DRE::U32 firstInstance)
 {
     m_ImportTable->vkCmdDraw(*m_CurrentCommandList, vertexCount, instanceCount, firstVertex, firstInstance);
 }
 
-void Context::CmdDrawIndirect(VKW::BufferResource const* buffer, std::uint32_t offset, std::uint32_t drawCount, std::uint32_t stride)
+void Context::CmdDrawIndirect(VKW::BufferResource const* buffer, DRE::U32 offset, DRE::U32 drawCount, DRE::U32 stride)
 {
     m_ImportTable->vkCmdDrawIndirect(*m_CurrentCommandList, buffer->handle_, offset, drawCount, stride);
 }
 
-void Context::CmdDrawIndexed(std::uint32_t indexCount, std::uint32_t instanceCount, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
+void Context::CmdDrawIndexed(DRE::U32 indexCount, DRE::U32 instanceCount, DRE::U32 firstIndex, DRE::S32 vertexOffset, DRE::U32 firstInstance)
 {
     m_ImportTable->vkCmdDrawIndexed(*m_CurrentCommandList, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }
 
-void Context::CmdDrawIndexedIndirect(VKW::BufferResource const* buffer, std::uint32_t offset, std::uint32_t drawCount, std::uint32_t stride)
+void Context::CmdDrawIndexedIndirect(VKW::BufferResource const* buffer, DRE::U32 offset, DRE::U32 drawCount, DRE::U32 stride)
 {
     m_ImportTable->vkCmdDrawIndexedIndirect(*m_CurrentCommandList, buffer->handle_, offset, drawCount, stride);
 }
 
-void Context::CmdDispatch(std::uint32_t x, std::uint32_t y, std::uint32_t z)
+void Context::CmdDispatch(DRE::U32 x, DRE::U32 y, DRE::U32 z)
 {
     WriteResourceDependencies();
     m_ImportTable->vkCmdDispatch(*m_CurrentCommandList, x, y, z);
@@ -133,13 +133,13 @@ void Context::CmdBindComputePipeline(VKW::Pipeline const* pipeline)
 
 void Context::CmdBindDescriptorSets(
     VKW::PipelineLayout const* layout, BindPoint bindPoint,
-    std::uint32_t firstSet, std::uint32_t descriptorSetCount, VKW::DescriptorSet const* sets,
-    std::uint32_t dynamicOffsetCount, std::uint32_t const* pDynamicOffsets)
+    DRE::U32 firstSet, DRE::U32 descriptorSetCount, VKW::DescriptorSet const* sets,
+    DRE::U32 dynamicOffsetCount, DRE::U32 const* pDynamicOffsets)
 {
     VkPipelineBindPoint const vkBindPoint = (bindPoint == BindPoint::Graphics) ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE;
 
     VkDescriptorSet vkSets[VKW::CONSTANTS::MAX_PIPELINE_LAYOUT_MEMBERS];
-    for (std::uint32_t i = 0; i < descriptorSetCount; i++)
+    for (DRE::U32 i = 0; i < descriptorSetCount; i++)
     {
         vkSets[i] = sets->GetHandle();
     }
@@ -149,21 +149,21 @@ void Context::CmdBindDescriptorSets(
 
 void Context::CmdBindGraphicsDescriptorSets(
     VKW::PipelineLayout const* layout,
-    std::uint32_t firstSet, std::uint32_t descriptorSetCount, VKW::DescriptorSet const* sets,
-    std::uint32_t dynamicOffsetCount, std::uint32_t const* pDynamicOffsets)
+    DRE::U32 firstSet, DRE::U32 descriptorSetCount, VKW::DescriptorSet const* sets,
+    DRE::U32 dynamicOffsetCount, DRE::U32 const* pDynamicOffsets)
 {
     CmdBindDescriptorSets(layout, BindPoint::Graphics, firstSet, descriptorSetCount, sets, dynamicOffsetCount, pDynamicOffsets);
 }
 
 void Context::CmdBindComputeDescriptorSets(
     VKW::PipelineLayout const* layout,
-    std::uint32_t firstSet, std::uint32_t descriptorSetCount, VKW::DescriptorSet const* sets,
-    std::uint32_t dynamicOffsetCount, std::uint32_t const* pDynamicOffsets)
+    DRE::U32 firstSet, DRE::U32 descriptorSetCount, VKW::DescriptorSet const* sets,
+    DRE::U32 dynamicOffsetCount, DRE::U32 const* pDynamicOffsets)
 {
     CmdBindDescriptorSets(layout, BindPoint::Compute, firstSet, descriptorSetCount, sets, dynamicOffsetCount, pDynamicOffsets);
 }
 
-void Context::CmdBindGlobalDescriptorSets(VKW::DescriptorManager& descriptorManager, std::uint8_t frameID)
+void Context::CmdBindGlobalDescriptorSets(VKW::DescriptorManager& descriptorManager, DRE::U8 frameID)
 {
     VkDescriptorSet globalSets[3];
     globalSets[0] = descriptorManager.GetGlobalGenericSet().GetHandle();
@@ -174,10 +174,10 @@ void Context::CmdBindGlobalDescriptorSets(VKW::DescriptorManager& descriptorMana
     m_ImportTable->vkCmdBindDescriptorSets(*m_CurrentCommandList, VK_PIPELINE_BIND_POINT_COMPUTE, descriptorManager.GetGlobalPipelineLayout()->GetHandle(), 0, 3, globalSets, 0, nullptr);
 }
 
-void Context::CmdSetViewport(std::uint32_t viewportCount, std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height)
+void Context::CmdSetViewport(DRE::U32 viewportCount, DRE::U32 x, DRE::U32 y, DRE::U32 width, DRE::U32 height)
 {
     VkViewport vp[VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS];
-    for (std::uint32_t i = 0; i < viewportCount; i++)
+    for (DRE::U32 i = 0; i < viewportCount; i++)
     {
         vp[i].x         = static_cast<float>(x);
         vp[i].y         = static_cast<float>(y);
@@ -190,10 +190,10 @@ void Context::CmdSetViewport(std::uint32_t viewportCount, std::uint32_t x, std::
     m_ImportTable->vkCmdSetViewport(*m_CurrentCommandList, 0, viewportCount, vp);
 }
 
-void Context::CmdSetScissor(std::uint32_t scissorCount, std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height)
+void Context::CmdSetScissor(DRE::U32 scissorCount, DRE::U32 x, DRE::U32 y, DRE::U32 width, DRE::U32 height)
 {
     VkRect2D sc[VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS];
-    for (std::uint32_t i = 0; i < scissorCount; i++)
+    for (DRE::U32 i = 0; i < scissorCount; i++)
     {
         sc[i].offset.x = x;
         sc[i].offset.y = y;
@@ -212,7 +212,7 @@ void Context::CmdSetPolygonMode(PolygonModeBits mode)
 }
 #endif // DRE_COMPILE_FOR_RENDERDOC
 
-void Context::CmdPushConstants(VKW::PipelineLayout const* layout, VKW::DescriptorStage stages, std::uint32_t offset, std::uint32_t size, void const* pValues)
+void Context::CmdPushConstants(VKW::PipelineLayout const* layout, VKW::DescriptorStage stages, DRE::U32 offset, DRE::U32 size, void const* pValues)
 {
     VkShaderStageFlags const shaderStages = VKW::HELPER::DescriptorStageToVK(stages);
     m_ImportTable->vkCmdPushConstants(*m_CurrentCommandList, layout->GetHandle(), shaderStages, offset, size, pValues);
@@ -232,7 +232,7 @@ void Context::CmdResourceDependency(VKW::ImageResource const* resource,
     ResourceAccess srcAccess, Stages srcStage,
     ResourceAccess dstAccess, Stages dstStage)
 {
-    std::uint32_t const queueFamily = m_ParentQueue->GetQueueFamily();
+    DRE::U32 const queueFamily = m_ParentQueue->GetQueueFamily();
 
     m_PendingDependency.Add(resource,
         srcAccess, srcStage, queueFamily,
@@ -243,7 +243,7 @@ void Context::CmdResourceDependency(VKW::BufferResource const* resource,
     ResourceAccess srcAccess, Stages srcStage,
     ResourceAccess dstAccess, Stages dstStage)
 {
-    std::uint32_t const queueFamily = m_ParentQueue->GetQueueFamily();
+    DRE::U32 const queueFamily = m_ParentQueue->GetQueueFamily();
 
     m_PendingDependency.Add(resource,
         srcAccess, srcStage, queueFamily,
@@ -251,11 +251,11 @@ void Context::CmdResourceDependency(VKW::BufferResource const* resource,
 }
 
 void Context::CmdResourceDependency(VKW::BufferResource const* resource,
-    std::uint32_t offset, std::uint32_t size, // offset is added to the base offset of the VKW::BufferResource
+    DRE::U32 offset, DRE::U32 size, // offset is added to the base offset of the VKW::BufferResource
     ResourceAccess srcAccess, Stages srcStage,
     ResourceAccess dstAccess, Stages dstStage)
 {
-    std::uint32_t const queueFamily = m_ParentQueue->GetQueueFamily();
+    DRE::U32 const queueFamily = m_ParentQueue->GetQueueFamily();
 
     m_PendingDependency.Add(resource,
         offset, size,
@@ -263,7 +263,7 @@ void Context::CmdResourceDependency(VKW::BufferResource const* resource,
         dstAccess, dstStage, queueFamily);
 }
 
-void Context::CmdClearAttachments(AttachmentMask attachments, std::uint32_t* value)
+void Context::CmdClearAttachments(AttachmentMask attachments, DRE::U32* value)
 {
     VkClearValue clearValue{};
     clearValue.color.uint32[0] = value[0];
@@ -273,7 +273,7 @@ void Context::CmdClearAttachments(AttachmentMask attachments, std::uint32_t* val
 
     DRE::InplaceVector<VkClearAttachment, VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS> clears;
     DRE::InplaceVector<VkClearRect, VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS> rects;
-    for (std::uint32_t i = 0; i < VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS; i++)
+    for (DRE::U32 i = 0; i < VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS; i++)
     {
         if (attachments & (ATTACHMENT_MASK_COLOR_0 << i))
         {
@@ -299,7 +299,7 @@ void Context::CmdClearAttachments(AttachmentMask attachments, float* color)
 
     DRE::InplaceVector<VkClearAttachment, VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS> clears;
     DRE::InplaceVector<VkClearRect, VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS> rects;
-    for (std::uint32_t i = 0; i < VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS; i++)
+    for (DRE::U32 i = 0; i < VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS; i++)
     {
         if (attachments & (ATTACHMENT_MASK_COLOR_0 << i))
         {
@@ -315,7 +315,7 @@ void Context::CmdClearAttachments(AttachmentMask attachments, float* color)
     m_ImportTable->vkCmdClearAttachments(*m_CurrentCommandList, clears.Size(), clears.Data(), rects.Size(), rects.Data());
 }
 
-void Context::CmdClearAttachments(AttachmentMask attachments, float depth, std::uint32_t stencil)
+void Context::CmdClearAttachments(AttachmentMask attachments, float depth, DRE::U32 stencil)
 {
     VkClearValue value{};
     value.depthStencil.depth = depth;
@@ -345,13 +345,13 @@ void Context::CmdClearAttachments(AttachmentMask attachments, float depth, std::
     m_ImportTable->vkCmdClearAttachments(*m_CurrentCommandList, clears.Size(), clears.Data(), rects.Size(), rects.Data());
 }
 
-void Context::CmdBeginRendering(std::uint32_t attachmentCount, VKW::ImageResourceView* const* attachments,
+void Context::CmdBeginRendering(DRE::U32 attachmentCount, VKW::ImageResourceView* const* attachments,
     VKW::ImageResourceView const* depthAttachment, VKW::ImageResourceView const* stencilAttachment)
 {
     DRE_ASSERT(attachmentCount <= VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS, "Exceeded maximum color attachment count.");
 
-    std::uint32_t renderingWidth = 0;
-    std::uint32_t renderingHeight = 0;
+    DRE::U32 renderingWidth = 0;
+    DRE::U32 renderingHeight = 0;
 
     if (attachmentCount > 0)
     {
@@ -379,7 +379,7 @@ void Context::CmdBeginRendering(std::uint32_t attachmentCount, VKW::ImageResourc
     m_RenderingRect.extent.height = renderingHeight;
 
     DRE::InplaceVector<VkRenderingAttachmentInfoKHR, VKW::CONSTANTS::MAX_COLOR_ATTACHMENTS> colorInfos;
-    for (std::uint32_t i = 0; i < attachmentCount; i++)
+    for (DRE::U32 i = 0; i < attachmentCount; i++)
     {
         VkRenderingAttachmentInfoKHR& attachmentInfo = colorInfos.EmplaceBack();
         attachmentInfo.sType                = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
@@ -453,13 +453,13 @@ void Context::CmdEndRendering()
     m_ImportTable->vkCmdEndRendering(*m_CurrentCommandList);
 }
 
-void Context::CmdBindVertexBuffer(VKW::BufferResource const* vertexBuffer, std::uint32_t offset)
+void Context::CmdBindVertexBuffer(VKW::BufferResource const* vertexBuffer, DRE::U32 offset)
 {
     VkDeviceSize vkOffset = static_cast<VkDeviceSize>(offset);
     m_ImportTable->vkCmdBindVertexBuffers(*m_CurrentCommandList, 0, 1, &vertexBuffer->handle_, &vkOffset);
 }
 
-void Context::CmdBindIndexBuffer(VKW::BufferResource const* indexBuffer, std::uint32_t offset, std::uint8_t indexSize)
+void Context::CmdBindIndexBuffer(VKW::BufferResource const* indexBuffer, DRE::U32 offset, DRE::U8 indexSize)
 {
     m_ImportTable->vkCmdBindIndexBuffer(*m_CurrentCommandList, indexBuffer->handle_, static_cast<VkDeviceSize>(offset), indexSize == 16 ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32);
 }
@@ -477,7 +477,7 @@ void Context::CmdClearColorImage(VKW::ImageResource const* image, float color[4]
     m_ImportTable->vkCmdClearColorImage(*m_CurrentCommandList, image->handle_, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &value, 1, &range);
 }
 
-void Context::CmdClearDepthStencilImage(VKW::ImageResource const* image, float depth, std::uint32_t stencil)
+void Context::CmdClearDepthStencilImage(VKW::ImageResource const* image, float depth, DRE::U32 stencil)
 {
     VkImageSubresourceRange const range = VKW::HELPER::ImageSubresourceRange(VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT, 1);
     VkClearDepthStencilValue value{};
@@ -513,7 +513,7 @@ void Context::CmdCopyImageToImage(VKW::ImageResource const* dst, VKW::ImageResou
     m_ImportTable->vkCmdCopyImage2(*m_CurrentCommandList, &info);
 }
 
-void Context::CmdCopyBufferToImage(VKW::ImageResource const* dst, VKW::BufferResource const* src, std::uint32_t bufferOffset)
+void Context::CmdCopyBufferToImage(VKW::ImageResource const* dst, VKW::BufferResource const* src, DRE::U32 bufferOffset)
 {
     VkBufferImageCopy2KHR copyDesc{};
     copyDesc.sType = VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2_KHR;
@@ -542,7 +542,7 @@ void Context::CmdCopyBufferToImage(VKW::ImageResource const* dst, VKW::BufferRes
     m_ImportTable->vkCmdCopyBufferToImage2(*m_CurrentCommandList, &copyInfo);
 }
 
-void Context::CmdCopyImageToBuffer(VKW::BufferResource const* dst, VKW::ImageResource const* src, std::uint32_t bufferOffset)
+void Context::CmdCopyImageToBuffer(VKW::BufferResource const* dst, VKW::ImageResource const* src, DRE::U32 bufferOffset)
 {
     VkBufferImageCopy2KHR copyDesc{};
     copyDesc.sType = VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2_KHR;
@@ -571,7 +571,7 @@ void Context::CmdCopyImageToBuffer(VKW::BufferResource const* dst, VKW::ImageRes
     m_ImportTable->vkCmdCopyImageToBuffer2(*m_CurrentCommandList, &copyInfo);
 }
 
-void Context::CmdCopyBufferToBuffer(VKW::BufferResource const* dst, std::uint32_t dstOffset, VKW::BufferResource const* src, std::uint32_t srcOffset, std::uint32_t size)
+void Context::CmdCopyBufferToBuffer(VKW::BufferResource const* dst, DRE::U32 dstOffset, VKW::BufferResource const* src, DRE::U32 srcOffset, DRE::U32 size)
 {
     VkBufferCopy2 region;
     region.sType = VK_STRUCTURE_TYPE_BUFFER_COPY_2;
@@ -607,12 +607,12 @@ void Context::CmdUpdateBuffer(VKW::BufferResource const* dst, DRE::U32 dstOffset
 }
 
 void Context::CmdBuildBLAS(VKW::AccelerationStructureResource const* blas,
-    std::uint64_t scratchBufferAddress,
-    std::uint64_t vertexBufferAddress,
-    std::uint64_t vertexStride,
-    std::uint64_t vertexCount,
-    std::uint64_t indexBufferAddress,
-    std::uint64_t indexCount)
+    DRE::U64 scratchBufferAddress,
+    DRE::U64 vertexBufferAddress,
+    DRE::U64 vertexStride,
+    DRE::U64 vertexCount,
+    DRE::U64 indexBufferAddress,
+    DRE::U64 indexCount)
 {
     VkAccelerationStructureGeometryKHR geometryInfo;
     geometryInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
@@ -658,9 +658,9 @@ void Context::CmdBuildBLAS(VKW::AccelerationStructureResource const* blas,
 
 void Context::CmdBuildTLAS(
     VKW::AccelerationStructureResource const* tlas,
-    std::uint64_t scratchBufferAddress,
-    std::uint32_t instanceCount,
-    std::uint64_t instanceBufferAddress)
+    DRE::U64 scratchBufferAddress,
+    DRE::U32 instanceCount,
+    DRE::U64 instanceBufferAddress)
 {
     VkAccelerationStructureGeometryKHR geometry;
     geometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
@@ -757,12 +757,12 @@ bool Context::TestLayoutCompatibility(VKW::PipelineLayout const* parentLayout, V
     if (parentLayout->GetDescriptor().GetPushConstantsCount() != childLayout->GetDescriptor().GetPushConstantsCount())
     {
         compatible = false;
-        std::cerr << "Incompatible pipeline layout. parent pushConstantCount==" << (std::uint32_t)parentLayout->GetDescriptor().GetPushConstantsCount()
-        << " but child pushConstantCount==" << (std::uint32_t)childLayout->GetDescriptor().GetPushConstantsCount() << std::endl;
+        std::cerr << "Incompatible pipeline layout. parent pushConstantCount==" << (DRE::U32)parentLayout->GetDescriptor().GetPushConstantsCount()
+        << " but child pushConstantCount==" << (DRE::U32)childLayout->GetDescriptor().GetPushConstantsCount() << std::endl;
     }
     else
     {
-        for (std::uint32_t i = 0, size = parentLayout->GetDescriptor().GetPushConstantsCount(); i < size; i++)
+        for (DRE::U32 i = 0, size = parentLayout->GetDescriptor().GetPushConstantsCount(); i < size; i++)
         {
 #define check_property(prop) \
             if (parentLayout->GetDescriptor().GetPushConstant(i).##prop != childLayout->GetDescriptor().GetPushConstant(i).##prop)\
@@ -785,7 +785,7 @@ bool Context::TestLayoutCompatibility(VKW::PipelineLayout const* parentLayout, V
 
 
 
-    for (std::uint32_t i = 0, size = parentLayout->GetMemberCount(); i < size; i++)
+    for (DRE::U32 i = 0, size = parentLayout->GetMemberCount(); i < size; i++)
     {
         auto* layout1 = parentLayout->GetMember(i);
         auto* layout2 = childLayout->GetMember(i);
@@ -797,7 +797,7 @@ bool Context::TestLayoutCompatibility(VKW::PipelineLayout const* parentLayout, V
             compatible = false;
         }
 
-        for (std::uint32_t ii = 0; ii < layout1->GetDescriptor().GetCount(); ii++)
+        for (DRE::U32 ii = 0; ii < layout1->GetDescriptor().GetCount(); ii++)
         {
             auto& m1 = layout1->GetDescriptor().GetMember(ii);
             auto& m2 = layout2->GetDescriptor().GetMember(ii);
