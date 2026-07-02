@@ -84,6 +84,7 @@ public:
 
 public:
     void CmdDraw(std::uint32_t vertexCount, std::uint32_t instanceCount = 1, std::uint32_t firstVertex = 0, std::uint32_t firstInstance = 0);
+    void CmdDrawIndirect(VKW::BufferResource const* buffer, std::uint32_t offset = 0, std::uint32_t drawCount = 1, std::uint32_t stride = sizeof(DrawIndirectCommand));
     void CmdDrawIndexed(std::uint32_t indexCount, std::uint32_t instanceCount = 1, std::uint32_t firstIndex = 0, std::int32_t vertexOffset = 0, std::uint32_t firstInstance = 0);
     void CmdDrawIndexedIndirect(VKW::BufferResource const* buffer, std::uint32_t offset = 0, std::uint32_t drawCount = 1, std::uint32_t stride = sizeof(DrawIndexedIndirectCommand));
     void CmdDispatch(std::uint32_t x, std::uint32_t y, std::uint32_t z);

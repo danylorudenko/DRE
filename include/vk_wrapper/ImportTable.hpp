@@ -191,6 +191,7 @@ public:
     PFN_vkCmdEndRendering vkCmdEndRendering = nullptr;
     PFN_vkCmdClearAttachments vkCmdClearAttachments = nullptr;
     PFN_vkCmdDraw vkCmdDraw = nullptr;
+    PFN_vkCmdDrawIndirect vkCmdDrawIndirect = nullptr;
     PFN_vkCmdDrawIndexed vkCmdDrawIndexed = nullptr;
     PFN_vkCmdDrawIndexedIndirect vkCmdDrawIndexedIndirect = nullptr;
     PFN_vkCmdTraceRaysKHR vkCmdTraceRaysKHR = nullptr;

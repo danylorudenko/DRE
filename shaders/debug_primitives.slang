@@ -7,7 +7,7 @@
 [[vk::binding(0, 3)]] RWStructuredBuffer<DebugDrawCounters> counterBuffer;
 [[vk::binding(1, 3)]] RWStructuredBuffer<DebugDrawBuffer> debugDrawBuffer;
 [[vk::binding(2, 3)]] RWStructuredBuffer<DebugDrawBuffer> sortedDebugDrawBuffer;
-[[vk::binding(3, 3)]] RWStructuredBuffer<DrawIndexedIndirectCommand> indirectArgs;
+[[vk::binding(3, 3)]] RWStructuredBuffer<DrawIndirectCommand> indirectArgs;
 
 [shader("compute")]
 [numthreads(64, 1, 1)]
@@ -50,9 +50,11 @@ void fillIndirectArgsCS(uint3 DTid: SV_DispatchThreadID)
     uint firstInstance = 0;
     for (uint i = 0; i < uint(DebugDrawCommandType::COUNT); ++i)
     {
-        indirectArgs[i].indexCount    = (i == uint(DebugDrawCommandType::Line)) ? 2 : 0;
+        //indirectArgs[i].indexCount    = (i == uint(DebugDrawCommandType::Line)) ? 2 : 0;
+        indirectArgs[i].vertexCount = (i == uint(DebugDrawCommandType::Line)) ? 2 : 0;
         indirectArgs[i].instanceCount = counterBuffer[0].totalTypeCount[i];
         indirectArgs[i].firstInstance = firstInstance;
+        indirectArgs[0].firstVertex = 0;
         firstInstance += counterBuffer[0].totalTypeCount[i];
     }
 }
