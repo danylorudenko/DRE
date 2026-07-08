@@ -6,6 +6,7 @@
 
 #ifndef __cplusplus
 #include "common/global_uniform.slang"
+#include "common/debug_draw.slang"
 
 
 /////////////////////////////
@@ -265,7 +266,7 @@ void DrawDebugLine(float3 pos0, float3 pos1, float3 color)
     uint commandIndex;
     InterlockedAdd(g_GlobalUniforms.DebugDrawBuffer->commandCount, 1, commandIndex);
 
-    if (commandIndex >= g_GlobalUniforms.DebugDrawBuffer->commandCapacity)
+    if (commandIndex >= DEBUG_DRAW_COMMAND_CAPACITY)
         return;
 
     S_DEBUG_DRAW_COMMAND cmd;
@@ -275,6 +276,8 @@ void DrawDebugLine(float3 pos0, float3 pos1, float3 color)
 
     cmd.p0 = float4(pos0, 1.0);
     cmd.p1 = float4(pos1, 1.0);
+
+    g_GlobalUniforms.DebugDrawBuffer->commands[commandIndex] = cmd;
 }
 
 #endif // !__cplusplus

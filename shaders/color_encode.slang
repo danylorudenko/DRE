@@ -1,4 +1,5 @@
 #include "common/shaders_common.slang"
+#include "common/debug_draw.slang"
 
 [[vk::binding(0, 3)]] RWTexture2D<float4>    linearRT;
 [[vk::binding(1, 3)]] RWTexture2D<float4>    encodedOutput;
@@ -28,6 +29,11 @@ float3 ACESFilm(float3 x)
 void mainCS(uint3 DTid : SV_DispatchThreadID)
 {
     int2 coords = int2(DTid.xy);
+
+    if (all(coords.xy == uint2(100, 100)))
+    {
+        DrawDebugLine(float3(0,0,0), float3(0, 10, 0), float3(1,0,0));
+    }
 
     float3 linearColor = linearRT[coords].rgb;
     float3 encoded = ACESFilm(linearColor * GetExposure());

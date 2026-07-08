@@ -27,9 +27,9 @@ struct S_DEBUG_DRAW_COMMAND
 struct DebugDrawBuffer
 {
     uint commandCount;
-    uint commandCapacity;
     uint pad0;
     uint pad1;
+    uint pad2;
 
     S_DEBUG_DRAW_COMMAND commands[DEBUG_DRAW_COMMAND_CAPACITY];
 };

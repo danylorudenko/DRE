@@ -67,7 +67,6 @@ void PipelineDB::CreateDefaultPipelines()
             debugPrimitivesDrawDesc.SetPipelineType(VKW::PIPELINE_TYPE_GRAPHIC);
             debugPrimitivesDrawDesc.SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_LINE_LIST);
             debugPrimitivesDrawDesc.SetCullMode(VK_CULL_MODE_NONE);
-            debugPrimitivesDrawDesc.EnableDepthTest(g_GraphicsManager->GetMainDepthFormat(), false);
             debugPrimitivesDrawDesc.AddColorOutput(g_GraphicsManager->GetFinalImageFormat());
             CreateCustomGraphicsPipeline("debug_primitives_draw", "debug_primitives.slang_mainVS", "debug_primitives.slang_mainPS", debugPrimitivesDrawDesc);
         }

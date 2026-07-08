@@ -62,7 +62,7 @@ private:
     GraphResourcesManager   m_ResourcesManager;
 
 
-    DRE::InplaceVector<BasePass*, 20>  m_Passes;
+    DRE::InplaceVector<BasePass*, 64>  m_Passes;
 };
 
 }

@@ -56,7 +56,6 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::I
 #ifdef DRE_IMGUI_CUSTOM_TEXTURE
     , m_ImGuiSyncQueue{ &DRE::g_PersistentDataAllocator }
 #endif
-    , m_DebugDrawBuffer{ m_PersistentStorage.AllocateRegion(sizeof(DebugDrawBuffer)) }
     , m_GlobalGeometryManager{ &m_MainContext, &m_Device, &m_UploadArena }
     , m_RayTracingManager{ &m_Device, &m_GlobalGeometryManager }
     , m_DDGI{ }
@@ -88,6 +87,8 @@ void GraphicsManager::PrecacheAllData(EDITOR::ViewportInputManager* viewportInpu
 
 void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary)
 {
+    m_RenderGraph.AddPass<DebugPrimitivesClearPass>(); // this must be the first, as it's intended for debug
+
     //m_RenderGraph.AddPass<ShadowPass>();
     //m_RenderGraph.AddPass<CausticPass>();
     m_RenderGraph.AddPass<GBufferPass>();
@@ -112,8 +113,8 @@ void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInpu
 
     m_RenderGraph.AddPass<EditorPass>(viewportInput);
 
-    m_RenderGraph.AddPass<DebugPrimitivesPass>();
     m_RenderGraph.AddPass<DebugPassDDGIProbeDisplay>();
+    m_RenderGraph.AddPass<DebugPrimitivesPass>();
     m_RenderGraph.AddPass<DebugPassTextureView>();
 
     m_RenderGraph.AddPass<ImGuiRenderPass>();
@@ -204,7 +205,7 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     globalUniform.InstanceBuffer        = reinterpret_cast<S_INSTANCE*>(m_InstanceDataManager.GetBufferAddress());
     globalUniform.GlobalGeometryBuffer  = m_GlobalGeometryManager.GetMainBufferAddress();
 
-    globalUniform.DebugDrawBuffer       = reinterpret_cast<DebugDrawBuffer*>(m_DebugDrawBuffer.GetGPUAddress());
+    globalUniform.DebugDrawBuffer       = reinterpret_cast<DebugDrawBuffer*>(m_RenderGraph.GetBuffer(RESOURCE_ID(BufferID::DebugDrawBuffer))->GetResource()->gpuAddress_);
 
     globalUniform.ddgiCB            = m_DDGI.GetConstantBuffer(graph);
 
