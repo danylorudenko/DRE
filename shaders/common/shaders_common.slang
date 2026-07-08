@@ -280,6 +280,35 @@ void DrawDebugLine(float3 pos0, float3 pos1, float3 color)
     g_GlobalUniforms.DebugDrawBuffer->commands[commandIndex] = cmd;
 }
 
+void DrawDebugCross(float3 pos0, float size, float3 color)
+{
+    if (g_GlobalUniforms.debugDrawEnabled == 0)
+        return;
+
+    uint commandIndex;
+    InterlockedAdd(g_GlobalUniforms.DebugDrawBuffer->commandCount, 3, commandIndex);
+
+    if (commandIndex + 3 >= DEBUG_DRAW_COMMAND_CAPACITY)
+        return;
+
+    S_DEBUG_DRAW_COMMAND cmd;
+    cmd.type = DebugDrawCommandType::Line;
+    cmd.flags = 0;
+    cmd.colorRGBA8 = pack_clamp_u8(uint4(float4(color, 1.0) * 255.0));
+
+    cmd.p0 = float4(pos0 - float3(size, 0, 0), 1.0);
+    cmd.p1 = float4(pos0 + float3(size, 0, 0), 1.0);
+    g_GlobalUniforms.DebugDrawBuffer->commands[commandIndex] = cmd;
+
+    cmd.p0 = float4(pos0 - float3(0, size, 0), 1.0);
+    cmd.p1 = float4(pos0 + float3(0, size, 0), 1.0);
+    g_GlobalUniforms.DebugDrawBuffer->commands[commandIndex + 1] = cmd;
+
+    cmd.p0 = float4(pos0 - float3(0, 0, size), 1.0);
+    cmd.p1 = float4(pos0 + float3(0, 0, size), 1.0);
+    g_GlobalUniforms.DebugDrawBuffer->commands[commandIndex + 2] = cmd;
+}
+
 #endif // !__cplusplus
 
 #endif // _SHADERS_COMMON_H_

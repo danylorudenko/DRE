@@ -41,6 +41,12 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
     ray.TMin = 0.01;
     ray.TMax = 1000.0;
 
+    if (all(DTid.xyz < uint3(10, 10, 10)) && all(DTid.xyz > uint3(5, 5, 5)))
+    {
+        DrawDebugLine(rayOrigin, rayOrigin + rayDir * ray.TMax, float3(1, 0, 0));
+        DrawDebugCross(rayOrigin + rayDir * ray.TMax, 1.0f, float3(0, 1, 0));
+    }
+
     RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> rayQuery;
     rayQuery.TraceRayInline(g_TLAS, RAY_FLAG_NONE, 0xFFFFFFFF, ray);
 

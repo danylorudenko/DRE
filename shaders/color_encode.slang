@@ -30,11 +30,6 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
 {
     int2 coords = int2(DTid.xy);
 
-    if (all(coords.xy == uint2(100, 100)))
-    {
-        DrawDebugLine(float3(0,0,0), float3(0, 10, 0), float3(1,0,0));
-    }
-
     float3 linearColor = linearRT[coords].rgb;
     float3 encoded = ACESFilm(linearColor * GetExposure());
 
