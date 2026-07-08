@@ -5,7 +5,7 @@
 namespace GFX
 {
 
-class DebugPrimitivesClearPass : public BasePass
+class DebugPassClearPrimitives : public BasePass
 {
 public:
     virtual PassID  GetID() const override;
@@ -15,7 +15,7 @@ public:
     virtual void    Render(RenderGraph& graph, VKW::Context& context) override;
 };
 
-class DebugPrimitivesPass : public BasePass
+class DebugPassDrawPrimitives : public BasePass
 {
 public:
     virtual PassID  GetID               () const override;

@@ -1,4 +1,4 @@
-#include <gfx\pass\DebugPrimitivesPass.hpp>
+#include <gfx\pass\DebugPassPrimitives.hpp>
 
 #include <gfx\GraphicsManager.hpp>
 #include <gfx\scheduling\RenderGraph.hpp>
@@ -9,20 +9,20 @@ namespace GFX
 {
 
 ///////////////////////////////////////////////
-PassID DebugPrimitivesClearPass::GetID() const
+PassID DebugPassClearPrimitives::GetID() const
 {
     return PassID::DebugPrimitivesClear;
 }
 
-void DebugPrimitivesClearPass::Initialize(RenderGraph& graph)
+void DebugPassClearPrimitives::Initialize(RenderGraph& graph)
 {}
 
-void DebugPrimitivesClearPass::RegisterResources(RenderGraph& graph)
+void DebugPassClearPrimitives::RegisterResources(RenderGraph& graph)
 {
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DebugDrawBuffer), sizeof(DebugDrawBuffer), VKW::RESOURCE_ACCESS_GENERIC_WRITE);
 }
 
-void DebugPrimitivesClearPass::Render(RenderGraph& graph, VKW::Context& context)
+void DebugPassClearPrimitives::Render(RenderGraph& graph, VKW::Context& context)
 {
     DRE_GPU_SCOPE(ClearDebugDrawBuffer);
 
@@ -36,16 +36,16 @@ void DebugPrimitivesClearPass::Render(RenderGraph& graph, VKW::Context& context)
 
 
 ///////////////////////////////////////////////
-PassID DebugPrimitivesPass::GetID() const
+PassID DebugPassDrawPrimitives::GetID() const
 {
     return PassID::DebugPrimitives;
 }
 
-void DebugPrimitivesPass::Initialize(RenderGraph& graph)
+void DebugPassDrawPrimitives::Initialize(RenderGraph& graph)
 {
 }
 
-void DebugPrimitivesPass::RegisterResources(RenderGraph& graph)
+void DebugPassDrawPrimitives::RegisterResources(RenderGraph& graph)
 {
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DebugDrawBuffer), sizeof(DebugDrawBuffer), VKW::RESOURCE_ACCESS_GENERIC_READ);
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::SortedDebugDrawBuffer), sizeof(DebugDrawBuffer), VKW::RESOURCE_ACCESS_GENERIC_RW);
@@ -53,9 +53,9 @@ void DebugPrimitivesPass::RegisterResources(RenderGraph& graph)
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DebugDrawIndirectArgs), sizeof(DrawIndirectCommand) * uint(DebugDrawCommandType::COUNT), VKW::RESOURCE_ACCESS_INDIRECT_ARGS);
 }
 
-void DebugPrimitivesPass::Render(RenderGraph& graph, VKW::Context& context)
+void DebugPassDrawPrimitives::Render(RenderGraph& graph, VKW::Context& context)
 {
-    DRE_GPU_SCOPE(DebugPrimitivesPass);
+    DRE_GPU_SCOPE(DebugPassDrawPrimitives);
 
     DRE::U32 const renderWidth  = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth;
     DRE::U32 const renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;

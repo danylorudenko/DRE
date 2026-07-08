@@ -15,7 +15,7 @@
 #include <gfx\pass\ColorEncodingPass.hpp>
 #include <gfx\pass\ImGuiRenderPass.hpp>
 #include <gfx\pass\DebugPassTextureView.hpp>
-#include <gfx\pass\DebugPrimitivesPass.hpp>
+#include <gfx\pass\DebugPassPrimitives.hpp>
 #include <gfx\pass\EditorPass.hpp>
 #include <gfx\pass\DDGI.hpp>
 
@@ -87,7 +87,7 @@ void GraphicsManager::PrecacheAllData(EDITOR::ViewportInputManager* viewportInpu
 
 void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary)
 {
-    m_RenderGraph.AddPass<DebugPrimitivesClearPass>(); // this must be the first, as it's intended for debug
+    m_RenderGraph.AddPass<DebugPassClearPrimitives>(); // this must be the first, as it's intended for debug
 
     //m_RenderGraph.AddPass<ShadowPass>();
     //m_RenderGraph.AddPass<CausticPass>();
@@ -114,7 +114,7 @@ void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInpu
     m_RenderGraph.AddPass<EditorPass>(viewportInput);
 
     m_RenderGraph.AddPass<DebugPassDDGIProbeDisplay>();
-    m_RenderGraph.AddPass<DebugPrimitivesPass>();
+    m_RenderGraph.AddPass<DebugPassDrawPrimitives>();
     m_RenderGraph.AddPass<DebugPassTextureView>();
 
     m_RenderGraph.AddPass<ImGuiRenderPass>();
