@@ -82,6 +82,7 @@ DDGIConstantBuffer DDGI::GetConstantBuffer(RenderGraph& graph) const
     cb.visualizationMode = static_cast<int>(ddgiDebugState.m_VisMode);
 
     cb.probeWorldOffset = settings.m_DDGIProbeWorldOffset;
+    cb.rayCountPerProbe = settings.m_DDGIRayPerProbeCount;
 
     cb.probeGeometryVertexCount = m_ProbeDebugSphereGPU->GetVertexCount();
     cb.probeGeometryIndexCount = m_ProbeDebugSphereGPU->GetIndexCount();
@@ -90,9 +91,11 @@ DDGIConstantBuffer DDGI::GetConstantBuffer(RenderGraph& graph) const
 
     cb.irradianceAtlasTextureID = graph.GetTexture(RESOURCE_ID(TextureID::DDGI_ProbeIrradiance))->GetShaderGlobalDescriptor().id_;
     cb.irradianceUpdateRate = settings.m_DDGIIrradianceUpdateRate;
+    cb.rayDistributionMode = settings.m_DDGIRayDistributionMode;
 
     cb.debugProbeFocus = ddgiDebugState.m_FocusProbe;
-    cb.debugDrawRays = static_cast<DRE::U32>(ddgiDebugState.m_DrawProbeRays);
+    cb.debugDrawRays = ddgiDebugState.m_DrawProbeRays;
+
     return cb;
 }
 

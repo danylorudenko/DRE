@@ -12,6 +12,48 @@
 [[vk::binding(4, 3)]] RWTexture2D                           ddgiAtlasVisibility;
 
 
+uint2 CalculateIrradianceTargetPixel(uint probeIndex, float2 probeLocalUV)
+{
+    uint4 probeGBufferRect = GetDDGIProbeRect(probeIndex, ddgiCB.probeGBufferResolution, ddgiCB.probeGridDimentions);
+    uint2 probeInnerRes = ddgiCB.probeGBufferResolution.xx - 2;
+    uint2 innerStart = probeGBufferRect.xy + 1;
+    uint2 targetPixel = innerStart + uint2(probeLocalUV * probeInnerRes); // maybe needs a clamp to innerRes
+
+    return targetPixel;
+}
+
+uint2 CalculateVisibilityTargetPixel(uint probeIndex, float2 probeLocalUV)
+{
+    uint4 probeVisibilityRect = GetDDGIProbeRect(probeIndex, ddgiCB.probeVisibilityResolution, ddgiCB.probeGridDimentions);
+    uint2 probeVisibilityInnerRes = ddgiCB.probeVisibilityResolution.xx - 2;
+    uint2 visibilityInnerStart = probeVisibilityRect.xy + 1;
+    uint2 visibilityTargetPixel = visibilityInnerStart + uint2(probeLocalUV * probeVisibilityInnerRes); // maybe needs a clamp to innerRes
+    
+    return visibilityTargetPixel;
+}
+
+void ApplyRadianceTrace(uint2 targetPixel, S_INSTANCE* hitInstance, float2 hitGeometryUV, float3x3 TBN)
+{
+    S_MATERIAL *material = GetMaterial(hitInstance);
+
+    ComputeMaterialTextureSampler sampler = { 0.0f };
+    S_MATERIAL_PROPERTIES MaterialProperties = ReadMaterialProperties(material, hitGeometryUV, TBN, sampler);
+
+    ddgiGBufferA[targetPixel] = float4(MaterialProperties.diffuse, MaterialProperties.roughness);
+    ddgiGBufferB[targetPixel] = float4(MaterialProperties.normal * 0.5 + 0.5, MaterialProperties.metalness);
+}
+
+void ApplyVisibilityTrace(uint2 targetPixel, float rayT)
+{
+    ddgiAtlasVisibility[targetPixel] = rayT;
+}
+
+void TraceProbeRay()
+{
+    
+}
+
+
 [require(spvRayQueryKHR)]
 [shader("compute")]
 [numthreads(4, 4, 4)]
@@ -19,11 +61,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
 {
     uint probeIndex = GetProbeIndex(ddgiCB.probeGridDimentions, DTid);
 
-    // 1. read some noise
-    Texture2D<float4> whiteNoiseTexture = GetGlobalTexture(GetWhiteNoiseTextureId());
-    float2 noiseTexSize;
-    whiteNoiseTexture.GetDimensions(noiseTexSize.x, noiseTexSize.y);
-
+    // 1. generate noise seed
     uint probeSeed = probeIndex + GetFrameNumber();
 
     // 2. based on noise generate random direction
@@ -34,12 +72,17 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
     float3 rayOrigin = probeData.position.xyz;
     float3 rayDir = PolarToCartesian(alpha, theta);
 
+    float2 probeLocalUV = OctahedronEncode(rayDir);
+
     // 3. trace ray from the probe location towards the chosen direction
     RayDesc ray;
     ray.Origin = rayOrigin;
     ray.Direction = rayDir;
     ray.TMin = 0.01;
     ray.TMax = 1000.0;
+
+    uint2 irradianceTargetPixel = CalculateIrradianceTargetPixel(probeIndex, probeLocalUV);
+    uint2 visibilityTargetPixel = CalculateVisibilityTargetPixel(probeIndex, probeLocalUV);
 
     RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> rayQuery;
     rayQuery.TraceRayInline(g_TLAS, RAY_FLAG_NONE, 0xFFFFFFFF, ray);
@@ -87,31 +130,16 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
             normalize(mul(model_mat, float4(N, 0.0)).xyz)
         );
 
-        float2 probeLocalUV = OctahedronEncode(rayDir);
-
-        {
-            uint4 probeGBufferRect = GetDDGIProbeRect(probeIndex, ddgiCB.probeGBufferResolution, ddgiCB.probeGridDimentions);
-            uint2 probeInnerRes = ddgiCB.probeGBufferResolution.xx - 2;
-            uint2 innerStart = probeGBufferRect.xy + 1;
-            uint2 targetPixel = innerStart + uint2(probeLocalUV * probeInnerRes); // maybe needs a clamp to innerRes
-
-            ComputeMaterialTextureSampler sampler = { 0.0f };
-            S_MATERIAL_PROPERTIES MaterialProperties = ReadMaterialProperties(material, hitUV, TBN, sampler);
-            ddgiGBufferA[targetPixel] = float4(MaterialProperties.diffuse, MaterialProperties.roughness);
-            ddgiGBufferB[targetPixel] = float4(MaterialProperties.normal * 0.5 + 0.5, MaterialProperties.metalness);
-        }
-
-        {
-            uint4 probeVisibilityRect = GetDDGIProbeRect(GetProbeIndex(ddgiCB.probeGridDimentions, DTid), ddgiCB.probeVisibilityResolution, ddgiCB.probeGridDimentions);
-            uint2 probeInnerRes = ddgiCB.probeVisibilityResolution.xx - 2;
-            uint2 innerStart = probeVisibilityRect.xy + 1;
-            uint2 targetPixel = innerStart + uint2(probeLocalUV * probeInnerRes); // maybe needs a clamp to innerRes
-
-            ddgiAtlasVisibility[targetPixel] = rayQuery.CommittedRayT();
-        }
+        ApplyRadianceTrace(irradianceTargetPixel, instance, hitUV, TBN);
+        ApplyVisibilityTrace(visibilityTargetPixel, rayQuery.CommittedRayT());
     }
     else
     {
+        ddgiGBufferA[irradianceTargetPixel] = float4(0, 0, 0, 1);
+        ddgiGBufferB[irradianceTargetPixel] = float4(0, 0, 1, 0);
+
+        ddgiAtlasVisibility[visibilityTargetPixel] = ray.TMax;
+
         if (ddgiCB.debugDrawRays != 0 && all(DTid.xyz == ddgiCB.debugProbeFocus))
         {
             DrawDebugLine(rayOrigin, rayOrigin + rayDir * ray.TMax, float3(1, 0, 0));

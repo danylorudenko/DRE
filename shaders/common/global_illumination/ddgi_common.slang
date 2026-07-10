@@ -11,6 +11,9 @@
 #define DDGI_VISUALIZATION_MODE_NORMAL 1
 #define DDGI_VISUALIZATION_MODE_UV 2
 
+#define DDGI_RAY_DISTRIBUTION_STABLE 0
+#define DDGI_RAY_DISTRIBUTION_RANDOM 1
+
 struct DDGIConstantBuffer
 {
     uint3 probeGridDimentions;
@@ -20,7 +23,7 @@ struct DDGIConstantBuffer
     int visualizationMode;
 
     float3 probeWorldOffset;
-    float pad0;
+    float rayCountPerProbe;
 
     int probeGeometryVertexCount;
     int probeGeometryIndexCount;
@@ -29,7 +32,7 @@ struct DDGIConstantBuffer
 
     uint irradianceAtlasTextureID;
     float irradianceUpdateRate;
-    float pad1;
+    uint rayDistributionMode; // DDGI_RAY_DISTIBUTION_*
     float pad2;
 
     uint3 debugProbeFocus;
