@@ -90,6 +90,9 @@ DDGIConstantBuffer DDGI::GetConstantBuffer(RenderGraph& graph) const
 
     cb.irradianceAtlasTextureID = graph.GetTexture(RESOURCE_ID(TextureID::DDGI_ProbeIrradiance))->GetShaderGlobalDescriptor().id_;
     cb.irradianceUpdateRate = settings.m_DDGIIrradianceUpdateRate;
+
+    cb.debugProbeFocus = ddgiDebugState.m_FocusProbe;
+    cb.debugDrawRays = static_cast<DRE::U32>(ddgiDebugState.m_DrawProbeRays);
     return cb;
 }
 

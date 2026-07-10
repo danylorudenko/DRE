@@ -29,6 +29,11 @@ struct DDGIConstantBuffer
 
     uint irradianceAtlasTextureID;
     float irradianceUpdateRate;
+    float pad1;
+    float pad2;
+
+    uint3 debugProbeFocus;
+    uint debugDrawRays;
 };
 
 struct DDGIProbeData

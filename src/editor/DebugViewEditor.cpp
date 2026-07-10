@@ -4,13 +4,22 @@
 #include <engine\ApplicationContext.hpp>
 
 #include <imgui.h>
+#include <glm\gtc\type_ptr.hpp>
+#include <gfx\GraphicsManager.hpp>
 
 namespace EDITOR
 {
 
 DebugViewEditor::DebugViewEditor(BaseEditor* rootEditor, EditorFlags flags)
     : BaseEditor{ rootEditor, flags }
-{}
+{
+    auto* gfxManager = GFX::g_GraphicsManager;
+    if (gfxManager)
+    {
+        glm::uvec3 middle = gfxManager->GetDDGI().GetProbeCount3D() / 3u;
+        DRE::g_AppContext.m_DDGIDebugState.m_FocusProbe = middle;
+    }
+}
 
 DebugViewEditor::DebugViewEditor(DebugViewEditor&& rhs)
     : BaseEditor{ DRE_MOVE(rhs) }
@@ -35,7 +44,13 @@ void DebugViewEditor::Render()
         ImGui::TextUnformatted("DDGI Probes");
         ImGui::Separator();
         ImGui::Checkbox("Draw Probes", &state.m_DrawProbes);
+        ImGui::Checkbox("Draw Probe Rays", &state.m_DrawProbeRays);
         ImGui::SliderFloat("Sphere Scale", &state.m_SphereScale, 0.1f, 5.0f);
+
+        ImGui::InputScalarN("Focus Probe", ImGuiDataType_U32, glm::value_ptr(state.m_FocusProbe), 3);
+
+        GFX::DDGI& ddgi = GFX::g_GraphicsManager->GetDDGI();
+        glm::clamp(state.m_FocusProbe, glm::uvec3{ 0,0,0 }, ddgi.GetProbeCount3D());
 
         ImGui::Separator();
         ImGui::TextUnformatted("Visualization Mode");

@@ -256,6 +256,31 @@ float2 CartesianToPolar(float3 cartesian)
     return float2(elevation, azimuth);
 }
 
+uint PcgHash(inout uint seedState) // https://www.reedbeta.com/blog/hash-functions-for-gpu-rendering/
+{
+    uint state = seedState;
+    seedState = seedState * 747796405u + 2891336453u;
+    uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+    return (word >> 22u) ^ word;
+}
+
+uint2 PcgHash2D(uint2 v)
+{
+    v = v * 1664525u + 1013904223u;
+
+    v.x += v.y * 1664525u;
+    v.y += v.x * 1664525u;
+
+    v = v ^ (v >> 16u);
+
+    v.x += v.y * 1664525u;
+    v.y += v.x * 1664525u;
+
+    v = v ^ (v >> 16u);
+
+    return v;
+}
+
 //////////////////////////////////
 // Debug Draw
 void DrawDebugLine(float3 pos0, float3 pos1, float3 color)

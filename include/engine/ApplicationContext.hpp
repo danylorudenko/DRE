@@ -2,6 +2,7 @@
 
 #include <foundation\Common.hpp>
 #include <foundation\string\InplaceString.hpp>
+#include <glm\vec3.hpp>
 
 namespace WORLD
 {
@@ -45,8 +46,10 @@ struct DDGIDebugState
     };
 
     bool m_DrawProbes = false;
+    bool m_DrawProbeRays = false;
     float m_SphereScale = 0.25f;
     VisMode m_VisMode = VisMode::Color;
+    glm::uvec3 m_FocusProbe;
 };
 
 struct ApplicationContext
