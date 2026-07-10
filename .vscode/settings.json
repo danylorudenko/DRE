@@ -1,0 +1,20 @@
+{
+  "files.exclude": {
+    ".vs": true,
+    "build": true,
+    "data": true,
+    "downloadable": true
+  },
+  "search.exclude": {
+    ".vs": true,
+    "build": true,
+    "data": true,
+    "downloadable": true
+  },
+  "files.watcherExclude": {
+    "**/.vs/**": true,
+    "**/build/**": true,
+    "**/data/**": true,
+    "**/downloadable/**": true
+  }
+}
