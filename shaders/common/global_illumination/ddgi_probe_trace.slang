@@ -37,8 +37,11 @@ void AddTracedSample(uint probeIndex, DDGIProbeData probeData, float3 rayDir, fl
     sample.octDirection = OctahedronEncode(rayDir);
 
     uint sampleIndex;
+    /////////////////////////////
+    // these line trigger DEVICE_LOST
     InterlockedAdd(ddgiSampleBuffer[probeIndex].sampleCount, 1, sampleIndex);
     ddgiSampleBuffer[probeIndex].samples[sampleIndex] = sample;
+    /////////////////////////////
 }
 
 void ApplyVisibilityTrace(uint2 targetPixel, float rayT)
