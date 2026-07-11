@@ -2,37 +2,37 @@
 #include "common/global_illumination/ddgi_common.slang"
 #include "common/lighting/lighting.slang"
 
-[[vk::binding(0, 3)]] ConstantBuffer<DDGIConstantBuffer> ddgiCB;
-[[vk::binding(1, 3)]] Texture2D ddgiGBufferA;
-[[vk::binding(2, 3)]] Texture2D ddgiGBufferB;
-[[vk::binding(3, 3)]] RWTexture2D ddgiAtlasIrradiance;
-[[vk::binding(4, 3)]] StructuredBuffer<DDGIProbeData> ddgiProbeData;
-// [[vk::binding(3, 3)]] Texture2D ddgiAtlasIrradiancePrev;
+[[vk::binding(0, 3)]] ConstantBuffer<DDGIConstantBuffer>    ddgiCB;
+[[vk::binding(1, 3)]] RWStructuredBuffer<DDGIProbeSamples>  ddgiSampleBuffer;
+[[vk::binding(2, 3)]] RWTexture2D                           ddgiAtlasIrradiance;
+[[vk::binding(3, 3)]] StructuredBuffer<DDGIProbeData>       ddgiProbeData;
 
 [require(spvRayQueryKHR)]
 [shader("compute")]
 [numthreads(8, 8, 1)]
 void mainCS(uint3 DTid : SV_DispatchThreadID)
 {
-    float4 gbufferA = ddgiGBufferA[DTid.xy];
-    float4 gbufferB = ddgiGBufferB[DTid.xy];
-
-    uint probeIndex = GetProbeIndexFromPixel(DTid.xy, ddgiCB.probeGBufferResolution, ddgiCB.probeGridDimentions);
-
-    S_SURFACE surface = {};
-    surface.diffuseSpectrum = gbufferA.rgb;
-    surface.roughness = gbufferA.a;
-    surface.normal = gbufferB.xyz * 2.0 - 1.0;
-    surface.metalness = gbufferB.a;
-    surface.ao = 1;
+    uint probeIndex = GetProbeIndexFromPixel(DTid.xy, ddgiCB.probeIrradianceResolution, ddgiCB.probeGridDimentions);
 
     DDGIProbeData probeData = ddgiProbeData[probeIndex];
-    surface.wpos = probeData.position.xyz;
-    surface.prevWpos = probeData.position.xyz;
+    DDGIProbeSamples probeGBuffer = ddgiSampleBuffer[probeIndex];
 
-    S_LIGHTING_RESULT lightingResult = CalculateDirectLighting(surface, ShaderStage::Compute);
+    float4 uvRect = GetProbeAtlasUVRect(probeIndex, ddgiCB.probeIrradianceResolution, ddgiCB.probeGridDimentions);
+    uint2 atlasPixel = DTid.xy;
+    float2 atlasUV = atlasPixel / GetProbeAtlasResolution(ddgiCB.probeIrradianceResolution, ddgiCB.probeGridDimentions);
+    float2 probeUV = (atlasUV - uvRect.xy) / (uvRect.zw - uvRect.xy);
 
-    float3 irradiance = lightingResult.finalRadiance * ddgiCB.irradianceUpdateRate + ddgiAtlasIrradiance[DTid.xy].rgb * (1.0 - ddgiCB.irradianceUpdateRate);
-    ddgiAtlasIrradiance[DTid.xy] = float4(irradiance, 1.0);
+    float3 probePixelNormal = OctahedronDecode(probeUV);
+
+    float3 accumulatedPixelRadiance = float3(0, 0, 0);
+    for (int i = 0; i < probeGBuffer.sampleCount; i++)
+    {
+        DDGISample sample = probeGBuffer.samples[i];
+        float3 sampleDir = OctahedronDecode(sample.octDirection);
+        float sampleWeight = saturate(dot(probePixelNormal, sampleDir));
+        accumulatedPixelRadiance += sample.radiance * sampleWeight;
+        
+        ddgiAtlasIrradiance[atlasPixel] = float4(accumulatedPixelRadiance * ddgiCB.irradianceUpdateRate + ddgiAtlasIrradiance[atlasPixel].rgb * (1.0 - ddgiCB.irradianceUpdateRate), 1.0f);
+    }
 
 }

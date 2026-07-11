@@ -7,6 +7,8 @@
 #include "common/utils/octahedron.slang"
 #endif // __cplusplus
 
+#define DDGI_MAX_SAMPLES_PER_PROBE 16
+
 #define DDGI_IRRADIANCE_PROBE_RESOLUTION 6
 #define DDGI_VISIBILITY_PROBE_RESOLUTION 16
 
@@ -30,12 +32,12 @@ struct DDGIConstantBuffer
 
     int probeGeometryVertexCount;
     int probeGeometryIndexCount;
-    uint probeGBufferResolution; // hight and width of 1 probe in atlas
+    uint probeIrradianceResolution; // hight and width of 1 probe in irradiance atlas
     uint probeVisibilityResolution; // hight and width of 1 probe in visibility atlas
 
     uint irradianceAtlasTextureID;
     float irradianceUpdateRate;
-    uint rayDistributionMode; // DDGI_RAY_DISTIBUTION_*
+    uint rayDistributionMode; // DDGI_RAY_DISTRIBUTION_*
     float pad2;
 
     uint3 debugProbeFocus;
@@ -45,6 +47,43 @@ struct DDGIConstantBuffer
 struct DDGIProbeData
 {
     float4 position;
+};
+
+struct DDGISample
+{
+    float3 radiance;
+    float distance;
+    float2 octDirection;
+};
+/*
+DDGISampleEncoded EncodeDDGISample(float3 probeLocalPosition, float3 diffuse, float2 octNormal, float roughness, float metalness)
+{
+    DDGISampleEncoded sample;
+    sample.probeLocalPosition = half3(probeLocalPosition);
+    sample.data0 = pack_clamp_u8(uint4(diffuse * 255.0f, roughness * 255.0f));
+    sample.data1 = pack_clamp_u8(uint4(octNormal * 255.0, metalness * 255.0f, 0));
+    return sample;
+}
+
+DDGISample DecodeDDGISample(DDGISampleEncoded encodedSample)
+{
+    float4 diffuse_roughness = (float4)encodedSample.data0 / 255.0f;
+    float3 octNormal_metalness = (float3)encodedSample.data1.xyz / 255.0f;
+
+    DDGISample sample;
+    sample.probeLocalPosition = float3(encodedSample.probeLocalPosition);
+    sample.diffuse = diffuse_roughness.rgb;
+    sample.roughness = diffuse_roughness.a;
+    sample.octNormal = octNormal_metalness.xy;
+    sample.metalness = octNormal_metalness.z;
+
+    return sample;
+}
+*/
+struct DDGIProbeSamples
+{
+    uint sampleCount;
+    DDGISample samples[DDGI_MAX_SAMPLES_PER_PROBE];
 };
 
 
@@ -80,11 +119,12 @@ uint2 GetProbeAtlasProbeStart(uint probeIndex, uint2 probeResolution, uint3 prob
     return topLeft;
 }
 
+// includes border pixels, returns full rect
 uint4 GetDDGIProbeRect(uint probeIndex, uint2 probeResolution, uint3 probeGridDimentions)
 {
-    uint2 probeStartCenter = GetProbeAtlasProbeStart(probeIndex, probeResolution, probeGridDimentions);
-    uint2 probeEndCenter = probeStartCenter + probeResolution;
-    return uint4(probeStartCenter, probeEndCenter);
+    uint2 probeStart = GetProbeAtlasProbeStart(probeIndex, probeResolution, probeGridDimentions);
+    uint2 probeEnd = probeStart + probeResolution;
+    return uint4(probeStart, probeEnd);
 }
 
 uint3 GetProbe3DIndexFromPixel(uint2 atlasPixel, uint2 probeResolution, uint3 probeGridDimentions)
@@ -101,13 +141,31 @@ uint GetProbeIndexFromPixel(uint2 atlasPixel, uint2 probeResolution, uint3 probe
     return GetProbeIndex(probeGridDimentions, probe3DIndex);
 }
 
+uint2 GetProbeAtlasResolution(uint2 probeResolution, uint3 probeGridDimentions)
+{
+    return probeResolution * uint2(probeGridDimentions.x, probeGridDimentions.y) * uint2(probeGridDimentions.z, 1);
+}
+
+// does not include border pixels, returns only inner rect
 float4 GetProbeAtlasUVRect(uint probeIndex, uint2 probeResolution, uint3 probeGridDimentions)
 {
     uint4 probeRect = GetDDGIProbeRect(probeIndex, probeResolution, probeGridDimentions);
-    uint2 atlasSize = probeResolution * uint2(probeGridDimentions.x, probeGridDimentions.y) * uint2(probeGridDimentions.z, 1);
+    uint2 atlasSize = GetProbeAtlasResolution(probeResolution, probeGridDimentions);
+
+    probeRect += uint4(1, 1, -1, -1); // exclude border pixels from uv rect
     float2 uvStart = probeRect.xy / (float2)atlasSize;
     float2 uvEnd = probeRect.zw / (float2)atlasSize;
     return float4(uvStart, uvEnd);
+}
+
+uint2 CalculateDDGIAtlasTargetPixel(uint probeIndex, float2 probeLocalUV, uint2 probeResolution, uint3 probeGridDimentions)
+{
+    uint4 probeGBufferRect = GetDDGIProbeRect(probeIndex, probeResolution, probeGridDimentions);
+    uint2 probeInnerRes = probeResolution - 2;
+    uint2 innerStart = probeGBufferRect.xy + 1;
+    uint2 targetPixel = innerStart + uint2(probeLocalUV * probeInnerRes); // maybe needs a clamp to innerRes
+
+    return targetPixel;
 }
 
 float3 GetProbeWorldPosition(uint probeIndex, float3 probeWorldOffset, float3 probesWorldDistance, uint3 probeGridDimentions)

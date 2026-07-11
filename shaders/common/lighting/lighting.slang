@@ -42,13 +42,13 @@ S_SURFACE InitSurface(float3 wpos)
     return Surface;
 }
 
-S_LIGHTING_RESULT CalculateDirectLighting(S_SURFACE surface, ShaderStage shaderStage)
+S_LIGHTING_RESULT CalculateDirectLighting(S_SURFACE surface, float3 viewPosWS, ShaderStage shaderStage)
 {
     S_LIGHTING_RESULT Result;
     Result.finalRadiance = float3(0.0f, 0.0f, 0.0f);
 
     float3 n = surface.normal;
-    float3 v = normalize(GetCameraPos() - surface.wpos);
+    float3 v = normalize(viewPosWS - surface.wpos);
     float NdotV = max(0.0f, dot(n, v));
 
     uint lightsCount = GetLightsCount();
@@ -101,7 +101,7 @@ S_LIGHTING_RESULT CalculateIndirectLighting(S_SURFACE surface)
             surface.normal,
             GetGlobalTextureObject(GetDDGI().irradianceAtlasTextureID),
             GetSamplerLinear(),
-            GetDDGI().probeGBufferResolution,
+            GetDDGI().probeIrradianceResolution,
             GetDDGI().probeGridDimentions);
 
         float finalWeight = probes.weights[i];

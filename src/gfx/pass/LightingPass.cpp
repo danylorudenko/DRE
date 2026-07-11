@@ -18,7 +18,7 @@ void LightingPass::RegisterResources(RenderGraph& graph)
 
     auto gBufferFormats = g_GraphicsManager->GetGBufferFormats();
 
-    glm::uvec2 ddgiAtlasDims = g_GraphicsManager->GetDDGI().GetProbeAtlasGBufferDimentions();
+    glm::uvec2 ddgiAtlasDims = g_GraphicsManager->GetDDGI().GetProbeAtlasIrradianceDimentions();
 
     graph.RegisterTexture(this,
         RESOURCE_ID(TextureID::ForwardColor),

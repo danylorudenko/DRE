@@ -82,7 +82,7 @@ float4 drawPS(PSInput input) : SV_Target0
         normalize(input.norm),
         probeIrradianceAtlas,
         GetSamplerLinear(),
-        ddgiCB.probeGBufferResolution,
+        ddgiCB.probeIrradianceResolution,
         ddgiCB.probeGridDimentions);
 
     if (ddgiCB.visualizationMode == DDGI_VISUALIZATION_MODE_COLOR)

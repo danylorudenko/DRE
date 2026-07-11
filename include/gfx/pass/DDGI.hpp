@@ -32,8 +32,8 @@ public:
     DRE::U32            GetProbeTotalCount       () const;
     DRE::U32            GetProbeDataBufferSize   () const;
 
-    DRE::U32            GetProbeResolutionGBuffer() const;
-    glm::uvec2          GetProbeAtlasGBufferDimentions() const;
+    DRE::U32            GetProbeResolutionIrradiance() const;
+    glm::uvec2          GetProbeAtlasIrradianceDimentions() const;
 
     DRE::U32            GetProbeResolutionVisibility() const;
     glm::uvec2          GetProbeAtlasVisibilityDimentions() const;
