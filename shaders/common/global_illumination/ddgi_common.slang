@@ -7,6 +7,9 @@
 #include "common/utils/octahedron.slang"
 #endif // __cplusplus
 
+#define DDGI_IRRADIANCE_PROBE_RESOLUTION 6
+#define DDGI_VISIBILITY_PROBE_RESOLUTION 16
+
 #define DDGI_VISUALIZATION_MODE_COLOR 0
 #define DDGI_VISUALIZATION_MODE_NORMAL 1
 #define DDGI_VISUALIZATION_MODE_UV 2

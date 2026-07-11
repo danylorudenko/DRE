@@ -41,7 +41,7 @@ DRE::U32 DDGI::GetProbeDataBufferSize() const
 
 DRE::U32 DDGI::GetProbeResolutionGBuffer() const
 {
-    return 6;
+    return DDGI_IRRADIANCE_PROBE_RESOLUTION;
 }
 
 glm::uvec2 DDGI::GetProbeAtlasGBufferDimentions() const
@@ -55,7 +55,7 @@ glm::uvec2 DDGI::GetProbeAtlasGBufferDimentions() const
 
 DRE::U32 DDGI::GetProbeResolutionVisibility() const
 {
-    return 16;
+    return DDGI_VISIBILITY_PROBE_RESOLUTION;
 }
 
 glm::uvec2 DDGI::GetProbeAtlasVisibilityDimentions() const

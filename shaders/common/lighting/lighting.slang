@@ -111,8 +111,7 @@ S_LIGHTING_RESULT CalculateIndirectLighting(S_SURFACE surface)
         accumulatedIrradiance += probeRadiance * finalWeight;
     }
 
-    Result.finalRadiance = accumulatedIrradiance * surface.diffuseSpectrum * 3;
-    //Result.finalRadiance = float3(0,0,0);
+    Result.finalRadiance = accumulatedIrradiance * surface.diffuseSpectrum;
     return Result;
 }
 
