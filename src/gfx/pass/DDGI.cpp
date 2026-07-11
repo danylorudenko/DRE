@@ -174,6 +174,10 @@ void DDGIProbeTracePass::Render(RenderGraph& graph, VKW::Context& context)
     StorageBuffer* ddgiProbeSampleBuffer = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeSampleBuffer));
     Texture* atlasVisibility = graph.GetTexture(RESOURCE_ID(TextureID::DDGI_AtlasVisibility));
 
+    // this fill helps combat DEVICE_LOST error on writing samples to buffer (I think it was unitialized sample counter
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeSampleBuffer->GetResource(), VKW::RESOURCE_ACCESS_GENERIC_WRITE, VKW::STAGE_TRANSFER);
+    context.CmdFillBuffer(ddgiProbeSampleBuffer->GetResource(), 0, sizeof(DDGIProbeSamples) * ddgi.GetProbeTotalCount(), 0);
+
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData->GetResource(), VKW::RESOURCE_ACCESS_SHADER_RW, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeSampleBuffer->GetResource(), VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, atlasVisibility->GetResource(), VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
@@ -233,6 +237,16 @@ void DDGIProbeLightingPass::Render(RenderGraph& graph, VKW::Context& context)
     StorageBuffer* probeData  = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData));
 
     auto& dependencyManager = g_GraphicsManager->GetDependencyManager();
+
+    ///////////////////
+    // temporary clear, because we don't have a proper reprojection
+    dependencyManager.ResourceBarrier(context, atlasIrradiance->GetResource(), VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
+    float clearColor[4] = { 0.f, 0.f, 0.f, 0.f };
+    context.CmdClearColorImage(atlasIrradiance->GetResource(), clearColor);
+    // remove later
+    ///////////////////
+
+
     dependencyManager.ResourceBarrier(context, ddgiProbeSampleBuffer->GetResource(), VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE);
     dependencyManager.ResourceBarrier(context, atlasIrradiance->GetResource(), VKW::RESOURCE_ACCESS_SHADER_WRITE,  VKW::STAGE_COMPUTE);
     dependencyManager.ResourceBarrier(context, probeData->GetResource(),       VKW::RESOURCE_ACCESS_SHADER_READ,   VKW::STAGE_COMPUTE);
