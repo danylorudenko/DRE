@@ -12,6 +12,10 @@
 [numthreads(8, 8, 1)]
 void mainCS(uint3 DTid : SV_DispatchThreadID)
 {
+    uint2 atlasResolution = GetProbeAtlasResolution(ddgiCB.probeIrradianceResolution, ddgiCB.probeGridDimentions);
+    if (any(DTid.xy >= atlasResolution))
+        return;
+
     uint probeIndex = GetProbeIndexFromPixel(DTid.xy, ddgiCB.probeIrradianceResolution, ddgiCB.probeGridDimentions);
 
     DDGIProbeData probeData = ddgiProbeData[probeIndex];
@@ -19,7 +23,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
 
     float4 uvRect = GetProbeAtlasUVRect(probeIndex, ddgiCB.probeIrradianceResolution, ddgiCB.probeGridDimentions);
     uint2 atlasPixel = DTid.xy;
-    float2 atlasUV = atlasPixel / GetProbeAtlasResolution(ddgiCB.probeIrradianceResolution, ddgiCB.probeGridDimentions);
+    float2 atlasUV = float2(atlasPixel + 0.5) / float2(GetProbeAtlasResolution(ddgiCB.probeIrradianceResolution, ddgiCB.probeGridDimentions));
     float2 probeUV = (atlasUV - uvRect.xy) / (uvRect.zw - uvRect.xy);
 
     float3 probePixelNormal = OctahedronDecode(probeUV);
@@ -30,9 +34,13 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
         DDGISample sample = probeGBuffer.samples[i];
         float3 sampleDir = OctahedronDecode(sample.octDirection);
         float sampleWeight = saturate(dot(probePixelNormal, sampleDir));
+        //sampleWeight = 1;
+        //sample.radiance = float3(1, 1, 1);
         accumulatedPixelRadiance += sample.radiance * sampleWeight;
-        
-        ddgiAtlasIrradiance[atlasPixel] = float4(accumulatedPixelRadiance * ddgiCB.irradianceUpdateRate + ddgiAtlasIrradiance[atlasPixel].rgb * (1.0 - ddgiCB.irradianceUpdateRate), 1.0f);
     }
+
+    accumulatedPixelRadiance /= probeGBuffer.sampleCount;
+
+    ddgiAtlasIrradiance[atlasPixel] = float4(accumulatedPixelRadiance * ddgiCB.irradianceUpdateRate + ddgiAtlasIrradiance[atlasPixel].rgb * (1.0 - ddgiCB.irradianceUpdateRate), 1.0f);
 
 }

@@ -109,13 +109,10 @@ uint3 GetProbe3DIndex(uint3 probeGridDimentions, uint globalProbeIndex)
 
 uint2 GetProbeAtlasProbeStart(uint probeIndex, uint2 probeResolution, uint3 probeGridDimentions)
 {
-    uint2 probeAtlasDimentions = probeResolution * uint2(probeGridDimentions.x, probeGridDimentions.y);
-    probeAtlasDimentions.x *= probeGridDimentions.z;
-
     uint3 gridPos = GetProbe3DIndex(probeGridDimentions, probeIndex);
 
     uint2 topLeft = gridPos.xy * probeResolution;
-    topLeft.x += gridPos.z * probeResolution.x;
+    topLeft.x += gridPos.z * probeGridDimentions.x * probeResolution.x;
     return topLeft;
 }
 

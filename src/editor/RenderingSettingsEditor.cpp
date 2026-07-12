@@ -103,6 +103,27 @@ void RenderingSettingsEditor::Render()
             ImGui::SliderFloat("DDGI Probe World Distance", &settings.m_DDGIProbeWorldDistance, 0.1f, 10.0f);
             ImGui::SliderFloat3("DDGI Probe World Offset", glm::value_ptr(settings.m_DDGIProbeWorldOffset), -50.0f, 50.0f);
             ImGui::SliderFloat("DDGI Irradiance Update Rate", &settings.m_DDGIIrradianceUpdateRate, 0.0f, 1.0f);
+            ImGui::InputInt("DDGI Ray Per Probe Count", (int*)&settings.m_DDGIRayPerProbeCount);
+            settings.m_DDGIRayPerProbeCount = glm::clamp(settings.m_DDGIRayPerProbeCount, 1u, DRE::U32(DDGI_MAX_SAMPLES_PER_PROBE));
+
+            char const* DDGIRayDistributionModeNames[] = { "Static", "PcgRandom" };
+
+            DRE::U32* rayDistributionMode = &settings.m_DDGIRayDistributionMode;
+            if (ImGui::BeginCombo("DDGI Ray Distribution Mode", DDGIRayDistributionModeNames[*rayDistributionMode]))
+            {
+                for (DRE::U32 i = 0; i < 2; i++)
+                {
+                    bool isSelected = *rayDistributionMode == i;
+                    if (ImGui::Selectable(DDGIRayDistributionModeNames[i], &isSelected))
+                    {
+                        *rayDistributionMode = i;
+                    }
+
+                    if (isSelected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
         }
         else
         {

@@ -26,15 +26,23 @@ void AddTracedSample(uint probeIndex, DDGIProbeData probeData, float3 rayDir, fl
     surface.normal = MaterialProperties.normal;
     surface.metalness = MaterialProperties.metalness;
     surface.ao = 1;
-    surface.wpos = probeData.position.xyz;
-    surface.prevWpos = probeData.position.xyz;
+    surface.wpos = hitPosition;
+    surface.prevWpos = hitPosition;
 
     S_LIGHTING_RESULT sampleDirectRadiance = CalculateDirectLighting(surface, probeData.position.xyz, ShaderStage::Compute);
 
     DDGISample sample;
     sample.radiance = sampleDirectRadiance.finalRadiance;
+    //sample.radiance = surface.diffuseSpectrum;
+    //sample.radiance = float3(1,1,1);
     sample.distance = rayT;
     sample.octDirection = OctahedronEncode(rayDir);
+
+    uint3 probeIndex3D = GetProbe3DIndex(ddgiCB.probeGridDimentions, probeIndex);
+    if (ddgiCB.debugDrawRays != 0 && all(probeIndex3D == ddgiCB.debugProbeFocus))
+    {
+        DrawDebugCrossAligned(hitPosition, 0.5f, sample.radiance);
+    }
 
     uint sampleIndex;
     /////////////////////////////
@@ -42,6 +50,18 @@ void AddTracedSample(uint probeIndex, DDGIProbeData probeData, float3 rayDir, fl
     InterlockedAdd(ddgiSampleBuffer[probeIndex].sampleCount, 1, sampleIndex);
     ddgiSampleBuffer[probeIndex].samples[sampleIndex] = sample;
     /////////////////////////////
+}
+
+void AddSkySample(uint probeIndex, float3 rayDir, float rayT)
+{
+    DDGISample sample;
+    sample.radiance = float3(1.0, 1.0, 1.0);
+    sample.distance = rayT;
+    sample.octDirection = OctahedronEncode(rayDir);
+
+    uint sampleIndex;
+    InterlockedAdd(ddgiSampleBuffer[probeIndex].sampleCount, 1, sampleIndex);
+    ddgiSampleBuffer[probeIndex].samples[sampleIndex] = sample;
 }
 
 void ApplyVisibilityTrace(uint2 targetPixel, float rayT)
@@ -75,7 +95,7 @@ void TraceProbeRay(DDGIProbeData probeData, uint probeIndex, float3 rayOrigin, f
         S_INSTANCE* instance = GetInstance(instanceID);
 
         uint primitiveID = rayQuery.CommittedPrimitiveIndex();
-        uint* indexOffset = (uint*)GetGlobalGeometry(instance->indexOffset + primitiveID * 3);
+        uint* indexOffset = (uint*)GetGlobalGeometry(instance->indexOffset + sizeof(uint) * primitiveID * 3);
 
         // 3.2 from triangle indicies get vertex attributes
         DREVertex* vertices = (DREVertex*)GetGlobalGeometry(instance->vertexOffset);
@@ -96,7 +116,7 @@ void TraceProbeRay(DDGIProbeData probeData, uint probeIndex, float3 rayOrigin, f
         if (ddgiCB.debugDrawRays != 0 && all(probeIndex3D == ddgiCB.debugProbeFocus))
         {
             DrawDebugLine(rayOrigin, wPos, float3(1, 1, 0));
-            DrawDebugCross(wPos, 1.0f, float3(0, 1, 0));
+            DrawDebugCross(wPos, 0.5f, float3(0, 1, 0));
         }
 
         float3 T = v0.tan * barycentric.x + v1.tan * barycentric.y + v2.tan * barycentric.z;
@@ -114,6 +134,7 @@ void TraceProbeRay(DDGIProbeData probeData, uint probeIndex, float3 rayOrigin, f
     }
     else
     {
+        AddSkySample(probeIndex, ray.Direction, ray.TMax);
         ddgiAtlasVisibility[visibilityTargetPixel] = ray.TMax;
 
         if (ddgiCB.debugDrawRays != 0 && all(probeIndex3D == ddgiCB.debugProbeFocus))
@@ -129,6 +150,9 @@ void TraceProbeRay(DDGIProbeData probeData, uint probeIndex, float3 rayOrigin, f
 [numthreads(4, 4, 4)]
 void mainCS(uint3 DTid : SV_DispatchThreadID)
 {
+    if (any(DTid >= ddgiCB.probeGridDimentions))
+        return;
+
     uint probeIndex = GetProbeIndex(ddgiCB.probeGridDimentions, DTid);
 
     uint probeSeed = probeIndex + GetFrameNumber();
@@ -141,6 +165,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
         DDGIProbeData probeData = ddgiProbeData[probeIndex];
         float3 rayOrigin = probeData.position.xyz;
         float3 rayDir = PolarToCartesian(alpha, theta);
+        //float3 rayDir = float3(0, 0, 1);
 
         float2 probeLocalUV = OctahedronEncode(rayDir);
 
