@@ -18,7 +18,7 @@ namespace VKW
 {
 
 /////////////////////////////////////
-enum ResourceAccess : std::uint64_t
+enum ResourceAccess : DRE::U64
 {
     RESOURCE_ACCESS_UNDEFINED                   = 0,
     RESOURCE_ACCESS_NONE                        = (1 << 0),
@@ -40,10 +40,12 @@ enum ResourceAccess : std::uint64_t
     RESOURCE_ACCESS_GENERIC_WRITE               = (1 << 16),
     RESOURCE_ACCESS_GENERIC_RW                  = (1 << 17),
     RESOURCE_ACCESS_INDIRECT_ARGS               = (1 << 18),
+
+    RESOURCE_ACCESS_INVALID                     = 0xFFFFFFFFFFFFFFFF,
 };
 
 /////////////////////////////////////
-enum StageBits : std::uint64_t
+enum StageBits : DRE::U64
 {
     STAGE_UNDEFINED         = 0,
     STAGE_INDIRECT_ARGS     = VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT,
@@ -60,7 +62,7 @@ enum StageBits : std::uint64_t
     STAGE_ALL_GLOBAL        = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
     STAGE_PRESENT           = STAGE_TOP,
 };
-using Stages = std::uint64_t;
+using Stages = DRE::U64;
 
 
 VkAccessFlags2KHR       AccessToFlags(ResourceAccess access);

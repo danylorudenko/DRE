@@ -25,29 +25,29 @@ RenderGraph::~RenderGraph()
     }
 }
 
-void RenderGraph::RegisterTexture(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access)
+void RenderGraph::RegisterTexture(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access, GraphResourceFlags flags)
 {
-    m_ResourcesManager.RegisterTexture(id, format, width, height, access);
+    m_ResourcesManager.RegisterTexture(id, format, width, height, access, flags);
 }
 
-void RenderGraph::RegisterRenderTarget(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 binding)
+void RenderGraph::RegisterRenderTarget(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 binding, GraphResourceFlags flags)
 {
-    m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT);
+    m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, flags);
 }
 
-void RenderGraph::RegisterDepthStencilTarget(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height)
+void RenderGraph::RegisterDepthStencilTarget(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, GraphResourceFlags flags)
 {
-    m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT);
+    m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT, flags);
 }
 
-void RenderGraph::RegisterDepthOnlyTarget(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height)
+void RenderGraph::RegisterDepthOnlyTarget(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, GraphResourceFlags flags)
 {
-    m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT);
+    m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT, flags);
 }
 
-void RenderGraph::RegisterStorageBuffer(BasePass* pass, char const* id, DRE::U32 size, VKW::ResourceAccess access)
+void RenderGraph::RegisterStorageBuffer(BasePass* pass, char const* id, DRE::U32 size, VKW::ResourceAccess access, GraphResourceFlags flags)
 {
-    m_ResourcesManager.RegisterBuffer(id, size, access);
+    m_ResourcesManager.RegisterBuffer(id, size, access, flags);
 }
 
 Texture* RenderGraph::GetTexture(char const* id)
@@ -58,6 +58,26 @@ Texture* RenderGraph::GetTexture(char const* id)
 StorageBuffer* RenderGraph::GetBuffer(char const* id)
 {
     return m_ResourcesManager.GetBuffer(id);
+}
+
+Texture* RenderGraph::GetTemporalTextureCurrent(char const* id)
+{
+    return m_ResourcesManager.GetTemporalTexture(id, m_GraphicsManager->GetCurrentFrameID());
+}
+
+Texture* RenderGraph::GetTemporalTextureHistory(char const* id)
+{
+    return m_ResourcesManager.GetTemporalTexture(id, m_GraphicsManager->GetPrevFrameID());
+}
+
+StorageBuffer* RenderGraph::GetTemporalBufferCurrent(char const* id)
+{
+    return m_ResourcesManager.GetTemporalBuffer(id, m_GraphicsManager->GetCurrentFrameID());
+}
+
+StorageBuffer* RenderGraph::GetTemporalBufferHistory(char const* id)
+{
+    return m_ResourcesManager.GetTemporalBuffer(id, m_GraphicsManager->GetPrevFrameID());
 }
 
 UniformProxy RenderGraph::AllocateUniform(PassID id, VKW::Context& context, DRE::U32 size)

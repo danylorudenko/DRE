@@ -19,8 +19,7 @@ void ColorEncodingPass::RegisterResources(RenderGraph& graph)
 {
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::ColorHistoryBuffer0), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_READ);
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::ColorHistoryBuffer1), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_READ);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::ColorHistoryBuffer), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_READ, GraphResourceFlags::TEMPORAL);
 
     graph.RegisterTexture(this, RESOURCE_ID(TextureID::DisplayEncodedImage),
         g_GraphicsManager->GetFinalImageFormat(), renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_WRITE);
@@ -30,12 +29,7 @@ void ColorEncodingPass::Render(RenderGraph& graph, VKW::Context& context)
 {
     DRE_GPU_SCOPE(ColorEncoding);
 
-    Texture* historyBuffers[2] = { 
-        graph.GetTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer0)),
-        graph.GetTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer1))
-    };
-
-    Texture* taaOutput = historyBuffers[g_GraphicsManager->GetCurrentFrameID()];
+    Texture* taaOutput = graph.GetTemporalTextureCurrent(RESOURCE_ID(TextureID::ColorHistoryBuffer));
     Texture* encodedImage = graph.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage));
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, taaOutput->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE);

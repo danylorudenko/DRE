@@ -27,8 +27,7 @@ void AntiAliasingPass::RegisterResources(RenderGraph& graph)
     graph.RegisterTexture(this, RESOURCE_ID(TextureID::ForwardColor), g_GraphicsManager->GetMainColorFormat(), renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
 
     VKW::ResourceAccess historyAccess = VKW::ResourceAccess(VKW::RESOURCE_ACCESS_SHADER_SAMPLE | std::uint64_t(VKW::RESOURCE_ACCESS_SHADER_WRITE));
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::ColorHistoryBuffer0), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, historyAccess);
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::ColorHistoryBuffer1), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, historyAccess);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::ColorHistoryBuffer), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, historyAccess, GraphResourceFlags::TEMPORAL);
 
     graph.RegisterTexture(this, RESOURCE_ID(TextureID::MainDepth), g_GraphicsManager->GetMainDepthFormat(), renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
 }
@@ -38,12 +37,10 @@ void AntiAliasingPass::Render(RenderGraph& graph, VKW::Context& context)
 {
     DRE_GPU_SCOPE(AntiAliasing);
 
-    Texture* historyBuffers[2] = { graph.GetTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer0)), graph.GetTexture(RESOURCE_ID(TextureID::ColorHistoryBuffer1)) };
-
     Texture* colorInput = graph.GetTexture(RESOURCE_ID(TextureID::ForwardColor));
     Texture* velocity = graph.GetTexture(RESOURCE_ID(TextureID::GBufferC_Velocity));
-    Texture* history = historyBuffers[g_GraphicsManager->GetPrevFrameID()];
-    Texture* taaOutput = historyBuffers[g_GraphicsManager->GetCurrentFrameID()];
+    Texture* history = graph.GetTemporalTextureCurrent(RESOURCE_ID(TextureID::ColorHistoryBuffer));
+    Texture* taaOutput = graph.GetTemporalTextureHistory(RESOURCE_ID(TextureID::ColorHistoryBuffer));
     Texture* mainDepth = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth));
 
     glm::vec4 taaSettings{ g_GraphicsManager->GetGraphicsSettings().m_AlphaTAA, g_GraphicsManager->GetGraphicsSettings().m_VarianceGammaTAA, 0.0f, 0.0f };

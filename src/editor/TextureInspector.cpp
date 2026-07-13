@@ -109,7 +109,8 @@ void TextureInspector::Render()
             {
                 m_GraphResources->ForEachTexture([&TextureInList](auto& texture)
                 {
-                    TextureInList(texture.value->texture);
+                    TextureInList(texture.value->temporalStorage[0]);
+                    //TextureInList(texture.value->temporalStorage[1]);
                 });
             }
 

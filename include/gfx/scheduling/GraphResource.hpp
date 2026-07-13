@@ -4,6 +4,13 @@
 namespace GFX
 {
 
+enum GraphResourceFlags : DRE::U32
+{
+    NONE = 0,
+    TEMPORAL = (1 << 0),
+    INIT_CLEAR = (1 << 1),
+};
+
 //////////////////////////////////////
 enum class TextureID
 {
@@ -23,8 +30,7 @@ enum class TextureID
     WaterHeight,
     AmbientOcclusion,
     DisplayEncodedImage,
-    ColorHistoryBuffer0,
-    ColorHistoryBuffer1,
+    ColorHistoryBuffer,
     GBufferA_DiffuseRoughness,
     GBufferB_NormalMetalness,
     GBufferC_Velocity,

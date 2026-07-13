@@ -20,17 +20,24 @@ GraphResourcesManager::GraphResourcesManager(VKW::Device* device)
 
 GraphResourcesManager::~GraphResourcesManager() = default;
 
-void GraphResourcesManager::RegisterTexture(char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access)
+void GraphResourcesManager::RegisterTexture(char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access, GraphResourceFlags flags)
 {
-    RegisterTexture(id, format, width, height, 1, access);
+    RegisterTexture(id, format, width, height, 1, access, flags);
 }
 
-void GraphResourcesManager::RegisterTexture(char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 mipCount, VKW::ResourceAccess access)
+void GraphResourcesManager::RegisterTexture(char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 mipCount, VKW::ResourceAccess access, GraphResourceFlags flags)
 {
     AccumulatedInfo& info = m_AccumulatedTextureInfo[id];
 
-    DRE_DEBUG_ONLY(if (info.access != VKW::RESOURCE_ACCESS_UNDEFINED))
-        DRE_ASSERT(info.size0 == width && info.size1 == height && info.depth == 1, "Different sized specified for same resource");
+    if (info.access != VKW::RESOURCE_ACCESS_INVALID)
+    {
+        DRE_ASSERT(info.size0 == width && info.size1 == height && info.depth == 1 && info.mipCount == mipCount && info.format == format && info.flags == flags, "Different sizes specified for same resource");
+    }
+    else
+    {
+        // first time init
+        info.access = VKW::RESOURCE_ACCESS_NONE;
+    }
 
     info.access = VKW::ResourceAccess(info.access | std::uint64_t(access));
     info.format = format;
@@ -38,20 +45,30 @@ void GraphResourcesManager::RegisterTexture(char const* id, VKW::Format format, 
     info.size1 = height;
     info.mipCount = mipCount;
     info.depth = 1;
+    info.flags = flags;
 }
 
-void GraphResourcesManager::RegisterBuffer(char const* id, std::uint32_t size, VKW::ResourceAccess access)
+void GraphResourcesManager::RegisterBuffer(char const* id, std::uint32_t size, VKW::ResourceAccess access, GraphResourceFlags flags)
 {
     AccumulatedInfo& info = m_AccumulatedBufferInfo[id];
 
-    DRE_DEBUG_ONLY(if (info.access != VKW::RESOURCE_ACCESS_UNDEFINED))
-        DRE_ASSERT(info.size0 == size, "Different sized specified for same resource");
+    if (info.access != VKW::RESOURCE_ACCESS_INVALID)
+    {
+        DRE_ASSERT(info.size0 == size && info.size1 == 0 && info.depth == 0 && info.mipCount == 1 && info.format == VKW::FORMAT_UNDEFINED && info.flags == flags, "Different sizes specified for same resource");
+    }
+    else
+    {
+        // first time init
+        info.access = VKW::RESOURCE_ACCESS_NONE;
+    }
 
     info.access = VKW::ResourceAccess(info.access | std::uint64_t(access));
     info.format = VKW::FORMAT_UNDEFINED;
     info.size0 = size;
     info.size1 = 0;
     info.depth = 0;
+    info.mipCount = 1;
+    info.flags = flags;
 }
 
 void GraphResourcesManager::InitResources()
@@ -87,14 +104,38 @@ void GraphResourcesManager::InitResources()
             imageAspect |= VK_IMAGE_ASPECT_DEPTH_BIT;
         }
 
-        VKW::ImageResource* image    = m_Device->GetResourcesController()->CreateImage(info.size0, info.size1, info.mipCount, info.format, usage, *pair.key);
+        // create texture
+        GraphTexture& graphTexture = m_StorageTextures.Emplace(*pair.key);
+        graphTexture.info = info;
 
+        DRE::String64 subkey0 = *pair.key;
+        if (info.flags & GraphResourceFlags::TEMPORAL)
+        {
+            subkey0.Append("_0");
+        }
+
+        VKW::ImageResource* image = m_Device->GetResourcesController()->CreateImage(info.size0, info.size1, info.mipCount, info.format, usage, subkey0);
 
         VkImageSubresourceRange range = VKW::HELPER::ImageSubresourceRange(imageAspect, image->mipLevels_);
         VKW::ImageResourceView* view = m_Device->GetResourcesController()->ViewImageAs(image, &range);
         VKW::TextureDescriptorIndex globalDescriptor = m_Device->GetDescriptorManager()->AllocateTextureDescriptor(view);
 
-        m_StorageTextures[*pair.key] = GraphTexture{ Texture{ m_Device, image, view, globalDescriptor }, info };
+        graphTexture.temporalStorage.EmplaceBack(Texture{ m_Device, image, view, globalDescriptor });
+
+        // temporal brother
+        if (info.flags & GraphResourceFlags::TEMPORAL)
+        {
+            DRE::String64 subkey1 = *pair.key;
+            subkey1.Append("_1");
+
+            VKW::ImageResource* temporalImage = m_Device->GetResourcesController()->CreateImage(info.size0, info.size1, info.mipCount, info.format, usage, subkey1);
+
+            VkImageSubresourceRange temporalRange = VKW::HELPER::ImageSubresourceRange(imageAspect, temporalImage->mipLevels_);
+            VKW::ImageResourceView* temporalView = m_Device->GetResourcesController()->ViewImageAs(temporalImage, &temporalRange);
+            VKW::TextureDescriptorIndex temporalDescriptor = m_Device->GetDescriptorManager()->AllocateTextureDescriptor(temporalView);
+
+            graphTexture.temporalStorage.EmplaceBack(Texture{ m_Device, temporalImage, temporalView, temporalDescriptor });
+        }
     });
  
 
@@ -115,8 +156,26 @@ void GraphResourcesManager::InitResources()
             usage = VKW::BufferUsage::INDIRECT_ARGS;
 
         // create buffer
-        VKW::BufferResource* buffer = m_Device->GetResourcesController()->CreateBuffer(info.size0, usage, *pair.key);
-        m_StorageBuffers.Emplace(*pair.key, GraphBuffer{ StorageBuffer{ m_Device, buffer }, info });
+        GraphBuffer& graphBuffer = m_StorageBuffers.Emplace(*pair.key);
+        graphBuffer.info = info;
+
+        DRE::String64 subkey0 = *pair.key;
+        if (info.flags & GraphResourceFlags::TEMPORAL)
+        {
+            subkey0.Append("_0");
+        }
+
+        VKW::BufferResource* buffer = m_Device->GetResourcesController()->CreateBuffer(info.size0, usage, subkey0);
+        graphBuffer.temporalStorage.EmplaceBack(StorageBuffer{ m_Device, buffer });
+
+        // temporal brother
+        if (info.flags & GraphResourceFlags::TEMPORAL)
+        {
+            DRE::String64 subkey1 = *pair.key;
+            subkey1.Append("_1");
+            VKW::BufferResource* temporalBuffer = m_Device->GetResourcesController()->CreateBuffer(info.size0, usage, subkey1);
+            graphBuffer.temporalStorage.EmplaceBack(StorageBuffer{ m_Device, temporalBuffer });
+        }
     });
 }
 
@@ -128,12 +187,30 @@ void GraphResourcesManager::DestroyResources()
 
 StorageBuffer* GraphResourcesManager::GetBuffer(char const* id)
 {
-    return &m_StorageBuffers.Find(id).value->buffer;
+    GraphBuffer* resource = m_StorageBuffers.Find(id).value;
+    DRE_ASSERT((resource->info.flags & GraphResourceFlags::TEMPORAL) == 0, "Attempt to access buffer via regular accessor with temporal flag.");
+    return &resource->temporalStorage[0];
 }
 
 Texture* GraphResourcesManager::GetTexture(char const* id)
 {
-    return &m_StorageTextures.Find(id).value->texture;
+    GraphTexture* resource = m_StorageTextures.Find(id).value;
+    DRE_ASSERT((resource->info.flags & GraphResourceFlags::TEMPORAL) == 0, "Attempt to access texture via regular accessor with temporal flag.");
+    return &resource->temporalStorage[0];
+}
+
+StorageBuffer* GraphResourcesManager::GetTemporalBuffer(char const* id, FrameID frameID)
+{
+    GraphBuffer* resource = m_StorageBuffers.Find(id).value;
+    DRE_ASSERT((resource->info.flags & GraphResourceFlags::TEMPORAL) != 0, "Attempt to access buffer via temporal accessor with no temporal flag.");
+    return &resource->temporalStorage[frameID];
+}
+
+Texture* GraphResourcesManager::GetTemporalTexture(char const* id, FrameID frameID)
+{
+    GraphTexture* resource = m_StorageTextures.Find(id).value;
+    DRE_ASSERT((resource->info.flags & GraphResourceFlags::TEMPORAL) != 0, "Attempt to access texture via temporal accessor with no temporal flag.");
+    return &resource->temporalStorage[frameID];
 }
 
 
