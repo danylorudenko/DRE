@@ -33,13 +33,13 @@ public:
         m_Passes.EmplaceBack(new TPass{ std::forward<TArgs>(args)... });
     }
 
-    void RegisterRenderTarget       (BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 binding, GraphResourceFlags flags = GraphResourceFlags::NONE);
-    void RegisterDepthStencilTarget (BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, GraphResourceFlags flags = GraphResourceFlags::NONE);
-    void RegisterDepthOnlyTarget    (BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, GraphResourceFlags flags = GraphResourceFlags::NONE);
+    void RegisterRenderTarget       (BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 binding, DRE::U32 flags = GraphResourceFlags::NONE);
+    void RegisterDepthStencilTarget (BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 flags = GraphResourceFlags::NONE);
+    void RegisterDepthOnlyTarget    (BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 flags = GraphResourceFlags::NONE);
 
-    void RegisterTexture            (BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access, GraphResourceFlags flags = GraphResourceFlags::NONE);
+    void RegisterTexture            (BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access, DRE::U32 flags = GraphResourceFlags::NONE);
 
-    void RegisterStorageBuffer      (BasePass* pass, char const* id, DRE::U32 size, VKW::ResourceAccess access, GraphResourceFlags flags = GraphResourceFlags::NONE);
+    void RegisterStorageBuffer      (BasePass* pass, char const* id, DRE::U32 size, VKW::ResourceAccess access, DRE::U32 flags = GraphResourceFlags::NONE);
 
     Texture*                        GetTexture(char const* id);
     StorageBuffer*                  GetBuffer(char const* id);
@@ -56,7 +56,7 @@ public:
 
 public:
     void ParseGraph();
-    void InitGraphResources();
+    void InitGraphResources(VKW::Context& context);
     void UnloadGraphResources();
 
     // last access to texture should be VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT

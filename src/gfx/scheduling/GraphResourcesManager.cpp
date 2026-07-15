@@ -20,12 +20,12 @@ GraphResourcesManager::GraphResourcesManager(VKW::Device* device)
 
 GraphResourcesManager::~GraphResourcesManager() = default;
 
-void GraphResourcesManager::RegisterTexture(char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access, GraphResourceFlags flags)
+void GraphResourcesManager::RegisterTexture(char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access, DRE::U32 flags)
 {
     RegisterTexture(id, format, width, height, 1, access, flags);
 }
 
-void GraphResourcesManager::RegisterTexture(char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 mipCount, VKW::ResourceAccess access, GraphResourceFlags flags)
+void GraphResourcesManager::RegisterTexture(char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 mipCount, VKW::ResourceAccess access, DRE::U32 flags)
 {
     AccumulatedInfo& info = m_AccumulatedTextureInfo[id];
 
@@ -48,7 +48,7 @@ void GraphResourcesManager::RegisterTexture(char const* id, VKW::Format format, 
     info.flags = flags;
 }
 
-void GraphResourcesManager::RegisterBuffer(char const* id, std::uint32_t size, VKW::ResourceAccess access, GraphResourceFlags flags)
+void GraphResourcesManager::RegisterBuffer(char const* id, DRE::U32 size, VKW::ResourceAccess access, DRE::U32 flags)
 {
     AccumulatedInfo& info = m_AccumulatedBufferInfo[id];
 
@@ -71,9 +71,9 @@ void GraphResourcesManager::RegisterBuffer(char const* id, std::uint32_t size, V
     info.flags = flags;
 }
 
-void GraphResourcesManager::InitResources()
+void GraphResourcesManager::CreateResources(VKW::Context& context)
 {
-    m_AccumulatedTextureInfo.ForEach([this](auto& pair)
+    m_AccumulatedTextureInfo.ForEach([this, &context](auto& pair)
     {
         AccumulatedInfo const& info = *pair.value;
         auto texturePair = m_StorageTextures.Find(*pair.key);
@@ -120,7 +120,8 @@ void GraphResourcesManager::InitResources()
         VKW::ImageResourceView* view = m_Device->GetResourcesController()->ViewImageAs(image, &range);
         VKW::TextureDescriptorIndex globalDescriptor = m_Device->GetDescriptorManager()->AllocateTextureDescriptor(view);
 
-        graphTexture.temporalStorage.EmplaceBack(Texture{ m_Device, image, view, globalDescriptor });
+        Texture& texture0 = graphTexture.temporalStorage.EmplaceBack(Texture{ m_Device, image, view, globalDescriptor });
+        InitResource(context, info, texture0);
 
         // temporal brother
         if (info.flags & GraphResourceFlags::TEMPORAL)
@@ -134,12 +135,13 @@ void GraphResourcesManager::InitResources()
             VKW::ImageResourceView* temporalView = m_Device->GetResourcesController()->ViewImageAs(temporalImage, &temporalRange);
             VKW::TextureDescriptorIndex temporalDescriptor = m_Device->GetDescriptorManager()->AllocateTextureDescriptor(temporalView);
 
-            graphTexture.temporalStorage.EmplaceBack(Texture{ m_Device, temporalImage, temporalView, temporalDescriptor });
+            Texture& texture1 = graphTexture.temporalStorage.EmplaceBack(Texture{ m_Device, temporalImage, temporalView, temporalDescriptor });
+            InitResource(context, info, texture1);
         }
     });
  
 
-    m_AccumulatedBufferInfo.ForEach([this](auto& pair)
+    m_AccumulatedBufferInfo.ForEach([this, &context](auto& pair)
     {
         AccumulatedInfo const& info = *pair.value;
         auto bufferPair = m_StorageBuffers.Find(*pair.key);
@@ -166,7 +168,8 @@ void GraphResourcesManager::InitResources()
         }
 
         VKW::BufferResource* buffer = m_Device->GetResourcesController()->CreateBuffer(info.size0, usage, subkey0);
-        graphBuffer.temporalStorage.EmplaceBack(StorageBuffer{ m_Device, buffer });
+        StorageBuffer& storageBuffer0 = graphBuffer.temporalStorage.EmplaceBack(StorageBuffer{ m_Device, buffer });
+        InitResource(context, info, storageBuffer0);
 
         // temporal brother
         if (info.flags & GraphResourceFlags::TEMPORAL)
@@ -174,9 +177,30 @@ void GraphResourcesManager::InitResources()
             DRE::String64 subkey1 = *pair.key;
             subkey1.Append("_1");
             VKW::BufferResource* temporalBuffer = m_Device->GetResourcesController()->CreateBuffer(info.size0, usage, subkey1);
-            graphBuffer.temporalStorage.EmplaceBack(StorageBuffer{ m_Device, temporalBuffer });
+            StorageBuffer& storageBuffer1 = graphBuffer.temporalStorage.EmplaceBack(StorageBuffer{ m_Device, temporalBuffer });
+            InitResource(context, info, storageBuffer1);
         }
     });
+}
+
+void GraphResourcesManager::InitResource(VKW::Context& context, AccumulatedInfo const& info, GFX::Texture& texture)
+{
+    if (info.flags & GraphResourceFlags::INIT_CLEAR)
+    {
+        g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, texture.GetResource(), VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
+
+        float clearColor[4] = { 0.f, 0.f, 0.f, 0.f };
+        context.CmdClearColorImage(texture.GetResource(), clearColor);
+    }
+}
+
+void GraphResourcesManager::InitResource(VKW::Context& context, AccumulatedInfo const& info, GFX::StorageBuffer& buffer)
+{
+    if (info.flags & GraphResourceFlags::INIT_CLEAR)
+    {
+        g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, buffer.GetResource(), VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
+        context.CmdFillBuffer(buffer.GetResource(), 0, info.size0, 0);
+    }
 }
 
 void GraphResourcesManager::DestroyResources()

@@ -62,11 +62,11 @@ public:
 
     virtual ~GraphResourcesManager();
 
-    void RegisterTexture(char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access, GraphResourceFlags flags = GraphResourceFlags::NONE);
-    void RegisterTexture(char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 mipCount, VKW::ResourceAccess access, GraphResourceFlags flags = GraphResourceFlags::NONE);
-    void RegisterBuffer(char const* id, DRE::U32 size, VKW::ResourceAccess access, GraphResourceFlags flags = GraphResourceFlags::NONE);
+    void RegisterTexture(char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access, DRE::U32 flags = GraphResourceFlags::NONE);
+    void RegisterTexture(char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 mipCount, VKW::ResourceAccess access, DRE::U32 flags = GraphResourceFlags::NONE);
+    void RegisterBuffer(char const* id, DRE::U32 size, VKW::ResourceAccess access, DRE::U32 flags = GraphResourceFlags::NONE);
 
-    void InitResources();
+    void CreateResources(VKW::Context& context);
     void DestroyResources();
 
     StorageBuffer*  GetBuffer    (char const* id);
@@ -80,6 +80,10 @@ public:
     {
         m_StorageTextures.ForEach(func);
     }
+
+private:
+    void InitResource(VKW::Context& context, AccumulatedInfo const& info, GFX::Texture& texture);
+    void InitResource(VKW::Context& context, AccumulatedInfo const& info, GFX::StorageBuffer& buffer);
 
 private:
     VKW::Device*        m_Device;

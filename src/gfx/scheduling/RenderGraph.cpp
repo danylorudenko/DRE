@@ -25,27 +25,27 @@ RenderGraph::~RenderGraph()
     }
 }
 
-void RenderGraph::RegisterTexture(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access, GraphResourceFlags flags)
+void RenderGraph::RegisterTexture(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, VKW::ResourceAccess access, DRE::U32 flags)
 {
     m_ResourcesManager.RegisterTexture(id, format, width, height, access, flags);
 }
 
-void RenderGraph::RegisterRenderTarget(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 binding, GraphResourceFlags flags)
+void RenderGraph::RegisterRenderTarget(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 binding, DRE::U32 flags)
 {
     m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, flags);
 }
 
-void RenderGraph::RegisterDepthStencilTarget(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, GraphResourceFlags flags)
+void RenderGraph::RegisterDepthStencilTarget(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 flags)
 {
     m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT, flags);
 }
 
-void RenderGraph::RegisterDepthOnlyTarget(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, GraphResourceFlags flags)
+void RenderGraph::RegisterDepthOnlyTarget(BasePass* pass, char const* id, VKW::Format format, DRE::U32 width, DRE::U32 height, DRE::U32 flags)
 {
     m_ResourcesManager.RegisterTexture(id, format, width, height, VKW::RESOURCE_ACCESS_DEPTH_ONLY_ATTACHMENT, flags);
 }
 
-void RenderGraph::RegisterStorageBuffer(BasePass* pass, char const* id, DRE::U32 size, VKW::ResourceAccess access, GraphResourceFlags flags)
+void RenderGraph::RegisterStorageBuffer(BasePass* pass, char const* id, DRE::U32 size, VKW::ResourceAccess access, DRE::U32 flags)
 {
     m_ResourcesManager.RegisterBuffer(id, size, access, flags);
 }
@@ -94,9 +94,9 @@ void RenderGraph::ParseGraph()
     }
 }
 
-void RenderGraph::InitGraphResources()
+void RenderGraph::InitGraphResources(VKW::Context& context)
 {
-    m_ResourcesManager.InitResources();
+    m_ResourcesManager.CreateResources(context);
 
     for (DRE::U32 i = 0, size = m_Passes.Size(); i < size; i++)
     {

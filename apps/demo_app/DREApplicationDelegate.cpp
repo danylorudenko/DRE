@@ -125,7 +125,7 @@ void DREApplicationDelegate::start()
     if (m_ImGuiEnabled)
         InitImGui();
 
-    m_GraphicsManager.PrecacheAllData(&m_ViewportInput, &m_GeometryLibrary);
+    m_GraphicsManager.PrecacheAllData(m_GraphicsManager.GetMainContext(), &m_ViewportInput, &m_GeometryLibrary);
 
 
 

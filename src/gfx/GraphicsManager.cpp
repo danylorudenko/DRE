@@ -77,15 +77,15 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::I
     m_Device.GetDescriptorManager()->AllocateDefaultDescriptors(VKW::CONSTANTS::FRAMES_BUFFERING, m_GlobalUniforms, m_PersistentStorage.GetStorage()->GetResource());
 }
 
-void GraphicsManager::PrecacheAllData(EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary)
+void GraphicsManager::PrecacheAllData(VKW::Context& context, EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary)
 {
     m_PipelineDB.CreateDefaultPipelines();
     m_TextureBank.LoadDefaultTextures();
     m_DDGI.Initialize(geometryLibrary);
-    CreateAllPasses(viewportInput, geometryLibrary);
+    CreateAllPasses(context, viewportInput, geometryLibrary);
 }
 
-void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary)
+void GraphicsManager::CreateAllPasses(VKW::Context& context, EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary)
 {
     m_RenderGraph.AddPass<DebugPassClearPrimitives>(); // this must be the first, as it's intended for debug
 
@@ -120,7 +120,7 @@ void GraphicsManager::CreateAllPasses(EDITOR::ViewportInputManager* viewportInpu
     m_RenderGraph.AddPass<ImGuiRenderPass>();
 
     m_RenderGraph.ParseGraph();
-    m_RenderGraph.InitGraphResources();
+    m_RenderGraph.InitGraphResources(context);
 }
 
 glm::vec2 constexpr s_HaltonSequence[16] = {

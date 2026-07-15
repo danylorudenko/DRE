@@ -49,7 +49,7 @@ void LightingPass::RegisterResources(RenderGraph& graph)
     graph.RegisterTexture(this,
         RESOURCE_ID(TextureID::DDGI_ProbeIrradiance),
         VKW::FORMAT_R16G16B16A16_FLOAT, ddgiAtlasDims.x, ddgiAtlasDims.y,
-        VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
+        VKW::RESOURCE_ACCESS_SHADER_SAMPLE, GraphResourceFlags::INIT_CLEAR);
 }
 
 void LightingPass::Initialize(RenderGraph&)

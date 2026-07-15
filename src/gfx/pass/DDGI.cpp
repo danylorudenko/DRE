@@ -218,7 +218,7 @@ void DDGIProbeLightingPass::RegisterResources(RenderGraph& graph)
     glm::uvec2 const irradianceDims = ddgi.GetProbeAtlasIrradianceDimentions();
 
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeSampleBuffer), sizeof(DDGIProbeSamples) * ddgi.GetProbeTotalCount(), VKW::RESOURCE_ACCESS_SHADER_READ);
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_ProbeIrradiance), VKW::FORMAT_R16G16B16A16_FLOAT, irradianceDims.x, irradianceDims.y, VKW::RESOURCE_ACCESS_SHADER_WRITE);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_ProbeIrradiance), VKW::FORMAT_R16G16B16A16_FLOAT, irradianceDims.x, irradianceDims.y, VKW::RESOURCE_ACCESS_SHADER_WRITE, /*GraphResourceFlags::TEMPORAL | */GraphResourceFlags::INIT_CLEAR);
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData), ddgi.GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_SHADER_READ);
 }
 
@@ -307,7 +307,7 @@ void DebugPassDDGIProbeDisplay::RegisterResources(RenderGraph& graph)
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData),                 g_GraphicsManager->GetDDGI().GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_SHADER_READ);
 
     glm::uvec2 ddgiAtlasDims = g_GraphicsManager->GetDDGI().GetProbeAtlasIrradianceDimentions();
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_ProbeIrradiance), VKW::FORMAT_R16G16B16A16_FLOAT, ddgiAtlasDims.x, ddgiAtlasDims.y, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_ProbeIrradiance), VKW::FORMAT_R16G16B16A16_FLOAT, ddgiAtlasDims.x, ddgiAtlasDims.y, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, GraphResourceFlags::INIT_CLEAR);
 
     DRE::U32 renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth;
     DRE::U32 renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;

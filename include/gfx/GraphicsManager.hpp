@@ -186,7 +186,7 @@ public:
 
 
 public:
-    void                                PrecacheAllData(EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary);
+    void                                PrecacheAllData(VKW::Context& context, EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary);
     void                                BuildMainSceneTLAS();
     void                                RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS, float globalTimeS);
     void                                WaitIdle();
@@ -197,7 +197,7 @@ public:
     GFX::ResourceBinder                 CreateResourceBinder(PipelineEntry* pipelineEntry, DRE::U32 setIDAfterGlobalSets);
 
 private:
-    void                                CreateAllPasses(EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary);
+    void                                CreateAllPasses(VKW::Context& context, EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary);
 
     void                                PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, RenderGraph& graph, std::uint64_t deltaTimeUS, float globalTimeS);
     VKW::QueueExecutionPoint            TransferToSwapchainAndPresent(Texture& src);
