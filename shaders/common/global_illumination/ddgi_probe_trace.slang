@@ -89,47 +89,50 @@ void TraceProbeRay(DDGIProbeData probeData, uint probeIndex, float3 rayOrigin, f
 
     if (rayQuery.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
     {
-        // 3.1 from the primitive index, get triangle indicies
-        uint instanceID = rayQuery.CommittedInstanceID();
-        S_INSTANCE* instance = GetInstance(instanceID);
-
-        uint primitiveID = rayQuery.CommittedPrimitiveIndex();
-        uint* indexOffset = (uint*)GetGlobalGeometry(instance->indexOffset + sizeof(uint) * primitiveID * 3);
-
-        // 3.2 from triangle indicies get vertex attributes
-        DREVertex* vertices = (DREVertex*)GetGlobalGeometry(instance->vertexOffset);
-        DREVertex v0 = vertices[indexOffset[0]];
-        DREVertex v1 = vertices[indexOffset[1]];
-        DREVertex v2 = vertices[indexOffset[2]];
-
-        // 3.3 calculate 3rd barycentric weight
-        float3 barycentric = float3(0.0, rayQuery.CommittedTriangleBarycentrics());
-        barycentric.x = 1.0 - (barycentric.y + barycentric.z);
-
-        // 3.4 interpolate vertex attributes with barycentrics
-        float2 hitUV = v0.uv * barycentric.x + v1.uv * barycentric.y + v2.uv * barycentric.z;
-        S_MATERIAL *material = GetMaterial(instance);
-
-        float3 wPos = ray.Origin + ray.Direction * rayQuery.CommittedRayT();
-
-        if (ddgiCB.debugDrawRays != 0 && all(probeIndex3D == ddgiCB.debugProbeFocus))
+        if (rayQuery.CommittedTriangleFrontFace())
         {
-            DrawDebugLine(rayOrigin, wPos, float3(1, 1, 0));
-            DrawDebugCross(wPos, 0.5f, float3(0, 1, 0));
+            // 3.1 from the primitive index, get triangle indicies
+            uint instanceID = rayQuery.CommittedInstanceID();
+            S_INSTANCE* instance = GetInstance(instanceID);
+            
+            uint primitiveID = rayQuery.CommittedPrimitiveIndex();
+            uint* indexOffset = (uint*)GetGlobalGeometry(instance->indexOffset + sizeof(uint) * primitiveID * 3);
+            
+            // 3.2 from triangle indicies get vertex attributes
+            DREVertex* vertices = (DREVertex*)GetGlobalGeometry(instance->vertexOffset);
+            DREVertex v0 = vertices[indexOffset[0]];
+            DREVertex v1 = vertices[indexOffset[1]];
+            DREVertex v2 = vertices[indexOffset[2]];
+            
+            // 3.3 calculate 3rd barycentric weight
+            float3 barycentric = float3(0.0, rayQuery.CommittedTriangleBarycentrics());
+            barycentric.x = 1.0 - (barycentric.y + barycentric.z);
+            
+            // 3.4 interpolate vertex attributes with barycentrics
+            float2 hitUV = v0.uv * barycentric.x + v1.uv * barycentric.y + v2.uv * barycentric.z;
+            S_MATERIAL *material = GetMaterial(instance);
+            
+            float3 wPos = ray.Origin + ray.Direction * rayQuery.CommittedRayT();
+            
+            if (ddgiCB.debugDrawRays != 0 && all(probeIndex3D == ddgiCB.debugProbeFocus))
+                {
+                    DrawDebugLine(rayOrigin, wPos, float3(1, 1, 0));
+                    DrawDebugCross(wPos, 0.5f, float3(0, 1, 0));
+                }
+                
+                float3 T = v0.tan * barycentric.x + v1.tan * barycentric.y + v2.tan * barycentric.z;
+                float3 B = v0.btan * barycentric.x + v1.btan * barycentric.y + v2.btan * barycentric.z;
+                float3 N = v0.norm * barycentric.x + v1.norm * barycentric.y + v2.norm * barycentric.z;
+                
+                float4x4 model_mat = GetWorldTransform(instance);
+                float3x3 TBN = float3x3(
+                    normalize(mul(model_mat, float4(T, 0.0)).xyz),
+                    normalize(mul(model_mat, float4(B, 0.0)).xyz),
+                    normalize(mul(model_mat, float4(N, 0.0)).xyz)
+                );
+                
+                AddTracedSample(probeIndex, probeData, ray.Direction, rayQuery.CommittedRayT(), wPos, instance, hitUV, TBN);
         }
-
-        float3 T = v0.tan * barycentric.x + v1.tan * barycentric.y + v2.tan * barycentric.z;
-        float3 B = v0.btan * barycentric.x + v1.btan * barycentric.y + v2.btan * barycentric.z;
-        float3 N = v0.norm * barycentric.x + v1.norm * barycentric.y + v2.norm * barycentric.z;
-
-        float4x4 model_mat = GetWorldTransform(instance);
-        float3x3 TBN = float3x3(
-            normalize(mul(model_mat, float4(T, 0.0)).xyz),
-            normalize(mul(model_mat, float4(B, 0.0)).xyz),
-            normalize(mul(model_mat, float4(N, 0.0)).xyz)
-        );
-
-        AddTracedSample(probeIndex, probeData, ray.Direction, rayQuery.CommittedRayT(), wPos, instance, hitUV, TBN);
     }
     else
     {

@@ -30,6 +30,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
     float3 probePixelNormal = OctahedronDecode(probeUV);
 
     float3 accumulatedPixelRadiance = float3(0, 0, 0);
+    float accumulatedWeight = 0;
     for (int i = 0; i < probeGBuffer.sampleCount; i++)
     {
         DDGISample sample = probeGBuffer.samples[i];
@@ -38,11 +39,12 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
         //sampleWeight = 1;
         //sample.radiance = float3(1, 1, 1);
         accumulatedPixelRadiance += sample.radiance * sampleWeight;
+        accumulatedWeight += sampleWeight;
     }
 
-    if (probeGBuffer.sampleCount > 0)
+    if (accumulatedWeight > 0)
     {
-        accumulatedPixelRadiance /= probeGBuffer.sampleCount;
+        accumulatedPixelRadiance /= accumulatedWeight;
     }
 
     ddgiAtlasIrradiance[atlasPixel] = float4(accumulatedPixelRadiance * ddgiCB.irradianceUpdateRate + ddgiAtlasIrradianceHistory[atlasPixel].rgb * (1.0 - ddgiCB.irradianceUpdateRate), 1.0f);
