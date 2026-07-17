@@ -89,7 +89,8 @@ DDGIConstantBuffer DDGI::GetConstantBuffer(RenderGraph& graph) const
     cb.probeIrradianceResolution = GetProbeResolutionIrradiance();
     cb.probeVisibilityResolution = GetProbeResolutionVisibility();
 
-    cb.irradianceAtlasTextureID = graph.GetTexture(RESOURCE_ID(TextureID::DDGI_ProbeIrradiance))->GetShaderGlobalDescriptor().id_;
+    cb.irradianceAtlasTextureID = graph.GetTemporalTextureCurrent(RESOURCE_ID(TextureID::DDGI_ProbeIrradiance))->GetShaderGlobalDescriptor().id_;
+    cb.irradianceHistoryTextureID = graph.GetTemporalTextureHistory(RESOURCE_ID(TextureID::DDGI_ProbeIrradiance))->GetShaderGlobalDescriptor().id_;
     cb.irradianceUpdateRate = settings.m_DDGIIrradianceUpdateRate;
     cb.rayDistributionMode = settings.m_DDGIRayDistributionMode;
 
@@ -218,7 +219,7 @@ void DDGIProbeLightingPass::RegisterResources(RenderGraph& graph)
     glm::uvec2 const irradianceDims = ddgi.GetProbeAtlasIrradianceDimentions();
 
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeSampleBuffer), sizeof(DDGIProbeSamples) * ddgi.GetProbeTotalCount(), VKW::RESOURCE_ACCESS_SHADER_READ);
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_ProbeIrradiance), VKW::FORMAT_R16G16B16A16_FLOAT, irradianceDims.x, irradianceDims.y, VKW::RESOURCE_ACCESS_SHADER_WRITE, /*GraphResourceFlags::TEMPORAL | */GraphResourceFlags::INIT_CLEAR);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_ProbeIrradiance), VKW::FORMAT_R16G16B16A16_FLOAT, irradianceDims.x, irradianceDims.y, VKW::RESOURCE_ACCESS_SHADER_WRITE, GraphResourceFlags::TEMPORAL | GraphResourceFlags::INIT_CLEAR);
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData), ddgi.GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_SHADER_READ);
 }
 
@@ -233,23 +234,25 @@ void DDGIProbeLightingPass::Render(RenderGraph& graph, VKW::Context& context)
     DDGI& ddgi = g_GraphicsManager->GetDDGI();
 
     StorageBuffer* ddgiProbeSampleBuffer = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeSampleBuffer));
-    Texture* atlasIrradiance  = graph.GetTexture(RESOURCE_ID(TextureID::DDGI_ProbeIrradiance));
     StorageBuffer* probeData  = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData));
+    Texture* atlasIrradiance  = graph.GetTemporalTextureCurrent(RESOURCE_ID(TextureID::DDGI_ProbeIrradiance));
+    Texture* atlasIrradianceHistory = graph.GetTemporalTextureHistory(RESOURCE_ID(TextureID::DDGI_ProbeIrradiance));
 
     auto& dependencyManager = g_GraphicsManager->GetDependencyManager();
 
     ///////////////////
     // temporary clear, because we don't have a proper reprojection
-    dependencyManager.ResourceBarrier(context, atlasIrradiance->GetResource(), VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
-    float clearColor[4] = { 0.f, 0.f, 0.f, 0.f };
-    context.CmdClearColorImage(atlasIrradiance->GetResource(), clearColor);
+    //dependencyManager.ResourceBarrier(context, atlasIrradiance->GetResource(), VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
+    //float clearColor[4] = { 0.f, 0.f, 0.f, 0.f };
+    //context.CmdClearColorImage(atlasIrradiance->GetResource(), clearColor);
     // remove later
     ///////////////////
 
 
-    dependencyManager.ResourceBarrier(context, ddgiProbeSampleBuffer->GetResource(), VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE);
-    dependencyManager.ResourceBarrier(context, atlasIrradiance->GetResource(), VKW::RESOURCE_ACCESS_SHADER_WRITE,  VKW::STAGE_COMPUTE);
-    dependencyManager.ResourceBarrier(context, probeData->GetResource(),       VKW::RESOURCE_ACCESS_SHADER_READ,   VKW::STAGE_COMPUTE);
+    dependencyManager.ResourceBarrier(context, ddgiProbeSampleBuffer->GetResource(),    VKW::RESOURCE_ACCESS_SHADER_READ,   VKW::STAGE_COMPUTE);
+    dependencyManager.ResourceBarrier(context, atlasIrradiance->GetResource(),          VKW::RESOURCE_ACCESS_SHADER_WRITE,  VKW::STAGE_COMPUTE);
+    dependencyManager.ResourceBarrier(context, atlasIrradianceHistory->GetResource(),   VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
+    dependencyManager.ResourceBarrier(context, probeData->GetResource(),                VKW::RESOURCE_ACCESS_SHADER_READ,   VKW::STAGE_COMPUTE);
 
     UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(DDGIConstantBuffer));
     uniform.WriteMember140(ddgi.GetConstantBuffer(graph));
@@ -260,7 +263,8 @@ void DDGIProbeLightingPass::Render(RenderGraph& graph, VKW::Context& context)
     binder.AddUniform(0, &uniform);
     binder.AddStorageBuffer(1, ddgiProbeSampleBuffer);
     binder.AddStorageTexture(2, atlasIrradiance);
-    binder.AddStorageBuffer(3, probeData);
+    binder.AddSampledTexture(3, atlasIrradianceHistory);
+    binder.AddStorageBuffer(4, probeData);
     binder.FlushDescriptorWrites();
 
     context.CmdBindComputePipeline(entry->GetPipeline());
@@ -307,7 +311,7 @@ void DebugPassDDGIProbeDisplay::RegisterResources(RenderGraph& graph)
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData),                 g_GraphicsManager->GetDDGI().GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_SHADER_READ);
 
     glm::uvec2 ddgiAtlasDims = g_GraphicsManager->GetDDGI().GetProbeAtlasIrradianceDimentions();
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_ProbeIrradiance), VKW::FORMAT_R16G16B16A16_FLOAT, ddgiAtlasDims.x, ddgiAtlasDims.y, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, GraphResourceFlags::INIT_CLEAR);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_ProbeIrradiance), VKW::FORMAT_R16G16B16A16_FLOAT, ddgiAtlasDims.x, ddgiAtlasDims.y, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, GraphResourceFlags::TEMPORAL | GraphResourceFlags::INIT_CLEAR);
 
     DRE::U32 renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth;
     DRE::U32 renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
@@ -372,7 +376,7 @@ void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context
 
         Texture* output = graph.GetTexture(RESOURCE_ID(TextureID::DisplayEncodedImage));
         Texture* depthBuffer = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth));
-        Texture* ddgiProbeIrradiance = graph.GetTexture(RESOURCE_ID(TextureID::DDGI_ProbeIrradiance));
+        Texture* ddgiProbeIrradiance = graph.GetTemporalTextureCurrent(RESOURCE_ID(TextureID::DDGI_ProbeIrradiance));
 
         g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, output->GetResource(), VKW::RESOURCE_ACCESS_COLOR_ATTACHMENT, VKW::STAGE_COLOR_OUTPUT);
         g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, depthBuffer->GetResource(), VKW::RESOURCE_ACCESS_DEPTH_STENCIL_ATTACHMENT, VKW::STAGE_ALL_GRAPHICS);

@@ -17,8 +17,6 @@ void AddTracedSample(uint probeIndex, DDGIProbeData probeData, float3 rayDir, fl
     ComputeMaterialTextureSampler sampler = { 0.0f };
     S_MATERIAL_PROPERTIES MaterialProperties = ReadMaterialProperties(material, hitGeometryUV, TBN, sampler);
 
-    //DDGISampleEncoded encodedSample = EncodeDDGISample(localHitPosition, MaterialProperties.diffuse, OctahedronEncode(MaterialProperties.normal), MaterialProperties.roughness, MaterialProperties.metalness);
-
     S_SURFACE surface = {};
 
     surface.diffuseSpectrum = MaterialProperties.diffuse;
@@ -30,9 +28,10 @@ void AddTracedSample(uint probeIndex, DDGIProbeData probeData, float3 rayDir, fl
     surface.prevWpos = hitPosition;
 
     S_LIGHTING_RESULT sampleDirectRadiance = CalculateDirectLighting(surface, probeData.position.xyz, ShaderStage::Compute);
+    S_LIGHTING_RESULT sampleIndirect = CalculateIndirectLighting(surface, GetDDGI().irradianceHistoryTextureID);
 
     DDGISample sample;
-    sample.radiance = sampleDirectRadiance.finalRadiance;
+    sample.radiance = sampleDirectRadiance.finalRadiance + sampleIndirect.finalRadiance;
     //sample.radiance = surface.diffuseSpectrum;
     //sample.radiance = float3(1,1,1);
     sample.distance = rayT;

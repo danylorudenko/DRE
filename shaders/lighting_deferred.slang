@@ -45,7 +45,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
     surface.prevWpos = surface.wpos;
 
     S_LIGHTING_RESULT directLighting = CalculateDirectLighting(surface, GetCameraPos(), ShaderStage::Compute);
-    S_LIGHTING_RESULT indirectLighting = CalculateIndirectLighting(surface);
+    S_LIGHTING_RESULT indirectLighting = CalculateIndirectLighting(surface, GetDDGI().irradianceAtlasTextureID);
 
     lightingOutput[pixel] = float4(directLighting.finalRadiance + indirectLighting.finalRadiance, 1.0f);
 }

@@ -87,7 +87,7 @@ S_LIGHTING_RESULT CalculateDirectLighting(S_SURFACE surface, float3 viewPosWS, S
     return Result;
 }
 
-S_LIGHTING_RESULT CalculateIndirectLighting(S_SURFACE surface)
+S_LIGHTING_RESULT CalculateIndirectLighting(S_SURFACE surface, uint atlasID)
 {
     S_LIGHTING_RESULT Result;
     float3 accumulatedIrradiance = float3(0.0f, 0.0f, 0.0f);
@@ -99,7 +99,7 @@ S_LIGHTING_RESULT CalculateIndirectLighting(S_SURFACE surface)
         float3 probeRadiance = SampleProbeRadiance(
             probeIndex,
             surface.normal,
-            GetGlobalTextureObject(GetDDGI().irradianceAtlasTextureID),
+            GetGlobalTextureObject(atlasID),
             GetSamplerLinear(),
             GetDDGI().probeIrradianceResolution,
             GetDDGI().probeGridDimentions);

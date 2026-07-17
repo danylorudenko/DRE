@@ -5,7 +5,8 @@
 [[vk::binding(0, 3)]] ConstantBuffer<DDGIConstantBuffer>    ddgiCB;
 [[vk::binding(1, 3)]] RWStructuredBuffer<DDGIProbeSamples>  ddgiSampleBuffer;
 [[vk::binding(2, 3)]] RWTexture2D                           ddgiAtlasIrradiance;
-[[vk::binding(3, 3)]] StructuredBuffer<DDGIProbeData>       ddgiProbeData;
+[[vk::binding(3, 3)]] Texture2D                             ddgiAtlasIrradianceHistory;
+[[vk::binding(4, 3)]] StructuredBuffer<DDGIProbeData>       ddgiProbeData;
 
 [require(spvRayQueryKHR)]
 [shader("compute")]
@@ -39,8 +40,11 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
         accumulatedPixelRadiance += sample.radiance * sampleWeight;
     }
 
-    accumulatedPixelRadiance /= probeGBuffer.sampleCount;
+    if (probeGBuffer.sampleCount > 0)
+    {
+        accumulatedPixelRadiance /= probeGBuffer.sampleCount;
+    }
 
-    ddgiAtlasIrradiance[atlasPixel] = float4(accumulatedPixelRadiance * ddgiCB.irradianceUpdateRate + ddgiAtlasIrradiance[atlasPixel].rgb * (1.0 - ddgiCB.irradianceUpdateRate), 1.0f);
+    ddgiAtlasIrradiance[atlasPixel] = float4(accumulatedPixelRadiance * ddgiCB.irradianceUpdateRate + ddgiAtlasIrradianceHistory[atlasPixel].rgb * (1.0 - ddgiCB.irradianceUpdateRate), 1.0f);
 
 }

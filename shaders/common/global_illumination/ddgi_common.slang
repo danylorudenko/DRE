@@ -35,10 +35,10 @@ struct DDGIConstantBuffer
     uint probeIrradianceResolution; // hight and width of 1 probe in irradiance atlas
     uint probeVisibilityResolution; // hight and width of 1 probe in visibility atlas
 
-    uint irradianceAtlasTextureID;
     float irradianceUpdateRate;
     uint rayDistributionMode; // DDGI_RAY_DISTRIBUTION_*
-    float pad2;
+    uint irradianceAtlasTextureID;
+    uint irradianceHistoryTextureID;
 
     uint3 debugProbeFocus;
     uint debugDrawRays;
