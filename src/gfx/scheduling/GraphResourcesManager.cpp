@@ -6,8 +6,6 @@
 #include <vk_wrapper\Helper.hpp>
 
 #include <gfx\GraphicsManager.hpp>
-#include <gfx\pass\BasePass.hpp>
-#include <gfx\buffer\UniformProxy.hpp>
 
 namespace GFX
 {
@@ -107,6 +105,7 @@ void GraphResourcesManager::CreateResources(VKW::Context& context)
         // create texture
         GraphTexture& graphTexture = m_StorageTextures.Emplace(*pair.key);
         graphTexture.info = info;
+        graphTexture.id = *pair.key;
 
         DRE::String64 subkey0 = *pair.key;
         if (info.flags & GraphResourceFlags::TEMPORAL)
@@ -160,6 +159,7 @@ void GraphResourcesManager::CreateResources(VKW::Context& context)
         // create buffer
         GraphBuffer& graphBuffer = m_StorageBuffers.Emplace(*pair.key);
         graphBuffer.info = info;
+        graphBuffer.id = *pair.key;
 
         DRE::String64 subkey0 = *pair.key;
         if (info.flags & GraphResourceFlags::TEMPORAL)
@@ -237,6 +237,17 @@ Texture* GraphResourcesManager::GetTemporalTexture(char const* id, FrameID frame
     return &resource->temporalStorage[frameID];
 }
 
+GraphResourcesManager::AccumulatedInfo const* GraphResourcesManager::GetAccumulatedBufferInfo(char const* id)
+{
+    auto const& pair = m_AccumulatedBufferInfo.Find(id);
+    return pair.value;
+}
+
+GraphResourcesManager::AccumulatedInfo const* GraphResourcesManager::GetAccumulatedTextureInfo(char const* id)
+{
+    auto const& pair = m_AccumulatedTextureInfo.Find(id);
+    return pair.value;
+}
 
 }
 

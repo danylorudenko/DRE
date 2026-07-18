@@ -5,11 +5,12 @@
 
 #include <vk_wrapper\Format.hpp>
 #include <vk_wrapper\pipeline\Dependency.hpp>
+#include <vk_wrapper\Context.hpp>
 
+#include <gfx\FrameID.hpp>
 #include <gfx\scheduling\GraphResource.hpp>
 
 #include <gfx\buffer\StorageBuffer.hpp>
-#include <gfx\buffer\TransientArena.hpp>
 #include <gfx\texture\Texture.hpp>
 
 namespace GFX
@@ -46,12 +47,14 @@ public:
 
     struct GraphBuffer
     {
+        DRE::String64 id;
         DRE::InplaceVector<StorageBuffer, 2> temporalStorage;
         AccumulatedInfo info;
     };
 
     struct GraphTexture
     {
+        DRE::String64 id;
         DRE::InplaceVector<Texture, 2> temporalStorage;
         AccumulatedInfo info;
     };
@@ -74,6 +77,9 @@ public:
 
     StorageBuffer*  GetTemporalBuffer(char const* id, FrameID frameID);
     Texture*        GetTemporalTexture(char const* id, FrameID frameID);
+
+    AccumulatedInfo const* GetAccumulatedBufferInfo(char const* id);
+    AccumulatedInfo const* GetAccumulatedTextureInfo(char const* id);
 
     template<typename TDelegate>
     void ForEachTexture(TDelegate func)

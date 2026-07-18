@@ -95,7 +95,7 @@ struct GraphicsSettings
     float           m_DDGIProbeWorldDistance = 5.0f;
     glm::vec3       m_DDGIProbeWorldOffset   = glm::vec3{ 0.0f, 30.0f, 0.0f };
     float           m_DDGIIrradianceUpdateRate = 0.05f;
-    DRE::U32        m_DDGIRayPerProbeCount = 1;
+    DRE::U32        m_DDGIRayPerProbeCount = 16;
     DRE::U32        m_DDGIRayDistributionMode = DDGI_RAY_DISTRIBUTION_RANDOM;
 
     DRE::U32        m_DDGIProbeCountX = 32;

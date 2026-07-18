@@ -16,12 +16,11 @@ PassID DebugPassTextureView::GetID() const
 }
 
 void DebugPassTextureView::Initialize(RenderGraph& graph)
-{
-}
+{}
 
 void DebugPassTextureView::RegisterResources(RenderGraph& graph)
 {
-    DRE::U32 renderWidth  = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth;
+    DRE::U32 renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth;
     DRE::U32 renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
     graph.RegisterTexture(this, RESOURCE_ID(TextureID::DisplayEncodedImage), g_GraphicsManager->GetFinalImageFormat(),
@@ -32,13 +31,32 @@ void DebugPassTextureView::RegisterResources(RenderGraph& graph)
 void DebugPassTextureView::Render(RenderGraph& graph, VKW::Context& context)
 {
     auto& viewContext = DRE::g_AppContext.m_TextureInspectorViewState;
-    if (!viewContext.m_DrawTexture)
+    if (!DRE::IsFlagSet32(viewContext.m_Flags, DRE::TextureViewState::FLAG_DRAW))
         return;
 
     GFX::Texture* displayedTexture = g_GraphicsManager->GetTextureBank().FindTexture(viewContext.m_TextureName);
     if (displayedTexture == nullptr)
     {
-        displayedTexture = graph.GetTexture(viewContext.m_TextureName);
+        GraphResourcesManager::AccumulatedInfo const* info = graph.GetResourcesManager().GetAccumulatedTextureInfo(viewContext.m_TextureName);
+        if (info == nullptr)
+            return;
+
+        if (info->flags & GraphResourceFlags::TEMPORAL)
+        {
+            if (DRE::IsFlagSet32(viewContext.m_Flags, DRE::TextureViewState::FLAG_SHOW_HISTORY))
+            {
+                displayedTexture = graph.GetTemporalTextureCurrent(viewContext.m_TextureName);
+            }
+            else
+            {
+                displayedTexture = graph.GetTemporalTextureHistory(viewContext.m_TextureName);
+            }
+        }
+        else
+        {
+            displayedTexture = graph.GetTexture(viewContext.m_TextureName);
+        }
+
         if (displayedTexture == nullptr)
             return;
     }
@@ -55,11 +73,16 @@ void DebugPassTextureView::Render(RenderGraph& graph, VKW::Context& context)
 
     DebugViewArgs args{};
     args.textureID   = displayedTexture->GetShaderGlobalDescriptor().id_;
-    args.sizeX        = viewContext.m_SizeX;
-    args.sizeY        = viewContext.m_SizeY;
+    args.sizeX       = viewContext.m_SizeX;
+    args.sizeY       = viewContext.m_SizeY;
+    args.offsetX     = viewContext.m_OffsetX;
+    args.offsetY     = viewContext.m_OffsetY;
     args.lowBound    = viewContext.m_LowerEnd;
     args.highBound   = viewContext.m_UpperEnd;
-    args.channelMask = (viewContext.m_ShowX ? 0x1 : 0) | (viewContext.m_ShowY ? 0x2 : 0) | (viewContext.m_ShowZ ? 0x4 : 0) | (viewContext.m_ShowW ? 0x8 : 0);
+    args.channelMask = (DRE::IsFlagSet32(viewContext.m_Flags, DRE::TextureViewState::FLAG_SHOW_X) ? 0x1 : 0) |
+                       (DRE::IsFlagSet32(viewContext.m_Flags, DRE::TextureViewState::FLAG_SHOW_Y) ? 0x2 : 0) |
+                       (DRE::IsFlagSet32(viewContext.m_Flags, DRE::TextureViewState::FLAG_SHOW_Z) ? 0x4 : 0) |
+                       (DRE::IsFlagSet32(viewContext.m_Flags, DRE::TextureViewState::FLAG_SHOW_W) ? 0x8 : 0);
 
     UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(DebugViewArgs));
     uniform.WriteMember140(args);

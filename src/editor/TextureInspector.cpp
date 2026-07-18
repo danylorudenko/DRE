@@ -80,25 +80,72 @@ void TextureInspector::Render()
             ImGui::InputText("Search", searchBuff, 32);
             std::uint32_t searchLength = std::strlen(searchBuff);
 
-            auto TextureInList = [this, &searchBuff, searchLength](GFX::Texture& texture)
+            auto TextureInListGraph = [this, &searchBuff, searchLength](DRE::String64& textureId)
+            {
+                if (searchLength == 0 || std::strstr(textureId.GetData(), searchBuff) != nullptr)
+                {
+                    GFX::GraphResourcesManager::AccumulatedInfo const* info = m_GraphResources->GetAccumulatedTextureInfo(textureId);
+                    if (info == nullptr)
+                    {
+                        return;
+                    }
+
+                    auto& ctx = DRE::g_AppContext.m_TextureInspectorViewState;
+                    GFX::Texture* texture = nullptr;
+                    if (info->flags & GFX::GraphResourceFlags::TEMPORAL)
+                    {
+                        if (ctx.m_Flags & DRE::TextureViewState::FLAG_SHOW_HISTORY)
+                        {
+                            texture = m_GraphResources->GetTemporalTexture(textureId, GFX::g_GraphicsManager->GetPrevFrameID());
+                        }
+                        else
+                        {
+                            texture = m_GraphResources->GetTemporalTexture(textureId, GFX::g_GraphicsManager->GetCurrentFrameID());
+                        }
+                    }
+                    else
+                    {
+                        texture = m_GraphResources->GetTexture(textureId);
+                    }
+
+                    if (ImGui::Button(textureId.GetData()))
+                    {
+                        if (m_DisplayedTexture == texture)
+                        {
+                            m_DisplayedTexture = nullptr;
+                            DRE::ClearFlag32(ctx.m_Flags, DRE::TextureViewState::FLAG_DRAW);
+                            ctx.m_TextureName.Shrink(0);
+                        }
+                        else
+                        {
+                            m_DisplayedTexture = texture;
+                            DRE::SetFlag32(ctx.m_Flags, DRE::TextureViewState::FLAG_DRAW);
+                            ctx.m_TextureName = textureId;
+
+                        }
+                    }
+                }
+            };
+
+            auto TextureInListDisk = [this, &searchBuff, searchLength](GFX::Texture& texture)
             {
                 char const* name = texture.GetShaderView()->parentResource_->name_.GetData();
                 if (searchLength == 0 || std::strstr(name, searchBuff) != nullptr)
                 {
                     if (ImGui::Button(name))
                     {
-                        auto& ctx = DRE::g_AppContext;
+                        auto& ctx = DRE::g_AppContext.m_TextureInspectorViewState;
                         if (m_DisplayedTexture == &texture)
                         {
                             m_DisplayedTexture = nullptr;
-                            ctx.m_TextureInspectorViewState.m_DrawTexture = false;
-                            ctx.m_TextureInspectorViewState.m_TextureName.Shrink(0);
+                            DRE::ClearFlag32(ctx.m_Flags, DRE::TextureViewState::FLAG_DRAW);
+                            ctx.m_TextureName.Shrink(0);
                         }
                         else
                         {
                             m_DisplayedTexture = &texture;
-                            ctx.m_TextureInspectorViewState.m_DrawTexture = true;
-                            ctx.m_TextureInspectorViewState.m_TextureName = m_DisplayedTexture->GetResource()->name_;
+                            DRE::SetFlag32(ctx.m_Flags, DRE::TextureViewState::FLAG_DRAW);
+                            ctx.m_TextureName = m_DisplayedTexture->GetResource()->name_;
 
                         }
                     }
@@ -107,18 +154,17 @@ void TextureInspector::Render()
 
             ImGui::SeparatorText("Graph Textures");
             {
-                m_GraphResources->ForEachTexture([&TextureInList](auto& texture)
+                m_GraphResources->ForEachTexture([&TextureInListGraph](auto& texture)
                 {
-                    TextureInList(texture.value->temporalStorage[0]);
-                    //TextureInList(texture.value->temporalStorage[1]);
+                    TextureInListGraph(texture.value->id);
                 });
             }
 
             ImGui::SeparatorText("Disc Textures");
             {
-                m_TextureBank->ForEachTexture([&TextureInList](auto& texture)
+                m_TextureBank->ForEachTexture([&TextureInListDisk](auto& texture)
                 {
-                    TextureInList(*texture.value);
+                    TextureInListDisk(*texture.value);
                 });
             }
         };
@@ -143,21 +189,38 @@ void TextureInspector::Render()
             ImGui::TextUnformatted(ctx.m_TextureName.GetData());
             if (ImGui::Button("Disable View"))
             {
-                ctx.m_DrawTexture = false;
+                DRE::ClearFlag32(ctx.m_Flags, DRE::TextureViewState::FLAG_DRAW);
                 ctx.m_TextureName.Shrink(0);
                 m_DisplayedTexture = nullptr;
             }
 
-            ImGui::SliderFloat("Size X", &ctx.m_SizeX, 0.0f, 5.0f);
-            ImGui::SliderFloat("Size Y", &ctx.m_SizeY, 0.0f, 5.0f);
+            bool showHistory = DRE::IsFlagSet32(ctx.m_Flags, DRE::TextureViewState::FLAG_SHOW_HISTORY);
+            ImGui::Checkbox("Show History", &showHistory);
+            if (showHistory) { DRE::SetFlag32(ctx.m_Flags, DRE::TextureViewState::FLAG_SHOW_HISTORY); } else { DRE::ClearFlag32(ctx.m_Flags, DRE::TextureViewState::FLAG_SHOW_HISTORY); }
+
+            ImGui::SliderFloat("Size X", &ctx.m_SizeX, 0.0f, 50.0f);
+            ImGui::SliderFloat("Size Y", &ctx.m_SizeY, 0.0f, 50.0f);
+            ImGui::SliderFloat("Offset X", &ctx.m_OffsetX, -50.0f, 50.0f);
+            ImGui::SliderFloat("Offset Y", &ctx.m_OffsetY, -50.0f, 50.0f);
 
             ImGui::SliderFloat("Lower", &ctx.m_LowerEnd, -5.0f, 5.0f);
             ImGui::SliderFloat("Upper", &ctx.m_UpperEnd, -5.0f, 5.0f);
 
-            ImGui::Checkbox("X Channel", &ctx.m_ShowX);
-            ImGui::Checkbox("Y Channel", &ctx.m_ShowY);
-            ImGui::Checkbox("Z Channel", &ctx.m_ShowZ);
-            ImGui::Checkbox("W Channel", &ctx.m_ShowW);
+            bool showXYZW[] = { DRE::IsFlagSet32(ctx.m_Flags, DRE::TextureViewState::FLAG_SHOW_X),
+                                DRE::IsFlagSet32(ctx.m_Flags, DRE::TextureViewState::FLAG_SHOW_Y),
+                                DRE::IsFlagSet32(ctx.m_Flags, DRE::TextureViewState::FLAG_SHOW_Z),
+                                DRE::IsFlagSet32(ctx.m_Flags, DRE::TextureViewState::FLAG_SHOW_W) };
+
+            ImGui::Checkbox("X Channel", &showXYZW[0]);
+            ImGui::Checkbox("Y Channel", &showXYZW[1]);
+            ImGui::Checkbox("Z Channel", &showXYZW[2]);
+            ImGui::Checkbox("W Channel", &showXYZW[3]);
+
+            // Update flags based on checkbox states
+            if (showXYZW[0]) { DRE::SetFlag32(ctx.m_Flags, DRE::TextureViewState::FLAG_SHOW_X); } else { DRE::ClearFlag32(ctx.m_Flags, DRE::TextureViewState::FLAG_SHOW_X); }
+            if (showXYZW[1]) { DRE::SetFlag32(ctx.m_Flags, DRE::TextureViewState::FLAG_SHOW_Y); } else { DRE::ClearFlag32(ctx.m_Flags, DRE::TextureViewState::FLAG_SHOW_Y); }
+            if (showXYZW[2]) { DRE::SetFlag32(ctx.m_Flags, DRE::TextureViewState::FLAG_SHOW_Z); } else { DRE::ClearFlag32(ctx.m_Flags, DRE::TextureViewState::FLAG_SHOW_Z); }
+            if (showXYZW[3]) { DRE::SetFlag32(ctx.m_Flags, DRE::TextureViewState::FLAG_SHOW_W); } else { DRE::ClearFlag32(ctx.m_Flags, DRE::TextureViewState::FLAG_SHOW_W); }
 #endif
         }
         ImGui::EndChild();

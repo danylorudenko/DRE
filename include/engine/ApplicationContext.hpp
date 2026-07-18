@@ -21,18 +21,23 @@ enum class ObjectFocusEvent
 
 struct TextureViewState
 {
-    bool m_DrawTexture = false;
+    static constexpr DRE::U32 FLAG_DRAW         = 1 << 0;
+    static constexpr DRE::U32 FLAG_SHOW_HISTORY = 1 << 1;
+    static constexpr DRE::U32 FLAG_SHOW_X       = 1 << 2;
+    static constexpr DRE::U32 FLAG_SHOW_Y       = 1 << 3;
+    static constexpr DRE::U32 FLAG_SHOW_Z       = 1 << 4;
+    static constexpr DRE::U32 FLAG_SHOW_W       = 1 << 5;
+
     DRE::String128 m_TextureName;
+    DRE::U32 m_Flags = FLAG_SHOW_X | FLAG_SHOW_Y | FLAG_SHOW_Z | FLAG_SHOW_W;
     float m_SizeX = 0.5f;
     float m_SizeY = 0.5f;
 
+    float m_OffsetX = 0.0f;
+    float m_OffsetY = 0.0f;
+
     float m_LowerEnd = 0.0f;
     float m_UpperEnd = 1.0f;
-
-    bool m_ShowX = true;
-    bool m_ShowY = true;
-    bool m_ShowZ = true;
-    bool m_ShowW = true;
 };
 
 struct DDGIDebugState

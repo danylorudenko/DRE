@@ -255,7 +255,7 @@ void SceneGraphEditor::RenderEntityProperties(RenderingContext& context)
                     char const* uniqueViewLabel = context.GetNextUniqueLabel("[view]");
                     if (ImGui::Button(uniqueViewLabel, ImVec2(50, 0)))
                     {
-                        DRE::g_AppContext.m_TextureInspectorViewState.m_DrawTexture = true;
+                        DRE::SetFlag32(DRE::g_AppContext.m_TextureInspectorViewState.m_Flags, DRE::TextureViewState::FLAG_DRAW);
                         DRE::g_AppContext.m_TextureInspectorViewState.m_TextureName = texture.GetName();
                     }
                     ImGui::SameLine();

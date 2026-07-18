@@ -78,6 +78,20 @@ using UPtr      = std::uintptr_t;
 #endif // if defined DRE_DEBUG
 
 
+inline DRE::U32 SetFlag32(DRE::U32& flags, DRE::U32 flag)
+{
+    return flags = (flags | flag);
+}
+
+inline DRE::U32 ClearFlag32(DRE::U32& flags, DRE::U32 flag)
+{
+    return flags = (flags & ~flag);
+}
+
+inline bool IsFlagSet32(DRE::U32 flags, DRE::U32 flag)
+{
+    return (flags & flag) != 0;
+}
 
 } // namespace DRE
 
