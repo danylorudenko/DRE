@@ -87,12 +87,54 @@ S_LIGHTING_RESULT CalculateDirectLighting(S_SURFACE surface, float3 viewPosWS, S
     return Result;
 }
 
+S_LIGHTING_RESULT CalculateDirectDiffuseLighting(S_SURFACE surface, ShaderStage shaderStage)
+{
+    S_LIGHTING_RESULT Result;
+    Result.finalRadiance = float3(0.0f, 0.0f, 0.0f);
+
+    float3 n = surface.normal;
+
+    uint lightsCount = GetLightsCount();
+    for(uint i = 0; i < lightsCount; i++)
+    {
+        S_LIGHT* light = GetLight(i);
+
+        float3 L = GetDirection(light);
+        float NdotL = saturate(dot(n, L) + 0.01);
+        float3 brdf = surface.diffuseSpectrum * NdotL;
+        float3 directRadiance = brdf * GetFlux(light);
+        float shadow = 1;
+
+        switch(GetType(light))
+        {
+            case DRE_LIGHT_TYPE_SUN:
+            case DRE_LIGHT_TYPE_DIRECTIONAL:
+            {
+            if (shaderStage != ShaderStage::Vertex)
+            {
+                shadow = ShadowVisibilityTrace(surface.wpos, L);
+                break;
+            }
+            }
+        }
+
+        directRadiance *= shadow;
+
+        Result.finalRadiance += directRadiance;
+    }
+
+    //Result.finalRadiance += float3(0.15f, 0.15f, 0.15f) * surface.diffuseSpectrum * surface.ao; // simple ambient
+
+    return Result;
+}
+
 S_LIGHTING_RESULT CalculateIndirectLighting(S_SURFACE surface, uint atlasID)
 {
     S_LIGHTING_RESULT Result;
     float3 accumulatedIrradiance = float3(0.0f, 0.0f, 0.0f);
 
     DDGIProbeNeighborhood probes = GetProbeNeighborhood(surface.wpos, GetDDGI());
+    float accumulatedWeight = 0.0;
     for (int i = 0; i < DDGIProbeNeighborhood::ProbeCount; i++)
     {
         uint probeIndex = probes.indices[i];
@@ -107,11 +149,15 @@ S_LIGHTING_RESULT CalculateIndirectLighting(S_SURFACE surface, uint atlasID)
         float finalWeight = probes.weights[i];
 
         float3 pixelToProbe = surface.wpos - GetProbeWorldPosition(probeIndex, GetDDGI().probeWorldOffset, GetDDGI().probesWorldDistance, GetDDGI().probeGridDimentions);
+        pixelToProbe = -normalize(pixelToProbe);
+
         finalWeight *= saturate(dot(surface.normal, pixelToProbe));
+        accumulatedWeight += finalWeight;
         accumulatedIrradiance += probeRadiance * finalWeight;
     }
 
-    Result.finalRadiance = accumulatedIrradiance * surface.diffuseSpectrum;
+    accumulatedWeight = max(0.0001, accumulatedWeight);
+    Result.finalRadiance = accumulatedIrradiance * surface.diffuseSpectrum * rcp(accumulatedWeight);
     return Result;
 }
 

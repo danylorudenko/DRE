@@ -3,7 +3,7 @@
 
 float2 OctahedronWrap(float2 p)
 {
-    return (p - abs(p.yx)) * sign(p);
+    return (1.0 - abs(p.yx)) * sign(p);
 }
 
 float2 OctahedronEncode(float3 sphereDir)

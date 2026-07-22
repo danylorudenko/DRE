@@ -27,7 +27,7 @@ void AddTracedSample(uint probeIndex, DDGIProbeData probeData, float3 rayDir, fl
     surface.wpos = hitPosition;
     surface.prevWpos = hitPosition;
 
-    S_LIGHTING_RESULT sampleDirectRadiance = CalculateDirectLighting(surface, probeData.position.xyz, ShaderStage::Compute);
+    S_LIGHTING_RESULT sampleDirectRadiance = CalculateDirectDiffuseLighting(surface, ShaderStage::Compute);
     S_LIGHTING_RESULT sampleIndirect = CalculateIndirectLighting(surface, GetDDGI().irradianceHistoryTextureID);
 
     DDGISample sample;
@@ -54,7 +54,8 @@ void AddTracedSample(uint probeIndex, DDGIProbeData probeData, float3 rayDir, fl
 void AddSkySample(uint probeIndex, float3 rayDir, float rayT)
 {
     DDGISample sample;
-    sample.radiance = float3(1.0, 1.0, 1.0);
+    //sample.radiance = float3(135.0, 206.0, 235.0) / 255.0;
+    sample.radiance = float3(0,0,0);
     sample.distance = rayT;
     sample.octDirection = OctahedronEncode(rayDir);
 
@@ -115,23 +116,23 @@ void TraceProbeRay(DDGIProbeData probeData, uint probeIndex, float3 rayOrigin, f
             float3 wPos = ray.Origin + ray.Direction * rayQuery.CommittedRayT();
             
             if (ddgiCB.debugDrawRays != 0 && all(probeIndex3D == ddgiCB.debugProbeFocus))
-                {
-                    DrawDebugLine(rayOrigin, wPos, float3(1, 1, 0));
-                    DrawDebugCross(wPos, 0.5f, float3(0, 1, 0));
-                }
-                
-                float3 T = v0.tan * barycentric.x + v1.tan * barycentric.y + v2.tan * barycentric.z;
-                float3 B = v0.btan * barycentric.x + v1.btan * barycentric.y + v2.btan * barycentric.z;
-                float3 N = v0.norm * barycentric.x + v1.norm * barycentric.y + v2.norm * barycentric.z;
-                
-                float4x4 model_mat = GetWorldTransform(instance);
-                float3x3 TBN = float3x3(
-                    normalize(mul(model_mat, float4(T, 0.0)).xyz),
-                    normalize(mul(model_mat, float4(B, 0.0)).xyz),
-                    normalize(mul(model_mat, float4(N, 0.0)).xyz)
-                );
-                
-                AddTracedSample(probeIndex, probeData, ray.Direction, rayQuery.CommittedRayT(), wPos, instance, hitUV, TBN);
+            {
+                DrawDebugLine(rayOrigin, wPos, float3(1, 1, 0));
+                DrawDebugCross(wPos, 0.5f, float3(0, 1, 0));
+            }
+            
+            float3 T = v0.tan * barycentric.x + v1.tan * barycentric.y + v2.tan * barycentric.z;
+            float3 B = v0.btan * barycentric.x + v1.btan * barycentric.y + v2.btan * barycentric.z;
+            float3 N = v0.norm * barycentric.x + v1.norm * barycentric.y + v2.norm * barycentric.z;
+            
+            float4x4 model_mat = GetWorldTransform(instance);
+            float3x3 TBN = float3x3(
+                normalize(mul(model_mat, float4(T, 0.0)).xyz),
+                normalize(mul(model_mat, float4(B, 0.0)).xyz),
+                normalize(mul(model_mat, float4(N, 0.0)).xyz)
+            );
+
+            AddTracedSample(probeIndex, probeData, ray.Direction, rayQuery.CommittedRayT(), wPos, instance, hitUV, TBN);
         }
     }
     else

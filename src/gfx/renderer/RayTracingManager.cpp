@@ -127,7 +127,7 @@ RayTracingManager::TLAS* RayTracingManager::BuildSceneAccelerationStructure(Rend
         instancesStart[i].instanceCustomIndex = renderableObjects[i]->GetInstanceGPU().GetID();
         instancesStart[i].mask = 0xFFFFFFFF;
         instancesStart[i].instanceShaderBindingTableRecordOffset = 0; // hmm
-        instancesStart[i].flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FRONT_COUNTERCLOCKWISE_BIT_KHR;
+        instancesStart[i].flags = 0 /*VK_GEOMETRY_INSTANCE_TRIANGLE_FRONT_COUNTERCLOCKWISE_BIT_KHR*/;
         instancesStart[i].accelerationStructureReference = renderableObjects[i]->GetBLASResource()->acAddress_;
     }
 
