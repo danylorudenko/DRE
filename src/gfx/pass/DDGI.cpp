@@ -158,11 +158,6 @@ void DDGIProbeTracePass::RegisterResources(RenderGraph& graph)
 
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData), ddgi.GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_SHADER_RW);
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeSampleBuffer), sizeof(DDGIProbeSamples) * ddgi.GetProbeTotalCount(), VKW::RESOURCE_ACCESS_SHADER_WRITE);
-
-    {
-        glm::uvec2 dims = ddgi.GetProbeAtlasVisibilityDimentions();
-        graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_AtlasVisibility), VKW::FORMAT_R16_FLOAT, dims.x, dims.y, VKW::RESOURCE_ACCESS_SHADER_WRITE);
-    }
 }
 
 void DDGIProbeTracePass::Render(RenderGraph& graph, VKW::Context& context)
@@ -221,6 +216,11 @@ void DDGIProbeLightingPass::RegisterResources(RenderGraph& graph)
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeSampleBuffer), sizeof(DDGIProbeSamples) * ddgi.GetProbeTotalCount(), VKW::RESOURCE_ACCESS_SHADER_READ);
     graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_ProbeIrradiance), VKW::FORMAT_R16G16B16A16_FLOAT, irradianceDims.x, irradianceDims.y, VKW::RESOURCE_ACCESS_SHADER_WRITE, GraphResourceFlags::TEMPORAL | GraphResourceFlags::INIT_CLEAR);
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData), ddgi.GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_SHADER_READ);
+
+    {
+        glm::uvec2 dims = ddgi.GetProbeAtlasVisibilityDimentions();
+        graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_AtlasVisibility), VKW::FORMAT_R16G16_FLOAT, dims.x, dims.y, VKW::RESOURCE_ACCESS_SHADER_WRITE);
+    }
 }
 
 void DDGIProbeLightingPass::Initialize(RenderGraph& graph)

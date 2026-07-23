@@ -28,7 +28,7 @@ struct DDGIConstantBuffer
     int visualizationMode;
 
     float3 probeWorldOffset;
-    float rayCountPerProbe;
+    uint rayCountPerProbe;
 
     int probeGeometryVertexCount;
     int probeGeometryIndexCount;

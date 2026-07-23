@@ -18,8 +18,12 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
         return;
 
     uint probeIndex = GetProbeIndexFromPixel(DTid.xy, ddgiCB.probeIrradianceResolution, ddgiCB.probeGridDimentions);
+
+    // returns full rect (borders included)
     uint4 probeRect = GetDDGIProbeRect(probeIndex, ddgiCB.probeIrradianceResolution, ddgiCB.probeGridDimentions);
-    if (any(DTid.xy < probeRect.xy) || any(DTid.xy >= probeRect.zw))
+
+    // test for the edge rows/columns
+    if (any(DTid.xy == probeRect.xy) || any(DTid.xy == probeRect.zw))
         return; // hmmmm
 
     DDGIProbeData probeData = ddgiProbeData[probeIndex];

@@ -10,7 +10,7 @@
 [[vk::binding(2, 3)]] RWStructuredBuffer<DDGIProbeSamples>  ddgiSampleBuffer;
 [[vk::binding(3, 3)]] RWTexture2D                           ddgiAtlasVisibility;
 
-void AddTracedSample(uint probeIndex, DDGIProbeData probeData, float3 rayDir, float rayT, float3 hitPosition, S_INSTANCE* hitInstance, float2 hitGeometryUV, float3x3 TBN)
+void AddTracedSample(inout uint rayCounter, uint probeIndex, DDGIProbeData probeData, float3 rayDir, float rayT, float3 hitPosition, S_INSTANCE* hitInstance, float2 hitGeometryUV, float3x3 TBN)
 {
     S_MATERIAL *material = GetMaterial(hitInstance);
 
@@ -43,15 +43,11 @@ void AddTracedSample(uint probeIndex, DDGIProbeData probeData, float3 rayDir, fl
         DrawDebugCrossAligned(hitPosition, 0.5f, sample.radiance);
     }
 
-    uint sampleIndex;
-    /////////////////////////////
-    // these line trigger DEVICE_LOST
-    InterlockedAdd(ddgiSampleBuffer[probeIndex].sampleCount, 1, sampleIndex);
+    uint sampleIndex = rayCounter++;
     ddgiSampleBuffer[probeIndex].samples[sampleIndex] = sample;
-    /////////////////////////////
 }
 
-void AddSkySample(uint probeIndex, float3 rayDir, float rayT)
+void AddSkySample(inout uint rayCounter, uint probeIndex, float3 rayDir, float rayT)
 {
     DDGISample sample;
     //sample.radiance = float3(135.0, 206.0, 235.0) / 255.0;
@@ -59,8 +55,7 @@ void AddSkySample(uint probeIndex, float3 rayDir, float rayT)
     sample.distance = rayT;
     sample.octDirection = OctahedronEncode(rayDir);
 
-    uint sampleIndex;
-    InterlockedAdd(ddgiSampleBuffer[probeIndex].sampleCount, 1, sampleIndex);
+    uint sampleIndex = rayCounter++;
     ddgiSampleBuffer[probeIndex].samples[sampleIndex] = sample;
 }
 
@@ -69,7 +64,7 @@ void ApplyVisibilityTrace(uint2 targetPixel, float rayT)
     ddgiAtlasVisibility[targetPixel] = rayT;
 }
 
-void TraceProbeRay(DDGIProbeData probeData, uint probeIndex, float3 rayOrigin, float3 rayDir)
+void TraceProbeRay(inout uint rayCounter, DDGIProbeData probeData, uint probeIndex, float3 rayOrigin, float3 rayDir)
 {
     float2 probeLocalUV = OctahedronEncode(rayDir);
     uint3 probeIndex3D = GetProbe3DIndex(ddgiCB.probeGridDimentions, probeIndex);
@@ -132,12 +127,12 @@ void TraceProbeRay(DDGIProbeData probeData, uint probeIndex, float3 rayOrigin, f
                 normalize(mul(model_mat, float4(N, 0.0)).xyz)
             );
 
-            AddTracedSample(probeIndex, probeData, ray.Direction, rayQuery.CommittedRayT(), wPos, instance, hitUV, TBN);
+            AddTracedSample(rayCounter, probeIndex, probeData, ray.Direction, rayQuery.CommittedRayT(), wPos, instance, hitUV, TBN);
         }
     }
     else
     {
-        AddSkySample(probeIndex, ray.Direction, ray.TMax);
+        AddSkySample(rayCounter, probeIndex, ray.Direction, ray.TMax);
         ddgiAtlasVisibility[visibilityTargetPixel] = ray.TMax;
 
         if (ddgiCB.debugDrawRays != 0 && all(probeIndex3D == ddgiCB.debugProbeFocus))
@@ -159,6 +154,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
     uint probeIndex = GetProbeIndex(ddgiCB.probeGridDimentions, DTid);
 
     uint probeSeed = probeIndex + GetFrameNumber();
+    uint rayCounter = 0;
 
     for (uint i = 0; i < ddgiCB.rayCountPerProbe; i++)
     {
@@ -172,6 +168,8 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
 
         float2 probeLocalUV = OctahedronEncode(rayDir);
 
-        TraceProbeRay(probeData, probeIndex, rayOrigin, rayDir);
+        TraceProbeRay(rayCounter, probeData, probeIndex, rayOrigin, rayDir);
     }
+
+    ddgiSampleBuffer[probeIndex].sampleCount = rayCounter;
 }
