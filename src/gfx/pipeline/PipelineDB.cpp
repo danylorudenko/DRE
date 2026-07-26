@@ -54,6 +54,7 @@ void PipelineDB::CreateDefaultPipelines()
         // DDGI
         CreateComputePipeline("ddgi_probe_border_blend", "ddgi_probe_border_blend.slang_mainCS");
         CreateComputePipeline("ddgi_probe_lighting", "ddgi_probe_lighting.slang_mainCS");
+        CreateComputePipeline("ddgi_probe_visibility", "ddgi_probe_visibility.slang_mainCS");
         CreateComputePipeline("ddgi_probe_scatter", "ddgi_probe_scatter.slang_mainCS");
         CreateComputePipeline("ddgi_probe_trace", "ddgi_probe_trace.slang_mainCS");
         CreateComputePipeline("debug_view_ddgi_probes_args", "debug_view_ddgi_probes.slang_indirectArgsFillCS");

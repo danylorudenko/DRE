@@ -102,7 +102,7 @@ void RenderingSettingsEditor::Render()
             ImGui::TextUnformatted("DDGI");
             ImGui::SliderFloat("DDGI Probe World Distance", &settings.m_DDGIProbeWorldDistance, 0.1f, 10.0f);
             ImGui::SliderFloat3("DDGI Probe World Offset", glm::value_ptr(settings.m_DDGIProbeWorldOffset), -50.0f, 50.0f);
-            ImGui::SliderFloat("DDGI Irradiance Update Rate", &settings.m_DDGIIrradianceUpdateRate, 0.0f, 1.0f);
+            ImGui::SliderFloat("DDGI Update Rate", &settings.m_DDGIUpdateRate, 0.0f, 1.0f);
             ImGui::InputInt("DDGI Ray Per Probe Count", (int*)&settings.m_DDGIRayPerProbeCount);
             settings.m_DDGIRayPerProbeCount = glm::clamp(settings.m_DDGIRayPerProbeCount, 1u, DRE::U32(DDGI_MAX_SAMPLES_PER_PROBE));
 

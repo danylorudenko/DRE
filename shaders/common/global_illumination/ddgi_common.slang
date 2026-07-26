@@ -24,8 +24,7 @@ struct DDGIConstantBuffer
     uint3 probeGridDimentions;
     float probeDebugScale;
 
-    float3 probesWorldDistance;
-    int visualizationMode;
+    float4 probesWorldDistance; // w - max from x,y,z
 
     float3 probeWorldOffset;
     uint rayCountPerProbe;
@@ -35,13 +34,19 @@ struct DDGIConstantBuffer
     uint probeIrradianceResolution; // hight and width of 1 probe in irradiance atlas
     uint probeVisibilityResolution; // hight and width of 1 probe in visibility atlas
 
-    float irradianceUpdateRate;
-    uint rayDistributionMode; // DDGI_RAY_DISTRIBUTION_*
     uint irradianceAtlasTextureID;
     uint irradianceHistoryTextureID;
+    uint visibilityAtlasTextureID;
+    uint visibilityHistoryTextureID;
+
+    float updateRate;
+    uint rayDistributionMode; // DDGI_RAY_DISTRIBUTION_*
+    int visualizationMode;
+    int pad0;
 
     uint3 debugProbeFocus;
     uint debugDrawRays;
+
 };
 
 struct DDGIProbeData
@@ -181,6 +186,22 @@ float3 SampleProbeRadiance(uint probeIndex, float3 direction, Texture2D probeAtl
     return probeAtlasIrradiance.SampleLevel(sampler, samplingUV, 0).rgb;
 }
 
+float SampleProbeVisibility(float testDistance, uint probeIndex, float3 direction, Texture2D probeAtlasVisibility, SamplerState sampler, uint2 probeResolution, uint3 probeGridDimentions)
+{
+    float2 probeUV = OctahedronEncode(direction);
+    float4 uvRect = GetProbeAtlasUVRect(probeIndex, probeResolution, probeGridDimentions);
+
+    float2 samplingUV = uvRect.xy + probeUV * (uvRect.zw - uvRect.xy);
+    float2 visibilityMoments = probeAtlasVisibility.SampleLevel(sampler, samplingUV, 0).xy;
+
+    // Chebyshev's inequality (aka Variance Shadow Map test)
+    float variance = visibilityMoments.y - visibilityMoments.x * visibilityMoments.x;
+    float diff = testDistance - visibilityMoments.x;
+    float chebyshev = variance / (variance + diff * diff);
+
+    return chebyshev;
+}
+
 
 struct DDGIProbeNeighborhood
 {
@@ -192,7 +213,7 @@ struct DDGIProbeNeighborhood
 
 DDGIProbeNeighborhood GetProbeNeighborhood(float3 worldPosition, in DDGIConstantBuffer cb)
 {
-    float3 gridSpaceCoord = (worldPosition - cb.probeWorldOffset) / max(cb.probesWorldDistance, 0.001f) + float3(cb.probeGridDimentions) * 0.5f;
+    float3 gridSpaceCoord = (worldPosition - cb.probeWorldOffset) / max(cb.probesWorldDistance.xyz, 0.001f) + float3(cb.probeGridDimentions) * 0.5f;
     uint3 baseProbeIndex = (uint3)floor(gridSpaceCoord);
 
     DDGIProbeNeighborhood neighborhood;

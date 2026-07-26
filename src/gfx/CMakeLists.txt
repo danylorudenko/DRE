@@ -91,6 +91,7 @@ set(GFX_SHADER_LIST
 	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_common.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_border_blend.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_lighting.slang"
+	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_visibility.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_scatter.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_trace.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/lighting/lighting_model.slang"

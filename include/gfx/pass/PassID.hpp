@@ -27,6 +27,7 @@ enum class PassID
     DDGIProbeTrace,
     DDGIProbeBlend,
     DDGIProbeLighting,
+    DDGIProbeVisibility,
     DDGIProbeScatter,
     DebugPrimitivesClear,
     DebugPrimitives,

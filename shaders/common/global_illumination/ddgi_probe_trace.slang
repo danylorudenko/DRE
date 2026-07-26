@@ -8,7 +8,6 @@
 [[vk::binding(0, 3)]] ConstantBuffer<DDGIConstantBuffer>    ddgiCB;
 [[vk::binding(1, 3)]] RWStructuredBuffer<DDGIProbeData>     ddgiProbeData;
 [[vk::binding(2, 3)]] RWStructuredBuffer<DDGIProbeSamples>  ddgiSampleBuffer;
-[[vk::binding(3, 3)]] RWTexture2D                           ddgiAtlasVisibility;
 
 void AddTracedSample(inout uint rayCounter, uint probeIndex, DDGIProbeData probeData, float3 rayDir, float rayT, float3 hitPosition, S_INSTANCE* hitInstance, float2 hitGeometryUV, float3x3 TBN)
 {
@@ -28,7 +27,7 @@ void AddTracedSample(inout uint rayCounter, uint probeIndex, DDGIProbeData probe
     surface.prevWpos = hitPosition;
 
     S_LIGHTING_RESULT sampleDirectRadiance = CalculateDirectDiffuseLighting(surface, ShaderStage::Compute);
-    S_LIGHTING_RESULT sampleIndirect = CalculateIndirectLighting(surface, GetDDGI().irradianceHistoryTextureID);
+    S_LIGHTING_RESULT sampleIndirect = CalculateIndirectLighting(surface, GetDDGI().irradianceHistoryTextureID, GetDDGI().visibilityHistoryTextureID);
 
     DDGISample sample;
     sample.radiance = sampleDirectRadiance.finalRadiance + sampleIndirect.finalRadiance;
@@ -57,11 +56,6 @@ void AddSkySample(inout uint rayCounter, uint probeIndex, float3 rayDir, float r
 
     uint sampleIndex = rayCounter++;
     ddgiSampleBuffer[probeIndex].samples[sampleIndex] = sample;
-}
-
-void ApplyVisibilityTrace(uint2 targetPixel, float rayT)
-{
-    ddgiAtlasVisibility[targetPixel] = rayT;
 }
 
 void TraceProbeRay(inout uint rayCounter, DDGIProbeData probeData, uint probeIndex, float3 rayOrigin, float3 rayDir)
@@ -133,7 +127,6 @@ void TraceProbeRay(inout uint rayCounter, DDGIProbeData probeData, uint probeInd
     else
     {
         AddSkySample(rayCounter, probeIndex, ray.Direction, ray.TMax);
-        ddgiAtlasVisibility[visibilityTargetPixel] = ray.TMax;
 
         if (ddgiCB.debugDrawRays != 0 && all(probeIndex3D == ddgiCB.debugProbeFocus))
         {

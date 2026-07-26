@@ -77,9 +77,9 @@ DDGIConstantBuffer DDGI::GetConstantBuffer(RenderGraph& graph) const
 
     DDGIConstantBuffer cb{};
     cb.probeGridDimentions = ddgiProbeGridDimentions;
-    cb.probesWorldDistance = ddgiProbeWorldDistance;
     cb.probeDebugScale = ddgiDebugState.m_SphereScale;
-    cb.visualizationMode = static_cast<int>(ddgiDebugState.m_VisMode);
+
+    cb.probesWorldDistance = glm::vec4(ddgiProbeWorldDistance, glm::max(ddgiProbeWorldDistance.x, glm::max(ddgiProbeWorldDistance.y, ddgiProbeWorldDistance.z)));
 
     cb.probeWorldOffset = settings.m_DDGIProbeWorldOffset;
     cb.rayCountPerProbe = settings.m_DDGIRayPerProbeCount;
@@ -91,8 +91,12 @@ DDGIConstantBuffer DDGI::GetConstantBuffer(RenderGraph& graph) const
 
     cb.irradianceAtlasTextureID = graph.GetTemporalTextureCurrent(RESOURCE_ID(TextureID::DDGI_ProbeIrradiance))->GetShaderGlobalDescriptor().id_;
     cb.irradianceHistoryTextureID = graph.GetTemporalTextureHistory(RESOURCE_ID(TextureID::DDGI_ProbeIrradiance))->GetShaderGlobalDescriptor().id_;
-    cb.irradianceUpdateRate = settings.m_DDGIIrradianceUpdateRate;
+    cb.visibilityAtlasTextureID = graph.GetTemporalTextureCurrent(RESOURCE_ID(TextureID::DDGI_AtlasVisibility))->GetShaderGlobalDescriptor().id_;
+    cb.visibilityHistoryTextureID = graph.GetTemporalTextureHistory(RESOURCE_ID(TextureID::DDGI_AtlasVisibility))->GetShaderGlobalDescriptor().id_;
+
+    cb.updateRate = settings.m_DDGIUpdateRate;
     cb.rayDistributionMode = settings.m_DDGIRayDistributionMode;
+    cb.visualizationMode = static_cast<int>(ddgiDebugState.m_VisMode);
 
     cb.debugProbeFocus = ddgiDebugState.m_FocusProbe;
     cb.debugDrawRays = ddgiDebugState.m_DrawProbeRays;
@@ -112,9 +116,6 @@ void DDGIProbeScatterPass::RegisterResources(RenderGraph& graph)
     DDGI& ddgi = g_GraphicsManager->GetDDGI();
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData), ddgi.GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_SHADER_WRITE);
 }
-
-void DDGIProbeScatterPass::Initialize(RenderGraph& graph)
-{}
 
 void DDGIProbeScatterPass::Render(RenderGraph& graph, VKW::Context& context)
 {
@@ -168,7 +169,6 @@ void DDGIProbeTracePass::Render(RenderGraph& graph, VKW::Context& context)
 
     StorageBuffer* ddgiProbeData = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData));
     StorageBuffer* ddgiProbeSampleBuffer = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeSampleBuffer));
-    Texture* atlasVisibility = graph.GetTexture(RESOURCE_ID(TextureID::DDGI_AtlasVisibility));
 
     // this fill helps combat DEVICE_LOST error on writing samples to buffer (I think it was unitialized sample counter
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeSampleBuffer->GetResource(), VKW::RESOURCE_ACCESS_GENERIC_WRITE, VKW::STAGE_TRANSFER);
@@ -176,7 +176,6 @@ void DDGIProbeTracePass::Render(RenderGraph& graph, VKW::Context& context)
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData->GetResource(), VKW::RESOURCE_ACCESS_SHADER_RW, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeSampleBuffer->GetResource(), VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, atlasVisibility->GetResource(), VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
 
     UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(DDGIConstantBuffer));
     uniform.WriteMember140(ddgi.GetConstantBuffer(graph));
@@ -187,7 +186,6 @@ void DDGIProbeTracePass::Render(RenderGraph& graph, VKW::Context& context)
     binder.AddUniform(0, &uniform);
     binder.AddStorageBuffer(1, ddgiProbeData);
     binder.AddStorageBuffer(2, ddgiProbeSampleBuffer);
-    binder.AddStorageTexture(3, atlasVisibility);
     binder.FlushDescriptorWrites();
 
     context.CmdBindComputePipeline(entry->GetPipeline());
@@ -216,15 +214,6 @@ void DDGIProbeLightingPass::RegisterResources(RenderGraph& graph)
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeSampleBuffer), sizeof(DDGIProbeSamples) * ddgi.GetProbeTotalCount(), VKW::RESOURCE_ACCESS_SHADER_READ);
     graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_ProbeIrradiance), VKW::FORMAT_R16G16B16A16_FLOAT, irradianceDims.x, irradianceDims.y, VKW::RESOURCE_ACCESS_SHADER_WRITE, GraphResourceFlags::TEMPORAL | GraphResourceFlags::INIT_CLEAR);
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData), ddgi.GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_SHADER_READ);
-
-    {
-        glm::uvec2 dims = ddgi.GetProbeAtlasVisibilityDimentions();
-        graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_AtlasVisibility), VKW::FORMAT_R16G16_FLOAT, dims.x, dims.y, VKW::RESOURCE_ACCESS_SHADER_WRITE);
-    }
-}
-
-void DDGIProbeLightingPass::Initialize(RenderGraph& graph)
-{
 }
 
 void DDGIProbeLightingPass::Render(RenderGraph& graph, VKW::Context& context)
@@ -276,6 +265,67 @@ void DDGIProbeLightingPass::Render(RenderGraph& graph, VKW::Context& context)
     context.CmdDispatch(dispatchSize.x, dispatchSize.y, 1);
 }
 
+
+
+////////////////////////////////////////////////
+PassID DDGIProbeVisibilityPass::GetID() const
+{
+    return PassID::DDGIProbeVisibility;
+}
+
+void DDGIProbeVisibilityPass::RegisterResources(RenderGraph& graph)
+{
+    DDGI& ddgi = g_GraphicsManager->GetDDGI();
+    glm::uvec2 const visibilityDims = ddgi.GetProbeAtlasVisibilityDimentions();
+
+    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeSampleBuffer), sizeof(DDGIProbeSamples) * ddgi.GetProbeTotalCount(), VKW::RESOURCE_ACCESS_SHADER_READ);
+    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData), ddgi.GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_SHADER_READ);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_AtlasVisibility), VKW::FORMAT_R16G16_FLOAT, visibilityDims.x, visibilityDims.y, VKW::RESOURCE_ACCESS_SHADER_WRITE, GraphResourceFlags::INIT_CLEAR | GraphResourceFlags::TEMPORAL);
+}
+
+void DDGIProbeVisibilityPass::Render(RenderGraph& graph, VKW::Context& context)
+{
+    DRE_GPU_SCOPE(DDGIProbeVisibility);
+
+    DDGI& ddgi = g_GraphicsManager->GetDDGI();
+
+    StorageBuffer* ddgiProbeSampleBuffer = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeSampleBuffer));
+    StorageBuffer* probeData  = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData));
+    Texture* atlasVisibility  = graph.GetTemporalTextureCurrent(RESOURCE_ID(TextureID::DDGI_AtlasVisibility));
+    Texture* atlasVisibilityHistory = graph.GetTemporalTextureHistory(RESOURCE_ID(TextureID::DDGI_AtlasVisibility));
+
+    DependencyManager& dependencyManager = g_GraphicsManager->GetDependencyManager();
+
+    dependencyManager.ResourceBarrier(context, ddgiProbeSampleBuffer->GetResource(),    VKW::RESOURCE_ACCESS_SHADER_READ,   VKW::STAGE_COMPUTE);
+    dependencyManager.ResourceBarrier(context, probeData->GetResource(),                VKW::RESOURCE_ACCESS_SHADER_READ,   VKW::STAGE_COMPUTE);
+    dependencyManager.ResourceBarrier(context, atlasVisibility->GetResource(),          VKW::RESOURCE_ACCESS_SHADER_WRITE,  VKW::STAGE_COMPUTE);
+    dependencyManager.ResourceBarrier(context, atlasVisibilityHistory->GetResource(),   VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
+
+    UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(DDGIConstantBuffer));
+    uniform.WriteMember140(ddgi.GetConstantBuffer(graph));
+    uniform.FlushWrites();
+
+    PipelineEntry* entry = g_GraphicsManager->GetPipelineDB().GetEntry("ddgi_probe_visibility");
+    ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(entry, 0);
+    binder.AddUniform(0, &uniform);
+    binder.AddStorageBuffer(1, ddgiProbeSampleBuffer);
+    binder.AddStorageTexture(2, atlasVisibility);
+    binder.AddSampledTexture(3, atlasVisibilityHistory);
+    binder.AddStorageBuffer(4, probeData);
+    binder.FlushDescriptorWrites();
+
+    context.CmdBindComputePipeline(entry->GetPipeline());
+    context.CmdBindComputeDescriptorSets(entry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
+
+    glm::uvec2 const atlasDims = ddgi.GetProbeAtlasVisibilityDimentions();
+    glm::uvec2 const groupSize{ 8, 8 };
+    glm::uvec2 const dispatchSize = (atlasDims + groupSize - 1u) / groupSize;
+    context.CmdDispatch(dispatchSize.x, dispatchSize.y, 1);
+
+}
+
+
+
 ////////////////////////////////////////////////
 PassID DDGIProbeBlendPass::GetID() const
 {
@@ -283,10 +333,6 @@ PassID DDGIProbeBlendPass::GetID() const
 }
 
 void DDGIProbeBlendPass::RegisterResources(RenderGraph& graph)
-{
-}
-
-void DDGIProbeBlendPass::Initialize(RenderGraph& graph)
 {
 }
 

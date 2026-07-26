@@ -18,7 +18,8 @@ void LightingPass::RegisterResources(RenderGraph& graph)
 
     auto gBufferFormats = g_GraphicsManager->GetGBufferFormats();
 
-    glm::uvec2 ddgiAtlasDims = g_GraphicsManager->GetDDGI().GetProbeAtlasIrradianceDimentions();
+    glm::uvec2 ddgiIrradianceAtlasDims = g_GraphicsManager->GetDDGI().GetProbeAtlasIrradianceDimentions();
+    glm::uvec2 ddgiVisibilityAtlasDims = g_GraphicsManager->GetDDGI().GetProbeAtlasVisibilityDimentions();
 
     graph.RegisterTexture(this,
         RESOURCE_ID(TextureID::ForwardColor),
@@ -48,7 +49,13 @@ void LightingPass::RegisterResources(RenderGraph& graph)
     // it's implicitly accessed from global uniform
     graph.RegisterTexture(this,
         RESOURCE_ID(TextureID::DDGI_ProbeIrradiance),
-        VKW::FORMAT_R16G16B16A16_FLOAT, ddgiAtlasDims.x, ddgiAtlasDims.y,
+        VKW::FORMAT_R16G16B16A16_FLOAT, ddgiIrradianceAtlasDims.x, ddgiIrradianceAtlasDims.y,
+        VKW::RESOURCE_ACCESS_SHADER_SAMPLE, GraphResourceFlags::TEMPORAL | GraphResourceFlags::INIT_CLEAR);
+
+    // it's implicitly accessed from global uniform
+    graph.RegisterTexture(this,
+        RESOURCE_ID(TextureID::DDGI_AtlasVisibility),
+        VKW::FORMAT_R16G16_FLOAT, ddgiVisibilityAtlasDims.x, ddgiVisibilityAtlasDims.y,
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE, GraphResourceFlags::TEMPORAL | GraphResourceFlags::INIT_CLEAR);
 }
 
@@ -68,6 +75,7 @@ void LightingPass::Render(RenderGraph& graph, VKW::Context& context)
     Texture* ambientOcclusion = graph.GetTexture(RESOURCE_ID(TextureID::AmbientOcclusion));
 
     Texture* ddgiIrradiance = graph.GetTemporalTextureCurrent(RESOURCE_ID(TextureID::DDGI_ProbeIrradiance)); // implicity accessed from global uniform
+    Texture* ddgiVisibility = graph.GetTemporalTextureCurrent(RESOURCE_ID(TextureID::DDGI_AtlasVisibility)); // implicity accessed from global uniform
 
     auto& dependencyManager = g_GraphicsManager->GetDependencyManager();
     dependencyManager.ResourceBarrier(context, forwardColor->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
@@ -78,6 +86,7 @@ void LightingPass::Render(RenderGraph& graph, VKW::Context& context)
     dependencyManager.ResourceBarrier(context, ambientOcclusion->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
 
     dependencyManager.ResourceBarrier(context, ddgiIrradiance->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE); // implicity accessed from global uniform
+    dependencyManager.ResourceBarrier(context, ddgiVisibility->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE); // implicity accessed from global uniform
 
     PipelineEntry* entry = g_GraphicsManager->GetPipelineDB().GetEntry("lighting_deferred");
     ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(entry, 0);

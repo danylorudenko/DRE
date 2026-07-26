@@ -49,11 +49,12 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
         accumulatedWeight += sampleWeight;
     }
 
+    float3 resultPixelRadiance = ddgiAtlasIrradianceHistory[atlasPixel].rgb;
     if (accumulatedWeight > 0)
     {
         accumulatedPixelRadiance /= accumulatedWeight;
+        resultPixelRadiance = accumulatedPixelRadiance * ddgiCB.updateRate + resultPixelRadiance * (1.0 - ddgiCB.updateRate);
     }
 
-    ddgiAtlasIrradiance[atlasPixel] = float4(accumulatedPixelRadiance * ddgiCB.irradianceUpdateRate + ddgiAtlasIrradianceHistory[atlasPixel].rgb * (1.0 - ddgiCB.irradianceUpdateRate), 1.0f);
-
+    ddgiAtlasIrradiance[atlasPixel] = float4(resultPixelRadiance, 1.0f);
 }

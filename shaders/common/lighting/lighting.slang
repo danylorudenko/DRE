@@ -128,7 +128,7 @@ S_LIGHTING_RESULT CalculateDirectDiffuseLighting(S_SURFACE surface, ShaderStage 
     return Result;
 }
 
-S_LIGHTING_RESULT CalculateIndirectLighting(S_SURFACE surface, uint atlasID)
+S_LIGHTING_RESULT CalculateIndirectLighting(S_SURFACE surface, uint irradianceAtlasID, uint visibilityAtlasID)
 {
     S_LIGHTING_RESULT Result;
     float3 accumulatedIrradiance = float3(0.0f, 0.0f, 0.0f);
@@ -141,17 +141,29 @@ S_LIGHTING_RESULT CalculateIndirectLighting(S_SURFACE surface, uint atlasID)
         float3 probeRadiance = SampleProbeRadiance(
             probeIndex,
             surface.normal,
-            GetGlobalTextureObject(atlasID),
+            GetGlobalTextureObject(irradianceAtlasID),
             GetSamplerLinear(),
             GetDDGI().probeIrradianceResolution,
             GetDDGI().probeGridDimentions);
 
         float finalWeight = probes.weights[i];
 
-        float3 pixelToProbe = surface.wpos - GetProbeWorldPosition(probeIndex, GetDDGI().probeWorldOffset, GetDDGI().probesWorldDistance, GetDDGI().probeGridDimentions);
-        pixelToProbe = -normalize(pixelToProbe);
+        float3 pixelToProbe = surface.wpos - GetProbeWorldPosition(probeIndex, GetDDGI().probeWorldOffset, GetDDGI().probesWorldDistance.xyz, GetDDGI().probeGridDimentions);
+        float statisticalVisibility = SampleProbeVisibility(
+            length(pixelToProbe),
+            probeIndex,
+            surface.normal,
+            GetGlobalTextureObject(visibilityAtlasID),
+            GetSamplerLinear(),
+            GetDDGI().probeVisibilityResolution,
+            GetDDGI().probeGridDimentions);
 
-        finalWeight *= saturate(dot(surface.normal, pixelToProbe));
+        finalWeight *= statisticalVisibility;
+        //finalWeight /= max(statisticalVisibility, 0.0001f);
+
+        float3 pixelToProbeDir = -normalize(pixelToProbe);
+
+        finalWeight *= saturate(dot(surface.normal, pixelToProbeDir));
         accumulatedWeight += finalWeight;
         accumulatedIrradiance += probeRadiance * finalWeight;
     }
