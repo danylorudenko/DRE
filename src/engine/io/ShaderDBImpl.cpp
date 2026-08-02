@@ -593,7 +593,7 @@ void ShaderDBImpl::CompileSources(bool parallel)
     compileTasks.Wait();
 }
 
-DRE::InplaceVector<DRE::String128, 12> ShaderDBImpl::GetPendingShaderFilesCopy()
+DRE::InplaceVector<DRE::String128, 12> ShaderDBImpl::ReadAndClearPendingShaderFilesCopy()
 {
     std::lock_guard guard{ m_PendingShaderFilesMutex };
     m_PendingChangesFlag.store(false, std::memory_order::relaxed);

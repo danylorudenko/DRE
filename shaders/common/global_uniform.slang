@@ -16,6 +16,10 @@ struct GlobalUniforms
     uint   FrameNumber;
     float4 Jitter;
 
+    uint2 cursorPos;
+    uint pad0;
+    uint pad1;
+
     float4x4 ViewM;
     float4x4 iViewM;
     float4x4 ProjM;
@@ -62,6 +66,8 @@ float       GetGenericScalar() { return g_GlobalUniforms.CameraPos_GenericScalar
 float3      GetCameraDir() { return g_GlobalUniforms.CameraDir.xyz; }
 uint        GetFrameNumber() { return g_GlobalUniforms.FrameNumber; }
 float2      GetJitter() { return g_GlobalUniforms.Jitter.xy; }
+
+uint2       GetCursorPos() { return g_GlobalUniforms.cursorPos; }
 
 float4x4    GetCameraViewM() { return g_GlobalUniforms.ViewM; }
 float4x4    GetCameraInvViewM() { return g_GlobalUniforms.iViewM; }

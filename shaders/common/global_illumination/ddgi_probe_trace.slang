@@ -79,7 +79,7 @@ void TraceProbeRay(inout uint rayCounter, DDGIProbeData probeData, uint probeInd
 
     if (rayQuery.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
     {
-        if (rayQuery.CommittedTriangleFrontFace())
+        //if (rayQuery.CommittedTriangleFrontFace())
         {
             // 3.1 from the primitive index, get triangle indicies
             uint instanceID = rayQuery.CommittedInstanceID();

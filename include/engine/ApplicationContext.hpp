@@ -52,6 +52,8 @@ struct DDGIDebugState
 
     bool m_DrawProbes = false;
     bool m_DrawProbeRays = false;
+    bool m_DrawSelectedCage = false;
+
     float m_SphereScale = 0.25f;
     VisMode m_VisMode = VisMode::Color;
     glm::uvec3 m_FocusProbe;
@@ -71,6 +73,7 @@ struct ApplicationContext
     WORLD::ISceneNodeUser*  m_FocusedObject = nullptr;
     DRE::U32                m_MouseHoveredObjectID = 0;
 
+    bool        m_FreezeCursorPosition = false;
     DRE::S32    m_CursorX = 0;
     DRE::S32    m_CursorY = 0;
 

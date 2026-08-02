@@ -7,7 +7,7 @@
 #include "common/utils/octahedron.slang"
 #endif // __cplusplus
 
-#define DDGI_MAX_SAMPLES_PER_PROBE 16
+#define DDGI_MAX_SAMPLES_PER_PROBE 64
 
 #define DDGI_IRRADIANCE_PROBE_RESOLUTION 6
 #define DDGI_VISIBILITY_PROBE_RESOLUTION 16
@@ -41,8 +41,8 @@ struct DDGIConstantBuffer
 
     float updateRate;
     uint rayDistributionMode; // DDGI_RAY_DISTRIBUTION_*
-    int visualizationMode;
-    int pad0;
+    uint visualizationMode;
+    uint drawSelectedCage;
 
     uint3 debugProbeFocus;
     uint debugDrawRays;

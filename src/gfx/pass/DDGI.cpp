@@ -96,7 +96,8 @@ DDGIConstantBuffer DDGI::GetConstantBuffer(RenderGraph& graph) const
 
     cb.updateRate = settings.m_DDGIUpdateRate;
     cb.rayDistributionMode = settings.m_DDGIRayDistributionMode;
-    cb.visualizationMode = static_cast<int>(ddgiDebugState.m_VisMode);
+    cb.visualizationMode = static_cast<DRE::U32>(ddgiDebugState.m_VisMode);
+    cb.drawSelectedCage = ddgiDebugState.m_DrawSelectedCage ? 1u : 0u;
 
     cb.debugProbeFocus = ddgiDebugState.m_FocusProbe;
     cb.debugDrawRays = ddgiDebugState.m_DrawProbeRays;

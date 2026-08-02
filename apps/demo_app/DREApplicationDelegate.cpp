@@ -198,8 +198,11 @@ void DREApplicationDelegate::update()
 
     // Input maintenance
     m_InputSystem.Update();
-    DRE::g_AppContext.m_CursorX = m_InputSystem.GetMouseState().mousePosX_;
-    DRE::g_AppContext.m_CursorY = m_InputSystem.GetMouseState().mousePosY_;
+    if (!DRE::g_AppContext.m_FreezeCursorPosition)
+    {
+        DRE::g_AppContext.m_CursorX = m_InputSystem.GetMouseState().mousePosX_;
+        DRE::g_AppContext.m_CursorY = m_InputSystem.GetMouseState().mousePosY_;
+    }
 
     // ImGui
     if (m_ImGuiEnabled)
@@ -225,7 +228,11 @@ void DREApplicationDelegate::update()
     }
 
     // Rendering
-    m_GraphicsManager.RenderFrame(DRE::g_AppContext.m_EngineFrame, DRE::g_AppContext.m_DeltaTimeUS, m_GlobalStopwatch.CurrentSeconds());
+    m_GraphicsManager.RenderFrame(
+        DRE::g_AppContext.m_EngineFrame,
+        DRE::g_AppContext.m_DeltaTimeUS,
+        m_GlobalStopwatch.CurrentSeconds(),
+        glm::uvec2{ DRE::U32(DRE::g_AppContext.m_CursorX), DRE::U32(DRE::g_AppContext.m_CursorY) });
 
     DRE::g_AppContext.m_EngineFrame++;
 }
@@ -292,9 +299,9 @@ void DREApplicationDelegate::ProcessInputShortcuts()
         }
     }
 
-    if (m_InputSystem.GetKeyboardButtonJustPressed(Keys::Space))
+    if (m_InputSystem.GetKeyboardButtonJustPressed(Keys::C))
     {
-        DebugBreak();
+        DRE::g_AppContext.m_FreezeCursorPosition = !DRE::g_AppContext.m_FreezeCursorPosition;
     }
 }
 
@@ -304,7 +311,7 @@ void DREApplicationDelegate::ReloadPendingShaders()
 
     m_GraphicsManager.WaitIdle();
 
-    auto fileNames = m_ShaderModuleDB.GetPendingShaderFilesCopy();
+    auto fileNames = m_ShaderModuleDB.ReadAndClearPendingShaderFilesCopy(); // this moves the vector from moduleDB to local var
     for (DRE::U32 i = 0; i < fileNames.Size(); i++)
     {
         m_GraphicsManager.GetPipelineDB().ReloadShaderFilePipelines(fileNames[i].GetData());
@@ -317,8 +324,8 @@ void DREApplicationDelegate::ForceReloadAllShaders()
 
     m_GraphicsManager.WaitIdle();
 
-    m_GraphicsManager.GetPipelineDB().ReloadAllPipelines();
     m_ShaderModuleDB.ClearPendingShaders();
+    m_GraphicsManager.GetPipelineDB().ReloadAllPipelines();
 }
 
 //////////////////////////////////////////

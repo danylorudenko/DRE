@@ -94,8 +94,8 @@ struct GraphicsSettings
     // DDGI
     float           m_DDGIProbeWorldDistance = 5.0f;
     glm::vec3       m_DDGIProbeWorldOffset   = glm::vec3{ 0.0f, 30.0f, 0.0f };
-    float           m_DDGIUpdateRate = 0.05f;
-    DRE::U32        m_DDGIRayPerProbeCount = 16;
+    float           m_DDGIUpdateRate = 0.02f;
+    DRE::U32        m_DDGIRayPerProbeCount = 64;
     DRE::U32        m_DDGIRayDistributionMode = DDGI_RAY_DISTRIBUTION_RANDOM;
 
     DRE::U32        m_DDGIProbeCountX = 32;
@@ -188,7 +188,7 @@ public:
 public:
     void                                PrecacheAllData(VKW::Context& context, EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary);
     void                                BuildMainSceneTLAS();
-    void                                RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS, float globalTimeS);
+    void                                RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS, float globalTimeS, glm::uvec2 cursorPos);
     void                                WaitIdle();
 
     RenderableObject*                   CreateRenderableObject(WORLD::SceneNode* sceneNode, VKW::Context& context, Data::Geometry* geometry, GFX::Material* material);
@@ -199,7 +199,7 @@ public:
 private:
     void                                CreateAllPasses(VKW::Context& context, EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary);
 
-    void                                PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, RenderGraph& graph, std::uint64_t deltaTimeUS, float globalTimeS);
+    void                                PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, RenderGraph& graph, std::uint64_t deltaTimeUS, float globalTimeS, glm::uvec2 cursorPos);
     VKW::QueueExecutionPoint            TransferToSwapchainAndPresent(Texture& src);
 
 

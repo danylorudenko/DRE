@@ -57,7 +57,6 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
         accumulatedDistances /= accumulatedWeight;
 
         resultDistances = accumulatedDistances * ddgiCB.updateRate + resultDistances * (1.0 - ddgiCB.updateRate);
-        //resultDistances = max(resultDistances, accumulatedDistances);
     }
 
     ddgiAtlasVisibility[atlasPixel] = resultDistances;

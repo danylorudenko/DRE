@@ -79,7 +79,7 @@ public:
     void                    ClearPendingShaders();
 
     // move-returns pending shaders. Pending shaders are automatically "cleared" after this call
-    DRE::InplaceVector<DRE::String128, 12> GetPendingShaderFilesCopy();
+    DRE::InplaceVector<DRE::String128, 12> ReadAndClearPendingShaderFilesCopy();
 
     DRE::InplaceHashTable<DRE::String128, DRE::String128, 512> const& GetShaderToFileMap() const;
 

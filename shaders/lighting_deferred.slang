@@ -22,7 +22,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
         return;
     }
 
-    int2 pixel = int2(DTid.xy);
+    uint2 pixel = uint2(DTid.xy);
     float depth = sceneDepth[pixel];
     if (depth >= 1.0f)
     {
@@ -44,8 +44,11 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
     surface.ao = ao;
     surface.prevWpos = surface.wpos;
 
+    //bool drawProbeCage = all(GetCursorPos() == pixel) && (GetDDGI().drawSelectedCage != 0);
+    bool drawProbeCage = false;
+
     S_LIGHTING_RESULT directLighting = CalculateDirectLighting(surface, GetCameraPos(), ShaderStage::Compute);
-    S_LIGHTING_RESULT indirectLighting = CalculateIndirectLighting(surface, GetDDGI().irradianceAtlasTextureID, GetDDGI().visibilityAtlasTextureID);
+    S_LIGHTING_RESULT indirectLighting = CalculateIndirectLighting(surface, GetDDGI().irradianceAtlasTextureID, GetDDGI().visibilityAtlasTextureID, drawProbeCage);
 
     lightingOutput[pixel] = float4(directLighting.finalRadiance + indirectLighting.finalRadiance, 1.0f);
 }

@@ -54,9 +54,9 @@ void ShaderDB::ClearPendingShaders()
     return m_Impl->ClearPendingShaders();
 }
 
-DRE::InplaceVector<DRE::String128, 12> ShaderDB::GetPendingShaderFilesCopy()
+DRE::InplaceVector<DRE::String128, 12> ShaderDB::ReadAndClearPendingShaderFilesCopy()
 {
-    return m_Impl->GetPendingShaderFilesCopy();
+    return m_Impl->ReadAndClearPendingShaderFilesCopy();
 }
 
 DRE::InplaceHashTable<DRE::String128, DRE::String128, 512> const& ShaderDB::GetShaderToFileMap() const

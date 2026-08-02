@@ -45,6 +45,7 @@ void DebugViewEditor::Render()
         ImGui::Separator();
         ImGui::Checkbox("Draw Probes", &state.m_DrawProbes);
         ImGui::Checkbox("Draw Probe Rays", &state.m_DrawProbeRays);
+        ImGui::Checkbox("Draw Selected Cage", &state.m_DrawSelectedCage);
         ImGui::SliderFloat("Sphere Scale", &state.m_SphereScale, 0.1f, 5.0f);
 
         ImGui::InputScalarN("Focus Probe", ImGuiDataType_U32, glm::value_ptr(state.m_FocusProbe), 3);

@@ -143,7 +143,7 @@ glm::vec2 constexpr s_HaltonSequence[16] = {
     glm::vec2{ 0.031250, 0.592593 }
 };
 
-void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, RenderGraph& graph, std::uint64_t deltaTimeUS, float timeS)
+void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, RenderGraph& graph, std::uint64_t deltaTimeUS, float timeS, glm::uvec2 cursorPos)
 {
     m_MainView.UpdatePreviosFrame();
     m_SunShadowView.UpdatePreviosFrame();
@@ -180,6 +180,8 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     globalUniform.CameraDir        = glm::vec3{ scene.GetMainCamera().GetForward() };
     globalUniform.FrameNumber      = DRE::U32(GetCurrentGraphicsFrame());
     globalUniform.Jitter           = glm::vec4{ taaJitter, 0.0f, 0.0f };
+
+    globalUniform.cursorPos        = glm::uvec2{ cursorPos };
 
     globalUniform.ViewM            = m_MainView.GetViewM();
     globalUniform.iViewM           = m_MainView.GetInvViewM();
@@ -226,7 +228,7 @@ void GraphicsManager::BuildMainSceneTLAS()
     m_Device.GetDescriptorManager()->WriteTLASDescriptor(m_RayTracingManager.GetMainSceneTLAS()->m_LogicalHandle);
 }
 
-void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS, float globalTimeS)
+void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS, float globalTimeS, glm::uvec2 cursorPos)
 {
     m_GraphicsFrame = frame;
 
@@ -245,7 +247,7 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
     DRE_GPU_SCOPE(FRAME);
 
     context.ResetDependenciesVectors(&DRE::g_FrameScratchAllocator);
-    PrepareGlobalData(context, *WORLD::g_MainScene, m_RenderGraph, deltaTimeUS, globalTimeS);
+    PrepareGlobalData(context, *WORLD::g_MainScene, m_RenderGraph, deltaTimeUS, globalTimeS, cursorPos);
 
     // maybe I should do these earlier?
     m_GlobalGeometryManager.UpdateGPUGeometry(context);

@@ -82,8 +82,6 @@ S_LIGHTING_RESULT CalculateDirectLighting(S_SURFACE surface, float3 viewPosWS, S
         Result.finalRadiance += directRadiance;
     }
 
-    //Result.finalRadiance += float3(0.15f, 0.15f, 0.15f) * surface.diffuseSpectrum * surface.ao; // simple ambient
-
     return Result;
 }
 
@@ -128,10 +126,12 @@ S_LIGHTING_RESULT CalculateDirectDiffuseLighting(S_SURFACE surface, ShaderStage 
     return Result;
 }
 
-S_LIGHTING_RESULT CalculateIndirectLighting(S_SURFACE surface, uint irradianceAtlasID, uint visibilityAtlasID)
+S_LIGHTING_RESULT CalculateIndirectLighting(S_SURFACE surface, uint irradianceAtlasID, uint visibilityAtlasID, bool debugDrawCage = false)
 {
     S_LIGHTING_RESULT Result;
     float3 accumulatedIrradiance = float3(0.0f, 0.0f, 0.0f);
+
+    float weightsDebug[DDGIProbeNeighborhood::ProbeCount];
 
     DDGIProbeNeighborhood probes = GetProbeNeighborhood(surface.wpos, GetDDGI());
     float accumulatedWeight = 0.0;
@@ -159,13 +159,32 @@ S_LIGHTING_RESULT CalculateIndirectLighting(S_SURFACE surface, uint irradianceAt
             GetDDGI().probeGridDimentions);
 
         finalWeight *= statisticalVisibility;
-        //finalWeight /= max(statisticalVisibility, 0.0001f);
 
         float3 pixelToProbeDir = -normalize(pixelToProbe);
 
         finalWeight *= saturate(dot(surface.normal, pixelToProbeDir));
         accumulatedWeight += finalWeight;
         accumulatedIrradiance += probeRadiance * finalWeight;
+
+        weightsDebug[i] = finalWeight;
+    }
+
+    if (debugDrawCage)
+    {
+        for (int i = 0; i < DDGIProbeNeighborhood::ProbeCount; i++)
+        {
+            uint probeIndex = probes.indices[i];
+            float3 probePos = GetProbeWorldPosition(probeIndex, GetDDGI().probeWorldOffset, GetDDGI().probesWorldDistance.xyz, GetDDGI().probeGridDimentions);
+
+            float3 weightColor = lerp(float3(1, 0, 0), float3(0, 1, 0), weightsDebug[i] / accumulatedWeight);
+            weightColor /= length(weightColor); // make it more visible
+
+            if (weightsDebug[i] == 0.0)
+                weightColor = float3(0, 0, 0);
+            
+            DrawDebugLine(surface.wpos, probePos, weightColor);
+        }
+
     }
 
     accumulatedWeight = max(0.0001, accumulatedWeight);
