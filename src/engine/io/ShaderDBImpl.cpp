@@ -348,6 +348,7 @@ bool ShaderDBImpl::CompileShaderFile(DRE::String128 const& path)
 
     ShaderFile& shaderFile = m_ShaderFileMap[fileName];
     shaderFile.fileName = fileName;
+    shaderFile.path = filePath.generic_string().c_str();
 
     //slang::PreprocessorMacroDesc shaderTypeMacro;
     //shaderTypeMacro.name = GetShaderTypeDefineString(type);
@@ -654,8 +655,25 @@ void ShaderDBImpl::ShaderObserver_Thread()
                 continue;
             }
 
+            char* FileNameStart = std::strrchr(fileName, '\\');
+            if (FileNameStart != nullptr)
+            {
+                FileNameStart = FileNameStart + 1;
+            }
+            else
+            {
+                FileNameStart = fileName;
+            }
+
             DRE::String128 fileNameStr{ "" };
-            fileNameStr.Append(fileName);
+            fileNameStr.Append(FileNameStart);
+
+            auto Pair = m_ShaderFileMap.Find(fileNameStr);
+            if (Pair.key == nullptr)
+            {
+                infoPtr = infoPtr->NextEntryOffset == 0 ? nullptr : DRE::PtrAdd(infoPtr, infoPtr->NextEntryOffset);
+                continue;
+            }
 
             {
                 std::lock_guard guard{ m_PendingShaderFilesMutex };

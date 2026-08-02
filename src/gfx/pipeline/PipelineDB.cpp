@@ -305,10 +305,9 @@ void PipelineDB::ReloadShaderFilePipelines(char const* shaderFileName)
     IO::ShaderFile const* shaderFile = m_ShaderDB->GetShaderFile(shaderFileName);
     DRE_ASSERT(shaderFile != nullptr, "Attempt to reload pipelines for non-existing shader file");
 
-    DRE::String128 shaderPath = IO::ShaderDB::BuildShaderPath(shaderFile->fileName);
-    if (!m_ShaderDB->CompileShaderFile(shaderPath.GetData()))
+    if (!m_ShaderDB->CompileShaderFile(shaderFile->path.GetData()))
     {
-        std::cout << "Failed to recompile shader file" << shaderPath.GetData() << ". Pipelines were not recreated." << std::endl;
+        std::cout << "Failed to recompile shader file" << shaderFile->path.GetData() << ". Pipelines were not recreated." << std::endl;
         return;
     }
 

@@ -52,7 +52,8 @@ struct ShaderEntry
 
 struct ShaderFile
 {
-    DRE::String64 fileName;
+    DRE::String64   fileName;
+    DRE::String128  path;
     DRE::InplaceVector<DRE::String64, 8> shaderEntries;
 };
 

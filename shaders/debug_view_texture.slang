@@ -1,6 +1,5 @@
 #include "common/shaders_common.slang"
 #include "debug_view.slang"
-#include "common/global_illumination/ddgi_common.slang"
 
 float4 RemapDisplayValue(float4 value, float lowBound, float highBound)
 {
@@ -20,7 +19,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
 
         if (all(uv <= 1.0) && all(uv >= 0.0))
         {
-            float4 textureValue = SampleGlobalTextureLinear(debugViewArgs.textureID, uv, 0.0);
+            float4 textureValue = SampleGlobalTextureNearest(debugViewArgs.textureID, uv, 0.0);
 
             uint4 channelMask = uint4(
                 GetChannelX(debugViewArgs),

@@ -44,8 +44,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
     surface.ao = ao;
     surface.prevWpos = surface.wpos;
 
-    //bool drawProbeCage = all(GetCursorPos() == pixel) && (GetDDGI().drawSelectedCage != 0);
-    bool drawProbeCage = false;
+    bool drawProbeCage = all(GetCursorPos() == pixel) && (GetDDGI().drawSelectedCage != 0);
 
     S_LIGHTING_RESULT directLighting = CalculateDirectLighting(surface, GetCameraPos(), ShaderStage::Compute);
     S_LIGHTING_RESULT indirectLighting = CalculateIndirectLighting(surface, GetDDGI().irradianceAtlasTextureID, GetDDGI().visibilityAtlasTextureID, drawProbeCage);

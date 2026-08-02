@@ -3,7 +3,7 @@
 
 T signNonZero<T : IFloat>(T x)
 {
-    return select(x >= T(0), T(1), T(0));
+    return select(x >= T(0), T(1), T(-1));
 }
 
 float2 OctahedronWrap(float2 p)

@@ -102,6 +102,8 @@ DDGIConstantBuffer DDGI::GetConstantBuffer(RenderGraph& graph) const
     cb.debugProbeFocus = ddgiDebugState.m_FocusProbe;
     cb.debugDrawRays = ddgiDebugState.m_DrawProbeRays;
 
+    cb.debugHighlightProbeTile = ddgiDebugState.m_HighlightProbeTile ? 1u : 0u;
+
     return cb;
 }
 

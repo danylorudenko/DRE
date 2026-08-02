@@ -47,6 +47,11 @@ struct DDGIConstantBuffer
     uint3 debugProbeFocus;
     uint debugDrawRays;
 
+    uint debugHighlightProbeTile;
+    uint pad0;
+    uint pad1;
+    uint pad2;
+
 };
 
 struct DDGIProbeData
@@ -131,10 +136,13 @@ uint4 GetDDGIProbeRect(uint probeIndex, uint2 probeResolution, uint3 probeGridDi
 
 uint3 GetProbe3DIndexFromPixel(uint2 atlasPixel, uint2 probeResolution, uint3 probeGridDimentions)
 {
-    uint2 probeIndexInSlice = atlasPixel / probeResolution;
-    uint sliceIndex = probeIndexInSlice.x / probeGridDimentions.x;
-    uint2 probeIndexInGrid = uint2(probeIndexInSlice.x % probeGridDimentions.x, probeIndexInSlice.y);
-    return uint3(probeIndexInGrid, sliceIndex);
+    uint sliceWidth = probeGridDimentions.x * probeResolution.x;
+    uint slice = atlasPixel.x / sliceWidth;
+
+    uint2 inSlicePixel = uint2(atlasPixel.x - (slice * sliceWidth), atlasPixel.y);
+    uint2 inSliceProbe = inSlicePixel / probeResolution;
+    
+    return uint3(inSliceProbe, slice);
 }
 
 uint GetProbeIndexFromPixel(uint2 atlasPixel, uint2 probeResolution, uint3 probeGridDimentions)
@@ -154,20 +162,11 @@ float4 GetProbeAtlasUVRect(uint probeIndex, uint2 probeResolution, uint3 probeGr
     uint4 probeRect = GetDDGIProbeRect(probeIndex, probeResolution, probeGridDimentions);
     uint2 atlasSize = GetProbeAtlasResolution(probeResolution, probeGridDimentions);
 
-    probeRect += uint4(1, 1, -1, -1); // exclude border pixels from uv rect
-    float2 uvStart = probeRect.xy / (float2)atlasSize;
-    float2 uvEnd = probeRect.zw / (float2)atlasSize;
+    float4 probeRectF = (float4)probeRect + float4(1.5, 1.5, -0.5, -0.5); // exclude border pixels from uv rect
+    float2 uvStart = probeRectF.xy / (float2)atlasSize;
+    float2 uvEnd = probeRectF.zw / (float2)atlasSize;
+
     return float4(uvStart, uvEnd);
-}
-
-uint2 CalculateDDGIAtlasTargetPixel(uint probeIndex, float2 probeLocalUV, uint2 probeResolution, uint3 probeGridDimentions)
-{
-    uint4 probeGBufferRect = GetDDGIProbeRect(probeIndex, probeResolution, probeGridDimentions);
-    uint2 probeInnerRes = probeResolution - 2;
-    uint2 innerStart = probeGBufferRect.xy + 1;
-    uint2 targetPixel = innerStart + uint2(probeLocalUV * probeInnerRes); // maybe needs a clamp to innerRes
-
-    return targetPixel;
 }
 
 float3 GetProbeWorldPosition(uint probeIndex, float3 probeWorldOffset, float3 probesWorldDistance, uint3 probeGridDimentions)

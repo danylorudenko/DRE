@@ -53,6 +53,7 @@ struct DDGIDebugState
     bool m_DrawProbes = false;
     bool m_DrawProbeRays = false;
     bool m_DrawSelectedCage = false;
+    bool m_HighlightProbeTile = false;
 
     float m_SphereScale = 0.25f;
     VisMode m_VisMode = VisMode::Color;

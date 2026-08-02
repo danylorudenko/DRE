@@ -70,8 +70,6 @@ void TraceProbeRay(inout uint rayCounter, DDGIProbeData probeData, uint probeInd
     ray.TMin = 0.01;
     ray.TMax = 1000.0;
 
-    uint2 visibilityTargetPixel = CalculateDDGIAtlasTargetPixel(probeIndex, probeLocalUV, ddgiCB.probeVisibilityResolution, ddgiCB.probeGridDimentions);
-
     RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> rayQuery;
     rayQuery.TraceRayInline(g_TLAS, RAY_FLAG_NONE, 0xFFFFFFFF, ray);
 
