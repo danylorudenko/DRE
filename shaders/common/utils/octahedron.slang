@@ -1,14 +1,9 @@
 #ifndef _OCTAHEDRON_SLANG_
 #define _OCTAHEDRON_SLANG_
 
-T signNonZero<T : IFloat>(T x)
-{
-    return select(x >= T(0), T(1), T(-1));
-}
-
 float2 OctahedronWrap(float2 p)
 {
-    return (1.0 - abs(p.yx)) * signNonZero(p);
+    return (1.0 - abs(p.yx)) * select(p >= 0.0f, 1.0f, -1.0f);
 }
 
 float2 OctahedronEncode(float3 sphereDir)
