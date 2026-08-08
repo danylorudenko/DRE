@@ -31,8 +31,6 @@ void AddTracedSample(inout uint rayCounter, uint probeIndex, DDGIProbeData probe
 
     DDGISample sample;
     sample.radiance = sampleDirectRadiance.finalRadiance + sampleIndirect.finalRadiance;
-    //sample.radiance = surface.diffuseSpectrum;
-    //sample.radiance = float3(1,1,1);
     sample.distance = rayT;
     sample.octDirection = OctahedronEncode(rayDir);
 
@@ -155,9 +153,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
         DDGIProbeData probeData = ddgiProbeData[probeIndex];
         float3 rayOrigin = probeData.position.xyz;
         float3 rayDir = PolarToCartesian(alpha, theta);
-        //float3 rayDir = float3(0, 0, 1);
-
-        float2 probeLocalUV = OctahedronEncode(rayDir);
+        //float3 rayDir = float3(0, 1, 0);
 
         TraceProbeRay(rayCounter, probeData, probeIndex, rayOrigin, rayDir);
     }

@@ -19,6 +19,8 @@
 #define DDGI_RAY_DISTRIBUTION_STABLE 0
 #define DDGI_RAY_DISTRIBUTION_RANDOM 1
 
+#define DDGI_VISIBILITY_FILL_PASS_BIT 0x1 // otherwise irradiance pass
+
 struct DDGIConstantBuffer
 {
     uint3 probeGridDimentions;
@@ -162,7 +164,7 @@ float4 GetProbeAtlasUVRect(uint probeIndex, uint2 probeResolution, uint3 probeGr
     uint4 probeRect = GetDDGIProbeRect(probeIndex, probeResolution, probeGridDimentions);
     uint2 atlasSize = GetProbeAtlasResolution(probeResolution, probeGridDimentions);
 
-    float4 probeRectF = (float4)probeRect + float4(1.5, 1.5, -0.5, -0.5); // exclude border pixels from uv rect
+    float4 probeRectF = (float4)probeRect + float4(1.0, 1.0, -1.0, -1.0); // we delibarately specify UV corners to be on the edge of innder pixels, because we want the whole sampling space to be mapped to the sphere
     float2 uvStart = probeRectF.xy / (float2)atlasSize;
     float2 uvEnd = probeRectF.zw / (float2)atlasSize;
 

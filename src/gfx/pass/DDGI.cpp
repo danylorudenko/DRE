@@ -330,17 +330,76 @@ void DDGIProbeVisibilityPass::Render(RenderGraph& graph, VKW::Context& context)
 
 
 ////////////////////////////////////////////////
-PassID DDGIProbeBlendPass::GetID() const
+PassID DDGIProbeBorderFillPass::GetID() const
 {
-    return PassID::DDGIProbeBlend;
+    return PassID::DDGIProbeBorderFill;
 }
 
-void DDGIProbeBlendPass::RegisterResources(RenderGraph& graph)
+void DDGIProbeBorderFillPass::RegisterResources(RenderGraph& graph)
 {
+    DDGI& ddgi = g_GraphicsManager->GetDDGI();
+    glm::uvec2 const irradianceDims = ddgi.GetProbeAtlasIrradianceDimentions();
+    glm::uvec2 const visibilityDims = ddgi.GetProbeAtlasVisibilityDimentions();
+
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_ProbeIrradiance), VKW::FORMAT_R16G16B16A16_FLOAT, irradianceDims.x, irradianceDims.y, VKW::RESOURCE_ACCESS_SHADER_RW, GraphResourceFlags::TEMPORAL | GraphResourceFlags::INIT_CLEAR);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_AtlasVisibility), VKW::FORMAT_R16G16_FLOAT, visibilityDims.x, visibilityDims.y, VKW::RESOURCE_ACCESS_SHADER_RW, GraphResourceFlags::TEMPORAL | GraphResourceFlags::INIT_CLEAR);
 }
 
-void DDGIProbeBlendPass::Render(RenderGraph& graph, VKW::Context& context)
+void DDGIProbeBorderFillPass::Render(RenderGraph& graph, VKW::Context& context)
 {
+    DRE_GPU_SCOPE(DDGIProbeBorderFill);
+
+    DDGI& ddgi = g_GraphicsManager->GetDDGI();
+
+    Texture* atlasIrradiance = graph.GetTemporalTextureCurrent(RESOURCE_ID(TextureID::DDGI_ProbeIrradiance));
+    Texture* atlasVisibility = graph.GetTemporalTextureCurrent(RESOURCE_ID(TextureID::DDGI_AtlasVisibility));
+
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, atlasIrradiance->GetResource(), VKW::RESOURCE_ACCESS_SHADER_RW, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, atlasVisibility->GetResource(), VKW::RESOURCE_ACCESS_SHADER_RW, VKW::STAGE_COMPUTE);
+
+    UniformProxy proxy = graph.AllocateUniform(GetID(), context, sizeof(DDGIConstantBuffer));
+    proxy.WriteMember140(ddgi.GetConstantBuffer(graph));
+    proxy.FlushWrites();
+
+    PipelineEntry* entry = g_GraphicsManager->GetPipelineDB().GetEntry("ddgi_probe_border_fill");
+    {
+        DRE_GPU_SCOPE(DDGIProbeBorderFillRadiance);
+        ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(entry, 0);
+        binder.AddUniform(0, &proxy);
+        binder.AddStorageTexture(1, atlasIrradiance);
+        binder.FlushDescriptorWrites();
+
+        context.CmdBindComputePipeline(entry->GetPipeline());
+        context.CmdBindComputeDescriptorSets(entry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
+
+        DRE::U32 flags = /*DDGI_VISIBILITY_FILL_PASS_BIT*/0;
+        context.CmdPushConstants(entry->GetLayout(), VKW::DESCRIPTOR_STAGE_ALL, 0, sizeof(DRE::U32), &flags);
+
+        glm::uvec3 const probeCount = ddgi.GetProbeCount3D();
+        glm::uvec3 const groupSize{ 4, 4, 4 };
+
+        glm::uvec3 const dispatchSize = (probeCount + groupSize - 1u) / groupSize;
+        context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
+    }
+    {
+        DRE_GPU_SCOPE(DDGIProbeBorderFillVisibility);
+        ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(entry, 0);
+        binder.AddUniform(0, &proxy);
+        binder.AddStorageTexture(1, atlasVisibility);
+        binder.FlushDescriptorWrites();
+
+        //context.CmdBindComputePipeline(entry->GetPipeline()); the pipeline is the same
+        context.CmdBindComputeDescriptorSets(entry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
+
+        DRE::U32 flags = DDGI_VISIBILITY_FILL_PASS_BIT;
+        context.CmdPushConstants(entry->GetLayout(), VKW::DESCRIPTOR_STAGE_ALL, 0, sizeof(DRE::U32), &flags);
+
+        glm::uvec3 const probeCount = ddgi.GetProbeCount3D();
+        glm::uvec3 const groupSize{ 4, 4, 4 };
+
+        glm::uvec3 const dispatchSize = (probeCount + groupSize - 1u) / groupSize;
+        context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
+    }
 }
 
 

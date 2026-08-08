@@ -25,15 +25,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
     // test for the edge rows/columns
     if (any(DTid.xy == probeRect.xy) || any(DTid.xy == probeRect.zw - 1))
     {
-        if ((ddgiCB.debugHighlightProbeTile != 0) && all(GetProbe3DIndex(ddgiCB.probeGridDimentions, probeIndex) == ddgiCB.debugProbeFocus))
-        {
-            ddgiAtlasIrradiance[DTid.xy] = float4(1.0f, 0.0f, 1.0f, 1.0f);
-        }
-        else
-        {
-            ddgiAtlasIrradiance[DTid.xy] = float4(0.0f, 0.0f, 0.0f, 1.0f);
-        }
-        return; // hmmmm
+        return;
     }
 
     DDGIProbeData probeData = ddgiProbeData[probeIndex];

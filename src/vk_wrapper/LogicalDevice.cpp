@@ -312,7 +312,11 @@ bool LogicalDevice::IsPhysicalDeviceValid(
     bool supportsExtensions = true;
     bool supportsSurface = false;
     bool supports13 = IsAPI13SupportedByPhysicalDevice(deviceProperties.properties2.properties);
-    bool supportsFeatures = vulkan12Features.descriptorIndexing && vulkan13Features.dynamicRendering;
+    bool supportsFeatures 
+        = vulkan12Features.descriptorIndexing 
+        && vulkan13Features.dynamicRendering 
+        && deviceProperties.features2.features.shaderStorageImageReadWithoutFormat
+        && deviceProperties.features2.features.shaderStorageImageWriteWithoutFormat;
 
     auto const& queueFamilyProperties = deviceProperties.queueFamilyProperties;
     for (auto i = 0u; i < queueFamilyProperties.size(); ++i) {

@@ -25,7 +25,7 @@ enum class PassID
     DebugTextureView,
     DebugDDGIProbeDisplay,
     DDGIProbeTrace,
-    DDGIProbeBlend,
+    DDGIProbeBorderFill,
     DDGIProbeLighting,
     DDGIProbeVisibility,
     DDGIProbeScatter,

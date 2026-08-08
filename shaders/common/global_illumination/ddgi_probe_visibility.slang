@@ -25,15 +25,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
     // test for the edge rows/columns
     if (any(DTid.xy == probeRect.xy) || any(DTid.xy == probeRect.zw - 1))
     {
-        if ((ddgiCB.debugHighlightProbeTile != 0) && all(GetProbe3DIndex(ddgiCB.probeGridDimentions, probeIndex) == ddgiCB.debugProbeFocus))
-        {
-            ddgiAtlasVisibility[DTid.xy] = float2(1.0f, 1.0f);
-        }
-        else
-        {
-            ddgiAtlasVisibility[DTid.xy] = float2(0.0f, 0.0f);
-        }
-        return; // hmmmm
+        return;
     }
 
     DDGIProbeData probeData = ddgiProbeData[probeIndex];
