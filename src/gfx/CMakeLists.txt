@@ -2,6 +2,7 @@ set(GFX_HEADER_LIST
 	"${DRE_SOURCE_DIR}/include/gfx/DeviceChild.hpp"
 	"${DRE_SOURCE_DIR}/include/gfx/FrameID.hpp"
 	"${DRE_SOURCE_DIR}/include/gfx/GraphicsManager.hpp"
+	"${DRE_SOURCE_DIR}/include/gfx/PerFrame.hpp"
 	"${DRE_SOURCE_DIR}/include/gfx/buffer/BufferBase.hpp"
 	"${DRE_SOURCE_DIR}/include/gfx/buffer/PersistentStorage.hpp"
 	"${DRE_SOURCE_DIR}/include/gfx/buffer/ReadbackProxy.hpp"
@@ -89,7 +90,7 @@ set(GFX_SOURCE_LIST
 
 set(GFX_SHADER_LIST
 	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_common.slang"
-	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_border_blend.slang"
+	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_border_fill.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_lighting.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_visibility.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_scatter.slang"

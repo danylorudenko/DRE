@@ -16,22 +16,41 @@ RayTracingManager::RayTracingManager(VKW::Device* device, GlobalGeometry* global
     , m_GlobalGeometryManager{ globalGeometry }
     , m_BLASTable{ &DRE::g_PersistentDataAllocator }
     , m_MainSceneTLAS{}
-    , m_ScratchBuffer{ nullptr }
+    , m_ScratchBuffer{}
+    , m_ScratchAlignment{ m_ParentDevice->GetLogicalDevice()->Properties().accelerationStructureProperties.minAccelerationStructureScratchOffsetAlignment }
 {
-    m_InstanceInputBuffer = device->GetResourcesController()->CreateBuffer(
-        sizeof(VkAccelerationStructureInstanceKHR) * MAX_INSTACES_IN_TLAS,
-        VKW::BufferUsage::ACCELERATION_STRUCTURE_INPUT,
-        "AS_build_instances");
+    static_assert(sizeof(void*) == sizeof(DRE::U64), "Will build and run only on 64-bit systems");
 
-    m_ScratchBuffer = device->GetResourcesController()->CreateBuffer(
-        BLAS_SCRATCH_BUFFER_SIZE,
-        VKW::BufferUsage::STORAGE,
-        "AS_build_scratch");
+    m_InstanceInputBuffer = [device]() {
+        return device->GetResourcesController()->CreateBuffer(
+            sizeof(VkAccelerationStructureInstanceKHR) * MAX_INSTACES_IN_TLAS,
+            VKW::BufferUsage::ACCELERATION_STRUCTURE_INPUT,
+            "AS_build_instances"
+        );
+    };
 
-    static_assert(sizeof(void*) == sizeof(m_ScratchBuffer->gpuAddress_), "Will build and run only on 64-bit systems");
-    m_ScratchLinearAllocator = DRE::AllocatorLinear(reinterpret_cast<void*>(m_ScratchBuffer->gpuAddress_), m_ScratchBuffer->size_);
+    m_ScratchBuffer = [device]() {
+        return device->GetResourcesController()->CreateBuffer(
+            BLAS_SCRATCH_BUFFER_SIZE,
+            VKW::BufferUsage::STORAGE,
+            "AS_build_scratch"
+        );
+    };
 
-    m_ScratchAlignment = m_ParentDevice->GetLogicalDevice()->Properties().accelerationStructureProperties.minAccelerationStructureScratchOffsetAlignment;
+    m_MainSceneTLAS = []() {
+        return TLAS{
+            .m_LogicalHandle = nullptr,
+            .m_ResidenceBuffer = nullptr
+        };
+    };
+}
+
+RayTracingManager::TLAS* RayTracingManager::Update(GFX::FrameID frameID, RenderView const& view, VKW::Context& context)
+{
+    VKW::BufferResource* scratchBuffer = m_ScratchBuffer.Get(frameID);
+    m_ScratchLinearAllocator.Reset(reinterpret_cast<void*>(scratchBuffer->gpuAddress_), scratchBuffer->size_);
+
+    return BuildSceneAccelerationStructure(view, context);
 }
 
 RayTracingManager::BLAS* RayTracingManager::RegisterGeometry(Data::Geometry* geometry, VKW::Context& context)
@@ -56,7 +75,7 @@ RayTracingManager::BLAS* RayTracingManager::RegisterGeometry(Data::Geometry* geo
     geometryDesc.geometry.triangles.indexData.deviceAddress = gpuGeometry->GetIndexGPUAddress();
     geometryDesc.geometry.triangles.transformData.deviceAddress = 0;
 
-    std::uint32_t primCount = gpuGeometry->GetIndexCount() / 3;
+    DRE::U32 const primCount = gpuGeometry->GetIndexCount() / 3;
 
 
     VkAccelerationStructureBuildGeometryInfoKHR buildInfo;
@@ -88,7 +107,8 @@ RayTracingManager::BLAS* RayTracingManager::RegisterGeometry(Data::Geometry* geo
     // cmdBuild
     VKW::BufferResource* asBuffer = m_ParentDevice->GetResourcesController()->CreateBuffer(buildSizeInfo.accelerationStructureSize, VKW::BufferUsage::ACCELERATION_STRUCTURE, "blas_buf");
     VKW::AccelerationStructureResource* vkBLAS = m_ParentDevice->GetResourcesController()->CreateBLAS(asBuffer, "blas");
-    std::uint64_t scratchAddress = reinterpret_cast<std::uint64_t>(m_ScratchLinearAllocator.Alloc(buildSizeInfo.buildScratchSize, m_ScratchAlignment));
+    DRE::U64 scratchAddress = reinterpret_cast<DRE::U64>(m_ScratchLinearAllocator.Alloc(buildSizeInfo.buildScratchSize, m_ScratchAlignment));
+
     context.CmdBuildBLAS(
         vkBLAS, scratchAddress,
         gpuGeometry->GetVertexGPUAddress(), sizeof(Data::DREVertex), gpuGeometry->GetVertexCount(),
@@ -103,6 +123,11 @@ RayTracingManager::BLAS* RayTracingManager::RegisterGeometry(Data::Geometry* geo
     blas.m_ResidenceBuffer = asBuffer;
     blas.m_ReferenceGeometry = geometry;
 
+    context.CmdMemoryDependency(
+        VKW::RESOURCE_ACCESS_ACCELERATION_STRUCTURE_BUILD, VKW::STAGE_AS_BUILD,
+        VKW::RESOURCE_ACCESS_ACCELERATION_STRUCTURE_TRACE, VKW::STAGE_RAY_TRACE
+    );
+
     return &m_BLASTable.Emplace(geometry, blas);
 }
 
@@ -113,10 +138,16 @@ void RayTracingManager::UnregisterGeometry(BLAS* blas)
 
 RayTracingManager::TLAS* RayTracingManager::BuildSceneAccelerationStructure(RenderView const& view, VKW::Context& context)
 {
-    VkAccelerationStructureInstanceKHR* instancesStart = reinterpret_cast<VkAccelerationStructureInstanceKHR*>(m_InstanceInputBuffer->memory_.GetRegionMappedPtr());
+    auto frameID = g_GraphicsManager->GetCurrentFrameID();
+    VkAccelerationStructureInstanceKHR* instancesStart = reinterpret_cast<VkAccelerationStructureInstanceKHR*>(m_InstanceInputBuffer.Get(frameID)->memory_.GetRegionMappedPtr());
 
     auto& renderableObjects = view.GetObjects();
-    for (std::uint32_t i = 0, size = renderableObjects.Size(); i < size; i++)
+    if (renderableObjects.Empty())
+    {
+        return nullptr;
+    }
+
+    for (DRE::U32 i = 0, size = renderableObjects.Size(); i < size; i++)
     {
         glm::mat4 const& m = renderableObjects[i]->GetInstanceGPU().GetTransform();
         instancesStart[i].transform = {
@@ -139,7 +170,7 @@ RayTracingManager::TLAS* RayTracingManager::BuildSceneAccelerationStructure(Rend
     geometry.geometry.instances.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR;
     geometry.geometry.instances.pNext = nullptr;
     geometry.geometry.instances.arrayOfPointers = VK_FALSE;
-    geometry.geometry.instances.data.deviceAddress = m_InstanceInputBuffer->gpuAddress_;
+    geometry.geometry.instances.data.deviceAddress = m_InstanceInputBuffer.Get(frameID)->gpuAddress_;
     geometry.flags = VK_GEOMETRY_OPAQUE_BIT_KHR;
 
     VkAccelerationStructureBuildGeometryInfoKHR buildInfo;
@@ -163,31 +194,40 @@ RayTracingManager::TLAS* RayTracingManager::BuildSceneAccelerationStructure(Rend
     sizes.buildScratchSize = 0;
     sizes.updateScratchSize = 0;
 
-    std::uint32_t primitiveCount = renderableObjects.Size();
+    DRE::U32 primitiveCount = renderableObjects.Size();
     m_ParentDevice->GetFuncTable()->vkGetAccelerationStructureBuildSizesKHR(m_ParentDevice->GetLogicalDevice()->Handle(),
         VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
         &buildInfo,
         &primitiveCount,
         &sizes);
 
+    // free old TLAS
+    VKW::ResourcesController* resourcesController = m_ParentDevice->GetResourcesController();
+
+    TLAS& currentTLAS = m_MainSceneTLAS.Get(g_GraphicsManager->GetCurrentFrameID());
+    if (currentTLAS.m_LogicalHandle != VK_NULL_HANDLE)
+    {
+        resourcesController->FreeAccelerationStructure(currentTLAS.m_LogicalHandle);
+        resourcesController->FreeBuffer(currentTLAS.m_ResidenceBuffer);
+    }
+
     // create TLAS
     VKW::BufferResource* tlasBuffer = m_ParentDevice->GetResourcesController()->CreateBuffer(sizes.accelerationStructureSize, VKW::BufferUsage::ACCELERATION_STRUCTURE, "TLAS_buffer");
     VKW::AccelerationStructureResource* tlas = m_ParentDevice->GetResourcesController()->CreateTLAS(tlasBuffer, "TLAS");
 
     // alloc scratch
-    std::uint64_t scratchGPUAddress = reinterpret_cast<std::uint64_t>(m_ScratchLinearAllocator.Alloc(sizes.buildScratchSize, 256));
+    DRE::U64 scratchGPUAddress = reinterpret_cast<DRE::U64>(m_ScratchLinearAllocator.Alloc(sizes.buildScratchSize, 256));
 
     // build
     // context builds all desc struct anew
-    context.CmdBuildTLAS(tlas, scratchGPUAddress, renderableObjects.Size(), m_InstanceInputBuffer->gpuAddress_);
+    context.CmdBuildTLAS(tlas, scratchGPUAddress, renderableObjects.Size(), m_InstanceInputBuffer.Get(frameID)->gpuAddress_);
 
     context.FlushAll();
-    context.WaitIdle();
 
-    m_MainSceneTLAS.m_LogicalHandle = tlas;
-    m_MainSceneTLAS.m_ResidenceBuffer = tlasBuffer;
+    currentTLAS.m_LogicalHandle = tlas;
+    currentTLAS.m_ResidenceBuffer = tlasBuffer;
 
-    return &m_MainSceneTLAS;
+    return &currentTLAS;
 }
 
 RayTracingManager::BLAS* RayTracingManager::GetGeometryBLAS(Data::Geometry* geometry)
@@ -199,18 +239,27 @@ RayTracingManager::~RayTracingManager()
 {
     VKW::ResourcesController* resourcesController = m_ParentDevice->GetResourcesController();
 
-    if (m_MainSceneTLAS.m_LogicalHandle != VK_NULL_HANDLE)
+    m_MainSceneTLAS.ForEach([resourcesController](auto& tlas)
     {
-        resourcesController->FreeAccelerationStructure(m_MainSceneTLAS.m_LogicalHandle);
-        resourcesController->FreeBuffer(m_MainSceneTLAS.m_ResidenceBuffer);
-    }
+        resourcesController->FreeAccelerationStructure(tlas.m_LogicalHandle);
+        resourcesController->FreeBuffer(tlas.m_ResidenceBuffer);
+    });
 
-    m_ParentDevice->GetResourcesController()->FreeBuffer(m_ScratchBuffer);
+    m_ScratchBuffer.ForEach([resourcesController](auto& buffer)
+    {
+        resourcesController->FreeBuffer(buffer);
+    });
+
     m_BLASTable.ForEach([resourcesController](auto& pair)
     {
         BLAS* blas = pair.value;
         resourcesController->FreeAccelerationStructure(blas->m_LogicalHandle);
         resourcesController->FreeBuffer(blas->m_ResidenceBuffer);
+    });
+
+    m_InstanceInputBuffer.ForEach([resourcesController](auto& buffer)
+    {
+        resourcesController->FreeBuffer(buffer);
     });
 }
 

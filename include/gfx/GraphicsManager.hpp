@@ -12,6 +12,7 @@
 #include <vk_wrapper\Device.hpp>
 
 #include <gfx\FrameID.hpp>
+#include <gfx\PerFrame.hpp>
 #include <gfx\buffer\TransientArena.hpp>
 #include <gfx\buffer\PersistentStorage.hpp>
 #include <gfx\texture\TextureBank.hpp>
@@ -160,7 +161,7 @@ public:
     inline LightsManager&               GetLightsManager() { return m_LightsManager; }
     inline InstanceDataManager&         GetInstanceDataManager() { return m_InstanceDataManager; }
     inline MaterialsManager&            GetMaterialsManager() { return m_MaterialsManager; }
-    inline RayTracingManager&           GetRayTracignManager() { return m_RayTracingManager; }
+    inline RayTracingManager&           GetRayTracingManager() { return m_RayTracingManager; }
     inline DDGI&                        GetDDGI() { return m_DDGI; }
     inline DDGI const&                  GetDDGI() const { return m_DDGI; }
     inline DependencyManager&           GetDependencyManager() { return m_DependencyManager; }
@@ -187,7 +188,6 @@ public:
 
 public:
     void                                PrecacheAllData(VKW::Context& context, EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary);
-    void                                BuildMainSceneTLAS();
     void                                RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS, float globalTimeS, glm::uvec2 cursorPos);
     void                                WaitIdle();
 
@@ -199,7 +199,7 @@ public:
 private:
     void                                CreateAllPasses(VKW::Context& context, EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary);
 
-    void                                PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, RenderGraph& graph, std::uint64_t deltaTimeUS, float globalTimeS, glm::uvec2 cursorPos);
+    void                                PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, RenderGraph& graph, RayTracingManager::TLAS* tlas, DRE::U64 deltaTimeUS, float timeS, glm::uvec2 cursorPos);
     VKW::QueueExecutionPoint            TransferToSwapchainAndPresent(Texture& src);
 
 
@@ -220,7 +220,7 @@ private:
     UniformArena                m_UniformArena;
     ReadbackArena               m_ReadbackArena;
 
-    VKW::BufferResource*        m_GlobalUniforms[VKW::CONSTANTS::FRAMES_BUFFERING];
+    PerFrame<VKW::BufferResource*> m_GlobalUniforms;
     PersistentStorage           m_PersistentStorage;
 
     MaterialsManager            m_MaterialsManager;

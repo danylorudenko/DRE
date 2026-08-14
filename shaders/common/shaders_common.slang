@@ -26,13 +26,22 @@ struct GlobalPushConstant
     uint value_int1;
 };
 [[vk::push_constant]] GlobalPushConstant globalPushConstant;
+/////////////////////////////
 
-//////////////////////////////
+
+/////////////////////////////
 // Global resources
-[[vk::binding(0, 0)]] SamplerState g_GlobalSamplers[];
-[[vk::binding(1, 0)]] RaytracingAccelerationStructure g_TLAS;
 
+// set 0
+[[vk::binding(0, 0)]] SamplerState g_GlobalSamplers[];
+// set 1
 [[vk::binding(0, 1)]] Texture2D<float4> g_GlobalTextures[];
+
+// set 2
+//[[vk::binding(0, 2)]] ConstantBuffer<GlobalUniforms> g_GlobalUniforms; // comes from global_uniform.slang
+[[vk::binding(1, 2)]] RaytracingAccelerationStructure g_TLAS;
+/////////////////////////////
+
 
 // Global textures
 #define GetGlobalTexture(id) g_GlobalTextures[id]

@@ -92,8 +92,8 @@ public:
 
     ~DescriptorManager();
 
-    void                        AllocateDefaultDescriptors(std::uint8_t globalBuffersCount, BufferResource** globalUniformBuffers, BufferResource* persistentStorageBuffer);
-    void                        WriteTLASDescriptor(VKW::AccelerationStructureResource* tlas);
+    void                        AllocateDefaultDescriptors(BufferResource* persistentStorageBuffer);
+    void                        WriteFrameDescriptors(DRE::U32 frameId, VKW::AccelerationStructureResource* tlas, VKW::BufferResource* globalUniformBuffer);
 
     TextureDescriptorIndex      AllocateTextureDescriptor(ImageResourceView const* view = nullptr);
     void                        FreeTextureDescriptor(TextureDescriptorIndex& handle);

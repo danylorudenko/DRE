@@ -54,7 +54,7 @@ DescriptorManager::DescriptorManager(ImportTable* table, LogicalDevice* device)
     sizes[1].descriptorCount    = 1;
 
     sizes[2].type               = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
-    sizes[2].descriptorCount    = 1;
+    sizes[2].descriptorCount    = 2;
 
     sizes[3].type               = VK_DESCRIPTOR_TYPE_SAMPLER;
     sizes[3].descriptorCount    = std::uint32_t(SAMPLER_TYPE_MAX);
@@ -194,7 +194,6 @@ void DescriptorManager::CreateGlobalDescriptorLayouts()
 {
     DescriptorSetLayout::Descriptor globalGenericLayoutDesc{ /*DESCRIPTOR_STAGE_ALL*/ };
     globalGenericLayoutDesc.Add(DESCRIPTOR_TYPE_SAMPLER, 0, DESCRIPTOR_STAGE_ALL, std::uint32_t(SAMPLER_TYPE_MAX));
-    globalGenericLayoutDesc.Add(DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE, 1, DESCRIPTOR_STAGE_ALL);
     globalSetLayouts_[0] = DescriptorSetLayout{ table_, device_, globalGenericLayoutDesc };
 
     DescriptorSetLayout::Descriptor globalTexturesLayoutDesc{ /*DESCRIPTOR_STAGE_ALL */};
@@ -203,6 +202,7 @@ void DescriptorManager::CreateGlobalDescriptorLayouts()
 
     DescriptorSetLayout::Descriptor globalUniformLayoutDesc{ /*DESCRIPTOR_STAGE_ALL*/ };
     globalUniformLayoutDesc.Add(DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0, DESCRIPTOR_STAGE_ALL);
+    globalUniformLayoutDesc.Add(DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE, 1, DESCRIPTOR_STAGE_ALL);
     globalSetLayouts_[2] = DescriptorSetLayout{ table_, device_, globalUniformLayoutDesc };
 
     VKW::PipelineLayout::Descriptor layoutDesc;
@@ -214,7 +214,7 @@ void DescriptorManager::CreateGlobalDescriptorLayouts()
     globalPipelineLayout_ = VKW::PipelineLayout{ table_, device_, layoutDesc };
 }
 
-void DescriptorManager::AllocateDefaultDescriptors(std::uint8_t globalBuffersCount, BufferResource** globalUniformBuffers, BufferResource* persistentStorageBuffer)
+void DescriptorManager::AllocateDefaultDescriptors(BufferResource* persistentStorageBuffer)
 {
     VkDescriptorSetLayout layouts[2];
     VkDescriptorSetAllocateInfo allocateInfo;
@@ -351,42 +351,14 @@ void DescriptorManager::AllocateDefaultDescriptors(std::uint8_t globalBuffersCou
     VK_ASSERT(table_->vkCreateSampler(device_->Handle(), &descriptorInfo, nullptr, defaultSamplers_ + (DRE::U32)SAMPLER_TYPE_ANISOTROPIC));
 
 
-    DRE::InplaceVector<VkDescriptorBufferInfo, VKW::CONSTANTS::FRAMES_BUFFERING> uniformBuffersinfo;
     VkDescriptorImageInfo samplerInfo[(int)SAMPLER_TYPE_MAX];
-    
-
-    for (std::uint8_t i = 0; i < globalBuffersCount; i++)
-    {
-        VkDescriptorBufferInfo& info = uniformBuffersinfo.EmplaceBack();
-        info.buffer = globalUniformBuffers[i]->handle_;
-        info.offset = 0;
-        info.range = globalUniformBuffers[i]->size_;
-    }
 
     for (std::uint8_t i = 0; i < (DRE::U32)SAMPLER_TYPE_MAX; i++)
     {
         samplerInfo[i].sampler = defaultSamplers_[i];
     }
 
-    std::uint16_t constexpr writeCount = VKW::CONSTANTS::FRAMES_BUFFERING * 2 + 1; // 2 global uniforms, sampler
-    DRE::InplaceVector<VkWriteDescriptorSet, writeCount> writeInfos;
-
-    for (std::uint16_t i = 0; i < globalBuffersCount; i++)
-    {
-        VkWriteDescriptorSet& uniformWrite = writeInfos.EmplaceBack();
-        uniformWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        uniformWrite.pNext = nullptr;
-        uniformWrite.dstSet = globalUniformSets_[i];
-        uniformWrite.dstBinding = 0;
-        uniformWrite.dstArrayElement = 0;
-        uniformWrite.descriptorCount = 1;
-        uniformWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uniformWrite.pImageInfo = nullptr;
-        uniformWrite.pBufferInfo = uniformBuffersinfo.Data() + i;
-        uniformWrite.pTexelBufferView = nullptr;
-    }
-
-    VkWriteDescriptorSet& samplerWrite = writeInfos.EmplaceBack();
+    VkWriteDescriptorSet samplerWrite;
     samplerWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     samplerWrite.pNext = nullptr;
     samplerWrite.dstSet = globalGenericSet_;
@@ -398,10 +370,10 @@ void DescriptorManager::AllocateDefaultDescriptors(std::uint8_t globalBuffersCou
     samplerWrite.pBufferInfo = nullptr;
     samplerWrite.pTexelBufferView = nullptr;
 
-    table_->vkUpdateDescriptorSets(device_->Handle(), writeInfos.Size(), writeInfos.Data(), 0, nullptr);
+    table_->vkUpdateDescriptorSets(device_->Handle(), 1, &samplerWrite, 0, nullptr);
 }
 
-void DescriptorManager::WriteTLASDescriptor(VKW::AccelerationStructureResource* tlas)
+void DescriptorManager::WriteFrameDescriptors(DRE::U32 frameId, VKW::AccelerationStructureResource* tlas, VKW::BufferResource* globalUniformBuffer)
 {
     VkWriteDescriptorSetAccelerationStructureKHR tlasInfo;
     tlasInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
@@ -409,19 +381,41 @@ void DescriptorManager::WriteTLASDescriptor(VKW::AccelerationStructureResource* 
     tlasInfo.accelerationStructureCount = 1;
     tlasInfo.pAccelerationStructures = &tlas->handle_;
 
-    VkWriteDescriptorSet writeInfo;
-    writeInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writeInfo.pNext = &tlasInfo;
-    writeInfo.dstSet = globalGenericSet_;
-    writeInfo.dstBinding = 1;
-    writeInfo.dstArrayElement = 0;
-    writeInfo.descriptorCount = 1;
-    writeInfo.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
-    writeInfo.pImageInfo = nullptr;
-    writeInfo.pBufferInfo = nullptr;
-    writeInfo.pTexelBufferView = nullptr;
+    DRE::InplaceVector<VkWriteDescriptorSet, 2> writeInfos;
+    {
+        VkWriteDescriptorSet& writeInfo = writeInfos.EmplaceBack();
+        writeInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeInfo.pNext = &tlasInfo;
+        writeInfo.dstSet = globalUniformSets_[frameId];
+        writeInfo.dstBinding = 1;
+        writeInfo.dstArrayElement = 0;
+        writeInfo.descriptorCount = 1;
+        writeInfo.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+        writeInfo.pImageInfo = nullptr;
+        writeInfo.pBufferInfo = nullptr;
+        writeInfo.pTexelBufferView = nullptr;
+    }
 
-    table_->vkUpdateDescriptorSets(device_->Handle(), 1, &writeInfo, 0, nullptr);
+    {
+        VkDescriptorBufferInfo uniformBufferInfo;
+        uniformBufferInfo.buffer = globalUniformBuffer->handle_;
+        uniformBufferInfo.offset = 0;
+        uniformBufferInfo.range = globalUniformBuffer->size_;
+
+        VkWriteDescriptorSet& uniformWrite = writeInfos.EmplaceBack();
+        uniformWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        uniformWrite.pNext = nullptr;
+        uniformWrite.dstSet = globalUniformSets_[frameId];
+        uniformWrite.dstBinding = 0;
+        uniformWrite.dstArrayElement = 0;
+        uniformWrite.descriptorCount = 1;
+        uniformWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uniformWrite.pImageInfo = nullptr;
+        uniformWrite.pBufferInfo = &uniformBufferInfo;
+        uniformWrite.pTexelBufferView = nullptr;
+    }
+
+    table_->vkUpdateDescriptorSets(device_->Handle(), writeInfos.Size(), writeInfos.Data(), 0, nullptr);
 }
 
 VkSampler DescriptorManager::GetDefaultSampler(SamplerType type) const

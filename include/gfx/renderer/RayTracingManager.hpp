@@ -1,11 +1,11 @@
 #pragma once
 
-#include <foundation\class_features\NonCopyable.hpp>
 #include <foundation\class_features\NonMovable.hpp>
 #include <foundation\container\HashTable.hpp>
 #include <foundation\memory\AllocatorLinear.hpp>
 
 #include <vk_wrapper\resources\Resource.hpp>
+#include <gfx\PerFrame.hpp>
 #include <gfx\buffer\StorageBuffer.hpp>
 #include <gfx\renderer\GlobalGeometryManager.hpp>
 
@@ -60,7 +60,8 @@ public:
     TLAS* BuildSceneAccelerationStructure(RenderView const& view, VKW::Context& context);
 
     BLAS* GetGeometryBLAS(Data::Geometry* geometry);
-    TLAS* GetMainSceneTLAS() { return &m_MainSceneTLAS; }
+
+    TLAS* Update(GFX::FrameID frameID, RenderView const& view, VKW::Context& context);
 
     ~RayTracingManager();
 
@@ -68,12 +69,12 @@ private:
     GlobalGeometry* m_GlobalGeometryManager;
 
     DRE::HashTable<Data::Geometry*, BLAS, DRE::AllocatorLinear> m_BLASTable;
-    TLAS m_MainSceneTLAS;
+    PerFrame<TLAS> m_MainSceneTLAS;
 
-    VKW::BufferResource* m_InstanceInputBuffer;
-    VKW::BufferResource* m_ScratchBuffer;
-    DRE::AllocatorLinear m_ScratchLinearAllocator;
-    std::uint32_t        m_ScratchAlignment;
+    GFX::PerFrame<VKW::BufferResource*>     m_InstanceInputBuffer;
+    GFX::PerFrame<VKW::BufferResource*>     m_ScratchBuffer;
+    DRE::AllocatorLinear                    m_ScratchLinearAllocator;
+    DRE::U32 const                          m_ScratchAlignment;
 };
 
 }

@@ -118,7 +118,7 @@ void DREApplicationDelegate::start()
     m_MainScene.SetMainSunLight(sunLight);
 
     sunLight->SetEulerOrientation(glm::vec3{ -70.0f, 110.0f, 0.0f });
-    //sunLight->SetEulerOrientation(glm::vec3{ 0.0f, 0.0f, 0.0f });
+    sunLight->SetFlux(4.0f);
     sunLight->ScheduleUpdateGPUData();
 
 
@@ -165,6 +165,7 @@ void DREApplicationDelegate::start()
 
 
     glm::mat spheresTransform = glm::rotate(glm::identity<glm::mat4>(), glm::radians(180.0f), glm::vec3{ 1.0f, 0.0, 0.0f });
+    spheresTransform = glm::translate(spheresTransform, glm::vec3{ 0.0f, 0.0f, -10.0f });
     WORLD::SceneNode* spheresNode = m_IOManager.ParseModelFile("data\\gltf_samples\\MetalRoughSpheres\\glTF\\MetalRoughSpheres.gltf", m_MainScene, spheresTransform);
 
     m_GraphicsManager.GetMainContext().FlushAll();
@@ -175,9 +176,6 @@ void DREApplicationDelegate::start()
 
     Data::Texture2D whiteNoise256 = m_IOManager.ReadTexture2D("textures\\white_noise.png", Data::TEXTURE_CHANNELS_GRAY);
     m_GraphicsManager.GetTextureBank().LoadTexture2DSync("white_noise_256", 256, 256, VKW::FORMAT_R8_UNORM, whiteNoise256.GetBuffer());
-
-    ////////////
-    m_GraphicsManager.BuildMainSceneTLAS();
 
     ////////////
     m_GraphicsManager.GetMainContext().FlushAll();

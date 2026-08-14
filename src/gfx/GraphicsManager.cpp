@@ -68,13 +68,10 @@ GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::I
     m_Settings.m_RenderingWidth = m_MainWindow->Width();
     m_Settings.m_RenderingHeight = m_MainWindow->Height();
 
-    for (std::uint32_t i = 0; i < VKW::CONSTANTS::FRAMES_BUFFERING; i++)
-    {
-        char name[16];
-        std::sprintf(name, "g_uniform_%u", i);
-        m_GlobalUniforms[i] = m_Device.GetResourcesController()->CreateBuffer(sizeof(GlobalUniforms), VKW::BufferUsage::UNIFORM, name);
-    }
-    m_Device.GetDescriptorManager()->AllocateDefaultDescriptors(VKW::CONSTANTS::FRAMES_BUFFERING, m_GlobalUniforms, m_PersistentStorage.GetStorage()->GetResource());
+    m_GlobalUniforms = PerFrame<VKW::BufferResource*>([this]() { return m_Device.GetResourcesController()->CreateBuffer(sizeof(GlobalUniforms), VKW::BufferUsage::UNIFORM, "g_GlobalUniform"); });
+    m_Device.GetDescriptorManager()->AllocateDefaultDescriptors(m_PersistentStorage.GetStorage()->GetResource());
+
+    m_RayTracingManager.Update(GetCurrentFrameID(), m_MainView, m_MainContext);
 }
 
 void GraphicsManager::PrecacheAllData(VKW::Context& context, EDITOR::ViewportInputManager* viewportInput, Data::GeometryLibrary* geometryLibrary)
@@ -143,12 +140,12 @@ glm::vec2 constexpr s_HaltonSequence[16] = {
     glm::vec2{ 0.031250, 0.592593 }
 };
 
-void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, RenderGraph& graph, std::uint64_t deltaTimeUS, float timeS, glm::uvec2 cursorPos)
+void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& scene, RenderGraph& graph, RayTracingManager::TLAS* tlas, DRE::U64 deltaTimeUS, float timeS, glm::uvec2 cursorPos)
 {
     m_MainView.UpdatePreviosFrame();
     m_SunShadowView.UpdatePreviosFrame();
 
-    VKW::BufferResource* buffer = m_GlobalUniforms[GetCurrentFrameID()];
+    VKW::BufferResource* buffer = m_GlobalUniforms.Get(GetCurrentFrameID());
     void* dst = buffer->memory_.GetRegionMappedPtr();
 
     glm::vec2 const halton = s_HaltonSequence[GetCurrentGraphicsFrame() % (sizeof(s_HaltonSequence) / sizeof(glm::vec2))];
@@ -219,13 +216,8 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     context.CmdResourceDependency(buffer,
         VKW::RESOURCE_ACCESS_HOST_WRITE, VKW::STAGE_HOST,
         VKW::RESOURCE_ACCESS_SHADER_UNIFORM, VKW::STAGE_VERTEX);
-}
 
-void GraphicsManager::BuildMainSceneTLAS()
-{
-    m_InstanceDataManager.FlushUpdates(GetMainContext());
-    m_RayTracingManager.BuildSceneAccelerationStructure(m_MainView, GetMainContext());
-    m_Device.GetDescriptorManager()->WriteTLASDescriptor(m_RayTracingManager.GetMainSceneTLAS()->m_LogicalHandle);
+    m_Device.GetDescriptorManager()->WriteFrameDescriptors(GetCurrentFrameID(), tlas->m_LogicalHandle, buffer);
 }
 
 void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS, float globalTimeS, glm::uvec2 cursorPos)
@@ -247,13 +239,15 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
     DRE_GPU_SCOPE(FRAME);
 
     context.ResetDependenciesVectors(&DRE::g_FrameScratchAllocator);
-    PrepareGlobalData(context, *WORLD::g_MainScene, m_RenderGraph, deltaTimeUS, globalTimeS, cursorPos);
 
     // maybe I should do these earlier?
     m_GlobalGeometryManager.UpdateGPUGeometry(context);
     m_InstanceDataManager.FlushUpdates(context);
     m_MaterialsManager.FlushUpdates(context);
     m_LightsManager.FlushUpdates(context);
+
+    RayTracingManager::TLAS* tlas = m_RayTracingManager.Update(GetCurrentFrameID(), m_MainView, context);
+    PrepareGlobalData(context, *WORLD::g_MainScene, m_RenderGraph, tlas, deltaTimeUS, globalTimeS, cursorPos);
 
 #ifdef DRE_DEBUG
     if (SYS::g_InputSystem->GetKeyboardButtonJustPressed(Keys::B))

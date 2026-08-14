@@ -51,6 +51,16 @@ public:
         m_NextFree = m_Memory;
     }
 
+    inline void Reset(void* memory, U64 size)
+    {
+        m_Memory = memory;
+        m_Size = size;
+        m_NextFree = memory;
+
+        DRE_ASSERT(m_Memory != nullptr, "AllocatorLinear: received null memory.");
+        DRE_ASSERT(m_Size != 0, "AllocatorLiner: received null size.");
+    }
+
     inline void Free(void* allocation)
     {
         //noop

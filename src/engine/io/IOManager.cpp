@@ -519,7 +519,7 @@ void IOManager::ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene
         }
 
         m_GeometryLibrary->AddGeometry(i, sceneName, DRE_MOVE(geometry));
-        GFX::g_GraphicsManager->GetRayTracignManager().RegisterGeometry(m_GeometryLibrary->GetGeometry(i, sceneName), gfxContext);
+        GFX::g_GraphicsManager->GetRayTracingManager().RegisterGeometry(m_GeometryLibrary->GetGeometry(i, sceneName), gfxContext);
     }
 }
 
