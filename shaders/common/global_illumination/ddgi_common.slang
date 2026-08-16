@@ -15,16 +15,27 @@
 #define DDGI_VISUALIZATION_MODE_COLOR 0
 #define DDGI_VISUALIZATION_MODE_NORMAL 1
 #define DDGI_VISUALIZATION_MODE_UV 2
+#define DDGI_VISUALIZETION_MODE_DISTANCE_MEAN 3
 
 #define DDGI_RAY_DISTRIBUTION_STABLE 0
 #define DDGI_RAY_DISTRIBUTION_RANDOM 1
 
 #define DDGI_VISIBILITY_FILL_PASS_BIT 0x1 // otherwise irradiance pass
 
+
+struct DDGIProbeData
+{
+    float4 position;
+};
+
 struct DDGIConstantBuffer
 {
     uint3 probeGridDimentions;
     float probeDebugScale;
+
+    DDGIProbeData* ddgiProbeData;
+    uint pad3;
+    uint pad4;
 
     float4 probesWorldDistance; // w - max from x,y,z
 
@@ -56,42 +67,13 @@ struct DDGIConstantBuffer
 
 };
 
-struct DDGIProbeData
-{
-    float4 position;
-};
-
 struct DDGISample
 {
     float3 radiance;
     float distance;
     float2 octDirection;
 };
-/*
-DDGISampleEncoded EncodeDDGISample(float3 probeLocalPosition, float3 diffuse, float2 octNormal, float roughness, float metalness)
-{
-    DDGISampleEncoded sample;
-    sample.probeLocalPosition = half3(probeLocalPosition);
-    sample.data0 = pack_clamp_u8(uint4(diffuse * 255.0f, roughness * 255.0f));
-    sample.data1 = pack_clamp_u8(uint4(octNormal * 255.0, metalness * 255.0f, 0));
-    return sample;
-}
 
-DDGISample DecodeDDGISample(DDGISampleEncoded encodedSample)
-{
-    float4 diffuse_roughness = (float4)encodedSample.data0 / 255.0f;
-    float3 octNormal_metalness = (float3)encodedSample.data1.xyz / 255.0f;
-
-    DDGISample sample;
-    sample.probeLocalPosition = float3(encodedSample.probeLocalPosition);
-    sample.diffuse = diffuse_roughness.rgb;
-    sample.roughness = diffuse_roughness.a;
-    sample.octNormal = octNormal_metalness.xy;
-    sample.metalness = octNormal_metalness.z;
-
-    return sample;
-}
-*/
 struct DDGIProbeSamples
 {
     uint sampleCount;
@@ -187,20 +169,18 @@ float3 SampleProbeRadiance(uint probeIndex, float3 direction, Texture2D probeAtl
     return probeAtlasIrradiance.SampleLevel(sampler, samplingUV, 0).rgb;
 }
 
-float SampleProbeVisibility(float testDistance, uint probeIndex, float3 direction, Texture2D probeAtlasVisibility, SamplerState sampler, uint2 probeResolution, uint3 probeGridDimentions)
+float GetVisibilityDistanceClamp(in DDGIConstantBuffer cb)
+{
+    return cb.probesWorldDistance.w * 2;
+}
+
+float2 SampleProbeVisibility(uint probeIndex, float3 direction, Texture2D probeAtlasVisibility, SamplerState sampler, uint2 probeResolution, uint3 probeGridDimentions)
 {
     float2 probeUV = OctahedronEncode(direction);
     float4 uvRect = GetProbeAtlasUVRect(probeIndex, probeResolution, probeGridDimentions);
 
     float2 samplingUV = uvRect.xy + probeUV * (uvRect.zw - uvRect.xy);
-    float2 visibilityMoments = probeAtlasVisibility.SampleLevel(sampler, samplingUV, 0).xy;
-
-    // Chebyshev's inequality (aka Variance Shadow Map test)
-    float variance = visibilityMoments.y - visibilityMoments.x * visibilityMoments.x;
-    float diff = testDistance - visibilityMoments.x;
-    float chebyshev = variance / (variance + diff * diff);
-
-    return chebyshev;
+    return probeAtlasVisibility.SampleLevel(sampler, samplingUV, 0).xy;
 }
 
 

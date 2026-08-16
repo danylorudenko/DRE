@@ -126,12 +126,13 @@ S_LIGHTING_RESULT CalculateDirectDiffuseLighting(S_SURFACE surface, ShaderStage 
     return Result;
 }
 
-S_LIGHTING_RESULT CalculateIndirectLighting(S_SURFACE surface, uint irradianceAtlasID, uint visibilityAtlasID, bool debugDrawCage = false)
+S_LIGHTING_RESULT CalculateIndirectLighting(in DDGIProbeData* ddgiProbeDataPtr, in S_SURFACE surface, uint irradianceAtlasID, uint visibilityAtlasID, bool debugDrawCage = false)
 {
     S_LIGHTING_RESULT Result;
     float3 accumulatedIrradiance = float3(0.0f, 0.0f, 0.0f);
 
     float weightsDebug[DDGIProbeNeighborhood::ProbeCount];
+    float chebushevDebug[DDGIProbeNeighborhood::ProbeCount];
 
     DDGIProbeNeighborhood probes = GetProbeNeighborhood(surface.wpos, GetDDGI());
     float accumulatedWeight = 0.0;
@@ -148,19 +149,30 @@ S_LIGHTING_RESULT CalculateIndirectLighting(S_SURFACE surface, uint irradianceAt
 
         float finalWeight = probes.weights[i];
 
-        float3 pixelToProbe = surface.wpos - GetProbeWorldPosition(probeIndex, GetDDGI().probeWorldOffset, GetDDGI().probesWorldDistance.xyz, GetDDGI().probeGridDimentions);
-        float statisticalVisibility = SampleProbeVisibility(
-            length(pixelToProbe),
+        DDGIProbeData probeData = ddgiProbeDataPtr[probes.indices[i]];
+        float3 pixelToProbe = probeData.position.xyz - surface.wpos;
+        float distanceToProbe = length(pixelToProbe) + 0.1f;
+        float3 pixelToProbeDir = pixelToProbe / max(distanceToProbe, 0.0001f);
+
+        float2 visibilityMoments = SampleProbeVisibility(
             probeIndex,
-            surface.normal,
+            -pixelToProbeDir, // negated, because this is must be the direction from the probe perspective
             GetGlobalTextureObject(visibilityAtlasID),
             GetSamplerLinear(),
             GetDDGI().probeVisibilityResolution,
             GetDDGI().probeGridDimentions);
 
-        finalWeight *= statisticalVisibility;
-
-        float3 pixelToProbeDir = -normalize(pixelToProbe);
+        // Chebyshev's inequality (aka Variance Shadow Map test)
+        float diff = distanceToProbe - visibilityMoments.x;
+        if (diff >= 0.0f)
+        {
+            float variance = abs(visibilityMoments.y - visibilityMoments.x * visibilityMoments.x);
+            float chebyshev = variance / (variance + diff * diff);
+            chebyshev = chebyshev * chebyshev * chebyshev;
+            finalWeight *= chebyshev;
+        }
+        
+        chebushevDebug[i] = visibilityMoments.x;
 
         finalWeight *= saturate(dot(surface.normal, pixelToProbeDir));
         accumulatedWeight += finalWeight;
@@ -181,8 +193,9 @@ S_LIGHTING_RESULT CalculateIndirectLighting(S_SURFACE surface, uint irradianceAt
 
             if (weightsDebug[i] == 0.0)
                 weightColor = float3(0, 0, 0);
-            
+
             DrawDebugLine(surface.wpos, probePos, weightColor);
+            DrawDebugCross(probePos + normalize(surface.wpos - probePos) * chebushevDebug[i], 0.075f, weightColor);
         }
 
     }

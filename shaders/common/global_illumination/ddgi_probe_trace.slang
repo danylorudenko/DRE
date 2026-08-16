@@ -6,10 +6,9 @@
 #include "common/vertex/dre_vertex_layout.slang"
 
 [[vk::binding(0, 3)]] ConstantBuffer<DDGIConstantBuffer>    ddgiCB;
-[[vk::binding(1, 3)]] RWStructuredBuffer<DDGIProbeData>     ddgiProbeData;
-[[vk::binding(2, 3)]] RWStructuredBuffer<DDGIProbeSamples>  ddgiSampleBuffer;
+[[vk::binding(1, 3)]] RWStructuredBuffer<DDGIProbeSamples>  ddgiSampleBuffer;
 
-void AddTracedSample(inout uint rayCounter, uint probeIndex, DDGIProbeData probeData, float3 rayDir, float rayT, float3 hitPosition, S_INSTANCE* hitInstance, float2 hitGeometryUV, float3x3 TBN)
+void AddTracedSample(inout uint rayCounter, uint probeIndex, in DDGIProbeData probeData, float3 rayDir, float rayT, float3 hitPosition, S_INSTANCE* hitInstance, float2 hitGeometryUV, float3x3 TBN)
 {
     S_MATERIAL *material = GetMaterial(hitInstance);
 
@@ -27,7 +26,7 @@ void AddTracedSample(inout uint rayCounter, uint probeIndex, DDGIProbeData probe
     surface.prevWpos = hitPosition;
 
     S_LIGHTING_RESULT sampleDirectRadiance = CalculateDirectDiffuseLighting(surface, ShaderStage::Compute);
-    S_LIGHTING_RESULT sampleIndirect = CalculateIndirectLighting(surface, GetDDGI().irradianceHistoryTextureID, GetDDGI().visibilityHistoryTextureID);
+    S_LIGHTING_RESULT sampleIndirect = CalculateIndirectLighting(ddgiCB.ddgiProbeData, surface, ddgiCB.irradianceHistoryTextureID, ddgiCB.visibilityHistoryTextureID);
 
     DDGISample sample;
     sample.radiance = sampleDirectRadiance.finalRadiance + sampleIndirect.finalRadiance;
@@ -39,6 +38,17 @@ void AddTracedSample(inout uint rayCounter, uint probeIndex, DDGIProbeData probe
     {
         DrawDebugCrossAligned(hitPosition, 0.5f, sample.radiance);
     }
+
+    uint sampleIndex = rayCounter++;
+    ddgiSampleBuffer[probeIndex].samples[sampleIndex] = sample;
+}
+
+void AddBackfaceSample(inout uint rayCounter, uint probeIndex, float3 rayDir)
+{
+    DDGISample sample;
+    sample.radiance = float3(0, 0, 0);
+    sample.distance = 0.0f;
+    sample.octDirection = OctahedronEncode(rayDir);
 
     uint sampleIndex = rayCounter++;
     ddgiSampleBuffer[probeIndex].samples[sampleIndex] = sample;
@@ -75,7 +85,7 @@ void TraceProbeRay(inout uint rayCounter, DDGIProbeData probeData, uint probeInd
 
     if (rayQuery.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
     {
-        //if (rayQuery.CommittedTriangleFrontFace())
+        if (rayQuery.CommittedTriangleFrontFace())
         {
             // 3.1 from the primitive index, get triangle indicies
             uint instanceID = rayQuery.CommittedInstanceID();
@@ -119,6 +129,10 @@ void TraceProbeRay(inout uint rayCounter, DDGIProbeData probeData, uint probeInd
 
             AddTracedSample(rayCounter, probeIndex, probeData, ray.Direction, rayQuery.CommittedRayT(), wPos, instance, hitUV, TBN);
         }
+        else
+        {
+            AddBackfaceSample(rayCounter, probeIndex, ray.Direction);
+        }
     }
     else
     {
@@ -150,7 +164,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
         float alpha = PcgHash(probeSeed) * (1.0/float(0xFFFFFFFFu)) * PI;
         float theta = PcgHash(probeSeed) * (1.0/float(0xFFFFFFFFu)) * PI * 2.0;
 
-        DDGIProbeData probeData = ddgiProbeData[probeIndex];
+        DDGIProbeData probeData = ddgiCB.ddgiProbeData[probeIndex];
         float3 rayOrigin = probeData.position.xyz;
         float3 rayDir = PolarToCartesian(alpha, theta);
         //float3 rayDir = float3(0, 1, 0);

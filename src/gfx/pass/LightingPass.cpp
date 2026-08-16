@@ -50,13 +50,13 @@ void LightingPass::RegisterResources(RenderGraph& graph)
     graph.RegisterTexture(this,
         RESOURCE_ID(TextureID::DDGI_ProbeIrradiance),
         VKW::FORMAT_R16G16B16A16_FLOAT, ddgiIrradianceAtlasDims.x, ddgiIrradianceAtlasDims.y,
-        VKW::RESOURCE_ACCESS_SHADER_SAMPLE, GraphResourceFlags::TEMPORAL | GraphResourceFlags::INIT_CLEAR);
+        VKW::RESOURCE_ACCESS_SHADER_SAMPLE, GraphResourceFlags::TEMPORAL | GraphResourceFlags::INIT_CLEAR_ZERO);
 
     // it's implicitly accessed from global uniform
     graph.RegisterTexture(this,
         RESOURCE_ID(TextureID::DDGI_AtlasVisibility),
         VKW::FORMAT_R16G16_FLOAT, ddgiVisibilityAtlasDims.x, ddgiVisibilityAtlasDims.y,
-        VKW::RESOURCE_ACCESS_SHADER_SAMPLE, GraphResourceFlags::TEMPORAL | GraphResourceFlags::INIT_CLEAR);
+        VKW::RESOURCE_ACCESS_SHADER_SAMPLE, GraphResourceFlags::TEMPORAL | GraphResourceFlags::INIT_CLEAR_ZERO);
 }
 
 void LightingPass::Initialize(RenderGraph&)

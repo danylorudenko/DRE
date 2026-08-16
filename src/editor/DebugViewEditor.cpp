@@ -56,7 +56,7 @@ void DebugViewEditor::Render()
 
         ImGui::Separator();
         ImGui::TextUnformatted("Visualization Mode");
-        char const* visModeNames[] = { "Color", "Normal", "UV" };
+        char const* visModeNames[] = { "Color", "Normal", "UV", "Distance" };
         DRE::S32 currentMode = static_cast<DRE::S32>(state.m_VisMode);
         if (ImGui::BeginCombo("Vis Mode", visModeNames[currentMode]))
         {

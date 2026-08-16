@@ -6,9 +6,10 @@ namespace GFX
 
 enum GraphResourceFlags : DRE::U32
 {
-    NONE = 0,
-    TEMPORAL = (1 << 0),
-    INIT_CLEAR = (1 << 1),
+    NONE                = 0,
+    TEMPORAL            = (1 << 0),
+    INIT_CLEAR_ZERO     = (1 << 1),
+    INIT_CLEAR_ONE      = (1 << 2)
 };
 
 //////////////////////////////////////

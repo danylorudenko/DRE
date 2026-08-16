@@ -7,6 +7,8 @@
 
 #include <gfx\GraphicsManager.hpp>
 
+#include <glm\gtc\type_ptr.hpp>
+
 namespace GFX
 {
 
@@ -185,21 +187,40 @@ void GraphResourcesManager::CreateResources(VKW::Context& context)
 
 void GraphResourcesManager::InitResource(VKW::Context& context, AccumulatedInfo const& info, GFX::Texture& texture)
 {
-    if (info.flags & GraphResourceFlags::INIT_CLEAR)
+    if (info.flags & (GraphResourceFlags::INIT_CLEAR_ZERO | GraphResourceFlags::INIT_CLEAR_ONE))
     {
+        DRE_ASSERT((GraphResourceFlags::INIT_CLEAR_ZERO ^ GraphResourceFlags::INIT_CLEAR_ONE) != 0, "Only one INIT_CLEAR flag is allowed");
+
         g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, texture.GetResource(), VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
 
-        float clearColor[4] = { 0.f, 0.f, 0.f, 0.f };
-        context.CmdClearColorImage(texture.GetResource(), clearColor);
+        glm::vec4 clearColor = { 0.f, 0.f, 0.f, 0.f };
+        if (info.flags & GraphResourceFlags::INIT_CLEAR_ZERO)
+            clearColor = { 0.f, 0.f, 0.f, 0.f };
+        else if (info.flags & GraphResourceFlags::INIT_CLEAR_ONE)
+            clearColor = { 1.f, 1.f, 1.f, 1.f };
+        else
+            DRE_ASSERT(false, "Invalid flag");
+
+        context.CmdClearColorImage(texture.GetResource(), glm::value_ptr(clearColor));
     }
 }
 
 void GraphResourcesManager::InitResource(VKW::Context& context, AccumulatedInfo const& info, GFX::StorageBuffer& buffer)
 {
-    if (info.flags & GraphResourceFlags::INIT_CLEAR)
+    if (info.flags & (GraphResourceFlags::INIT_CLEAR_ZERO | GraphResourceFlags::INIT_CLEAR_ONE))
     {
+        DRE_ASSERT((GraphResourceFlags::INIT_CLEAR_ZERO ^ GraphResourceFlags::INIT_CLEAR_ONE) != 0, "Only one INIT_CLEAR flag is allowed");
+
+        DRE::U32 fillValue = 0;
+        if (info.flags & GraphResourceFlags::INIT_CLEAR_ZERO)
+            fillValue = 0;
+        else if (info.flags & GraphResourceFlags::INIT_CLEAR_ONE)
+            fillValue = 1;
+        else
+            DRE_ASSERT(false, "Invalid flag");
+
         g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, buffer.GetResource(), VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
-        context.CmdFillBuffer(buffer.GetResource(), 0, info.size0, 0);
+        context.CmdFillBuffer(buffer.GetResource(), 0, info.size0, fillValue);
     }
 }
 

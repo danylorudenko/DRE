@@ -48,6 +48,7 @@ struct DDGIDebugState
         Color     = 0,
         Normal    = 1,
         UV        = 2,
+        Distance  = 3
     };
 
     bool m_DrawProbes = false;

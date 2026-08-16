@@ -38,16 +38,16 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
 
     float3 probePixelNormal = OctahedronDecode(probeUV);
 
-    float2 accumulatedDistances = 0.0f; // distance and distance^2
+    float2 accumulatedDistances = float2(0.0f, 0.0f); // distance and distance^2
     float accumulatedWeight = 0;
 
     for (int i = 0; i < probeGBuffer.sampleCount; i++)
     {
         DDGISample sample = probeGBuffer.samples[i];
         float3 sampleDir = OctahedronDecode(sample.octDirection);
-        float sampleWeight = saturate(dot(probePixelNormal, sampleDir));
+        float sampleWeight = pow(saturate(dot(probePixelNormal, sampleDir)), 50.0f);
 
-        float clampedDistance = min(sample.distance, ddgiCB.probesWorldDistance.w * 2);
+        float clampedDistance = min(sample.distance, GetVisibilityDistanceClamp(ddgiCB));
 
         accumulatedDistances += float2(clampedDistance, clampedDistance * clampedDistance) * sampleWeight;
         accumulatedWeight += sampleWeight;

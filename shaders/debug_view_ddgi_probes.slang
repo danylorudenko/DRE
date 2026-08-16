@@ -5,7 +5,6 @@
 [[vk::binding(0, 3)]] RWStructuredBuffer<DrawIndexedIndirectCommand>    indirectArgBuffer;
 [[vk::binding(1, 3)]] StructuredBuffer<DDGIProbeData>                   probeData;
 [[vk::binding(2, 3)]] ConstantBuffer<DDGIConstantBuffer>                ddgiCB;
-[[vk::binding(3, 3)]] Texture2D                                         probeIrradianceAtlas;
 
 float4 RemapDisplayValue(float4 value, float lowBound, float highBound)
 {
@@ -77,16 +76,17 @@ static const float3 debugColors[8] =
 float4 drawPS(PSInput input) : SV_Target0
 {
     float3 probeColor = debugColors[input.instanceID % 8];
-    float3 radiance = SampleProbeRadiance(
-        input.instanceID,
-        normalize(input.norm),
-        probeIrradianceAtlas,
-        GetSamplerLinear(),
-        ddgiCB.probeIrradianceResolution,
-        ddgiCB.probeGridDimentions);
 
     if (ddgiCB.visualizationMode == DDGI_VISUALIZATION_MODE_COLOR)
     {
+        float3 radiance = SampleProbeRadiance(
+            input.instanceID,
+            normalize(input.norm),
+            GetGlobalTextureObject(ddgiCB.irradianceAtlasTextureID),
+            GetSamplerLinear(),
+            ddgiCB.probeIrradianceResolution,
+            ddgiCB.probeGridDimentions);
+
         return float4(radiance, 1.0);
     }
     else if (ddgiCB.visualizationMode == DDGI_VISUALIZATION_MODE_UV)
@@ -96,6 +96,18 @@ float4 drawPS(PSInput input) : SV_Target0
     else if (ddgiCB.visualizationMode == DDGI_VISUALIZATION_MODE_NORMAL)
     {
         return float4(input.norm * 0.5 + 0.5, 1.0);
+    }
+    else if (ddgiCB.visualizationMode == DDGI_VISUALIZETION_MODE_DISTANCE_MEAN)
+    {
+        float2 moments = SampleProbeVisibility(
+            input.instanceID,
+            normalize(input.norm),
+            GetGlobalTextureObject(ddgiCB.visibilityAtlasTextureID),
+            GetSamplerLinear(),
+            ddgiCB.probeVisibilityResolution,
+            ddgiCB.probeGridDimentions);
+
+        return float4(moments.xxx / GetVisibilityDistanceClamp(ddgiCB), 1.0f);
     }
     
     return float4(1,1,1, 1.0);
