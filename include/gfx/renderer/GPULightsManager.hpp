@@ -47,7 +47,7 @@ public:
 
     public:
         LightGPU(LightsManager* manager, DRE::U64 addressGPU, DRE::U32 id);
-        void ScheduleUpdate(glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, DRE::U32 type);
+        void ScheduleUpdate(glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float intensity, DRE::U32 type);
     };
 
 public:

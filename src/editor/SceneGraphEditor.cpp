@@ -16,6 +16,8 @@
 
 #include <imgui.h>
 
+#include <common\lighting\lights.slang>
+
 namespace EDITOR
 {
 
@@ -282,8 +284,6 @@ bool SceneGraphEditor::RenderLightProperties(bool wasTransformUpdated)
 
     int currentType = light->GetLightType();
     glm::vec3 spectrum = light->GetSpectrum();
-    float flux = light->GetFlux();
-
 
     // go and see "shaders\lights.h" for proper order
     const char* items[] = { "Sun", "Directional", "Point" };
@@ -304,11 +304,22 @@ bool SceneGraphEditor::RenderLightProperties(bool wasTransformUpdated)
     }
 
     ImGui::NewLine();
-    ImGui::Text("Flux:");
-    if (ImGui::DragFloat("##flux", &flux, 1.0f, 0.0f, 100.0f))
+
+    switch (currentType)
     {
-        light->SetFlux(flux);
-        needsUpdate = true;
+    case DRE_LIGHT_TYPE_DIRECTIONAL:
+    {
+        ImGui::Text("Illuminance:");
+        float illuminance = static_cast<float>(light->GetIllumiance());
+        if (ImGui::DragFloat("##illuminance", &illuminance, 1.0f, 0.0f, 100.0f, "%.3f lux"))
+        {
+            light->SetIlluminanceLux(illuminance);
+            needsUpdate = true;
+        }
+        break;
+    }
+    default:
+        DRE_ASSERT(false, "Unsupported light type");
     }
 
     if (needsUpdate)

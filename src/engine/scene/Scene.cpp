@@ -59,23 +59,25 @@ SceneNode* Scene::CreateSceneNode(ISceneNodeUser* user, SceneNode* parent)
     return sceneNode;
 }
 
-Light* Scene::CreateSunLight(VKW::Context& context, SceneNode* parent)
-{
-    return CreateDirectionalLightInternal(context, parent, DRE_LIGHT_TYPE_SUN);
-}
-
 Light* Scene::CreateDirectionalLight(VKW::Context& context, SceneNode* parent)
 {
-    return CreateDirectionalLightInternal(context, parent, DRE_LIGHT_TYPE_DIRECTIONAL);
-}
-
-Light* Scene::CreateDirectionalLightInternal(VKW::Context& context, SceneNode* parent, std::uint32_t type)
-{
     LightID const id = m_LightsCounter++;
-    Light* light = &m_SceneLights.Emplace(id, &GFX::g_GraphicsManager->GetLightsManager(), static_cast<std::uint32_t>(type));
+    Light* light = &m_SceneLights.Emplace(id, &GFX::g_GraphicsManager->GetLightsManager(), static_cast<std::uint32_t>(DRE_LIGHT_TYPE_DIRECTIONAL));
 
     SceneNode* node = CreateSceneNode(light, parent == nullptr ? m_RootNode : parent);
     node->SetName("Directional Light");
+    light->ScheduleUpdateGPUData();
+
+    return light;
+}
+
+Light* Scene::CreatePointLight(VKW::Context& context, SceneNode* parent)
+{
+    LightID const id = m_LightsCounter++;
+    Light* light = &m_SceneLights.Emplace(id, &GFX::g_GraphicsManager->GetLightsManager(), static_cast<std::uint32_t>(DRE_LIGHT_TYPE_POINT));
+
+    SceneNode* node = CreateSceneNode(light, parent == nullptr ? m_RootNode : parent);
+    node->SetName("Point Light");
     light->ScheduleUpdateGPUData();
 
     return light;

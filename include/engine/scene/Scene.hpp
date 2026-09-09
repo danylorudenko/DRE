@@ -36,9 +36,9 @@ class ISceneNodeUser;
 class Scene
 {
 public:
-    using EntityID = std::uint32_t;
-    using NodeID = std::uint32_t;
-    using LightID = std::uint32_t;
+    using EntityID = DRE::U32;
+    using NodeID = DRE::U32;
+    using LightID = DRE::U32;
 
     Scene(DRE::DefaultAllocator* allocator);
     ~Scene();
@@ -58,13 +58,12 @@ public:
     Entity*                         CreateOpaqueEntity(VKW::Context& context, Data::Geometry* geometry, Data::Material* material, SceneNode* parent = nullptr);
     inline SceneNode*               CreateSceneNode(ISceneNodeUser* user, SceneNode* parent);
 
-    Light*                          CreateSunLight(VKW::Context& context, SceneNode* parent = nullptr);
     Light*                          CreateDirectionalLight(VKW::Context& context, SceneNode* parent = nullptr);
+    Light*                          CreatePointLight(VKW::Context& context, SceneNode* parent = nullptr);
 
 private:
     inline SceneNode*               CreateRootSceneNode(SceneNode* parent = nullptr) { NodeID const id = m_NodeCounter++; return &m_Nodes.Emplace(id, parent, nullptr); }
     inline Entity*                  CreateEntity() { EntityID const id = m_EntityCounter++; return &m_SceneEntities.Emplace(id); }
-    Light*                          CreateDirectionalLightInternal(VKW::Context& context, SceneNode* parent, std::uint32_t type);
 
 private:
     Camera                  m_MainCamera;

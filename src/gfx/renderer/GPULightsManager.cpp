@@ -34,12 +34,12 @@ LightsManager::LightGPU::LightGPU(LightsManager* manager, DRE::U64 addressGPU, D
 {
 }
 
-void LightsManager::LightGPU::ScheduleUpdate(glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float flux, DRE::U32 type)
+void LightsManager::LightGPU::ScheduleUpdate(glm::vec3 const& position, glm::vec3 const& orientation, glm::vec3 const& color, float intensity, DRE::U32 type)
 {
     S_LIGHT SLight;
     SLight.world_pos = glm::vec4(position, 1.0f);
     SLight.direction_type = glm::vec4(orientation, *reinterpret_cast<float*>(&type));
-    SLight.spectrum_flux = glm::vec4(color, flux);
+    SLight.spectrum_intensity = glm::vec4(color, intensity);
 
     Base::Payload::ScheduleUpdate(SLight);
 }

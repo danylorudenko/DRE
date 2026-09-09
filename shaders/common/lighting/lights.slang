@@ -3,16 +3,19 @@
 
 #include "common/shaders_defines.slang"
 
-#define DRE_LIGHT_TYPE_SUN          0
-#define DRE_LIGHT_TYPE_DIRECTIONAL  1
-#define DRE_LIGHT_TYPE_POINT        2
+#define DRE_LIGHT_TYPE_DIRECTIONAL  0
+#define DRE_LIGHT_TYPE_POINT        1
+#define DRE_LIGHT_TYPE_SPOT         2
 #define DRE_LIGHT_TYPE_MAX          3
 
 struct S_LIGHT
 {
     float4 world_pos;
     float4 direction_type;
-    float4 spectrum_flux;
+    // xyz - spectrum, w - intensity
+    // intensity is in lux for directional lights
+    // local (spot/point) in candelas (cd)
+    float4 spectrum_intensity;
 };
 
 #ifndef __cplusplus
@@ -34,13 +37,14 @@ uint GetType(S_LIGHT* light)
 
 float3 GetSpectrum(S_LIGHT* light)
 {
-    return light.spectrum_flux.rgb;
+    return light.spectrum_intensity.rgb;
 }
 
-float GetFlux(S_LIGHT* light)
+float GetIntensity(S_LIGHT* light)
 {
-    return light.spectrum_flux.w;
+    return light.spectrum_intensity.w;
 }
+
 
 #endif // !__cplusplus
 

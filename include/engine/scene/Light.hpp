@@ -23,27 +23,33 @@ namespace WORLD
 class Light : public ISceneNodeUser
 {
 public:
-    Light(GFX::LightsManager* lightsManager, std::uint32_t type);
+        Light(GFX::LightsManager* lightsManager, DRE::U32 type);
 
     inline glm::vec3 const& GetDirection() { return m_SceneNode->GetForward(); }
 
-    inline float GetFlux() { return m_Flux; }
-    inline void  SetFlux(float f) { m_Flux = f; }
+    double GetFlux();
+    double GetIllumiance(); // for directional lights cd/m2
+    double GetLuminance(); // for spot lights cd (lm/sr)
+
+    void SetFluxLumen(double flux);
+    void SetIlluminanceLux(double illuminance); // for directional lights lux (lumen/m^2)
+    void SetLuminanceCd(double luminance); // for spot lights cd (lm/sr)
+
 
     inline glm::vec3 const& GetSpectrum() const { return m_Spectrum; }
     inline void SetSpectrum(glm::vec3 const& s) { m_Spectrum = s; }
 
     // DRE_LIGHT_TYPE_
-    inline std::uint32_t GetLightType() const { return m_Type; }
-    inline void SetLightType(std::uint32_t type/*DRE_LIGHT_TYPE_*/) { m_Type = type; }
+    inline DRE::U32 GetLightType() const { return m_Type; }
+    void SetLightType(DRE::U32 type/*DRE_LIGHT_TYPE_*/);
 
     void    ScheduleUpdateGPUData();
     virtual void OnTransformChanged(glm::mat4 const& transform) override;
 
 private:
-    std::uint32_t                   m_Type = DRE_LIGHT_TYPE_MAX; // DRE_LIGHT_TYPE_
+    DRE::U32                        m_Type = DRE_LIGHT_TYPE_MAX; // DRE_LIGHT_TYPE_
     glm::vec3                       m_Spectrum;
-    float                           m_Flux;
+    double                          m_Intensity; // candelas for local lights, illuminance for directional lights
     float                           m_Radius;
     float                           m_Falloff;
 

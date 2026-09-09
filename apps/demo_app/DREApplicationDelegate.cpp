@@ -114,13 +114,17 @@ void DREApplicationDelegate::start()
     m_MainScene.GetMainCamera().SetPosition(glm::vec3{ -0.23f, 10.41f, 14.70f });
     m_MainScene.GetMainCamera().SetCameraEuler(glm::vec3{ -13.32f, -43.83f, 0.0f });
 
-    WORLD::Light* sunLight = m_MainScene.CreateSunLight(m_GraphicsManager.GetMainContext());
+    WORLD::Light* sunLight = m_MainScene.CreateDirectionalLight(m_GraphicsManager.GetMainContext());
     m_MainScene.SetMainSunLight(sunLight);
 
     sunLight->SetEulerOrientation(glm::vec3{ -70.0f, 110.0f, 0.0f });
-    sunLight->SetFlux(4.0f);
+    sunLight->SetIlluminanceLux(4.0f);
     sunLight->ScheduleUpdateGPUData();
 
+    //WORLD::Light* pointLight = m_MainScene.CreatePointLight(m_GraphicsManager.GetMainContext());
+    //pointLight->SetPosition(glm::vec3{ 0.0f, 5.0f, 0.0f });
+    //pointLight->SetFlux(2.0f);
+    //pointLight->ScheduleUpdateGPUData();
 
     if (m_ImGuiEnabled)
         InitImGui();
