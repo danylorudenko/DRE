@@ -121,10 +121,10 @@ void DREApplicationDelegate::start()
     sunLight->SetIlluminanceLux(4.0f);
     sunLight->ScheduleUpdateGPUData();
 
-    //WORLD::Light* pointLight = m_MainScene.CreatePointLight(m_GraphicsManager.GetMainContext());
-    //pointLight->SetPosition(glm::vec3{ 0.0f, 5.0f, 0.0f });
-    //pointLight->SetFlux(2.0f);
-    //pointLight->ScheduleUpdateGPUData();
+    WORLD::Light* pointLight = m_MainScene.CreatePointLight(m_GraphicsManager.GetMainContext());
+    pointLight->SetPosition(glm::vec3{ 0.0f, 20.0f, 0.0f });
+    pointLight->SetLuminanceCd(100.0f);
+    pointLight->ScheduleUpdateGPUData();
 
     if (m_ImGuiEnabled)
         InitImGui();

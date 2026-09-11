@@ -73,7 +73,7 @@ S_LIGHTING_RESULT CalculateDirectLightingPoint(S_SURFACE surface, S_LIGHT* light
     float falloff = 1.0f / (distanceToLight * distanceToLight);
     float3 directRadiance = brdf * GetIntensity(light) * falloff;
     
-    float shadow = ShadowVisibilityTrace(surface.wpos, L);
+    float shadow = ShadowVisibilityTrace(surface.wpos, L, distanceToLight);
 
     S_LIGHTING_RESULT Result;
     Result.finalRadiance = directRadiance * shadow;

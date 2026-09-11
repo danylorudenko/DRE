@@ -50,13 +50,13 @@ float ShadowMapSample(float3 wpos, float4x4 shadowViewProj, float2 shadowMapDims
     return result;
 }
 
-float ShadowVisibilityTrace(float3 wpos, float3 shadowDir)
+float ShadowVisibilityTrace(float3 wpos, float3 shadowDir, float maxDistance = 10000.0f)
 {
     RayDesc rayDesc;
     rayDesc.Origin = wpos;
     rayDesc.TMin = 0.1;
     rayDesc.Direction = shadowDir;
-    rayDesc.TMax = 10000;
+    rayDesc.TMax = maxDistance;
 
     RayQuery<RAY_FLAG_CULL_NON_OPAQUE | 
         RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | 

@@ -310,10 +310,22 @@ bool SceneGraphEditor::RenderLightProperties(bool wasTransformUpdated)
     case DRE_LIGHT_TYPE_DIRECTIONAL:
     {
         ImGui::Text("Illuminance:");
-        float illuminance = static_cast<float>(light->GetIllumiance());
+        float illuminance = static_cast<float>(light->GetIllumianceLux());
         if (ImGui::DragFloat("##illuminance", &illuminance, 1.0f, 0.0f, 100.0f, "%.3f lux"))
         {
             light->SetIlluminanceLux(illuminance);
+            needsUpdate = true;
+        }
+        break;
+    }
+
+    case DRE_LIGHT_TYPE_POINT:
+    {
+        ImGui::Text("Luminance:");
+        float luminance = static_cast<float>(light->GetLuminanceCd());
+        if (ImGui::DragFloat("##luminance", &luminance, 1.0f, 0.0f, 1000.0f, "%.3f cd"))
+        {
+            light->SetLuminanceCd(luminance);
             needsUpdate = true;
         }
         break;

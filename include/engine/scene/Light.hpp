@@ -27,9 +27,9 @@ public:
 
     inline glm::vec3 const& GetDirection() { return m_SceneNode->GetForward(); }
 
-    double GetFlux();
-    double GetIllumiance(); // for directional lights cd/m2
-    double GetLuminance(); // for spot lights cd (lm/sr)
+    double GetFluxLumen();
+    double GetIllumianceLux(); // for directional lights lux (lm/m2)
+    double GetLuminanceCd(); // for spot lights cd (lm/sr)
 
     void SetFluxLumen(double flux);
     void SetIlluminanceLux(double illuminance); // for directional lights lux (lumen/m^2)

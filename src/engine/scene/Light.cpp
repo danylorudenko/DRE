@@ -17,19 +17,19 @@ Light::Light(GFX::LightsManager* lightsManager, DRE::U32 type)
 {
 }
 
-double Light::GetFlux() // lumens (lm) for point and spot lights
+double Light::GetFluxLumen() // lumens (lm) for point and spot lights
 {
     DRE_ASSERT(m_Type != DRE_LIGHT_TYPE_DIRECTIONAL, "Lighting unit inconsistent with light type.");
     return m_Intensity * 4.0 * glm::pi<double>();
 }
 
-double Light::GetLuminance() // for spot lights cd (lm/sr)
+double Light::GetLuminanceCd() // for spot lights cd (lm/sr)
 {
     DRE_ASSERT(m_Type != DRE_LIGHT_TYPE_DIRECTIONAL, "Lighting unit inconsistent with light type.");
     return m_Intensity;
 }
 
-double Light::GetIllumiance() // for directional lights nits (cd/m2)
+double Light::GetIllumianceLux() // for directional lights lux (lm/m2)
 {
     DRE_ASSERT(m_Type == DRE_LIGHT_TYPE_DIRECTIONAL, "Lighting unit inconsistent with light type.");
     return m_Intensity;
