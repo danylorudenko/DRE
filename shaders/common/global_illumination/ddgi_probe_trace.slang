@@ -25,7 +25,7 @@ void AddTracedSample(inout uint rayCounter, uint probeIndex, in DDGIProbeData pr
     surface.wpos = hitPosition;
     surface.prevWpos = hitPosition;
 
-    S_LIGHTING_RESULT sampleDirectRadiance = CalculateDirectDiffuseLighting(surface, ShaderStage::Compute);
+    S_LIGHTING_RESULT sampleDirectRadiance = CalculateDirectLighting(surface, probeData.position.xyz, ShaderStage::Compute);
     S_LIGHTING_RESULT sampleIndirect = CalculateIndirectLighting(ddgiCB.ddgiProbeData, surface, ddgiCB.irradianceHistoryTextureID, ddgiCB.visibilityHistoryTextureID);
 
     DDGISample sample;

@@ -112,44 +112,6 @@ S_LIGHTING_RESULT CalculateDirectLighting(S_SURFACE surface, float3 viewPosWS, S
     return Result;
 }
 
-S_LIGHTING_RESULT CalculateDirectDiffuseLighting(S_SURFACE surface, ShaderStage shaderStage)
-{
-    S_LIGHTING_RESULT Result;
-    Result.finalRadiance = float3(0.0f, 0.0f, 0.0f);
-
-    float3 n = surface.normal;
-
-    uint lightsCount = GetLightsCount();
-    for(uint i = 0; i < lightsCount; i++)
-    {
-        S_LIGHT* light = GetLight(i);
-
-        float3 L = GetDirection(light);
-        float NdotL = saturate(dot(n, L) + 0.01);
-        float3 brdf = surface.diffuseSpectrum * NdotL;
-        float3 directRadiance = brdf * GetIntensity(light);
-        float shadow = 1;
-
-        switch(GetType(light))
-        {
-            case DRE_LIGHT_TYPE_DIRECTIONAL:
-            {
-            if (shaderStage != ShaderStage::Vertex)
-            {
-                shadow = ShadowVisibilityTrace(surface.wpos, L);
-                break;
-            }
-            }
-        }
-
-        directRadiance *= shadow;
-
-        Result.finalRadiance += directRadiance;
-    }
-
-    return Result;
-}
-
 S_LIGHTING_RESULT CalculateIndirectLighting(in DDGIProbeData* ddgiProbeDataPtr, in S_SURFACE surface, uint irradianceAtlasID, uint visibilityAtlasID, bool debugDrawCage = false)
 {
     S_LIGHTING_RESULT Result;
