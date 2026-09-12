@@ -9,6 +9,8 @@
 #include <engine\scene\ISceneNodeUser.hpp>
 #include <engine\ApplicationContext.hpp>
 
+#include <editor\ViewportInputManager.hpp>
+
 #include <gfx\renderer\RenderableObject.hpp>
 #include <gfx\GraphicsManager.hpp>
 
@@ -21,10 +23,11 @@
 namespace EDITOR
 {
 
-SceneGraphEditor::SceneGraphEditor(BaseEditor* rootEditor, EditorFlags flags, WORLD::Scene* scene)
+SceneGraphEditor::SceneGraphEditor(BaseEditor* rootEditor, ViewportInputManager* inputManager, EditorFlags flags, WORLD::Scene* scene)
     : BaseEditor{ rootEditor, flags }
     , m_Scene{ scene }
     , m_ShowIDs{ false }
+    , m_ViewportInputManager{ inputManager }
 {}
 
 SceneGraphEditor::SceneGraphEditor(SceneGraphEditor&& rhs)
@@ -395,7 +398,8 @@ void SceneGraphEditor::RenderSceneNodeRecursive(WORLD::SceneNode* node, SceneGra
     {
         if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
         {
-            DRE::g_AppContext.m_FocusedObject = node->GetNodeUser();
+            m_ViewportInputManager->Unfocus();
+            m_ViewportInputManager->Focus(node);
         }
 
         for (DRE::U32 i = 0; i < childCount; ++i)

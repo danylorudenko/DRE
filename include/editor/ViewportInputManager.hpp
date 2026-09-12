@@ -27,6 +27,9 @@ public:
 
     void ProcessInput(SYS::InputSystem& inputSystem, GFX::RenderView& view);
 
+    void Focus(WORLD::SceneNode* node);
+    void Unfocus();
+
     bool ShouldRenderTranslationGizmo() const;
     glm::vec3 GetFocusedObjectPosition() const;
 

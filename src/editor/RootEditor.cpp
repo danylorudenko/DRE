@@ -17,9 +17,10 @@
 namespace EDITOR
 {
 
-RootEditor::RootEditor(WORLD::Scene* mainScene)
+RootEditor::RootEditor(WORLD::Scene* mainScene, ViewportInputManager* inputManager)
     : BaseEditor{ nullptr, EDITOR_FLAGS_STATIC }
     , m_MainScene{ mainScene }
+    , m_ViewportInputManager{ inputManager }
     , m_Editors{ &DRE::g_PersistentDataAllocator }
     , m_CloseQueue{ &DRE::g_FrameScratchAllocator }
 {}
@@ -27,6 +28,7 @@ RootEditor::RootEditor(WORLD::Scene* mainScene)
 RootEditor::RootEditor(RootEditor&& rhs)
     : BaseEditor{ DRE_MOVE(rhs) }
     , m_MainScene{ nullptr }
+    , m_ViewportInputManager{ nullptr }
 {
     operator=(DRE_MOVE(rhs));
 }
@@ -36,6 +38,7 @@ RootEditor& RootEditor::operator=(RootEditor&& rhs)
     BaseEditor::operator=(DRE_MOVE(rhs));
 
     DRE_SWAP_MEMBER(m_MainScene);
+    DRE_SWAP_MEMBER(m_ViewportInputManager);
     DRE_SWAP_MEMBER(m_Editors);
     DRE_SWAP_MEMBER(m_CloseQueue);
 
@@ -119,7 +122,7 @@ void RootEditor::Render()
             {
                 if (GetEditorByType(BaseEditor::Type::SceneGraph) == nullptr)
                 {
-                    SceneGraphEditor* sceneEditor = DRE::g_MainAllocator.Alloc<SceneGraphEditor>(this, EDITOR_FLAGS_NONE, m_MainScene);
+                    SceneGraphEditor* sceneEditor = DRE::g_MainAllocator.Alloc<SceneGraphEditor>(this, m_ViewportInputManager, EDITOR_FLAGS_NONE, m_MainScene);
                     m_Editors.EmplaceBack(sceneEditor);
                 }
             }

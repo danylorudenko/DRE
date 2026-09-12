@@ -15,10 +15,12 @@ class SceneNode;
 namespace EDITOR
 {
 
+class ViewportInputManager;
+
 class SceneGraphEditor : public BaseEditor
 {
 public:
-    SceneGraphEditor(BaseEditor* rootEditor, EditorFlags flags, WORLD::Scene* scene);
+    SceneGraphEditor(BaseEditor* rootEditor, ViewportInputManager* inputManager, EditorFlags flags, WORLD::Scene* scene);
     SceneGraphEditor(SceneGraphEditor&& rhs);
 
     SceneGraphEditor& operator=(SceneGraphEditor&& rhs);
@@ -54,6 +56,8 @@ private:
 private:
     WORLD::Scene* m_Scene;
     bool m_ShowIDs;
+
+    ViewportInputManager* m_ViewportInputManager;
 };
 
 }

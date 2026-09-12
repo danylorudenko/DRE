@@ -28,6 +28,7 @@ public:
     SceneNodeManipulator();
 
     void SetFocusedNode(SceneNode* node);
+    glm::vec3 GetFocusedNodePosition() const;
     bool TryInteract(SYS::InputSystem& inputSystem, GFX::RenderView& view);
 
 private:

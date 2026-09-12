@@ -12,6 +12,18 @@ ViewportInputManager::ViewportInputManager(WORLD::Scene* scene)
 {
 }
 
+void ViewportInputManager::Focus(WORLD::SceneNode* node)
+{
+    DRE::g_AppContext.m_FocusedObject = node->GetNodeUser();
+    m_NodeManipulator.SetFocusedNode(node);
+}
+
+void ViewportInputManager::Unfocus()
+{
+    DRE::g_AppContext.m_FocusedObject = nullptr;
+    m_NodeManipulator.SetFocusedNode(nullptr);
+}
+
 void ViewportInputManager::ProcessInput(SYS::InputSystem& inputSystem, GFX::RenderView& view)
 {
     if (!TryInteractWithDebugPrimitives(inputSystem, view))
@@ -22,8 +34,7 @@ void ViewportInputManager::ProcessInput(SYS::InputSystem& inputSystem, GFX::Rend
             DRE_ASSERT(result != nullptr, "Can't find picked object.");
             if (result != nullptr)
             {
-                DRE::g_AppContext.m_FocusedObject = result->GetNodeUser();
-                m_NodeManipulator.SetFocusedNode(DRE::g_AppContext.m_FocusedObject->GetSceneNode());
+               Focus(result);
             }
         }
     }
@@ -41,7 +52,7 @@ bool ViewportInputManager::ShouldRenderTranslationGizmo() const
 
 glm::vec3 ViewportInputManager::GetFocusedObjectPosition() const
 {
-    return DRE::g_AppContext.m_FocusedObject->GetGlobalPosition();
+    return m_NodeManipulator.GetFocusedNodePosition();
 }
 
 

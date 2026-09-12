@@ -78,8 +78,8 @@ private:
 
     WORLD::Scene                        m_MainScene;
 
-    EDITOR::RootEditor                  m_RootEditor;
     EDITOR::ViewportInputManager        m_ViewportInput;
+    EDITOR::RootEditor                  m_RootEditor;
 
     float                               m_CameraMoveSpeed;
 };

@@ -19,11 +19,12 @@ namespace EDITOR
 {
 
 class CameraEditor;
+class ViewportInputManager;
 
 class RootEditor : public BaseEditor
 {
 public:
-    RootEditor(WORLD::Scene* mainScene);
+    RootEditor(WORLD::Scene* mainScene, ViewportInputManager* inputManager);
     RootEditor(RootEditor&& rhs);
 
     RootEditor& operator=(RootEditor&& rhs);
@@ -41,6 +42,7 @@ public:
 
 private:
     WORLD::Scene* m_MainScene;
+    ViewportInputManager* m_ViewportInputManager;
 
     DRE::Vector<BaseEditor*, DRE::AllocatorLinear> m_Editors;
     DRE::Vector<BaseEditor*, DRE::AllocatorLinear> m_CloseQueue;

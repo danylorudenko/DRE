@@ -37,8 +37,8 @@ DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* t
     , m_GraphicsManager{ instance, &m_MainWindow, &m_IOManager, &m_ShaderModuleDB, vkDebug }
     , m_ImGuiEnabled{ imguiEnabled }
     , m_MainScene{ &DRE::g_MainAllocator }
-    , m_RootEditor{ &m_MainScene }
     , m_ViewportInput{ &m_MainScene }
+    , m_RootEditor{ &m_MainScene, &m_ViewportInput }
     , m_CameraMoveSpeed{ 25.0f }
 {
     WORLD::g_MainScene = &m_MainScene;

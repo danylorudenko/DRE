@@ -66,6 +66,7 @@ public:
 
 
     void                    SetPosition(glm::vec3 const& position);
+    void                    SetGlobalPosition(glm::vec3 const& position);
     void                    SetOrientation(glm::quat const& orientation);
     void                    SetEulerOrientation(glm::vec3 const& orientation);
     void                    SetScale(float scale);

@@ -90,7 +90,7 @@ SceneNode* SceneNode::GetChild(DRE::U32 i)
 
 glm::vec3 SceneNode::GetGlobalPosition() const
 {
-    return m_Parent != nullptr ? m_Parent->GetGlobalPosition() + m_Position : m_Position;
+    return glm::vec3{ GetGlobalMatrix()[3] };
 }
 
 glm::quat SceneNode::GetGlobalOrientation() const
@@ -189,6 +189,13 @@ void SceneNode::SetMatrix(glm::mat4 const& matrix)
 void SceneNode::SetPosition(glm::vec3 const& position)
 {
     m_Position = position;
+    NotifyTransformChange();
+}
+
+void SceneNode::SetGlobalPosition(glm::vec3 const& position)
+{
+    glm::mat4 globalMatrixInverse = glm::inverse(m_Parent->GetGlobalMatrix());
+    m_Position = globalMatrixInverse * glm::vec4{ position, 1.0f };
     NotifyTransformChange();
 }
 

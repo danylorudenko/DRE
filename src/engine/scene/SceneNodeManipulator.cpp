@@ -24,6 +24,13 @@ void SceneNodeManipulator::SetFocusedNode(SceneNode* node)
     m_FocusedNode = node;
 }
 
+glm::vec3 SceneNodeManipulator::GetFocusedNodePosition() const
+{
+    if (m_FocusedNode == nullptr)
+        return glm::vec3{ 0.0f, 0.0f, 0.0f };
+    return m_FocusedNode->GetGlobalPosition();
+}
+
 glm::vec3 SceneNodeManipulator::PickBestPlaneNormal(glm::vec3 cameraDir, SceneNodeManipulator::Axis dragAxis)
 {
     float dotX = glm::abs(glm::dot(cameraDir, glm::vec3{ 1.0f, 0.0f, 0.0f }));
@@ -41,7 +48,7 @@ glm::vec3 SceneNodeManipulator::PickBestPlaneNormal(glm::vec3 cameraDir, SceneNo
     rating.EmplaceBack(Axis::X, dotX);
     rating.EmplaceBack(Axis::Y, dotY);
     rating.EmplaceBack(Axis::Z, dotZ);
-    rating.SortBubble([](auto const& lhs, const auto& rhs){ return lhs.dot < rhs.dot; });
+    rating.SortBubble([](auto const& lhs, const auto& rhs){ return lhs.dot > rhs.dot; });
 
     if (rating[0].axis != dragAxis)
         return AxisToVector(rating[0].axis);
@@ -117,7 +124,7 @@ bool SceneNodeManipulator::TryInteract(SYS::InputSystem& inputSystem, GFX::Rende
 
         if (m_DraggedAxis != Axis(0))
         {
-            m_BeginNodePosition = m_FocusedNode->GetPosition();
+            m_BeginNodePosition = m_FocusedNode->GetGlobalPosition();
 
             glm::vec3 dragPlaneNormal = PickBestPlaneNormal(view.GetDirection(), m_DraggedAxis);
             DRE::Plane dragPlane = DRE::PlaneFromNormalAndPoint(dragPlaneNormal, m_BeginNodePosition);
@@ -144,12 +151,12 @@ bool SceneNodeManipulator::TryInteract(SYS::InputSystem& inputSystem, GFX::Rende
             float axisStart = glm::dot(m_BeginTranslatePoint, dragAxis);
             float diff = axisDrag - axisStart;
             glm::vec3 targetPosition = m_BeginNodePosition + dragAxis * diff;
-            m_FocusedNode->SetPosition(targetPosition);
+            m_FocusedNode->SetGlobalPosition(targetPosition);
         }
-
-        if (inputSystem.GetLeftMouseButtonJustReleased())
-            m_DraggedAxis = Axis(0); // stop dragging
     }
+
+    if (inputSystem.GetLeftMouseButtonJustReleased())
+        m_DraggedAxis = Axis(0); // stop dragging
 
     return hitGizmo;
 }
