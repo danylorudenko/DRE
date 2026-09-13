@@ -42,7 +42,7 @@ void RenderingSettingsEditor::Render()
             ImGui::TextUnformatted("Tone mapping");
             ImGui::Separator();
             ImGui::Checkbox("Use ACES", &settings.m_UseACESEncoding);
-            ImGui::SliderFloat("Exposure target EV", &settings.m_ExposureEV, -3.0f, 5.0f);
+            ImGui::SliderFloat("Target EV", &settings.m_TargetEV, -4.0f, 26.0f);
 
             ImGui::Separator();
             ImGui::TextUnformatted("Temporal AA");

@@ -425,11 +425,9 @@ void DebugPassDDGIProbeDisplay::RegisterResources(RenderGraph& graph)
     DRE::U32 renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth;
     DRE::U32 renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
-    auto gBufferFormats = g_GraphicsManager->GetGBufferFormats();
-
     graph.RegisterRenderTarget(this,
         RESOURCE_ID(TextureID::DisplayEncodedImage),
-        gBufferFormats[0], renderWidth, renderHeight,
+        g_GraphicsManager->GetDisplayEncodedFormat(), renderWidth, renderHeight,
         0);
 
     graph.RegisterDepthOnlyTarget(this,

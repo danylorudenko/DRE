@@ -20,7 +20,7 @@ void GBufferPass::RegisterResources(RenderGraph& graph)
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth,
         renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
-    auto gBufferFormats = g_GraphicsManager->GetGBufferFormats();
+    auto gBufferFormats = g_GraphicsManager->GetGBufferAttachmentFormats();
 
     graph.RegisterRenderTarget(this,
         RESOURCE_ID(TextureID::GBufferA_DiffuseRoughness),

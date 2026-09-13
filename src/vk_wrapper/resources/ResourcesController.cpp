@@ -88,7 +88,12 @@ BufferResource* ResourcesController::CreateBuffer(DRE::U32 size, BufferUsage usa
     {
     case BufferUsage::VERTEX_INDEX:
         regionDesc.memoryClass_ = MemoryClass::DeviceFast;
-        vkBufferCreateInfo.usage |= (VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR);
+        vkBufferCreateInfo.usage |= 
+            (VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | 
+             VK_BUFFER_USAGE_INDEX_BUFFER_BIT | 
+             VK_BUFFER_USAGE_TRANSFER_DST_BIT | 
+             VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
+             VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
         break;
     case BufferUsage::VERTEX_INDEX_WRITABLE:
         regionDesc.memoryClass_ = MemoryClass::CpuStaging;

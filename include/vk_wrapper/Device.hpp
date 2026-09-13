@@ -28,7 +28,7 @@ class Device final
     : public NonCopyable
 {
 public:
-    Device(HINSTANCE hInstance,HWND hwnd, bool debug = false);
+    Device(HINSTANCE hInstance,HWND hwnd, bool debug, DRE::U32 validationBreakSeverity);
 
     Device(Device&& rhs) = default;
     Device& operator=(Device&& rhs) = default;

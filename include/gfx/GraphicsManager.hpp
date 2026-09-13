@@ -4,15 +4,14 @@
 #include <foundation\class_features\NonMovable.hpp>
 
 #include <foundation\system\Window.hpp>
-#include <foundation\container\ObjectPool.hpp>
 #include <foundation\container\InplaceHashTable.hpp>
-#include <foundation\container\HashTable.hpp>
 #include <foundation\container\Vector.hpp>
 
 #include <vk_wrapper\Device.hpp>
 
 #include <gfx\FrameID.hpp>
 #include <gfx\PerFrame.hpp>
+#include <gfx\Photometric.hpp>
 #include <gfx\buffer\TransientArena.hpp>
 #include <gfx\buffer\PersistentStorage.hpp>
 #include <gfx\texture\TextureBank.hpp>
@@ -78,7 +77,7 @@ struct GraphicsSettings
 
     // Tonemapping
     bool            m_UseACESEncoding       = true;
-    float           m_ExposureEV            = 0.0f;
+    float           m_TargetEV              = C_EV100_DEFAULT_TARGET;
 
     // TAA
     float           m_AlphaTAA              = 0;//= 0.9f;
@@ -128,7 +127,7 @@ class GraphicsManager final
 public:
     using ImGuiSyncQueue = DRE::Vector<Texture*, DRE::AllocatorLinear>;
 
-    GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::IOManager* ioManager, IO::ShaderDB* shaderDB, bool debug = false);
+    GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::IOManager* ioManager, IO::ShaderDB* shaderDB, bool debug, DRE::U32 validationBreakSeverity);
     ~GraphicsManager();
 
     inline SYS::Window*                 GetMainWindow() { return m_MainWindow; }
@@ -177,13 +176,13 @@ public:
     inline GraphicsSettings&            GetGraphicsSettings() { return m_Settings; }
     inline GraphicsSettings const&      GetGraphicsSettings() const { return m_Settings; }
 
-    static constexpr VKW::Format        GetMainColorFormat() { return VKW::FORMAT_B8G8R8A8_UNORM; }
-    static constexpr VKW::Format        GetFinalImageFormat() { return VKW::FORMAT_B8G8R8A8_UNORM; }
+    static constexpr VKW::Format        GetLinearSceneColorFormat() { return VKW::FORMAT_R16G16B16A16_FLOAT; }
+    static constexpr VKW::Format        GetDisplayEncodedFormat() { return VKW::FORMAT_B8G8R8A8_UNORM; }
     static constexpr VKW::Format        GetMainDepthFormat() { return VKW::FORMAT_D32_FLOAT; }
     static constexpr VKW::Format        GetObjectIDBufferFormat() { return VKW::FORMAT_B8G8R8A8_UNORM; }
     static constexpr VKW::Format        GetVelocityBufferFormat() { return VKW::FORMAT_R16G16_FLOAT; }
 
-    static constexpr std::array<VKW::Format, 4> GetGBufferFormats() { return { VKW::FORMAT_B8G8R8A8_UNORM, VKW::FORMAT_B8G8R8A8_UNORM, GetVelocityBufferFormat(), GetObjectIDBufferFormat() }; }
+    static constexpr std::array<VKW::Format, 4> GetGBufferAttachmentFormats() { return { VKW::FORMAT_R16G16B16A16_FLOAT, VKW::FORMAT_B8G8R8A8_UNORM, GetVelocityBufferFormat(), GetObjectIDBufferFormat() }; }
 
 
 public:

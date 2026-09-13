@@ -24,10 +24,10 @@ void AntiAliasingPass::RegisterResources(RenderGraph& graph)
 
     graph.RegisterTexture(this, RESOURCE_ID(TextureID::GBufferC_Velocity), g_GraphicsManager->GetVelocityBufferFormat(), renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
 
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::ForwardColor), g_GraphicsManager->GetMainColorFormat(), renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::LinearSceneColor), g_GraphicsManager->GetLinearSceneColorFormat(), renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
 
     VKW::ResourceAccess historyAccess = VKW::ResourceAccess(VKW::RESOURCE_ACCESS_SHADER_SAMPLE | std::uint64_t(VKW::RESOURCE_ACCESS_SHADER_WRITE));
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::ColorHistoryBuffer), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, historyAccess, GraphResourceFlags::TEMPORAL);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::ColorHistoryBuffer), g_GraphicsManager->GetLinearSceneColorFormat(), renderWidth, renderHeight, historyAccess, GraphResourceFlags::TEMPORAL);
 
     graph.RegisterTexture(this, RESOURCE_ID(TextureID::MainDepth), g_GraphicsManager->GetMainDepthFormat(), renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
 }
@@ -37,7 +37,7 @@ void AntiAliasingPass::Render(RenderGraph& graph, VKW::Context& context)
 {
     DRE_GPU_SCOPE(AntiAliasing);
 
-    Texture* colorInput = graph.GetTexture(RESOURCE_ID(TextureID::ForwardColor));
+    Texture* colorInput = graph.GetTexture(RESOURCE_ID(TextureID::LinearSceneColor));
     Texture* velocity = graph.GetTexture(RESOURCE_ID(TextureID::GBufferC_Velocity));
     Texture* history = graph.GetTemporalTextureCurrent(RESOURCE_ID(TextureID::ColorHistoryBuffer));
     Texture* taaOutput = graph.GetTemporalTextureHistory(RESOURCE_ID(TextureID::ColorHistoryBuffer));

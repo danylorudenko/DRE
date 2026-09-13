@@ -35,8 +35,8 @@ void ForwardOpaquePass::RegisterResources(RenderGraph& graph)
 
 
     graph.RegisterRenderTarget(this,
-        RESOURCE_ID(TextureID::ForwardColor),
-        g_GraphicsManager->GetMainColorFormat(), renderWidth, renderHeight,
+        RESOURCE_ID(TextureID::LinearSceneColor),
+        g_GraphicsManager->GetLinearSceneColorFormat(), renderWidth, renderHeight,
         0);
 
     graph.RegisterRenderTarget(this,
@@ -64,9 +64,9 @@ void ForwardOpaquePass::Render(RenderGraph& graph, VKW::Context& context)
 
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
-    Texture* colorAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ForwardColor));
-    Texture* velocityAttachment = graph.GetTexture(RESOURCE_ID(TextureID::Velocity));
-    Texture* objectIDAttachment = graph.GetTexture(RESOURCE_ID(TextureID::ObjectIDBuffer));
+    Texture* colorAttachment = graph.GetTexture(RESOURCE_ID(TextureID::LinearSceneColor));
+    Texture* velocityAttachment = graph.GetTexture(RESOURCE_ID(TextureID::GBufferC_Velocity));
+    Texture* objectIDAttachment = graph.GetTexture(RESOURCE_ID(TextureID::GBufferD_ObjectIDBuffer));
     Texture* depthAttachment = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth));
     Texture* shadowMap       = graph.GetTexture(RESOURCE_ID(TextureID::ShadowMap));
     Texture* causticMap      = graph.GetTexture(RESOURCE_ID(TextureID::CausticMap));

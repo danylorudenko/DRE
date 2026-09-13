@@ -16,14 +16,14 @@ void LightingPass::RegisterResources(RenderGraph& graph)
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth;
     std::uint32_t renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
-    auto gBufferFormats = g_GraphicsManager->GetGBufferFormats();
+    auto gBufferFormats = g_GraphicsManager->GetGBufferAttachmentFormats();
 
     glm::uvec2 ddgiIrradianceAtlasDims = g_GraphicsManager->GetDDGI().GetProbeAtlasIrradianceDimentions();
     glm::uvec2 ddgiVisibilityAtlasDims = g_GraphicsManager->GetDDGI().GetProbeAtlasVisibilityDimentions();
 
     graph.RegisterTexture(this,
-        RESOURCE_ID(TextureID::ForwardColor),
-        g_GraphicsManager->GetMainColorFormat(), renderWidth, renderHeight,
+        RESOURCE_ID(TextureID::LinearSceneColor),
+        g_GraphicsManager->GetLinearSceneColorFormat(), renderWidth, renderHeight,
         VKW::RESOURCE_ACCESS_SHADER_WRITE);
 
     graph.RegisterTexture(this,
@@ -67,7 +67,7 @@ void LightingPass::Render(RenderGraph& graph, VKW::Context& context)
 {
     DRE_GPU_SCOPE(Lighting);
 
-    Texture* forwardColor = graph.GetTexture(RESOURCE_ID(TextureID::ForwardColor));
+    Texture* linearSceneColor = graph.GetTexture(RESOURCE_ID(TextureID::LinearSceneColor));
 
     Texture* gbufferA = graph.GetTexture(RESOURCE_ID(TextureID::GBufferA_DiffuseRoughness));
     Texture* gbufferB = graph.GetTexture(RESOURCE_ID(TextureID::GBufferB_NormalMetalness));
@@ -78,7 +78,7 @@ void LightingPass::Render(RenderGraph& graph, VKW::Context& context)
     Texture* ddgiVisibility = graph.GetTemporalTextureCurrent(RESOURCE_ID(TextureID::DDGI_AtlasVisibility)); // implicity accessed from global uniform
 
     auto& dependencyManager = g_GraphicsManager->GetDependencyManager();
-    dependencyManager.ResourceBarrier(context, forwardColor->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
+    dependencyManager.ResourceBarrier(context, linearSceneColor->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
 
     dependencyManager.ResourceBarrier(context, gbufferA->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
     dependencyManager.ResourceBarrier(context, gbufferB->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_SAMPLE, VKW::STAGE_COMPUTE);
@@ -90,7 +90,7 @@ void LightingPass::Render(RenderGraph& graph, VKW::Context& context)
 
     PipelineEntry* entry = g_GraphicsManager->GetPipelineDB().GetEntry("lighting_deferred");
     ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(entry, 0);
-    binder.AddStorageTexture(0, forwardColor);
+    binder.AddStorageTexture(0, linearSceneColor);
     binder.AddSampledTexture(1, gbufferA);
     binder.AddSampledTexture(2, gbufferB);
     binder.AddSampledTexture(3, depth);

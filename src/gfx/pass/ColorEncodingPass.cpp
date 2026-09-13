@@ -1,6 +1,7 @@
 #include <gfx\pass\ColorEncodingPass.hpp>
 
 #include <gfx\GraphicsManager.hpp>
+#include <gfx\Photometric.hpp>
 #include <gfx\scheduling\RenderGraph.hpp>
 
 namespace GFX
@@ -19,10 +20,10 @@ void ColorEncodingPass::RegisterResources(RenderGraph& graph)
 {
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::ColorHistoryBuffer), VKW::FORMAT_B8G8R8A8_UNORM, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_READ, GraphResourceFlags::TEMPORAL);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::ColorHistoryBuffer), g_GraphicsManager->GetLinearSceneColorFormat(), renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_READ, GraphResourceFlags::TEMPORAL);
 
     graph.RegisterTexture(this, RESOURCE_ID(TextureID::DisplayEncodedImage),
-        g_GraphicsManager->GetFinalImageFormat(), renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_WRITE);
+        g_GraphicsManager->GetDisplayEncodedFormat(), renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_WRITE);
 }
 
 void ColorEncodingPass::Render(RenderGraph& graph, VKW::Context& context)
@@ -37,8 +38,8 @@ void ColorEncodingPass::Render(RenderGraph& graph, VKW::Context& context)
 
     UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(glm::vec4));
     float const useACES = g_GraphicsManager->GetGraphicsSettings().m_UseACESEncoding ? 1.0f : 0.0f;
-    float const exposure = glm::exp2(-g_GraphicsManager->GetGraphicsSettings().m_ExposureEV);
-    uniform.WriteMember140(glm::vec4{ useACES, exposure, 0.0f, 0.0f });
+    float const exposureCompensation = CalculateExposureCompensation(g_GraphicsManager->GetGraphicsSettings().m_TargetEV);
+    uniform.WriteMember140(glm::vec4{ useACES, exposureCompensation, 0.0f, 0.0f });
     uniform.FlushWrites();
 
     PipelineEntry* pipelineEntry = g_GraphicsManager->GetPipelineDB().GetEntry("color_encode");

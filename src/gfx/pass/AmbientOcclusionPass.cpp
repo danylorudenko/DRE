@@ -22,7 +22,7 @@ void AmbientOcclusionPass::RegisterResources(RenderGraph& graph)
     VKW::Format const depthFormat = g_GraphicsManager->GetMainDepthFormat();
     graph.RegisterTexture(this, RESOURCE_ID(TextureID::AmbientOcclusion), VKW::FORMAT_R8_UNORM, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_WRITE);
     graph.RegisterTexture(this, RESOURCE_ID(TextureID::MainDepth), depthFormat, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::GBufferB_NormalMetalness), g_GraphicsManager->GetGBufferFormats()[1], renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::GBufferB_NormalMetalness), g_GraphicsManager->GetGBufferAttachmentFormats()[1], renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
     graph.RegisterTexture(this, RESOURCE_ID(TextureID::DEBUG_TEXTURE), VKW::FORMAT_R32G32B32A32_FLOAT, renderWidth, renderHeight, VKW::RESOURCE_ACCESS_SHADER_RW);
 }
 

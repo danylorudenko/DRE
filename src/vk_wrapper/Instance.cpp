@@ -14,6 +14,8 @@
 namespace VKW
 {
 
+DRE::U32 Instance::s_BreakOnSeverity = DRE_U32_MAX;
+
 Instance::Instance()
     : instance_{ VK_NULL_HANDLE }
     , table_{ nullptr }
@@ -27,6 +29,8 @@ Instance::Instance(InstanceDesc const& desc)
     , table_{ desc.table_ }
     , debugMessenger_{ VK_NULL_HANDLE }
 {
+    s_BreakOnSeverity = desc.validationBreakSeverity_;
+
     std::uint32_t layerPropertiesCount = 0;
     std::vector<VkLayerProperties> instanceLayerProperties;
 
@@ -183,17 +187,43 @@ VkBool32 Instance::DebugCallback(
 
 	output << "[";
 
+    bool TriggerDebugBreak = false;
+
     if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
+    {
         output << "VERBOSE|";
+        if (s_BreakOnSeverity >= 3)
+        {
+            TriggerDebugBreak = true;
+        }
+    }
 
     if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
+    {
         output << "INFO|";
+        if (s_BreakOnSeverity >= 2)
+        {
+            TriggerDebugBreak = true;
+        }
+    }
 
     if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+    {
         output << "WARNING|";
+        if (s_BreakOnSeverity >= 1)
+        {
+            TriggerDebugBreak = true;
+        }
+    }
 
     if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+    {
         output << "ERROR|";
+        if (s_BreakOnSeverity >= 0)
+        {
+            TriggerDebugBreak = true;
+        }
+    }
 
     /////////////////////
 
@@ -217,134 +247,14 @@ VkBool32 Instance::DebugCallback(
     }
 
     output << "MESSAGE: " << pCallbackData->pMessage << std::endl << std::endl;
-    /*
-
-    char const* objTypeStr = nullptr;
-    switch (type) {
-    case VK_DEBUG_REPORT_OBJECT_TYPE_UNKNOWN_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_UNKNOWN_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_INSTANCE_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_INSTANCE_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_PHYSICAL_DEVICE_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_PHYSICAL_DEVICE_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_DEVICE_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_DEVICE_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_QUEUE_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_QUEUE_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_SEMAPHORE_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_SEMAPHORE_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_COMMAND_BUFFER_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_COMMAND_BUFFER_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_FENCE_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_FENCE_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_DEVICE_MEMORY_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_DEVICE_MEMORY_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_BUFFER_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_BUFFER_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_IMAGE_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_IMAGE_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_EVENT_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_EVENT_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_QUERY_POOL_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_QUERY_POOL_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_BUFFER_VIEW_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_BUFFER_VIEW_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_IMAGE_VIEW_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_IMAGE_VIEW_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_SHADER_MODULE_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_SHADER_MODULE_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_PIPELINE_CACHE_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_PIPELINE_CACHE_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_PIPELINE_LAYOUT_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_PIPELINE_LAYOUT_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_RENDER_PASS_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_RENDER_PASS_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_PIPELINE_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_PIPELINE_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_SAMPLER_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_SAMPLER_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_DESCRIPTOR_POOL_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_DESCRIPTOR_POOL_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_DESCRIPTOR_SET_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_DESCRIPTOR_SET_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_FRAMEBUFFER_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_FRAMEBUFFER_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_COMMAND_POOL_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_COMMAND_POOL_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_SURFACE_KHR_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_SURFACE_KHR_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_SWAPCHAIN_KHR_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_SWAPCHAIN_KHR_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_CALLBACK_EXT_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_CALLBACK_EXT_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_DISPLAY_KHR_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_DISPLAY_KHR_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_DISPLAY_MODE_KHR_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_DISPLAY_MODE_KHR_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_VALIDATION_CACHE_EXT_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_VALIDATION_CACHE_EXT_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_SAMPLER_YCBCR_CONVERSION_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_SAMPLER_YCBCR_CONVERSION_EXT";
-        break;
-    case VK_DEBUG_REPORT_OBJECT_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_EXT:
-        objTypeStr = "VK_DEBUG_REPORT_OBJECT_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_EXT";
-        break;
-    default:
-        objTypeStr = "UNKNOWN";
-        break;
-    }
-
-    std::stringstream stringstream;
-
-    stringstream 
-        << std::endl << "DEBUG_LAYER"
-        << std::endl << "Message type: " << flagsString
-        << std::endl << "Layer prefix: " << layerPrefix
-        << std::endl << "Message: " << msg
-        << std::endl << "Object type: " << objTypeStr << ", id: (" << object << ")" << std::endl << std::endl;
-
-    */
 
     auto str = output.str();
     std::cerr << str;
     OutputDebugStringA(str.c_str());
 
 #ifdef DRE_DEBUG
-    DebugBreak();
+    if (TriggerDebugBreak)
+        DebugBreak();
 #endif
 
      return VK_FALSE;

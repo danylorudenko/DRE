@@ -292,7 +292,7 @@ void EditorPass::RegisterResources(RenderGraph& graph)
     DRE::U32 renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
     graph.RegisterRenderTarget(this, RESOURCE_ID(TextureID::DisplayEncodedImage),
-        g_GraphicsManager->GetFinalImageFormat(), renderWidth, renderHeight,
+        g_GraphicsManager->GetDisplayEncodedFormat(), renderWidth, renderHeight,
         0);
 }
 

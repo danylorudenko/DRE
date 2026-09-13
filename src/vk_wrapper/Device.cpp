@@ -8,7 +8,7 @@
 namespace VKW
 {
 
-Device::Device(HINSTANCE hInstance, HWND hwnd, bool debug)
+Device::Device(HINSTANCE hInstance, HWND hwnd, bool debug, DRE::U32 validationBreakSeverity)
     : vulkanLibrary_{}
     , table_{}
 {
@@ -36,6 +36,7 @@ Device::Device(HINSTANCE hInstance, HWND hwnd, bool debug)
     instanceDesc.requiredInstanceExtensions_ = instanceExtensions;
     instanceDesc.requiredInstanceLayers_ = instanceLayers;
     instanceDesc.debug_ = debug;
+    instanceDesc.validationBreakSeverity_ = validationBreakSeverity;
 
     instance_ = std::make_unique<VKW::Instance>(instanceDesc);
 

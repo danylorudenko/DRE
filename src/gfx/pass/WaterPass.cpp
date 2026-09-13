@@ -27,8 +27,8 @@ void WaterPass::RegisterResources(RenderGraph& graph)
         VKW::FORMAT_D16_UNORM, C_SHADOW_MAP_WIDTH, C_SHADOW_MAP_HEIGHT, VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
 
     graph.RegisterTexture(this,
-        RESOURCE_ID(TextureID::ForwardColor),
-        g_GraphicsManager->GetMainColorFormat(), renderWidth, renderHeight,
+        RESOURCE_ID(TextureID::LinearSceneColor),
+        g_GraphicsManager->GetLinearSceneColorFormat(), renderWidth, renderHeight,
         VKW::RESOURCE_ACCESS_SHADER_SAMPLE);
 
     graph.RegisterTexture(this,
@@ -43,7 +43,7 @@ void WaterPass::RegisterResources(RenderGraph& graph)
 
     graph.RegisterRenderTarget(this,
         RESOURCE_ID(TextureID::WaterColor),
-        g_GraphicsManager->GetMainColorFormat(), renderWidth, renderHeight,
+        g_GraphicsManager->GetLinearSceneColorFormat(), renderWidth, renderHeight,
         0);
 
     graph.RegisterRenderTarget(this,
@@ -71,7 +71,7 @@ void WaterPass::Render(RenderGraph& graph, VKW::Context& context)
     Texture* depthAttachment = graph.GetTexture(RESOURCE_ID(TextureID::MainDepth));
     Texture* shadowMap       = graph.GetTexture(RESOURCE_ID(TextureID::ShadowMap));
     Texture* heightMap       = graph.GetTexture(RESOURCE_ID(TextureID::WaterHeight));
-    Texture* color           = graph.GetTexture(RESOURCE_ID(TextureID::ForwardColor));
+    Texture* color           = graph.GetTexture(RESOURCE_ID(TextureID::LinearSceneColor));
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, waterAttachment->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, color->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_TRANSFER_SRC, VKW::STAGE_TRANSFER);

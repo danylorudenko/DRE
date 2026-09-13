@@ -68,14 +68,14 @@ void PipelineDB::CreateDefaultPipelines()
             debugPrimitivesDrawDesc.SetPipelineType(VKW::PIPELINE_TYPE_GRAPHIC);
             debugPrimitivesDrawDesc.SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_LINE_LIST);
             debugPrimitivesDrawDesc.SetCullMode(VK_CULL_MODE_NONE);
-            debugPrimitivesDrawDesc.AddColorOutput(g_GraphicsManager->GetFinalImageFormat());
+            debugPrimitivesDrawDesc.AddColorOutput(g_GraphicsManager->GetDisplayEncodedFormat());
             CreateCustomGraphicsPipeline("debug_primitives_draw", "debug_primitives.slang_mainVS", "debug_primitives.slang_mainPS", debugPrimitivesDrawDesc);
         }
 
         VKW::Pipeline::Descriptor ddgiDrawDesc;
         ddgiDrawDesc.SetPipelineType(VKW::PIPELINE_TYPE_GRAPHIC);
         ddgiDrawDesc.EnableDepthTest(g_GraphicsManager->GetMainDepthFormat(), true);
-        ddgiDrawDesc.AddColorOutput(g_GraphicsManager->GetFinalImageFormat());
+        ddgiDrawDesc.AddColorOutput(g_GraphicsManager->GetDisplayEncodedFormat());
         AddDREVertexAttributes(ddgiDrawDesc);
         CreateCustomGraphicsPipeline("debug_view_ddgi_probes_draw", "debug_view_ddgi_probes.slang_drawVS", "debug_view_ddgi_probes.slang_drawPS", ddgiDrawDesc);
 
@@ -146,9 +146,9 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardPipeline(char const* name,
     desc.SetLayout(GetLayout(layoutName->GetData()));
     desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
     desc.EnableDepthTest(g_GraphicsManager->GetMainDepthFormat());
-    desc.AddColorOutput(g_GraphicsManager->GetMainColorFormat()); // main color
+    desc.AddColorOutput(g_GraphicsManager->GetLinearSceneColorFormat()); // main color
     desc.AddColorOutput(g_GraphicsManager->GetVelocityBufferFormat()); // velocity vectors
-    desc.AddColorOutput(VKW::FORMAT_B8G8R8A8_UNORM);              // object IDs
+    desc.AddColorOutput(g_GraphicsManager->GetObjectIDBufferFormat()); // object IDs
     static_assert(FORWARD_PASS_OUTPUT_COUNT == 3, "Don't forget to modify PipelineDB and ForwardOpaquePass");
 
     AddDREVertexAttributes(desc);
@@ -179,7 +179,7 @@ DRE::String64 const* PipelineDB::CreateGraphicsGBufferPipeline(char const* name,
     desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
     desc.EnableDepthTest(g_GraphicsManager->GetMainDepthFormat());
 
-    auto gBufferFormats = g_GraphicsManager->GetGBufferFormats();
+    auto gBufferFormats = g_GraphicsManager->GetGBufferAttachmentFormats();
     static_assert(gBufferFormats.size() == 4, "Don't forget this");
 
     desc.AddColorOutput(gBufferFormats[0]); // diffuse_roughness
@@ -216,8 +216,8 @@ DRE::String64 const* PipelineDB::CreateGraphicsForwardWaterPipeline(char const* 
     desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
     //desc.SetPolygonMode(VK_POLYGON_MODE_LINE);
     desc.EnableDepthTest(g_GraphicsManager->GetMainDepthFormat(), false);
-    desc.AddColorOutput(g_GraphicsManager->GetMainColorFormat());
-    desc.AddColorOutput(VKW::FORMAT_R16G16_FLOAT); // velocity vectors
+    desc.AddColorOutput(g_GraphicsManager->GetLinearSceneColorFormat());
+    desc.AddColorOutput(g_GraphicsManager->GetVelocityBufferFormat()); // velocity vectors
 
     AddDREVertexAttributes(desc);
 
@@ -288,7 +288,7 @@ DRE::String64 const* PipelineDB::CreateGraphicsGizmoPipeline(char const* name, c
     desc.SetFragmentShader(fragModule);
     desc.SetLayout(GetLayout(layoutName->GetData()));
     desc.SetCullMode(VK_CULL_MODE_BACK_BIT);
-    desc.AddColorOutput(g_GraphicsManager->GetMainColorFormat());
+    desc.AddColorOutput(g_GraphicsManager->GetDisplayEncodedFormat());
 
     AddDREVertexAttributes(desc);
 

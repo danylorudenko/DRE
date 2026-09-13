@@ -20,7 +20,7 @@ constexpr bool C_COMPILE_HLSL_PARALLEL = false; // don't turn on while HLSL infr
 ////////////////
 
 //////////////////////////////////////////
-DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* title, std::uint32_t windowWidth, std::uint32_t windowHeight, std::uint32_t buffering, bool vkDebug, bool imguiEnabled)
+DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* title, DRE::U32 windowWidth, DRE::U32 windowHeight, DRE::U32 buffering, bool vkDebug, DRE::U32 validationBreakSeverity, bool imguiEnabled)
     : m_MainWindow {
         instance,
         title,
@@ -34,7 +34,7 @@ DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* t
     , m_GeometryLibrary{ &DRE::g_MainAllocator }
     , m_IOManager{ &m_MaterialLibrary, &m_GeometryLibrary }
     , m_ShaderModuleDB{ &m_IOManager }
-    , m_GraphicsManager{ instance, &m_MainWindow, &m_IOManager, &m_ShaderModuleDB, vkDebug }
+    , m_GraphicsManager{ instance, &m_MainWindow, &m_IOManager, &m_ShaderModuleDB, vkDebug, validationBreakSeverity }
     , m_ImGuiEnabled{ imguiEnabled }
     , m_MainScene{ &DRE::g_MainAllocator }
     , m_ViewportInput{ &m_MainScene }
@@ -118,7 +118,7 @@ void DREApplicationDelegate::start()
     m_MainScene.SetMainSunLight(sunLight);
 
     sunLight->SetEulerOrientation(glm::vec3{ -70.0f, 110.0f, 0.0f });
-    sunLight->SetIlluminanceLux(4.0f);
+    sunLight->SetIlluminanceLux(80000.0f);
     sunLight->ScheduleUpdateGPUData();
 
     WORLD::Light* pointLight = m_MainScene.CreatePointLight(m_GraphicsManager.GetMainContext());

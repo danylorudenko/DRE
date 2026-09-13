@@ -32,7 +32,7 @@ PassID ImGuiRenderPass::GetID() const
 /////////////////////////
 void ImGuiRenderPass::RegisterResources(RenderGraph& graph)
 {
-    graph.RegisterRenderTarget(this, RESOURCE_ID(TextureID::DisplayEncodedImage), g_GraphicsManager->GetFinalImageFormat(),
+    graph.RegisterRenderTarget(this, RESOURCE_ID(TextureID::DisplayEncodedImage), g_GraphicsManager->GetDisplayEncodedFormat(),
         g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight,
         0);
 }

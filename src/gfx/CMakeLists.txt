@@ -2,6 +2,7 @@ set(GFX_HEADER_LIST
 	"${DRE_SOURCE_DIR}/include/gfx/DeviceChild.hpp"
 	"${DRE_SOURCE_DIR}/include/gfx/FrameID.hpp"
 	"${DRE_SOURCE_DIR}/include/gfx/GraphicsManager.hpp"
+	"${DRE_SOURCE_DIR}/include/gfx/Photometric.hpp"
 	"${DRE_SOURCE_DIR}/include/gfx/PerFrame.hpp"
 	"${DRE_SOURCE_DIR}/include/gfx/buffer/BufferBase.hpp"
 	"${DRE_SOURCE_DIR}/include/gfx/buffer/PersistentStorage.hpp"
@@ -49,6 +50,7 @@ set(GFX_HEADER_LIST
 set(GFX_SOURCE_LIST
 	"${DRE_SOURCE_DIR}/src/gfx/DeviceChild.cpp"
 	"${DRE_SOURCE_DIR}/src/gfx/GraphicsManager.cpp"
+	"${DRE_SOURCE_DIR}/src/gfx/Photometric.cpp"
 	"${DRE_SOURCE_DIR}/src/gfx/buffer/BufferBase.cpp"
 	"${DRE_SOURCE_DIR}/src/gfx/buffer/PersistentStorage.cpp"
 	"${DRE_SOURCE_DIR}/src/gfx/buffer/ReadbackProxy.cpp"

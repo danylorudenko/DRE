@@ -16,6 +16,7 @@ struct InstanceDesc
     std::vector<std::string> requiredInstanceExtensions_;
     std::vector<std::string> requiredInstanceLayers_;
     bool debug_;
+    DRE::U32 validationBreakSeverity_;
 };
 
 class Instance
@@ -46,6 +47,7 @@ private:
     VKW::ImportTable* table_;
     VkInstance instance_;
     VkDebugUtilsMessengerEXT debugMessenger_;
+    static DRE::U32 s_BreakOnSeverity; // error, warning, info, verbose
 };
 
 }

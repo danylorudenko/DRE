@@ -23,7 +23,7 @@ void DebugPassTextureView::RegisterResources(RenderGraph& graph)
     DRE::U32 renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth;
     DRE::U32 renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DisplayEncodedImage), g_GraphicsManager->GetFinalImageFormat(),
+    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DisplayEncodedImage), g_GraphicsManager->GetDisplayEncodedFormat(),
         renderWidth, renderHeight,
         VKW::RESOURCE_ACCESS_SHADER_WRITE);
 }

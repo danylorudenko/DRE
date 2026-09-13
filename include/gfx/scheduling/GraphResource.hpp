@@ -20,7 +20,7 @@ enum class TextureID
     ShadowMap,
     CausticEnvMap,
     CausticMap,
-    ForwardColor,
+    LinearSceneColor,
     FFTButterfly,
     FFTH0,
     FFTHxt,
