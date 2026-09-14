@@ -45,6 +45,7 @@ public:
 private:
     static void GeneratePlaneMesh(DRE::U32 width, DRE::U32 height, DRE::ByteBuffer& vertexOut, DRE::ByteBuffer& indexOut);
     static void GenerateSphereMesh(DRE::U32 verticalResolution, DRE::U32 horizontalResolution, DRE::ByteBuffer& vertexOut, DRE::ByteBuffer& indexOut);
+    static void GenerateBoxMesh(DRE::ByteBuffer& vertexOut, DRE::ByteBuffer& indexOut);
 
 private:
     DRE::HashTable<Hash, Geometry, DRE::DefaultAllocator> m_Geometries;
