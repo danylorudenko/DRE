@@ -26,7 +26,7 @@ DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* t
         title,
         windowWidth,
         windowHeight,
-        "VulkanRenderWindow",
+        "DREWindow",
         DREApplicationDelegate::WinProc,
         this }
     , m_InputSystem{ m_MainWindow.NativeHandle() }

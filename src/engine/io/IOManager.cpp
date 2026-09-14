@@ -420,7 +420,7 @@ void IOManager::ParseAssimpMaterials(aiScene const* scene, char const* sceneName
             material->FlushToGfxMaterial(gfxMaterial);
         }
     }
-    , false);
+    , true);
 }
 
 void IOManager::ParseAssimpMaterials_PBRTextures(aiScene const* scene, aiMaterial const* aiMat, DRE::String128 const& path, Data::Material& targetDataMaterial)
@@ -480,7 +480,9 @@ void IOManager::ParseAssimpMaterials_NormalsHELPER(aiScene const* scene, aiMater
 
 void IOManager::ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene, char const* sceneName)
 {
-    for (std::uint32_t i = 0, size = scene->mNumMeshes; i < size; i++)
+    std::mutex geometryMutex;
+
+    DRE::ParallelFor<16>(scene->mNumMeshes, [this, &gfxContext, scene, sceneName, &geometryMutex](DRE::U32 i)
     {
         aiMesh* mesh = scene->mMeshes[i];
 
@@ -488,7 +490,7 @@ void IOManager::ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene
         geometry.ResizeVertexStorage(mesh->mNumVertices);
         geometry.ResizeIndexStorage(mesh->mNumFaces * 3);
 
-        for (std::uint32_t j = 0, jSize = mesh->mNumVertices; j < jSize; j++)
+        for (DRE::U32 j = 0, jSize = mesh->mNumVertices; j < jSize; j++)
         {
             Data::DREVertex& v = geometry.GetVertex<Data::DREVertex>(j);
             v.pos[0] = mesh->mVertices[j].x;
@@ -511,16 +513,18 @@ void IOManager::ParseAssimpMeshes(VKW::Context& gfxContext, aiScene const* scene
             v.uv0[1] = mesh->mTextureCoords[0][j].y;
         }
 
-        for (std::uint32_t j = 0, jSize = mesh->mNumFaces; j < jSize; j++)
+        for (DRE::U32 j = 0, jSize = mesh->mNumFaces; j < jSize; j++)
         {
             geometry.GetIndex<Data::DREIndex>(j*3 + 0) = mesh->mFaces[j].mIndices[0];
             geometry.GetIndex<Data::DREIndex>(j*3 + 1) = mesh->mFaces[j].mIndices[1];
             geometry.GetIndex<Data::DREIndex>(j*3 + 2) = mesh->mFaces[j].mIndices[2];
         }
 
+        std::lock_guard<std::mutex> lock(geometryMutex);
         m_GeometryLibrary->AddGeometry(i, sceneName, DRE_MOVE(geometry));
         GFX::g_GraphicsManager->GetRayTracingManager().RegisterGeometry(m_GeometryLibrary->GetGeometry(i, sceneName), gfxContext);
-    }
+    },
+    true);
 }
 
 }

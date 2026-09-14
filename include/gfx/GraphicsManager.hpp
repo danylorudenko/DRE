@@ -146,9 +146,9 @@ public:
     inline VKW::Context&                GetMainContext() { return m_MainContext; }
 
     inline std::uint64_t                GetCurrentGraphicsFrame() const { return m_GraphicsFrame; }
-    inline FrameID                      GetCurrentFrameID() const { return FrameID{ std::uint8_t(m_GraphicsFrame % VKW::CONSTANTS::FRAMES_BUFFERING) }; }
-    inline FrameID                      GetPrevFrameID() const { return FrameID{ std::uint8_t((m_GraphicsFrame - 1) % VKW::CONSTANTS::FRAMES_BUFFERING) }; }
-    inline FrameID                      GetNextFrameID() const { return FrameID{ std::uint8_t((m_GraphicsFrame + 1) % VKW::CONSTANTS::FRAMES_BUFFERING) }; }
+    inline FrameID                      GetCurrentFrameID() const { return FrameID{ DRE::U8(m_GraphicsFrame % VKW::CONSTANTS::FRAMES_BUFFERING) }; }
+    inline FrameID                      GetPrevFrameID() const { return FrameID{ DRE::U8((m_GraphicsFrame - 1) % VKW::CONSTANTS::FRAMES_BUFFERING) }; }
+    inline FrameID                      GetNextFrameID() const { return FrameID{ DRE::U8((m_GraphicsFrame + 1) % VKW::CONSTANTS::FRAMES_BUFFERING) }; }
 
     inline UploadArena&                 GetUploadArena() { return m_UploadArena; }
     inline UniformArena&                GetUniformArena() { return m_UniformArena; }
