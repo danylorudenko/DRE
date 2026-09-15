@@ -58,6 +58,14 @@ void SceneGraphEditor::Render()
         if (ImGui::BeginMenuBar())
         {
             ImGui::MenuItem("Show IDs", nullptr, &m_ShowIDs);
+            if (ImGui::MenuItem("Spawn Box"))
+            {
+                DRE::CreateDefaultBox(m_Scene);
+            }
+            if (ImGui::MenuItem("Spawn Sphere"))
+            {
+                DRE::CreateDefaultSphere(m_Scene);
+            }
         }
         ImGui::EndMenuBar();
 
@@ -245,26 +253,26 @@ void SceneGraphEditor::RenderEntityProperties(RenderingContext& context)
             for(DRE::U32 i = 0; i < Data::Material::TextureProperty::Slot::MAX; ++i)
             {
                 Data::Material::TextureProperty::Slot slot = static_cast<Data::Material::TextureProperty::Slot>(i);
-                Data::Texture2D const& texture = material->GetTexture(slot);
+                DRE::String128 const& textureName = material->GetTextureName(slot);
 
                 ImGui::TableNextRow();
                 ImGui::TableSetColumnIndex(0);
                 ImGui::TextUnformatted(GetTextureSlotString(slot));
 
                 ImGui::TableSetColumnIndex(1);
-                if (texture.IsInitialized())
+                if (textureName.GetSize() > 0)
                 {
-                    GFX::Texture* gfxTexture = GFX::g_GraphicsManager->GetTextureBank().FindTexture(texture.GetName());
+                    GFX::Texture* gfxTexture = GFX::g_GraphicsManager->GetTextureBank().FindTexture(textureName.GetData());
                     DRE_ASSERT(gfxTexture != nullptr, "Material has a texture that is not loaded in the TextureBank");
 
                     char const* uniqueViewLabel = context.GetNextUniqueLabel("[view]");
                     if (ImGui::Button(uniqueViewLabel, ImVec2(50, 0)))
                     {
                         DRE::SetFlag32(DRE::g_AppContext.m_TextureInspectorViewState.m_Flags, DRE::TextureViewState::FLAG_DRAW);
-                        DRE::g_AppContext.m_TextureInspectorViewState.m_TextureName = texture.GetName();
+                        DRE::g_AppContext.m_TextureInspectorViewState.m_TextureName = textureName.GetData();
                     }
                     ImGui::SameLine();
-                    ImGui::Text("(GUID=%d)%s", gfxTexture->GetShaderGlobalDescriptor().id_, texture.GetName());
+                    ImGui::Text("(GUID=%d)%s", gfxTexture->GetShaderGlobalDescriptor().id_, textureName.GetData());
                 }
                 else
                 {

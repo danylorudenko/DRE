@@ -44,8 +44,7 @@ public:
             MAX
         };
 
-        Texture2D const& GetTexture() const;
-        void SetDataTexture(Texture2D&& texture);
+        DRE::String128 const& GetTextureName() const;
         void SetGfxTexture(GFX::Texture* texture);
 
         inline Slot GetSlotType() const { return m_Slot; }
@@ -53,7 +52,7 @@ public:
 
     private:
         Slot            m_Slot = Slot::MAX;
-        Texture2D       m_DataTexture;
+        DRE::String128  m_GfxTextureName;
         GFX::Texture*   m_GFXTexture = nullptr; // TODO: should receive dummy black texture if slot is empty
 
     };
@@ -115,12 +114,12 @@ public:
 
     //////////////////////////////////////
     // Material
-    void AssignTextureToSlot(TextureProperty::Slot slot, Texture2D&& texture, GFX::Texture* gfxTexture);
+    void AssignTextureToSlot(TextureProperty::Slot slot, char const* gfxTextureName, GFX::Texture* gfxTexture);
 
     RenderingProperties& GetRenderingProperties() { return m_RenderingProperties; }
     RenderingProperties const& GetRenderingProperties() const { return m_RenderingProperties; }
 
-    inline Texture2D const& GetTexture(TextureProperty::Slot slot) const { return m_TextureProperties[int(slot)].GetTexture(); }
+    inline DRE::String128 const& GetTextureName(TextureProperty::Slot slot) const { return m_TextureProperties[int(slot)].GetTextureName(); }
     inline GFX::Material* GetGfxMaterial() { return m_GFXMaterial; }
 
     inline char const* GetName() const { return static_cast<char const*>(m_Name); }

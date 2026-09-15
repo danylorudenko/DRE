@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <future>
 
 #include <foundation\class_features\NonMovable.hpp>
 
@@ -11,15 +10,11 @@
 #include <demo_app\Application.hpp>
 #include <demo_app\ImGuiHelper.hpp>
 
-#include <vk_wrapper\Context.hpp>
-
 #include <gfx\GraphicsManager.hpp>
 
 #include <foundation\system\Window.hpp>
-#include <foundation\system\DynamicLibrary.hpp>
 #include <foundation\input\InputSystem.hpp>
 
-#include <engine\ApplicationContext.hpp>
 #include <engine\scene\Scene.hpp>
 #include <engine\data\MaterialLibrary.hpp>
 #include <engine\data\GeometryLibrary.hpp>

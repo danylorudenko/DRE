@@ -5,14 +5,9 @@
 namespace Data
 {
 
-Texture2D const& Material::TextureProperty::GetTexture() const
+DRE::String128 const& Material::TextureProperty::GetTextureName() const
 {
-    return m_DataTexture;
-}
-
-void Material::TextureProperty::SetDataTexture(Texture2D&& texture)
-{
-    m_DataTexture = DRE_MOVE(texture);
+    return m_GfxTextureName;
 }
 
 void Material::TextureProperty::SetGfxTexture(GFX::Texture* texture)
@@ -20,10 +15,10 @@ void Material::TextureProperty::SetGfxTexture(GFX::Texture* texture)
     m_GFXTexture = DRE_MOVE(texture);
 }
 
-void Material::AssignTextureToSlot(TextureProperty::Slot slot, Texture2D&& texture, GFX::Texture* gfxTexture)
+void Material::AssignTextureToSlot(TextureProperty::Slot slot, char const* gfxTextureName, GFX::Texture* gfxTexture)
 {
     m_TextureProperties[slot].SetSlotType(slot);
-    m_TextureProperties[slot].SetDataTexture(DRE_MOVE(texture));
+    m_TextureProperties[slot].m_GfxTextureName = gfxTextureName;
     m_TextureProperties[slot].SetGfxTexture(gfxTexture);
 }
 

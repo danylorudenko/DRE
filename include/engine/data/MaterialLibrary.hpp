@@ -17,18 +17,21 @@ class MaterialLibrary
     : public NonCopyable
 {
 public:
+    static constexpr char NAME_DEFAULT_DIFFUSE_WHITE[] = "dre_default_diffuse";
+
     struct Hash
     {
-        explicit Hash(std::uint32_t id, char const* sceneName);
-        explicit Hash(std::uint32_t hash) : m_Hash{ hash } {}
+        explicit Hash(DRE::U32 id, char const* sceneName);
+        explicit Hash(char const* name);
+        explicit Hash(DRE::U32 hash) : m_Hash{ hash } {}
         explicit Hash() : m_Hash{ 0 } {}
-        explicit operator std::uint32_t() const { return m_Hash; }
+        explicit operator DRE::U32() const { return m_Hash; }
 
         bool operator==(Hash const& rhs) { return m_Hash == rhs.m_Hash; }
         bool operator!=(Hash const& rhs) { return m_Hash != rhs.m_Hash; }
 
     private:
-        std::uint32_t m_Hash;
+        DRE::U32 m_Hash;
     };
 
 
@@ -36,15 +39,13 @@ public:
 
     void InitDefaultMaterials();
 
+    Material* CreateMaterial(char const* name);
     Material* CreateMaterial(Hash hash, char const* name);
-    Material* CreateMaterial(std::uint32_t id, char const* sceneName, char const* name);
-    Material* GetMaterial(Hash hash);
-    Material* GetMaterial(std::uint32_t id, char const* sceneName);
+    Material* CreateMaterial(DRE::U32 id, char const* sceneName, char const* name);
 
-    //void debug_output()
-    //{
-    //    m_MaterialsMap.ForEach([](auto const& pair) { std::cout << "K:" << *pair.key << " V:" << pair.value->GetName() << std::endl; });
-    //}
+    Material* GetMaterial(char const* name);
+    Material* GetMaterial(Hash hash);
+    Material* GetMaterial(DRE::U32 id, char const* sceneName);
 
 private:
     DRE::HashTable<Hash, Material, DRE::DefaultAllocator> m_MaterialsMap;

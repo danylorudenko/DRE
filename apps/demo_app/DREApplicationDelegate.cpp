@@ -41,7 +41,9 @@ DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* t
     , m_RootEditor{ &m_MainScene, &m_ViewportInput }
     , m_CameraMoveSpeed{ 25.0f }
 {
-    WORLD::g_MainScene = &m_MainScene;
+    DRE::g_AppContext.m_MainScene = &m_MainScene;
+    DRE::g_AppContext.m_GeometryLibrary = &m_GeometryLibrary;
+    DRE::g_AppContext.m_MaterialLibrary = &m_MaterialLibrary;
 }
 
 //////////////////////////////////////////
@@ -103,8 +105,15 @@ void DREApplicationDelegate::start()
     {  
         m_ShaderModuleDB.CompileSources(C_COMPILE_HLSL_PARALLEL);
     }
-    
+
+    if (m_ImGuiEnabled)
+        InitImGui();
+
     m_GeometryLibrary.LoadDefaultGeometry();
+    m_GraphicsManager.PrecacheAllData(m_GraphicsManager.GetMainContext(), &m_ViewportInput, &m_GeometryLibrary);
+
+    m_MaterialLibrary.InitDefaultMaterials();
+
 
     m_MainScene.GetMainCamera().SetFOV(60.0f);
     //m_MainScene.GetMainCamera().SetPosition(glm::vec3{ 7.28f, 5.57f, -1.07f });
@@ -125,12 +134,6 @@ void DREApplicationDelegate::start()
     pointLight->SetPosition(glm::vec3{ 0.0f, 20.0f, 0.0f });
     pointLight->SetLuminanceCd(100.0f);
     pointLight->ScheduleUpdateGPUData();
-
-    if (m_ImGuiEnabled)
-        InitImGui();
-
-    m_GraphicsManager.PrecacheAllData(m_GraphicsManager.GetMainContext(), &m_ViewportInput, &m_GeometryLibrary);
-
 
 
     /////////////////////////////////////////////////////////////////////

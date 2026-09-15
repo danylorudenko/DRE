@@ -1,6 +1,5 @@
 #include <gfx\GraphicsManager.hpp>
 
-#include <foundation\math\Geometry.hpp>
 #include <foundation\system\Window.hpp>
 #include <foundation\input\InputSystem.hpp>
 
@@ -22,6 +21,7 @@
 #include <engine\io\IOManager.hpp>
 #include <engine\scene\Scene.hpp>
 #include <engine\data\GeometryLibrary.hpp>
+#include <engine\ApplicationContext.hpp>
 
 #include <common\global_uniform.slang>
 #include <common\debug_draw.slang>
@@ -247,7 +247,7 @@ void GraphicsManager::RenderFrame(std::uint64_t frame, std::uint64_t deltaTimeUS
     m_LightsManager.FlushUpdates(context);
 
     RayTracingManager::TLAS* tlas = m_RayTracingManager.Update(GetCurrentFrameID(), m_MainView, context);
-    PrepareGlobalData(context, *WORLD::g_MainScene, m_RenderGraph, tlas, deltaTimeUS, globalTimeS, cursorPos);
+    PrepareGlobalData(context, *DRE::g_AppContext.m_MainScene, m_RenderGraph, tlas, deltaTimeUS, globalTimeS, cursorPos);
 
 #ifdef DRE_DEBUG
     if (SYS::g_InputSystem->GetKeyboardButtonJustPressed(Keys::B))

@@ -185,7 +185,7 @@ void IOManager::ParseMaterialTexture_Parallel(aiScene const* scene, aiMaterial c
             GFX::g_GraphicsManager->GetUploadArena().ResetAllocations(GFX::g_GraphicsManager->GetCurrentFrameID());
         }
 
-        material.AssignTextureToSlot(slot, DRE_MOVE(dataTexture), gfxTexture);
+        material.AssignTextureToSlot(slot, textureFilePath.GetData(), gfxTexture);
     }
     else
     {

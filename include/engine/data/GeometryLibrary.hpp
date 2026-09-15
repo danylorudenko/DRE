@@ -15,6 +15,10 @@ class GeometryLibrary
     : public NonCopyable
 {
 public:
+    static constexpr char NAME_DEFAULT_BOX[] = "dre_box";
+    static constexpr char NAME_DEFAULT_SPHERE[] = "dre_sphere";
+    static constexpr char NAME_DEFAULT_PLANE[] = "dre_plane";
+
     struct Hash
     {
         explicit Hash(DRE::U32 id, char const* sceneName);

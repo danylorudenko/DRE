@@ -29,15 +29,18 @@ Texture* TextureBank::FindTexture(DRE::String128 const& name)
 void TextureBank::LoadDefaultTextures()
 {
     DRE::U8 defaultBlack[4] = { 0x00, 0x00, 0x00, 0x00 };
+    DRE::U8 defaultWhite[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
     DRE::U8 defaultNormal[4] = { 0x80, 0x80, 0xFF, 0x00 };
     DRE::U8 zero = 0x00;
     DRE::U8 one = 0xFF;
     DRE::ByteBuffer defaultBlackBuffer{ defaultBlack, sizeof(defaultBlack) };
+    DRE::ByteBuffer defaultWhiteBuffer{ defaultWhite, sizeof(defaultWhite) };
     DRE::ByteBuffer defaultNormalBuffer{ defaultNormal, sizeof(defaultNormal) };
     DRE::ByteBuffer zeroBuffer{ &zero, sizeof(zero) };
     DRE::ByteBuffer oneBuffer{ &one, sizeof(one) };
 
     LoadTexture2DSync(NAME_DEFAULT_BLACK, 1, 1, VKW::FORMAT_R8G8B8A8_UNORM, defaultBlackBuffer);
+    LoadTexture2DSync(NAME_DEFAULT_WHITE, 1, 1, VKW::FORMAT_R8G8B8A8_UNORM, defaultWhiteBuffer);
     LoadTexture2DSync(NAME_DEFAULT_NORMAL, 1, 1, VKW::FORMAT_R8G8B8A8_UNORM, defaultNormalBuffer);
     LoadTexture2DSync(NAME_DEFAULT_R_ZERO, 1, 1, VKW::FORMAT_R8_UNORM, zeroBuffer);
     LoadTexture2DSync(NAME_DEFAULT_R_ONE, 1, 1, VKW::FORMAT_R8_UNORM, oneBuffer);

@@ -7,6 +7,14 @@
 namespace WORLD
 {
 class ISceneNodeUser;
+class Scene;
+class Entity;
+}
+
+namespace Data
+{
+class GeometryLibrary;
+class MaterialLibrary;
 }
 
 namespace DRE
@@ -68,8 +76,12 @@ struct ApplicationContext
     DRE::U64    m_TimeSinceStartUS = 0;
     DRE::U64    m_SystemTimeUS = 0;
     DRE::U64    m_DeltaTimeUS = 0;
-
     bool        m_PauseTime = false;
+
+    // General Engine Access
+    WORLD::Scene*           m_MainScene = nullptr;
+    Data::GeometryLibrary*  m_GeometryLibrary = nullptr;
+    Data::MaterialLibrary*  m_MaterialLibrary = nullptr;
 
     // Focused Object
     WORLD::ISceneNodeUser*  m_FocusedObject = nullptr;
@@ -88,5 +100,10 @@ struct ApplicationContext
 };
 
 extern ApplicationContext g_AppContext;
+
+
+WORLD::Entity* CreateDefaultBox(WORLD::Scene* targetScene);
+WORLD::Entity* CreateDefaultSphere(WORLD::Scene* targetScene);
+WORLD::Entity* CreateLocalLight(WORLD::Scene* targetScene);
 
 }

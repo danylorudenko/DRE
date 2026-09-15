@@ -26,6 +26,7 @@ class TextureBank
 {
 public:
     static constexpr char NAME_DEFAULT_BLACK[]  = "default_color";
+    static constexpr char NAME_DEFAULT_WHITE[] = "default_white";
     static constexpr char NAME_DEFAULT_NORMAL[] = "default_normal";
     static constexpr char NAME_DEFAULT_R_ZERO[] = "zero_r";
     static constexpr char NAME_DEFAULT_R_ONE[]  = "one_r";

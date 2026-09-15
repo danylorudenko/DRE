@@ -56,6 +56,7 @@ public:
 
 
     Entity*                         CreateOpaqueEntity(VKW::Context& context, Data::Geometry* geometry, Data::Material* material, SceneNode* parent = nullptr);
+
     inline SceneNode*               CreateSceneNode(ISceneNodeUser* user, SceneNode* parent);
 
     Light*                          CreateDirectionalLight(VKW::Context& context, SceneNode* parent = nullptr);
@@ -80,8 +81,6 @@ private:
 
     SceneNode* m_RootNode;
 };
-
-extern Scene* g_MainScene;
 
 }
 
