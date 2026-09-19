@@ -1,8 +1,8 @@
 #include "common/shaders_common.slang"
 #include "common/global_illumination/ddgi_common.slang"
 
-[[vk::binding(0, 3)]] ConstantBuffer<DDGIConstantBuffer>    ddgiCB;
-[[vk::binding(1, 3)]] RWStructuredBuffer<DDGIProbeData>     ddgiProbesData;
+[[vk::binding(0, 3)]] ConstantBuffer<DDGIConstantBuffer>        ddgiCB;
+[[vk::binding(1, 3)]] RWStructuredBuffer<DDGIProbeEncodedData>  ddgiProbesData;
 
 
 [shader("compute")]
@@ -14,9 +14,10 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
     {
         uint probeIndex = GetProbeIndex(ddgiCB.probeGridDimentions, DTid);
 
-        DDGIProbeData probeData;
-        probeData.position = float4(probesCoordinateStart + ddgiCB.probesWorldDistance.xyz * float3(DTid), 1.0);
-        
-        ddgiProbesData[probeIndex] = probeData;
+        DDGIProbeData probeData = DecodeProbeData(ddgiProbesData[probeIndex]);
+        probeData.position = probesCoordinateStart + ddgiCB.probesWorldDistance.xyz * float3(DTid);
+        probeData.framesSinceUpdate += 1;
+
+        ddgiProbesData[probeIndex] = EncodeProbeData(probeData);
     }
 }

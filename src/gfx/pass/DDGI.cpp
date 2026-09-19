@@ -36,7 +36,7 @@ DRE::U32 DDGI::GetProbeTotalCount() const
 
 DRE::U32 DDGI::GetProbeDataBufferSize() const
 {
-    return sizeof(DDGIProbeData) * GetProbeTotalCount();
+    return sizeof(DDGIProbeEncodedData) * GetProbeTotalCount();
 }
 
 DRE::U32 DDGI::GetProbeResolutionIrradiance() const
@@ -79,7 +79,7 @@ DDGIConstantBuffer DDGI::GetConstantBuffer(RenderGraph& graph) const
     cb.probeGridDimentions = ddgiProbeGridDimentions;
     cb.probeDebugScale = ddgiDebugState.m_SphereScale;
 
-    cb.ddgiProbeData = reinterpret_cast<DDGIProbeData*>(graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData))->GetResource()->gpuAddress_);
+    cb.ddgiProbeData = reinterpret_cast<DDGIProbeEncodedData*>(graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData))->GetResource()->gpuAddress_);
 
     cb.probesWorldDistance = glm::vec4(ddgiProbeWorldDistance, glm::max(ddgiProbeWorldDistance.x, glm::max(ddgiProbeWorldDistance.y, ddgiProbeWorldDistance.z)));
 
@@ -126,9 +126,17 @@ void DDGIProbeScatterPass::Render(RenderGraph& graph, VKW::Context& context)
 {
     DRE_GPU_SCOPE(DDGIProbeScatter);
 
-    glm::uvec3 GROUP_SIZE{ 4, 4, 4, };
-
     StorageBuffer* ddgiProbeData = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData));
+
+    static bool probeDataPrimed = false;
+    if (!probeDataPrimed)
+    {
+        g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData->GetResource(), VKW::RESOURCE_ACCESS_GENERIC_WRITE, VKW::STAGE_TRANSFER);
+        context.CmdFillBuffer(ddgiProbeData->GetResource(), 0, ddgiProbeData->GetSize(), 0);
+
+        probeDataPrimed = true;
+    }
+
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData->GetResource(), VKW::RESOURCE_ACCESS_GENERIC_WRITE, VKW::STAGE_COMPUTE);
 
     PipelineEntry* entry = g_GraphicsManager->GetPipelineDB().GetEntry("ddgi_probe_scatter");
@@ -147,6 +155,7 @@ void DDGIProbeScatterPass::Render(RenderGraph& graph, VKW::Context& context)
 
     glm::uvec3 const ddgiProbeDimentions = g_GraphicsManager->GetDDGI().GetProbeCount3D();
 
+    glm::uvec3 GROUP_SIZE{ 4, 4, 4, };
     glm::uvec3 dispatchSize = (ddgiProbeDimentions + GROUP_SIZE - 1u) / GROUP_SIZE;
     context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
 }
@@ -174,10 +183,6 @@ void DDGIProbeTracePass::Render(RenderGraph& graph, VKW::Context& context)
 
     StorageBuffer* ddgiProbeData = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData));
     StorageBuffer* ddgiProbeSampleBuffer = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeSampleBuffer));
-
-    // this fill helps combat DEVICE_LOST error on writing samples to buffer (I think it was unitialized sample counter
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeSampleBuffer->GetResource(), VKW::RESOURCE_ACCESS_GENERIC_WRITE, VKW::STAGE_TRANSFER);
-    context.CmdFillBuffer(ddgiProbeSampleBuffer->GetResource(), 0, sizeof(DDGIProbeSamples) * ddgi.GetProbeTotalCount(), 0);
 
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData->GetResource(), VKW::RESOURCE_ACCESS_SHADER_RW, VKW::STAGE_COMPUTE);
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeSampleBuffer->GetResource(), VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);

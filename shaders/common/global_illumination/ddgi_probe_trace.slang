@@ -164,7 +164,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
         float alpha = PcgHash(probeSeed) * (1.0/float(0xFFFFFFFFu)) * PI;
         float theta = PcgHash(probeSeed) * (1.0/float(0xFFFFFFFFu)) * PI * 2.0;
 
-        DDGIProbeData probeData = ddgiCB.ddgiProbeData[probeIndex];
+        DDGIProbeData probeData = DecodeProbeData(ddgiCB.ddgiProbeData[probeIndex]);
         float3 rayOrigin = probeData.position.xyz;
         float3 rayDir = PolarToCartesian(alpha, theta);
         //float3 rayDir = float3(0, 1, 0);

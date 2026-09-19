@@ -112,7 +112,7 @@ S_LIGHTING_RESULT CalculateDirectLighting(S_SURFACE surface, float3 viewPosWS, S
     return Result;
 }
 
-S_LIGHTING_RESULT CalculateIndirectLighting(in DDGIProbeData* ddgiProbeDataPtr, in S_SURFACE surface, uint irradianceAtlasID, uint visibilityAtlasID, bool debugDrawCage = false)
+S_LIGHTING_RESULT CalculateIndirectLighting(in DDGIProbeEncodedData* ddgiProbeDataPtr, in S_SURFACE surface, uint irradianceAtlasID, uint visibilityAtlasID, bool debugDrawCage = false)
 {
     S_LIGHTING_RESULT Result;
     float3 accumulatedIrradiance = float3(0.0f, 0.0f, 0.0f);
@@ -135,7 +135,7 @@ S_LIGHTING_RESULT CalculateIndirectLighting(in DDGIProbeData* ddgiProbeDataPtr, 
 
         float finalWeight = probes.weights[i];
 
-        DDGIProbeData probeData = ddgiProbeDataPtr[probes.indices[i]];
+        DDGIProbeData probeData = DecodeProbeData(ddgiProbeDataPtr[probes.indices[i]]);
         float3 pixelToProbe = probeData.position.xyz - surface.wpos;
         float distanceToProbe = length(pixelToProbe) + 0.1f;
         float3 pixelToProbeDir = pixelToProbe / max(distanceToProbe, 0.0001f);

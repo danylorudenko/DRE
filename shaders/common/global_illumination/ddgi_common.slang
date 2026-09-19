@@ -23,9 +23,17 @@
 #define DDGI_VISIBILITY_FILL_PASS_BIT 0x1 // otherwise irradiance pass
 
 
+struct DDGIProbeEncodedData
+{
+    float3 position;
+    uint   data;
+};
+
 struct DDGIProbeData
 {
-    float4 position;
+    float3 position;
+    uint   framesSinceUpdate;
+    bool   isActive;
 };
 
 struct DDGIConstantBuffer
@@ -33,7 +41,7 @@ struct DDGIConstantBuffer
     uint3 probeGridDimentions;
     float probeDebugScale;
 
-    DDGIProbeData* ddgiProbeData;
+    DDGIProbeEncodedData* ddgiProbeData;
     uint pad3;
     uint pad4;
 
@@ -82,6 +90,24 @@ struct DDGIProbeSamples
 
 
 #ifndef __cplusplus
+
+DDGIProbeEncodedData EncodeProbeData(DDGIProbeData probeData)
+{
+    DDGIProbeEncodedData encoded;
+    encoded.position = probeData.position;
+    encoded.data = (probeData.framesSinceUpdate & 0x7FFFFFFF) | (probeData.isActive ? 0x80000000 : 0);
+    return encoded;
+}
+
+DDGIProbeData DecodeProbeData(DDGIProbeEncodedData encoded)
+{
+    DDGIProbeData probeData;
+    probeData.position = encoded.position;
+    probeData.framesSinceUpdate = encoded.data & 0x7FFFFFFF;
+    probeData.isActive = (encoded.data & 0x80000000) != 0;
+    return probeData;
+}
+
 
 uint GetProbeIndex(uint3 probeGridDimentions, uint3 DTid)
 {

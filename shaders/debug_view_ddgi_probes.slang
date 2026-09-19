@@ -3,7 +3,7 @@
 #include "common/vertex/dre_vertex_layout.slang"
 
 [[vk::binding(0, 3)]] RWStructuredBuffer<DrawIndexedIndirectCommand>    indirectArgBuffer;
-[[vk::binding(1, 3)]] StructuredBuffer<DDGIProbeData>                   probeData;
+[[vk::binding(1, 3)]] StructuredBuffer<DDGIProbeEncodedData>            probeData;
 [[vk::binding(2, 3)]] ConstantBuffer<DDGIConstantBuffer>                ddgiCB;
 
 float4 RemapDisplayValue(float4 value, float lowBound, float highBound)
@@ -44,7 +44,7 @@ PSInput drawVS(DREVertex input, uint instanceID : SV_InstanceID)
     PSInput output;
     output.wpos = input.pos * ddgiCB.probeDebugScale;
 
-    DDGIProbeData probeData = probeData[instanceID];
+    DDGIProbeData probeData = DecodeProbeData(probeData[instanceID]);
     output.wpos += probeData.position.xyz;
 
     float4 ndc_pos = mul(GetCameraViewProjM(), float4(output.wpos, 1.0));

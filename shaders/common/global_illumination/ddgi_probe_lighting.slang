@@ -2,11 +2,11 @@
 #include "common/global_illumination/ddgi_common.slang"
 #include "common/lighting/lighting.slang"
 
-[[vk::binding(0, 3)]] ConstantBuffer<DDGIConstantBuffer>    ddgiCB;
-[[vk::binding(1, 3)]] RWStructuredBuffer<DDGIProbeSamples>  ddgiSampleBuffer;
-[[vk::binding(2, 3)]] RWTexture2D                           ddgiAtlasIrradiance;
-[[vk::binding(3, 3)]] Texture2D                             ddgiAtlasIrradianceHistory;
-[[vk::binding(4, 3)]] StructuredBuffer<DDGIProbeData>       ddgiProbeData;
+[[vk::binding(0, 3)]] ConstantBuffer<DDGIConstantBuffer>        ddgiCB;
+[[vk::binding(1, 3)]] RWStructuredBuffer<DDGIProbeSamples>      ddgiSampleBuffer;
+[[vk::binding(2, 3)]] RWTexture2D                               ddgiAtlasIrradiance;
+[[vk::binding(3, 3)]] Texture2D                                 ddgiAtlasIrradianceHistory;
+[[vk::binding(4, 3)]] StructuredBuffer<DDGIProbeEncodedData>    ddgiProbeData;
 
 [require(spvRayQueryKHR)]
 [shader("compute")]
@@ -28,7 +28,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
         return;
     }
 
-    DDGIProbeData probeData = ddgiProbeData[probeIndex];
+    DDGIProbeData probeData = DecodeProbeData(ddgiProbeData[probeIndex]);
     DDGIProbeSamples probeGBuffer = ddgiSampleBuffer[probeIndex];
 
     float4 uvRect = GetProbeAtlasUVRect(probeIndex, ddgiCB.probeIrradianceResolution, ddgiCB.probeGridDimentions);
