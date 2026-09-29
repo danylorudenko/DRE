@@ -111,35 +111,30 @@ DDGIConstantBuffer DDGI::GetConstantBuffer(RenderGraph& graph) const
 
 
 ////////////////////////////////////////////////
-PassID DDGIProbeScatterPass::GetID() const
+PassID DDGIProbePrimePass::GetID() const
 {
-    return PassID::DDGIProbeScatter;
+    return PassID::DDGIProbePrime;
 }
 
-void DDGIProbeScatterPass::RegisterResources(RenderGraph& graph)
+void DDGIProbePrimePass::RegisterResources(RenderGraph& graph)
 {
     DDGI& ddgi = g_GraphicsManager->GetDDGI();
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData), ddgi.GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_SHADER_WRITE);
 }
 
-void DDGIProbeScatterPass::Render(RenderGraph& graph, VKW::Context& context)
+void DDGIProbePrimePass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    DRE_GPU_SCOPE(DDGIProbeScatter);
+    static bool probeDataPrimed = false;
+    if (probeDataPrimed)
+        return;
+
+    DRE_GPU_SCOPE(DDGIProbePrime);
 
     StorageBuffer* ddgiProbeData = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData));
 
-    static bool probeDataPrimed = false;
-    if (!probeDataPrimed)
-    {
-        g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData->GetResource(), VKW::RESOURCE_ACCESS_GENERIC_WRITE, VKW::STAGE_TRANSFER);
-        context.CmdFillBuffer(ddgiProbeData->GetResource(), 0, ddgiProbeData->GetSize(), 0);
-
-        probeDataPrimed = true;
-    }
-
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData->GetResource(), VKW::RESOURCE_ACCESS_GENERIC_WRITE, VKW::STAGE_COMPUTE);
 
-    PipelineEntry* entry = g_GraphicsManager->GetPipelineDB().GetEntry("ddgi_probe_scatter");
+    PipelineEntry* entry = g_GraphicsManager->GetPipelineDB().GetEntry("ddgi_probe_prime");
     UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(DDGIConstantBuffer));
 
     uniform.WriteMember140(g_GraphicsManager->GetDDGI().GetConstantBuffer(graph));
@@ -158,6 +153,8 @@ void DDGIProbeScatterPass::Render(RenderGraph& graph, VKW::Context& context)
     glm::uvec3 GROUP_SIZE{ 4, 4, 4, };
     glm::uvec3 dispatchSize = (ddgiProbeDimentions + GROUP_SIZE - 1u) / GROUP_SIZE;
     context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
+
+    probeDataPrimed = true;
 }
 
 
@@ -195,6 +192,7 @@ void DDGIProbeTracePass::Render(RenderGraph& graph, VKW::Context& context)
     ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(entry, 0);
     binder.AddUniform(0, &uniform);
     binder.AddStorageBuffer(1, ddgiProbeSampleBuffer);
+    binder.AddStorageBuffer(2, ddgiProbeData);
     binder.FlushDescriptorWrites();
 
     context.CmdBindComputePipeline(entry->GetPipeline());
@@ -237,15 +235,6 @@ void DDGIProbeLightingPass::Render(RenderGraph& graph, VKW::Context& context)
     Texture* atlasIrradianceHistory = graph.GetTemporalTextureHistory(RESOURCE_ID(TextureID::DDGI_ProbeIrradiance));
 
     auto& dependencyManager = g_GraphicsManager->GetDependencyManager();
-
-    ///////////////////
-    // temporary clear, because we don't have a proper reprojection
-    //dependencyManager.ResourceBarrier(context, atlasIrradiance->GetResource(), VKW::RESOURCE_ACCESS_TRANSFER_DST, VKW::STAGE_TRANSFER);
-    //float clearColor[4] = { 0.f, 0.f, 0.f, 0.f };
-    //context.CmdClearColorImage(atlasIrradiance->GetResource(), clearColor);
-    // remove later
-    ///////////////////
-
 
     dependencyManager.ResourceBarrier(context, ddgiProbeSampleBuffer->GetResource(),    VKW::RESOURCE_ACCESS_SHADER_READ,   VKW::STAGE_COMPUTE);
     dependencyManager.ResourceBarrier(context, atlasIrradiance->GetResource(),          VKW::RESOURCE_ACCESS_SHADER_WRITE,  VKW::STAGE_COMPUTE);

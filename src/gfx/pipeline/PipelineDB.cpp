@@ -52,12 +52,13 @@ void PipelineDB::CreateDefaultPipelines()
         CreateComputePipeline("debug_view_texture", "debug_view_texture.slang_mainCS");
 
         // DDGI
-        CreateComputePipeline("ddgi_probe_border_fill", "ddgi_probe_border_fill.slang_mainCS");
-        CreateComputePipeline("ddgi_probe_lighting", "ddgi_probe_lighting.slang_mainCS");
-        CreateComputePipeline("ddgi_probe_visibility", "ddgi_probe_visibility.slang_mainCS");
-        CreateComputePipeline("ddgi_probe_scatter", "ddgi_probe_scatter.slang_mainCS");
-        CreateComputePipeline("ddgi_probe_trace", "ddgi_probe_trace.slang_mainCS");
-        CreateComputePipeline("debug_view_ddgi_probes_args", "debug_view_ddgi_probes.slang_indirectArgsFillCS");
+        CreateComputePipeline("ddgi_probe_border_fill",         "ddgi_probe_border_fill.slang_mainCS");
+        CreateComputePipeline("ddgi_probe_lighting",            "ddgi_probe_lighting.slang_mainCS");
+        CreateComputePipeline("ddgi_probe_visibility",          "ddgi_probe_visibility.slang_mainCS");
+        CreateComputePipeline("ddgi_probe_prime",               "ddgi_probe_management.slang_primeProbesCS");
+        CreateComputePipeline("ddgi_probe_update",              "ddgi_probe_management.slang_probeUpdateCS");
+        CreateComputePipeline("ddgi_probe_trace",               "ddgi_probe_trace.slang_mainCS");
+        CreateComputePipeline("debug_view_ddgi_probes_args",    "debug_view_ddgi_probes.slang_indirectArgsFillCS");
 
         CreateComputePipeline("debug_primitives_count",     "debug_primitives.slang_countCommandsCS");
         CreateComputePipeline("debug_primitives_sort",      "debug_primitives.slang_sortCommandsCS");

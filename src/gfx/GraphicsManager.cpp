@@ -90,7 +90,7 @@ void GraphicsManager::CreateAllPasses(VKW::Context& context, EDITOR::ViewportInp
     //m_RenderGraph.AddPass<CausticPass>();
     m_RenderGraph.AddPass<GBufferPass>();
 
-    m_RenderGraph.AddPass<DDGIProbeScatterPass>();
+    m_RenderGraph.AddPass<DDGIProbePrimePass>();
     m_RenderGraph.AddPass<DDGIProbeTracePass>();
     m_RenderGraph.AddPass<DDGIProbeVisibilityPass>();
     m_RenderGraph.AddPass<DDGIProbeLightingPass>();

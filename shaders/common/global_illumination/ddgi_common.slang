@@ -26,13 +26,20 @@
 struct DDGIProbeEncodedData
 {
     float3 position;
-    uint   data;
+    uint   data0;
+
+    uint   data1;
+    uint   pad0;
+    uint   pad1;
+    uint   pad2;
 };
 
 struct DDGIProbeData
 {
     float3 position;
     uint   framesSinceUpdate;
+    float  updateWeight;
+    float  irradianceMean;
     bool   isActive;
 };
 
@@ -95,7 +102,8 @@ DDGIProbeEncodedData EncodeProbeData(DDGIProbeData probeData)
 {
     DDGIProbeEncodedData encoded;
     encoded.position = probeData.position;
-    encoded.data = (probeData.framesSinceUpdate & 0x7FFFFFFF) | (probeData.isActive ? 0x80000000 : 0);
+    encoded.data0 = (probeData.framesSinceUpdate & 0x7FFFFFFF) | (probeData.isActive ? 0x80000000 : 0);
+    encoded.data1 = uint(probeData.updateWeight * SLANG_U16_MAX) | clamp(uint(probeData.irradianceMean), 0, SLANG_U16_MAX) << 16;
     return encoded;
 }
 
@@ -103,8 +111,12 @@ DDGIProbeData DecodeProbeData(DDGIProbeEncodedData encoded)
 {
     DDGIProbeData probeData;
     probeData.position = encoded.position;
-    probeData.framesSinceUpdate = encoded.data & 0x7FFFFFFF;
-    probeData.isActive = (encoded.data & 0x80000000) != 0;
+
+    probeData.framesSinceUpdate = encoded.data0 & 0x7FFFFFFF;
+    probeData.isActive = (encoded.data0 & 0x80000000) != 0;
+    
+    probeData.updateWeight = float(encoded.data1 & 0xFFFF) / float(SLANG_U16_MAX);
+    probeData.irradianceMean = float((encoded.data1 >> 16) & 0xFFFF);
     return probeData;
 }
 

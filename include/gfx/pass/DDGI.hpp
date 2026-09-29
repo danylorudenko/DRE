@@ -88,7 +88,7 @@ public:
     virtual void    Render              (RenderGraph& graph, VKW::Context& context) override;
 };
 
-class DDGIProbeScatterPass : public BasePass
+class DDGIProbePrimePass : public BasePass
 {
 public:
     virtual PassID  GetID               () const override;

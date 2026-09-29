@@ -5,8 +5,9 @@
 #include "common/utils/octahedron.slang"
 #include "common/vertex/dre_vertex_layout.slang"
 
-[[vk::binding(0, 3)]] ConstantBuffer<DDGIConstantBuffer>    ddgiCB;
-[[vk::binding(1, 3)]] RWStructuredBuffer<DDGIProbeSamples>  ddgiSampleBuffer;
+[[vk::binding(0, 3)]] ConstantBuffer<DDGIConstantBuffer>        ddgiCB;
+[[vk::binding(1, 3)]] RWStructuredBuffer<DDGIProbeSamples>      ddgiSampleBuffer;
+[[vk::binding(2, 3)]] RWStructuredBuffer<DDGIProbeEncodedData>  ddgiProbeData;
 
 void AddTracedSample(inout uint rayCounter, uint probeIndex, in DDGIProbeData probeData, float3 rayDir, float rayT, float3 hitPosition, S_INSTANCE* hitInstance, float2 hitGeometryUV, float3x3 TBN)
 {
@@ -66,7 +67,7 @@ void AddSkySample(inout uint rayCounter, uint probeIndex, float3 rayDir, float r
     ddgiSampleBuffer[probeIndex].samples[sampleIndex] = sample;
 }
 
-void TraceProbeRay(inout uint rayCounter, DDGIProbeData probeData, uint probeIndex, float3 rayOrigin, float3 rayDir)
+void TraceProbeRay(inout uint rayCounter, inout bool hitValidSurface, in DDGIProbeData probeData, uint probeIndex, float3 rayOrigin, float3 rayDir)
 {
     float2 probeLocalUV = OctahedronEncode(rayDir);
     uint3 probeIndex3D = GetProbe3DIndex(ddgiCB.probeGridDimentions, probeIndex);
@@ -128,6 +129,7 @@ void TraceProbeRay(inout uint rayCounter, DDGIProbeData probeData, uint probeInd
             );
 
             AddTracedSample(rayCounter, probeIndex, probeData, ray.Direction, rayQuery.CommittedRayT(), wPos, instance, hitUV, TBN);
+            hitValidSurface = true;
         }
         else
         {
@@ -137,6 +139,7 @@ void TraceProbeRay(inout uint rayCounter, DDGIProbeData probeData, uint probeInd
     else
     {
         AddSkySample(rayCounter, probeIndex, ray.Direction, ray.TMax);
+        hitValidSurface = true;
 
         if (ddgiCB.debugDrawRays != 0 && all(probeIndex3D == ddgiCB.debugProbeFocus))
         {
@@ -155,22 +158,34 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
         return;
 
     uint probeIndex = GetProbeIndex(ddgiCB.probeGridDimentions, DTid);
+    DDGIProbeData probeData = DecodeProbeData(ddgiProbeData[probeIndex]);
 
     uint probeSeed = probeIndex + GetFrameNumber();
     uint rayCounter = 0;
+    bool hitValidSurface = false;
 
     for (uint i = 0; i < ddgiCB.rayCountPerProbe; i++)
     {
         float alpha = PcgHash(probeSeed) * (1.0/float(0xFFFFFFFFu)) * PI;
         float theta = PcgHash(probeSeed) * (1.0/float(0xFFFFFFFFu)) * PI * 2.0;
 
-        DDGIProbeData probeData = DecodeProbeData(ddgiCB.ddgiProbeData[probeIndex]);
         float3 rayOrigin = probeData.position.xyz;
         float3 rayDir = PolarToCartesian(alpha, theta);
-        //float3 rayDir = float3(0, 1, 0);
 
-        TraceProbeRay(rayCounter, probeData, probeIndex, rayOrigin, rayDir);
+        TraceProbeRay(rayCounter, hitValidSurface, probeData, probeIndex, rayOrigin, rayDir);
     }
 
+    if (hitValidSurface)
+    {
+        probeData.isActive = true;
+        probeData.framesSinceUpdate = 0;
+    }
+    else
+    {
+        probeData.isActive = false;
+        probeData.framesSinceUpdate += 1;
+    }
+
+    ddgiProbeData[probeIndex] = EncodeProbeData(probeData);
     ddgiSampleBuffer[probeIndex].sampleCount = rayCounter;
 }

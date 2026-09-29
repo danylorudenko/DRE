@@ -43,4 +43,12 @@ struct DrawIndirectCommand
 
 #define PI 3.14159
 
+#define SLANG_U16_MAX 65535
+#define SLANG_S16_MAX 32767
+#define SLANG_S16_MIN -32768
+
+#define SLANG_U32_MAX 4294967295
+#define SLANG_S32_MAX 2147483647
+#define SLANG_S32_MIN -2147483648
+
 #endif // _SHADER_DEFINES_SLANG_
