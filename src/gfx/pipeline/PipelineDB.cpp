@@ -58,6 +58,9 @@ void PipelineDB::CreateDefaultPipelines()
         CreateComputePipeline("ddgi_probe_prime",               "ddgi_probe_management.slang_primeProbesCS");
         CreateComputePipeline("ddgi_probe_update",              "ddgi_probe_management.slang_probeUpdateCS");
         CreateComputePipeline("ddgi_probe_trace",               "ddgi_probe_trace.slang_mainCS");
+        CreateComputePipeline("ddgi_probe_sort_count",          "ddgi_probe_sort_count.slang_countCS");
+        CreateComputePipeline("ddgi_probe_sort_prefix_sums",    "ddgi_probe_sort_prefix_sums.slang_prefixSumsCS");
+        CreateComputePipeline("ddgi_probe_sort_reorder",        "ddgi_probe_sort_reorder.slang_reorderCS");
         CreateComputePipeline("debug_view_ddgi_probes_args",    "debug_view_ddgi_probes.slang_indirectArgsFillCS");
 
         CreateComputePipeline("debug_primitives_count",     "debug_primitives.slang_countCommandsCS");

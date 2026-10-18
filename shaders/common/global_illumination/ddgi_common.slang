@@ -22,6 +22,9 @@
 
 #define DDGI_VISIBILITY_FILL_PASS_BIT 0x1 // otherwise irradiance pass
 
+#define DDGI_RADIX_SORT_BITS_PER_PASS 4
+#define DDGI_RADIX_SORT_BUCKET_COUNT (1 << DDGI_RADIX_SORT_BITS_PER_PASS)
+
 
 struct DDGIProbeEncodedData
 {
@@ -247,6 +250,12 @@ DDGIProbeNeighborhood GetProbeNeighborhood(float3 worldPosition, in DDGIConstant
     }
 
     return neighborhood;
+}
+
+
+uint GetProbeSortingKey(DDGIProbeData probeData)
+{
+    return asuint(probeData.position.x + probeData.position.y + probeData.position.z);
 }
 
 

@@ -91,7 +91,7 @@ uint        GetWhiteNoiseTextureId() { return g_GlobalUniforms.whiteNoiseTexture
 uint        GetLightsCount() { return g_GlobalUniforms.lightsCount.x; }
 S_LIGHT*    GetLight(uint i) { return g_GlobalUniforms.LightBuffer + i; }
 
-uint        GetInstanceID() { return globalPushConstant.value_int1; }
+uint        GetInstanceID() { return globalPushConstant.value_uint.x; }
 S_INSTANCE* GetInstance(uint i) { return g_GlobalUniforms.InstanceBuffer + i; }
 S_INSTANCE* GetInstance() { return GetInstance(GetInstanceID()); }
 

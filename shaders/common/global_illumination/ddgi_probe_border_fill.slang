@@ -49,7 +49,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
     if (any(DTid >= ddgiCB.probeGridDimentions))
         return;
 
-    bool isVisibilityPass = (globalPushConstant.value_int1 & DDGI_VISIBILITY_FILL_PASS_BIT) != 0;
+    bool isVisibilityPass = (globalPushConstant.value_uint.x & DDGI_VISIBILITY_FILL_PASS_BIT) != 0;
 
     uint2 probeResolution = isVisibilityPass ? ddgiCB.probeVisibilityResolution : ddgiCB.probeIrradianceResolution;
     uint probeIndex = GetProbeIndex(ddgiCB.probeGridDimentions, DTid);

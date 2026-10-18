@@ -23,7 +23,7 @@ enum ShaderStage
 // Global push constants
 struct GlobalPushConstant
 {
-    uint value_int1;
+    uint4 value_uint;
 };
 [[vk::push_constant]] GlobalPushConstant globalPushConstant;
 /////////////////////////////

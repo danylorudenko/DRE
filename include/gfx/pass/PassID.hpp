@@ -24,6 +24,7 @@ enum class PassID
     Editor,
     DebugTextureView,
     DDGIProbePrime,
+    DDGIProbeSort,
     DDGIProbeTrace,
     DDGIProbeBorderFill,
     DDGIProbeLighting,
