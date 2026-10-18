@@ -1,6 +1,6 @@
 ---
 name: create-rendering-pass
-description: Create a rendering pass in the DRE render graph
+description: Use when adding a new rendering pass (BasePass subclass) to the DRE render graph - creates the pass files, PassID entry, graph registration and CMake entries
 ---
 
 To create a completely new pass in the DRE rendering engine, follow these steps:

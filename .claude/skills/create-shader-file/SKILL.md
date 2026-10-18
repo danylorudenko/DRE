@@ -1,6 +1,6 @@
 ---
 name: create-shader-file
-description: Create a new shader in the DRE rendering engine
+description: Use when adding a new .slang shader file to the DRE rendering engine - creates the file in shaders/ with the required include and guards, and registers it in CMake
 ---
 
 To create a new shader in the DRE rendering engine, follow these steps:

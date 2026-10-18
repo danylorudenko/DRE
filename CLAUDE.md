@@ -1,15 +1,16 @@
-# DRE � GitHub Copilot Instructions
+# DRE - Claude Code Instructions
 
 ## Project Overview
 DRE is a C++20 Vulkan real-time rendering engine targeting Windows only (MSVC, Visual Studio 2022).
 Third-party dependencies: GLM (math), Assimp (asset import), Dear ImGui (UI), slang shader language (for shaders).
-The Vulkan API is fully wrapped under the `VKW` namespace � never call Vulkan directly.
+The Vulkan API is fully wrapped under the `VKW` namespace - never call Vulkan directly.
+Do not build or run the project - the user builds it.
 
 ---
 
 ## Language & Standard
 - C++20, MSVC, Visual Studio 2022, Windows only (Win32 API)
-- `#pragma once` in every header � no include guards
+- `#pragma once` in every header - no include guards
 - No exceptions anywhere in the codebase
 
 ---
@@ -45,27 +46,27 @@ Limit macros: `DRE_U32_MAX`, `DRE_S32_MAX`, `DRE_FLT_EPS`, etc.
 
 ---
 
-## Containers *(STL containers are legacy leftovers � do NOT introduce new STL container usage)*
+## Containers *(STL containers are legacy leftovers - do NOT introduce new STL container usage)*
 
 ### `DRE::InplaceVector<T, STORAGE_SIZE>`  *(`<foundation\container\InplaceVector.hpp>`)*
 Fixed compile-time capacity, no heap allocation, order not preserved on removal.
-- Copy/move assignment **requires empty destination** � `DRE_ASSERT(m_Size == 0, ...)`
-- `EmplaceBack(args...)` � asserts on overflow
-- `EmplaceBackUnique(value)` � inserts only if not already present, returns ref
-- `RemoveIndex(U32)` � swaps last element into the gap, O(1)
-- `RemovePtr(T*)` � removes by pointer
-- `RemoveValue(T const&)` � finds and removes first match
-- `Find(T const&)` / `FindIf(predicate)` ? `U32` index, returns `Size()` if not found
+- Copy/move assignment **requires empty destination** - `DRE_ASSERT(m_Size == 0, ...)`
+- `EmplaceBack(args...)` - asserts on overflow
+- `EmplaceBackUnique(value)` - inserts only if not already present, returns ref
+- `RemoveIndex(U32)` - swaps last element into the gap, O(1)
+- `RemovePtr(T*)` - removes by pointer
+- `RemoveValue(T const&)` - finds and removes first match
+- `Find(T const&)` / `FindIf(predicate)` -> `U32` index, returns `Size()` if not found
 - `SortBubble(predicate)`
 - `Clear()`, `Last()`, `Size()`, `Empty()`, `Data()`, `Capacity()`, `SizeInBytes()`
-- `ResizeUnsafe(U32)` � sets size without constructing/destructing
+- `ResizeUnsafe(U32)` - sets size without constructing/destructing
 
 ### `DRE::Vector<T, TAllocator>`  *(`<foundation\container\Vector.hpp>`)*
 Dynamic, heap-backed with SVO (12-element inplace buffer). Requires allocator pointer.
 - `Vector(TAllocator* allocator)`
 - `EmplaceBack(args...)`, `RemoveIndex(U32)`, `Reserve(U32)`, `Resize(U32)`, `Clear()`
-- `Find(T const&)` / `FindIf(predicate)` ? `U32`, returns `Size()` if not found
-- `Reset(TAllocator*)` � clears and reassigns allocator
+- `Find(T const&)` / `FindIf(predicate)` -> `U32`, returns `Size()` if not found
+- `Reset(TAllocator*)` - clears and reassigns allocator
 
 ### `DRE::InplaceHashTable<TKey, TValue, BUCKET_COUNT = 256>`  *(`<foundation\container\InplaceHashTable.hpp>`)*
 Fixed-capacity open hash map with inplace storage and a collision pool.
@@ -79,7 +80,7 @@ Fixed-size inplace strings, no heap. Implicitly converts to `const char*`.
 Owning heap buffer for raw byte data. Used for geometry / shader binary storage.
 
 ### `DRE::ParallelFor<MAX>(count, func, parallel)`  *(`<foundation\system\Parallel.hpp>`)*
-Parallel task dispatch. Returns a `ParallelTaskGroup<MAX>` � call `.Wait()` on it.
+Parallel task dispatch. Returns a `ParallelTaskGroup<MAX>` - call `.Wait()` on it.
 `std::future` / `std::async` are acceptable at this system-layer boundary only.
 
 ---
@@ -143,12 +144,12 @@ Use **backslash** path separators in angle-bracket includes:
 #include <foundation\container\Vector.hpp>
 #include <vk_wrapper\pipeline\Pipeline.hpp>
 ```
-Group order: standard library ? third-party (glm, assimp, imgui) ? engine headers
+Group order: standard library -> third-party (glm, assimp, imgui) -> engine headers
 
 ---
 
 ## Vulkan / GPU Architecture
-- All GPU work goes through `VKW::Context` � never call Vulkan API directly
+- All GPU work goes through `VKW::Context` - never call Vulkan API directly
 - Pipeline creation & management: `GFX::PipelineDB`
 - Texture loading & lookup: `GFX::TextureBank`
 - Per-instance GPU data: `GFX::InstanceDataManager`
@@ -178,22 +179,22 @@ Group order: standard library ? third-party (glm, assimp, imgui) ? engine header
 ---
 
 ## Scene Architecture
-- Scene root: `WORLD::Scene` � global access via `WORLD::g_MainScene`
+- Scene root: `WORLD::Scene` - global access via `WORLD::g_MainScene`
 - Objects attach to `WORLD::SceneNode` via `WORLD::ISceneNodeUser`
 - Entity types: `WORLD::Entity` (opaque renderables), `WORLD::Light`
-- Camera: `m_MainScene.GetMainCamera()` � `SetPosition`, `SetCameraEuler`, `Move`, `RotateCamera`
+- Camera: `m_MainScene.GetMainCamera()` - `SetPosition`, `SetCameraEuler`, `Move`, `RotateCamera`
 
 ## GPU Scene
 - GPU scene data (object matrices, material indices, light data) managed by `GFX::InstanceDataManager`
 
 ---
 
-## Anti-Patterns � Never Do These
-- `std::vector`, `std::unordered_map`, `std::string` in engine code � use DRE containers
-- `std::move(x)` � use `DRE_MOVE(x)`
-- `std::swap(a, b)` � use `DRE_SWAP(a, b)`
-- `assert(...)` � use `DRE_ASSERT(cond, msg)`
-- `std::uint32_t` / raw `int` for sizes/indices � use `U32` / `S32`
-- Raw `new` / `delete` in engine code � use allocators
+## Anti-Patterns - Never Do These
+- `std::vector`, `std::unordered_map`, `std::string` in engine code - use DRE containers
+- `std::move(x)` - use `DRE_MOVE(x)`
+- `std::swap(a, b)` - use `DRE_SWAP(a, b)`
+- `assert(...)` - use `DRE_ASSERT(cond, msg)`
+- `std::uint32_t` / raw `int` for sizes/indices - use `U32` / `S32`
+- Raw `new` / `delete` in engine code - use allocators
 - Vulkan API calls outside `VKW`
 - Exceptions
