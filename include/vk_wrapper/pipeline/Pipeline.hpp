@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vulkan\vulkan.h>
+#include <glm\vec3.hpp>
 #include <foundation\Common.hpp>
 
 #include <foundation\class_features\NonMovable.hpp>
@@ -46,6 +47,23 @@ enum WindingOrder
     WINDING_RODER_COUNTER_CLOCKWIZE = VK_FRONT_FACE_COUNTER_CLOCKWISE
 };
 
+struct WorkgroupSize
+{
+    DRE::U32 dims[3];
+};
+
+inline glm::uvec3 CalculateDispatchSize(WorkgroupSize const& workgroupSize, glm::uvec3 const& threadCount)
+{
+    DRE_ASSERT(workgroupSize.dims[0] > 0 && workgroupSize.dims[1] > 0 && workgroupSize.dims[2] > 0, "Workgroup size must be non-zero");
+
+    return glm::uvec3(
+          (threadCount.x + workgroupSize.dims[0] - 1) / workgroupSize.dims[0]
+        , (threadCount.y + workgroupSize.dims[1] - 1) / workgroupSize.dims[1]
+        , (threadCount.z + workgroupSize.dims[2] - 1) / workgroupSize.dims[2]);
+}
+
+
+////////////////////////////////////////
 class Pipeline
     : public NonCopyable
 {
@@ -65,14 +83,13 @@ public:
         inline bool IsShaderStagePresent(ShaderStageSlot slot) const { return (shaderStageMask_ >> slot) & 1; }
         inline DRE::String64 const& GetShaderStageName(ShaderStageSlot slot) const { return shaderStages_[slot].shaderName; }
         inline DRE::String64 const& GetShaderStageEntryPoint(ShaderStageSlot slot) const { return shaderStages_[slot].entryPoint; }
- 
 
-        //inline void ClearShaderStages() { shaderStagesCount_ = 0; DRE::MemZero(shaderStages_, sizeof(shaderStages_); DRE::MemZero(shaderStageNames_, sizeof(shaderStageNames_)); }
+        inline WorkgroupSize GetWorkgroupSize() const { return workgroupSize_; }
 
         void SetPipelineType        (PipelineType type);
         void SetVertexShader        (ShaderModule const& vertexModule);
         void SetFragmentShader      (ShaderModule const& fragmentModule);
-        void SetComputeShader       (ShaderModule const& computeShader);
+        void SetComputeShader       (ShaderModule const& computeShader, DRE::U32 const* workgroupSize);
 
         void SetLayout              (PipelineLayout const* layout);
 
@@ -102,6 +119,8 @@ public:
         PipelineType                                type_;
         bool                                        depthTestEnabled_ : 1;
         bool                                        stencilTestEnabled_ : 1;
+
+        WorkgroupSize                               workgroupSize_;
 
         VkPipelineRenderingCreateInfo               renderingCreateInfo_;
 
@@ -145,6 +164,7 @@ public:
         PipelineLayout const*                       pipelineLayout_;
     };
 
+////////////////////////////////////
 public:
     Pipeline();
     Pipeline(ImportTable* table, LogicalDevice* device, Descriptor& descriptor, char const* name);
@@ -159,6 +179,7 @@ public:
 
     inline Descriptor&              GetDescriptor() { return descriptor_; }
 
+    inline WorkgroupSize            GetWorkgroupSize() const { return descriptor_.GetWorkgroupSize(); }
 
 private:
     ImportTable*            table_;

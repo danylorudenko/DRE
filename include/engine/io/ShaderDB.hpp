@@ -33,8 +33,8 @@ struct ShaderInterface
     };
 
     DRE::InplaceVector<Member, 16> m_Members;
-    std::uint8_t m_PushConstantSize : 7 = 0;
-    std::uint8_t m_PushConstantPresent : 1 = 0;
+    DRE::U8 m_PushConstantSize : 7 = 0;
+    DRE::U8 m_PushConstantPresent : 1 = 0;
     VKW::DescriptorStage m_PushConstantStages = VKW::DESCRIPTOR_STAGE_NONE;
 
     void Merge(ShaderInterface const& rhs);
@@ -45,6 +45,7 @@ struct ShaderEntry
     DRE::String64           name;
     DRE::String64           entryPoint;
     VKW::ShaderModuleType   type;
+    DRE::U32                workgroupSize[3];
     DRE::ByteBuffer         spirv;
     DRE::ByteBuffer         source;
     ShaderInterface         bindingInterface;

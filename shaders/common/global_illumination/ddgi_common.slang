@@ -52,7 +52,7 @@ struct DDGIConstantBuffer
     float probeDebugScale;
 
     DDGIProbeEncodedData* ddgiProbeData;
-    uint pad3;
+    uint totalProbeCount;
     uint pad4;
 
     float4 probesWorldDistance; // w - max from x,y,z
@@ -96,6 +96,16 @@ struct DDGIProbeSamples
 {
     uint sampleCount;
     DDGISample samples[DDGI_MAX_SAMPLES_PER_PROBE];
+};
+
+struct BucketCounts
+{
+    uint buckets[DDGI_RADIX_SORT_BUCKET_COUNT];
+};
+
+struct PrefixSums
+{
+    uint sums[DDGI_RADIX_SORT_BUCKET_COUNT];
 };
 
 

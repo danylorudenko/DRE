@@ -27,6 +27,7 @@ public:
     VKW::PipelineLayout*  GetLayout()        { return m_Layout; }
     ShaderEntries const&  GetShaderEntries() const { return m_ShaderEntries; }
 
+    // required for shader hot-reload
     void SetPipeline(VKW::Pipeline&& newPipeline);
 
 private:

@@ -80,6 +80,7 @@ DDGIConstantBuffer DDGI::GetConstantBuffer(RenderGraph& graph) const
     cb.probeDebugScale = ddgiDebugState.m_SphereScale;
 
     cb.ddgiProbeData = reinterpret_cast<DDGIProbeEncodedData*>(graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData))->GetResource()->gpuAddress_);
+    cb.totalProbeCount = GetProbeTotalCount();
 
     cb.probesWorldDistance = glm::vec4(ddgiProbeWorldDistance, glm::max(ddgiProbeWorldDistance.x, glm::max(ddgiProbeWorldDistance.y, ddgiProbeWorldDistance.z)));
 
@@ -159,6 +160,9 @@ void DDGIProbePrimePass::Render(RenderGraph& graph, VKW::Context& context)
 
 
 ////////////////////////////////////////////////
+
+constexpr DRE::U32 C_DDGI_SORT_REGION_SIZE = 1024;
+
 PassID DDGIProbeSortPass::GetID() const
 {
     return PassID::DDGIProbeSort;
@@ -167,7 +171,14 @@ PassID DDGIProbeSortPass::GetID() const
 void DDGIProbeSortPass::RegisterResources(RenderGraph& graph)
 {
     DDGI& ddgi = g_GraphicsManager->GetDDGI();
+
+    DRE::U32 const sortGroupCount = (ddgi.GetProbeTotalCount() + C_DDGI_SORT_REGION_SIZE - 1) / C_DDGI_SORT_REGION_SIZE;
+
     graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData), ddgi.GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_SHADER_RW);
+    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeDataReordered), ddgi.GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_SHADER_WRITE);
+    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeSortCounts), sizeof(BucketCounts) * sortGroupCount, VKW::RESOURCE_ACCESS_SHADER_RW);
+    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeSortGroupPrefixSums), sizeof(PrefixSums) * sortGroupCount, VKW::RESOURCE_ACCESS_SHADER_RW);
+    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeSortGlobalPrefixSum), sizeof(PrefixSums), VKW::RESOURCE_ACCESS_SHADER_WRITE);
 }
 
 void DDGIProbeSortPass::Render(RenderGraph& graph, VKW::Context& context)
@@ -175,52 +186,72 @@ void DDGIProbeSortPass::Render(RenderGraph& graph, VKW::Context& context)
     DRE_GPU_SCOPE(DDGIProbeSort);
 
     DDGI& ddgi = g_GraphicsManager->GetDDGI();
-    StorageBuffer* ddgiProbeData = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData));
+    StorageBuffer* ddgiProbeData            = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData));
+    StorageBuffer* ddgiProbeDataReordered   = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeDataReordered));
+    StorageBuffer* groupBucketCounts        = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeSortCounts));
+    StorageBuffer* groupPrefixSums          = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeSortGroupPrefixSums));
+    StorageBuffer* globalPrefixSum          = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeSortGlobalPrefixSum));
 
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData->GetResource(), VKW::RESOURCE_ACCESS_SHADER_RW, VKW::STAGE_COMPUTE);
-
-    glm::uvec3 const groupSize{ 64, 1, 1 };
-    glm::uvec3 const dispatchSize = GetComputeGroupCount(glm::uvec3{ ddgi.GetProbeTotalCount(), 1, 1 }, groupSize);
+    DependencyManager& dependencyManager = g_GraphicsManager->GetDependencyManager();
 
     PipelineEntry* countEntry = g_GraphicsManager->GetPipelineDB().GetEntry("ddgi_probe_sort_count");
     {
+        dependencyManager.ResourceBarrier(context, ddgiProbeData->GetResource(),        VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE);
+        dependencyManager.ResourceBarrier(context, groupBucketCounts->GetResource(),    VKW::RESOURCE_ACCESS_SHADER_RW,   VKW::STAGE_COMPUTE);
+
         ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(countEntry, 0);
         binder.AddStorageBuffer(0, ddgiProbeData);
+        binder.AddStorageBuffer(1, groupBucketCounts);
         binder.FlushDescriptorWrites();
 
         context.CmdBindComputePipeline(countEntry->GetPipeline());
         context.CmdBindComputeDescriptorSets(countEntry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
-        context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
-    }
 
-    context.CmdMemoryDependency(
-        VKW::RESOURCE_ACCESS_GENERIC_RW, VKW::STAGE_COMPUTE,
-        VKW::RESOURCE_ACCESS_GENERIC_RW, VKW::STAGE_COMPUTE);
+        glm::uvec3 const threadDims{ ddgi.GetProbeTotalCount(), 1, 1 };
+        glm::uvec3 const dims = VKW::CalculateDispatchSize(countEntry->GetPipeline()->GetWorkgroupSize(), threadDims);
+        context.CmdDispatch(dims.x, dims.y, dims.z);
+    }
 
     PipelineEntry* prefixSumsEntry = g_GraphicsManager->GetPipelineDB().GetEntry("ddgi_probe_sort_prefix_sums");
     {
+        dependencyManager.ResourceBarrier(context, groupBucketCounts->GetResource(),    VKW::RESOURCE_ACCESS_SHADER_READ,  VKW::STAGE_COMPUTE);
+        dependencyManager.ResourceBarrier(context, groupPrefixSums->GetResource(),      VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
+        dependencyManager.ResourceBarrier(context, globalPrefixSum->GetResource(),      VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
+
+        UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(DDGIConstantBuffer));
+        uniform.WriteMember140(ddgi.GetConstantBuffer(graph));
+        uniform.FlushWrites();
+
         ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(prefixSumsEntry, 0);
-        binder.AddStorageBuffer(0, ddgiProbeData);
+        binder.AddStorageBuffer(0, groupBucketCounts);
+        binder.AddStorageBuffer(1, groupPrefixSums);
+        binder.AddStorageBuffer(2, globalPrefixSum);
+        binder.AddUniform(3, &uniform);
         binder.FlushDescriptorWrites();
 
         context.CmdBindComputePipeline(prefixSumsEntry->GetPipeline());
         context.CmdBindComputeDescriptorSets(prefixSumsEntry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
-        context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
+        context.CmdDispatch(1, 1, 1);
     }
-
-    context.CmdMemoryDependency(
-        VKW::RESOURCE_ACCESS_GENERIC_RW, VKW::STAGE_COMPUTE,
-        VKW::RESOURCE_ACCESS_GENERIC_RW, VKW::STAGE_COMPUTE);
 
     PipelineEntry* reorderEntry = g_GraphicsManager->GetPipelineDB().GetEntry("ddgi_probe_sort_reorder");
     {
+        dependencyManager.ResourceBarrier(context, ddgiProbeData->GetResource(),            VKW::RESOURCE_ACCESS_SHADER_READ,  VKW::STAGE_COMPUTE);
+        dependencyManager.ResourceBarrier(context, groupPrefixSums->GetResource(),          VKW::RESOURCE_ACCESS_SHADER_READ,  VKW::STAGE_COMPUTE);
+        dependencyManager.ResourceBarrier(context, ddgiProbeDataReordered->GetResource(),   VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
+
         ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(reorderEntry, 0);
         binder.AddStorageBuffer(0, ddgiProbeData);
+        binder.AddStorageBuffer(1, groupPrefixSums);
+        binder.AddStorageBuffer(2, ddgiProbeDataReordered);
         binder.FlushDescriptorWrites();
 
         context.CmdBindComputePipeline(reorderEntry->GetPipeline());
         context.CmdBindComputeDescriptorSets(reorderEntry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
-        context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
+
+        glm::uvec3 const threadDims{ ddgi.GetProbeTotalCount(), 1, 1 };
+        glm::uvec3 const dims = VKW::CalculateDispatchSize(countEntry->GetPipeline()->GetWorkgroupSize(), threadDims);
+        context.CmdDispatch(dims.x, dims.y, dims.z);
     }
 }
 

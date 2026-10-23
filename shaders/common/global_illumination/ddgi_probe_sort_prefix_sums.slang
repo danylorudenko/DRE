@@ -1,45 +1,29 @@
 #include "shaders_common.slang"
 #include "common/global_illumination/ddgi_common.slang"
 
-struct BucketCounts
-{
-    uint buckets[DDGI_RADIX_SORT_BUCKET_COUNT];
-}
-
-struct PrefixSums
-{
-    uint sums[DDGI_RADIX_SORT_BUCKET_COUNT];
-}
-
 [[vk::binding(0, 3)]] RWStructuredBuffer<BucketCounts> groupBucketCount;
 [[vk::binding(1, 3)]] RWStructuredBuffer<PrefixSums> groupPrefixSums;
 [[vk::binding(2, 3)]] RWStructuredBuffer<PrefixSums> globalPrefixSum;
-
-groupshared PrefixSums s_GlobalPrefixSum;
+[[vk::binding(3, 3)]] ConstantBuffer<DDGIConstantBuffer> ddgiCB;
 
 [shader("compute")]
-[numthreads(256, 1, 1)]
+[numthreads(DDGI_RADIX_SORT_BUCKET_COUNT, 1, 1)]
 void prefixSumsCS(uint3 DTid : SV_DispatchThreadID)
 {
-    if (DTid.x < DDGI_RADIX_SORT_BUCKET_COUNT)
+    uint workGroupCount = ddgiCB.totalProbeCount / globalPushConstant.value_uint.y; // ensure that it's multiple of 256 on CPU
+
+    // just filling first 16 elements of the prefix sum array, as we have only 16 buckets
+    groupPrefixSums[0].sums[DTid.x] = 0;
+
+    uint sum = 0;
+    for (uint i = 1; i < workGroupCount; ++i)
     {
-        s_GlobalPrefixSum.sums[DTid.x] = 0;
+        sum += groupBucketCount[i - 1].buckets[DTid.x];
+        groupPrefixSums[i].sums[DTid.x] = sum;
     }
 
-    PrefixSums prefixSum;
-    prefixSum.sums[0] = 0;
-    for (uint i = 1; i < DDGI_RADIX_SORT_BUCKET_COUNT; i++)
-    {
-        prefixSum.sums[i] = prefixSum.sums[i - 1] + groupBucketCount[DTid.x].buckets[i - 1];
-        InterlockedAdd(s_GlobalPrefixSum.sums[i], prefixSum.sums[i]);
-    }
+    sum += groupBucketCount[workGroupCount - 1].buckets[DTid.x];
+    uint keyGlobalOffset = WavePrefixSum(sum);
 
-    groupPrefixSums[DTid.x] = prefixSum;
-
-    GroupMemoryBarrierWithGroupSync();
-
-    if (DTid.x < DDGI_RADIX_SORT_BUCKET_COUNT)
-    {
-        globalPrefixSum[0].sums[DTid.x] = s_GlobalPrefixSum.sums[DTid.x];
-    }
+    globalPrefixSum[0].sums[DTid.x] = keyGlobalOffset;
 }

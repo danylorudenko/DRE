@@ -1,24 +1,9 @@
 #include "shaders_common.slang"
 #include "common/global_illumination/ddgi_common.slang"
 
-
-struct BucketCounts
-{
-    uint buckets[DDGI_RADIX_SORT_BUCKET_COUNT];
-}
-
-struct PrefixSums
-{
-    uint sums[DDGI_RADIX_SORT_BUCKET_COUNT + 1];
-}
-
-
 [[vk::binding(0, 3)]] RWStructuredBuffer<DDGIProbeEncodedData> ddgiProbeData;
-[[vk::binding(1, 3)]] StructuredBuffer<BucketCounts> groupBucketCounts;
-[[vk::binding(2, 3)]] StructuredBuffer<PrefixSums> groupPrefixSums;
-[[vk::binding(3, 3)]] StructuredBuffer<PrefixSums> globalPrefixSum;
-
-[[vk::binding(4, 3)]] RWStructuredBuffer<DDGIProbeEncodedData> ddgiProbeDataReordered;
+[[vk::binding(1, 3)]] StructuredBuffer<PrefixSums> groupPrefixSums;
+[[vk::binding(2, 3)]] RWStructuredBuffer<DDGIProbeEncodedData> ddgiProbeDataReordered;
 
 
 //groupshared uint s_LocalBucketCounts[DDGI_RADIX_SORT_BUCKET_COUNT];
@@ -69,107 +54,95 @@ void UnpackKeyValues(in uint4 packedKeyValues, inout uint keyValues[DDGI_RADIX_S
     }
 }
 
+groupshared uint s_CurrentBucketOffsets[DDGI_RADIX_SORT_BUCKET_COUNT];
+
+groupshared uint4 s_PerWaveBucketCountsPacked[256 / 32];
+
+groupshared uint s_IterationBucketCounts[DDGI_RADIX_SORT_BUCKET_COUNT];
+groupshared uint s_IterationBucketStartOffsets[DDGI_RADIX_SORT_BUCKET_COUNT];
+
+groupshared DDGIProbeEncodedData localSortedProbes[256];
+groupshared uint localSortedProbesKeys[256];
 
 [shader("compute")]
-[numthreads(32, 1, 1)]
+[numthreads(256, 1, 1)]
 void reorderCS(uint groupID : SV_GroupID, uint3 GTid : SV_GroupThreadID)
 {
-    static const uint regionSize = 256;
-    static const uint iterationsOverRegion = regionSize / 32;
+    if (GTid.x < DDGI_RADIX_SORT_BUCKET_COUNT)
+    {
+        s_CurrentBucketOffsets[GTid.x] = groupPrefixSums[groupID].sums[GTid.x];
+    }
+
+    uint regionSize = globalPushConstant.value_uint.y; // ensure that it's multiple of 256 on CPU
+    uint iterationsOverRegion = regionSize / 256;
     uint regionStart = groupID * regionSize;
 
     uint sortingPass = globalPushConstant.value_uint.x;
 
-    uint4 totalBucketCountsPacked = {};
-    uint totalBucketCounts[DDGI_RADIX_SORT_BUCKET_COUNT] = {};
-    uint totalBucketPrefixSums[DDGI_RADIX_SORT_BUCKET_COUNT] = {};
-
-    uint4 localBucketCounts[iterationsOverRegion] = {};
-    uint4 localBucketPrefixSums[iterationsOverRegion] = {};
-    uint keysForThread[iterationsOverRegion];
+    uint waveId = GTid.x / WaveGetLaneCount();
 
     for (uint i = 0; i < iterationsOverRegion; i++)
     {
-        uint inputID = regionStart + i * 32 + GTid.x;
+        if (GTid.x < DDGI_RADIX_SORT_BUCKET_COUNT)
+        {
+            s_IterationBucketCounts[GTid.x] = 0;
+        }
+
+        uint4 waveBucketCounts;
+        uint4 waveOffsetsInsideBuckets;
+
+        uint inputID = regionStart + i * 256 + GTid.x;
         DDGIProbeData probeData = DecodeProbeData(ddgiProbeData[inputID]);
         uint key =  GetProbeSortingKey(probeData);
         key = (key >> (sortingPass * 4)) & 0xF;
-        keysForThread[i] = key;
 
-        // each thread increments its own bucket count (packed)
-        IncrementPackedKeyValue(localBucketCounts[i], key);
+        IncrementPackedKeyValue(waveBucketCounts, key);
+        InterlockedAdd(s_IterationBucketCounts[key], 1);
 
-        // this will be a position of this input item inside it's bucket
-        localBucketPrefixSums[i] = WavePrefixSum(localBucketCounts[i]);
+        waveOffsetsInsideBuckets = WavePrefixSum(waveBucketCounts);
+        waveBucketCounts = WaveActiveSum(waveBucketCounts);
 
-        // then threads share-sum bucket counts which results basically in step 1 of the radix sort
-        localBucketCounts[i] = WaveActiveSum(localBucketCounts[i]);
-
-        // because we do multiple iterations over this, accumulate totals in outer scope
-        totalBucketCountsPacked += localBucketCounts[i];
-    }
-
-    bool specialCaseDetected = false;
-    uint specialCaseBucket = 0;
-    for (uint i = 0; i < DDGI_RADIX_SORT_BUCKET_COUNT; i++)
-    {
-        totalBucketCounts[i] = UnpackKeyValue(totalBucketCountsPacked, i);
-        uint testCount = groupBucketCounts[groupID].buckets[i];
-        if (testCount == regionSize)
+        if (WaveIsFirstLane())
         {
-            specialCaseDetected = true;
-            specialCaseBucket = i;
-            break;
+            s_PerWaveBucketCountsPacked[waveId] = waveBucketCounts;
+        }
+
+        GroupMemoryBarrierWithGroupSync();
+
+        uint4 prevWavesOffsetsInsideBuckets = uint4(0,0,0,0);
+        for (uint w = 0; w < waveId; w++)
+        {
+            prevWavesOffsetsInsideBuckets += s_PerWaveBucketCountsPacked[w];
+        }
+
+        uint4 groupOffsetsInsideBuckets = prevWavesOffsetsInsideBuckets + waveOffsetsInsideBuckets;
+        uint offsetInsideBucket = UnpackKeyValue(groupOffsetsInsideBuckets, key); // rank inside bucket
+
+        if (GTid.x < DDGI_RADIX_SORT_BUCKET_COUNT)
+        {
+            s_IterationBucketStartOffsets[GTid.x] = WavePrefixSum(s_IterationBucketCounts[GTid.x]);
+        }
+
+        GroupMemoryBarrierWithGroupSync();
+
+
+        uint localSortedID = s_IterationBucketStartOffsets[key] + offsetInsideBucket;
+
+        localSortedProbes[localSortedID] = ddgiProbeData[inputID];
+        localSortedProbesKeys[localSortedID] = key;
+
+        GroupMemoryBarrierWithGroupSync();
+
+
+        uint outputKeyForThread = localSortedProbesKeys[GTid.x];
+        uint localDistanceFromBucketStart = GTid.x - s_IterationBucketStartOffsets[outputKeyForThread];
+
+        uint finalDestination = s_CurrentBucketOffsets[outputKeyForThread] + localDistanceFromBucketStart;
+        ddgiProbeDataReordered[finalDestination] = localSortedProbes[GTid.x];
+
+        if (GTid.x < DDGI_RADIX_SORT_BUCKET_COUNT)
+        {
+            s_CurrentBucketOffsets[GTid.x] += s_IterationBucketCounts[GTid.x];
         }
     }
-
-    // all 256 elements are of the same key, no local sort required
-    if (specialCaseDetected)
-    {
-        // all items in this region belong to the same bucket, so we can just copy them over
-        for (uint i = 0; i < iterationsOverRegion; i++)
-        {
-            uint inputID = regionStart + i * 32 + GTid.x;
-
-            DDGIProbeData probeData = DecodeProbeData(ddgiProbeData[inputID]);
-            uint key =  GetProbeSortingKey(probeData);
-            key = (key >> (sortingPass * 4)) & 0xF;
-
-            uint globalKeyOffset = globalPrefixSum[0].sums[key];
-            uint workgroupKeyOffset = groupPrefixSums[groupID].sums[key];
-            uint globalSortPosition = globalKeyOffset + workgroupKeyOffset + inputID;
-            ddgiProbeDataReordered[globalSortPosition] = ddgiProbeData[inputID];
-        }
-        return;
-    }
-
-    for (uint i = 1; i < DDGI_RADIX_SORT_BUCKET_COUNT; i++)
-    {
-        totalBucketPrefixSums[i] = totalBucketPrefixSums[i - 1] + totalBucketCounts[i - 1];
-    }
-
-    uint localKeyOffsetTrackers[DDGI_RADIX_SORT_BUCKET_COUNT] = {};
-    for (uint i = 0; i < iterationsOverRegion; i++)
-    {
-        uint key = keysForThread[i];
-
-        uint keyCount = totalBucketCounts[key];
-
-        uint key32PositionInBucket = UnpackKeyValue(localBucketPrefixSums[i], key);
-        uint itemPositionInBucket = localKeyOffsetTrackers[key] + key32PositionInBucket;
-        uint localSortPosition = totalBucketPrefixSums[key] + itemPositionInBucket;
-
-        uint globalKeyOffset = globalPrefixSum[0].sums[key];
-        uint workgroupKeyOffset = groupPrefixSums[groupID].sums[key];
-        uint globalSortPosition = globalKeyOffset + workgroupKeyOffset + itemPositionInBucket;
-
-        ddgiProbeDataReordered[globalSortPosition] = ddgiProbeData[regionStart + i * 32 + GTid.x];
-
-        for (uint j = 0; j < DDGI_RADIX_SORT_BUCKET_COUNT; j++)
-        {
-            localKeyOffsetTrackers[j] += UnpackKeyValue(localBucketCounts[i], j);
-        }
-    }
-
-    
 }

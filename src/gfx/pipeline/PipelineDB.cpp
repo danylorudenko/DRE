@@ -266,7 +266,7 @@ DRE::String64 const* PipelineDB::CreateComputePipeline(char const* name, char co
 
     VKW::Pipeline::Descriptor desc;
     desc.SetPipelineType(VKW::PIPELINE_TYPE_COMPUTE);
-    desc.SetComputeShader(compModule);
+    desc.SetComputeShader(compModule, shaderData->workgroupSize);
     desc.SetLayout(layout);
 
     PipelineEntry::ShaderEntries shaderEntries;
@@ -363,7 +363,7 @@ void PipelineDB::RecreatePipeline(char const* name)
             pipeline->GetDescriptor().SetFragmentShader(shaderModule);
             break;
         case VKW::SHADER_MODULE_TYPE_COMPUTE:
-            pipeline->GetDescriptor().SetComputeShader(shaderModule);
+            pipeline->GetDescriptor().SetComputeShader(shaderModule, shaderEntry->workgroupSize);
             break;
         }
     }

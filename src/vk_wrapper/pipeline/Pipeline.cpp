@@ -18,6 +18,7 @@ Pipeline::Descriptor::Descriptor()
     : type_{ PIEPLINE_TYPE_INVALID }
     , depthTestEnabled_{ false }
     , stencilTestEnabled_{ false }
+    , workgroupSize_{ 0, 0, 0 }
     , shaderStageMask_{ 0 }
     , vertexAttributeCount_{ 0 }
     , colorOutputCount_{ 0 }
@@ -194,7 +195,7 @@ void Pipeline::Descriptor::SetFragmentShader(ShaderModule const& fragmentModule)
     shaderStageMask_ |= (1 << SHADER_STAGE_SLOT_FRAGMENT);
 }
 
-void Pipeline::Descriptor::SetComputeShader(ShaderModule const& computeShader)
+void Pipeline::Descriptor::SetComputeShader(ShaderModule const& computeShader, DRE::U32 const* workgroupSize)
 {
     DRE_ASSERT(type_ == PIPELINE_TYPE_COMPUTE, "Incompatible state detected in Pipeline::Descriptor - setting compute shader for non-compute pipeline.");
 
@@ -210,6 +211,10 @@ void Pipeline::Descriptor::SetComputeShader(ShaderModule const& computeShader)
     shaderStages_[SHADER_STAGE_SLOT_COMPUTE].shaderName = computeShader.GetName();
     shaderStages_[SHADER_STAGE_SLOT_COMPUTE].entryPoint = computeShader.GetEntryPoint();
     shaderStageMask_ |= (1 << SHADER_STAGE_SLOT_COMPUTE);
+
+    workgroupSize_[0] = workgroupSize[0];
+    workgroupSize_[1] = workgroupSize[1];
+    workgroupSize_[2] = workgroupSize[2];
 }
 
 void Pipeline::Descriptor::SetLayout(PipelineLayout const* layout)

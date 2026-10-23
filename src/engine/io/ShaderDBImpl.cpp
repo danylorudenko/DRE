@@ -23,142 +23,6 @@ namespace IO
 
 class IOManager;
 
-/*
-// keep this object until hlsl was compiled
-/////////////////////////////////
-// DXCArgsBuilder
-DXCArgsBuilder::DXCArgsBuilder()
-    : m_GenericArgsBuffer{}
-    , m_GenericArgsBufferOffset{ 0 }
-{
-    m_CompilationArgs.EmplaceBack(DXC_ARG_PACK_MATRIX_COLUMN_MAJOR);
-    m_CompilationArgs.EmplaceBack(DXC_ARG_WARNINGS_ARE_ERRORS);
-    m_CompilationArgs.EmplaceBack(L"-spirv");
-    m_CompilationArgs.EmplaceBack(L"-fspv-target-env=vulkan1.3");
-    m_CompilationArgs.EmplaceBack(L"-fspv-preserve-bindings");
-    m_CompilationArgs.EmplaceBack(L"-fspv-preserve-interface");
-    m_CompilationArgs.EmplaceBack(L"-fspv-reflect");
-    m_CompilationArgs.EmplaceBack(L"-Ishaders");
-    m_CompilationArgs.EmplaceBack(m_GenericArgsBuffer); // filled later
-
-    //m_CompilationArgs.EmplaceBack(L"-fvk-use-dx-position-w");
-    //m_CompilationArgs.EmplaceBack(L"-fvk-invert-y");
-}
-
-void DXCArgsBuilder::AddDebugArgs()
-{
-    m_CompilationArgs.EmplaceBack(L"-O0");
-    m_CompilationArgs.EmplaceBack(L"-Zi");
-    m_CompilationArgs.EmplaceBack(L"-fspv-debug=vulkan-with-source");
-}
-
-void DXCArgsBuilder::AddOptimizedArgs()
-{
-    m_CompilationArgs.EmplaceBack(L"-O3");
-}
-
-void DXCArgsBuilder::AddEntryPoint(char const* entryPoint, VKW::ShaderModuleType type)
-{
-    //AddGenericArgument("-fspv-entrypoint-name=", entryPoint);
-    AddGenericArgument("-E", entryPoint);
-    AddProfileArgs(type);
-}
-
-void DXCArgsBuilder::AppendGenericArgument(char const* input)
-{
-    DRE::SizeT size = std::strlen(input);
-    PeekGenericBufferSize(size);
-
-    std::mbstate_t state{};
-
-    DRE::SizeT result = 0;
-    std::mbsrtowcs(
-        m_GenericArgsBuffer + m_GenericArgsBufferOffset,
-        &input,
-        GENERIC_ARGUMENT_BUFFER_SIZE - m_GenericArgsBufferOffset,
-        &state);
-
-    m_GenericArgsBufferOffset += size;
-
-}
-
-void DXCArgsBuilder::AddGenericArgument(char const* prefix, char const* argument)
-{
-    AppendGenericArgument(prefix);
-    AppendGenericArgument(argument);
-}
-
-void DXCArgsBuilder::PeekGenericBufferSize(DRE::U32 appendSize)
-{
-    DRE_ASSERT((m_GenericArgsBufferOffset + appendSize) < (GENERIC_ARGUMENT_BUFFER_SIZE - 1), "dxc define buffer overflow. See GENERIC_ARGUMENT_BUFFER_SIZE");
-}
-
-void DXCArgsBuilder::AddProfileArgs(VKW::ShaderModuleType type)
-{
-    wchar_t const* profileStr = nullptr;
-    switch (type)
-    {
-    case VKW::SHADER_MODULE_TYPE_VERTEX:
-        profileStr = L"-Tvs_6_0";
-        m_CompilationArgs.EmplaceBack(L"-DDRE_VERTEX_SHADER=1");
-        break;
-    case VKW::SHADER_MODULE_TYPE_FRAGMENT:
-        profileStr = L"-Tps_6_0";
-        m_CompilationArgs.EmplaceBack(L"-DDRE_PIXEL_SHADER=1");
-        break;
-    case VKW::SHADER_MODULE_TYPE_COMPUTE:
-        profileStr = L"-Tcs_6_0";
-        m_CompilationArgs.EmplaceBack(L"-DDRE_COMPUTE_SHADER=1");
-        break;
-    default:
-        DRE_ASSERT(false, "DXCArgsBuilder: shader type not supported");
-    };
-
-    m_CompilationArgs.EmplaceBack(profileStr);
-}
-*/
-
-/*
-VKW::ShaderModuleType SPVExecutionModelToVKWModuleType(spv::ExecutionModel executionModel)
-{
-    switch (executionModel)
-    {
-    case spv::ExecutionModelVertex:
-        return VKW::SHADER_MODULE_TYPE_VERTEX;
-    case spv::ExecutionModelFragment:
-        return VKW::SHADER_MODULE_TYPE_FRAGMENT;
-    case spv::ExecutionModelGLCompute:
-        return VKW::SHADER_MODULE_TYPE_COMPUTE;
-    default:
-        return VKW::SHADER_MODULE_TYPE_NONE;
-    }
-}
-
-template<typename TResourceArray>
-void ParseShaderInterfaceType(spirv_cross::Compiler& compiler, TResourceArray const& resources, VKW::DescriptorType type, ShaderInterface& resultInterface)
-{
-    for (spirv_cross::Resource const& res : resources)
-    {
-        auto& member        = resultInterface.m_Members.EmplaceBack();
-        member.type         = type;
-        member.stage        = SPVExecutionModelToVKWStage(compiler.get_execution_model());
-        member.set          = compiler.get_decoration(res.id, spv::DecorationDescriptorSet);
-        member.binding      = compiler.get_decoration(res.id, spv::DecorationBinding);
-
-        spirv_cross::SPIRType const& spvType = compiler.get_type(res.type_id);
-        member.arraySize    = 1;
-
-        if (!spvType.array.empty())
-        {
-            DRE_ASSERT(spvType.array.size() <= 1, "Don't support multidimentional array relfection yet.");
-            DRE_ASSERT(spvType.array_size_literal[0] == true, "Arrays of size from specialization constants are not supported yet.");
-            std::uint8_t const arraySize = spvType.array[0];
-            member.arraySize = arraySize == 0 ? DRE_U8_MAX : arraySize; // if array size 0 -> variable size
-        }
-    }
-}
-*/
-
 VKW::DescriptorStage SlangStageToVKWStage(SlangStage stage)
 {
     switch (stage)
@@ -241,18 +105,51 @@ VKW::DescriptorType SlangTypeToDescriptorArraylessType(slang::TypeReflection* ty
     }
 }
 
-void ParseShaderInterface(slang::ProgramLayout* layout, SlangStage& outStage, ShaderInterface& resultInterface)
+void ParseShaderInterface(slang::ProgramLayout* layout, SlangStage& outStage, DRE::U32* workgroupSize, ShaderInterface& resultInterface)
 {
     outStage = layout->getEntryPointByIndex(0)->getStage();
+    if (outStage == SLANG_STAGE_COMPUTE)
+    {
+        slang::EntryPointReflection* entryPointReflection = layout->getEntryPointByIndex(0);
+        DRE_ASSERT(entryPointReflection != nullptr, "Missing entry point reflection on compute shader.");
+
+        SlangUInt wgSizes[3] = {};
+        entryPointReflection->getComputeThreadGroupSize(3, wgSizes);
+
+        workgroupSize[0] = static_cast<DRE::U32>(wgSizes[0]);
+        workgroupSize[1] = static_cast<DRE::U32>(wgSizes[1]);
+        workgroupSize[2] = static_cast<DRE::U32>(wgSizes[2]);
+    }
+
+    bool foundPushConstant = false;
 
     for (DRE::U32 i = 0, size = layout->getParameterCount(); i < size; i ++)
     {
         slang::VariableLayoutReflection* variableReflection = layout->getParameterByIndex(i);
+        slang::TypeReflection* typeReflection = variableReflection->getType();
+
+        if (variableReflection->getCategory() == slang::ParameterCategory::PushConstantBuffer)
+        {
+            DRE_ASSERT(!foundPushConstant, "Found second push constant. This is not supported.");
+            foundPushConstant = true;
+            slang::TypeLayoutReflection* typeLayoutReflection = variableReflection->getTypeLayout();
+            if (typeLayoutReflection->getKind() == slang::TypeReflection::Kind::ConstantBuffer)
+                typeLayoutReflection = typeLayoutReflection->getElementTypeLayout();
+
+            DRE::SizeT const pushConstantSize = typeLayoutReflection->getSize(slang::ParameterCategory::Uniform);
+            DRE_ASSERT(pushConstantSize < 128, "PushConstant is too large");
+
+            resultInterface.m_PushConstantPresent = 1;
+            resultInterface.m_PushConstantSize = pushConstantSize;
+            resultInterface.m_PushConstantStages = SlangStageToVKWStage(outStage);
+
+            continue;
+        }
+
         DRE::U32    descriptorSet = variableReflection->getBindingSpace();
         DRE::U32    bindingIndex = variableReflection->getBindingIndex();
         char const* name = variableReflection->getName();
 
-        slang::TypeReflection* typeReflection = variableReflection->getType();
         slang::TypeReflection::Kind typeKind = typeReflection->getKind();
 
         DRE::U64 elementCount = 1;
@@ -471,6 +368,7 @@ bool ShaderDBImpl::CompileShaderFile(DRE::String128 const& path)
 
         slang::ProgramLayout* programLayout = nullptr;
         SlangStage shaderStage = SLANG_STAGE_COUNT;
+        DRE::U32 workgroupSize[3] = { 0, 0, 0 };
         ShaderInterface resultInterface;
         {
             Slang::ComPtr<slang::IBlob> diagnosticsBlob;
@@ -483,7 +381,7 @@ bool ShaderDBImpl::CompileShaderFile(DRE::String128 const& path)
                 continue;
             }
 
-            ParseShaderInterface(programLayout, shaderStage, resultInterface);
+            ParseShaderInterface(programLayout, shaderStage, workgroupSize, resultInterface);
         }
 
         Slang::ComPtr<slang::IBlob> slangSpirv;
@@ -520,6 +418,7 @@ bool ShaderDBImpl::CompileShaderFile(DRE::String128 const& path)
                 .name = entryName,
                 .entryPoint = entryPointName,
                 .type = SlangStageToVKWModuleType(shaderStage),
+                .workgroupSize = { workgroupSize[0], workgroupSize[1], workgroupSize[2] },
                 .spirv = DRE_MOVE(spvBuffer),
                 .source = sourceBlob,
                 .bindingInterface = resultInterface
