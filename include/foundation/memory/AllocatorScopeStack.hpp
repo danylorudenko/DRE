@@ -95,7 +95,7 @@ private:
     {
         void (*destructor)(void*);
         Finalizer* next;
-        U8 objectOffset;
+        U32 objectOffset;
     };
 
     struct ArrayFinalizer
@@ -104,7 +104,7 @@ private:
         ArrayFinalizer* next;
         U32 objectsCount;
         U32 objectSize;
-        U8 objectsOffset;
+        U32 objectsOffset;
     };
 
 
@@ -199,7 +199,7 @@ public:
         void* data = PtrAlign(m_NextFree, alignment);
         void* dataEnd = PtrAdd(data, (PtrDiff)size);
 
-        DRE_ASSERT(PtrDifference(PtrAdd(m_Memory, m_Size), dataEnd) > 0, "AllocatorScopeStack: out of memory!");
+        DRE_ASSERT(PtrDifference(PtrAdd(m_Memory, m_Size), dataEnd) >= 0, "AllocatorScopeStack: out of memory!");
 
         m_NextFree = dataEnd;
 
@@ -215,7 +215,7 @@ public:
         void* data = PtrAlign(finalizer + 1, alignment);
         void* dataEnd = PtrAdd(data, (PtrDiff)size);
 
-        DRE_ASSERT(PtrDifference(PtrAdd(m_Memory, m_Size), dataEnd) > 0, "AllocatorScopeStack: out of memory!");
+        DRE_ASSERT(PtrDifference(PtrAdd(m_Memory, m_Size), dataEnd) >= 0, "AllocatorScopeStack: out of memory!");
 
         m_NextFree = dataEnd;
 
@@ -225,7 +225,7 @@ public:
     inline void Unwind(void* point, U8 level)
     {
         DRE_ASSERT(PtrDifference(point, m_Memory) >= 0,                          "AllocatorScopeStack: unwind point is out of bound");
-        DRE_ASSERT(PtrDifference(PtrAdd(m_Memory, (PtrDiff)m_Size), point) > 0, "AllocatorScopeStack: unwind point is out of bound");
+        DRE_ASSERT(PtrDifference(PtrAdd(m_Memory, (PtrDiff)m_Size), point) >= 0, "AllocatorScopeStack: unwind point is out of bound");
         DRE_ASSERT(level == m_TopLevel, "AllocatorScope stack: attempt to unwind from intermediate scope.");
         
         m_NextFree = point;
@@ -268,7 +268,7 @@ inline T* AllocationScope::AllocClass()
 
     finalizer->next = m_FinalizerChain;
     finalizer->destructor = &DestructorCall<T>;
-    finalizer->objectOffset = (U8)PtrDifference(data, finalizer);
+    finalizer->objectOffset = (U32)PtrDifference(data, finalizer);
 
     m_FinalizerChain = finalizer;
 
@@ -290,7 +290,7 @@ inline T* AllocationScope::AllocClassArray(U32 count)
     finalizer->destructor = &DestructorCall<T>;
     finalizer->objectsCount = count;
     finalizer->objectSize = sizeof(T);
-    finalizer->objectsOffset = (U8)PtrDifference(data, finalizer);
+    finalizer->objectsOffset = (U32)PtrDifference(data, finalizer);
 
     m_ArrayFinalizerChain = finalizer;
 

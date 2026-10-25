@@ -78,9 +78,17 @@ public:
 
     void AppendFormat(char const* format, auto&&... args)
     {
-        int characters = std::snprintf(m_Data + m_Size, SIZE - (m_Size + 1), format, std::forward<decltype(args)>(args)...);
-        DRE_ASSERT(characters < SIZE, "InplaceString::AppendFormat(). OVERFLOW");
-        m_Size += characters;
+        S32 const remaining = SIZE - m_Size;
+        S32 characters = std::snprintf(m_Data + m_Size, remaining, format, std::forward<decltype(args)>(args)...);
+        DRE_ASSERT(characters >= 0 && characters < remaining, "InplaceString::AppendFormat(). OVERFLOW");
+
+        // snprintf returns the would-be length on truncation; clamp to what was actually written
+        if (characters < 0)
+            characters = 0;
+        else if (characters > remaining - 1)
+            characters = remaining - 1;
+
+        m_Size += U16(characters);
     }
 
 private:

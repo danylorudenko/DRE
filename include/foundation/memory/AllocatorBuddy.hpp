@@ -79,10 +79,11 @@ public:
     {
         DRE_ASSERT(size < DRE_U32_MAX, "AllocatorBuddyBase currently supports allocations only < DRE_U32_MAX");
 
-        U64 const potSize = (U64)NextPowOf2((U32)size);
-        U8 const depth = GetDepthBySize(potSize);
         if (size > RootChunkSize())
             return INVALID_OFFSET;
+
+        U64 const potSize = (U64)NextPowOf2((U32)Max<U64>(size, 1));
+        U8 const depth = GetDepthBySize(potSize);
 
         U64 result = RecursiveAllocInternal(depth);
         if (result != INVALID_OFFSET)
@@ -404,10 +405,14 @@ protected:
     inline void MetaSetChunkDepth(U64 chunk, U8 depth)
     {
 #ifdef DRE_DEBUG
-        U32 leavesPerChunk = ChunkSizeByDepth(depth) / LEAF_SIZE;
-        for (U32 i = 1; i < leavesPerChunk; i++)
+        // 255 marks junk leaves, it's not a real depth - don't compute chunk size from it
+        if (depth != 255)
         {
-            MetaSetChunkDepth(chunk + i * LEAF_SIZE, 255);
+            U32 leavesPerChunk = ChunkSizeByDepth(depth) / LEAF_SIZE;
+            for (U32 i = 1; i < leavesPerChunk; i++)
+            {
+                MetaSetChunkDepth(chunk + i * LEAF_SIZE, 255);
+            }
         }
 #endif
         DRE_ASSERT(depth <= MAX_DEPTH || depth == 255, "Attempt to store invalid depth.");
@@ -510,7 +515,7 @@ public:
     {
         DRE_ASSERT(memorySize >= AllocatorBuddy::RequiredMemorySize(), "Not enough memory provided to AllocatorBuddy");
 
-        MemZero(m_Memory, sizeof(m_MemorySize));
+        MemZero(m_Memory, m_MemorySize);
         m_MetaData = reinterpret_cast<typename Base::MetaData*>(PtrAlign(memory, alignof(typename Base::MetaData)));
         m_ChunksStart = ChunksStart();
 

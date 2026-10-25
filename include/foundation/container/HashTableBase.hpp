@@ -91,7 +91,7 @@ public:
         {
             baseBucket->m_Key.key = key;
             baseBucket->m_Key.isEmpty = false;
-            baseBucket->m_NextID = DRE_U32_MAX;
+            // m_NextID is preserved: an erased base bucket may still head a collision chain
 
             new (baseBucket->m_Value.m_Storage) TValue{ std::forward<TArgs>(args)... };
 
@@ -124,7 +124,7 @@ public:
     void Erase(TKey const& key)
     {
         Bucket* bucket = FindBaseBucketInternal(key);
-        if (bucket->m_Key.key == key)
+        if (!bucket->m_Key.isEmpty && bucket->m_Key.key == key)
         {
             bucket->m_Key.key = TKey{};
             bucket->m_Key.isEmpty = true;
@@ -135,7 +135,7 @@ public:
 
         // go through linked list of conflicted entries
         Bucket* prevBucket = bucket;
-        U32 targetBucketID = bucket.m_NextID;
+        U32 targetBucketID = bucket->m_NextID;
 
         while (targetBucketID != DRE_U32_MAX && m_CollisionPool[targetBucketID].m_Key.key != key) // don't need to check "isEmtpy" in collision pool
         {
@@ -201,9 +201,9 @@ public:
                 nextBucket.m_Key.key = defaultKey;
                 nextBucket.m_Key.isEmpty = true;
                 nextBucket.m_Value.Destroy();
-                static_cast<Derived&>(*this).ReleaseCollisionBucketBehavior(&nextBucket);
                 nextBucketID = nextBucket.m_NextID;
                 nextBucket.m_NextID = DRE_U32_MAX;
+                static_cast<Derived&>(*this).ReleaseCollisionBucketBehavior(&nextBucket);
             }
 
             bucket.m_NextID = DRE_U32_MAX;

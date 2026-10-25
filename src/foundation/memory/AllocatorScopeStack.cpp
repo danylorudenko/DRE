@@ -5,6 +5,10 @@ DRE_BEGIN_NAMESPACE
 
 AllocationScope::~AllocationScope()
 {
+    // moved-from scope
+    if (m_Allocator == nullptr)
+        return;
+
     ArrayFinalizer* arrayFinalizer = m_ArrayFinalizerChain;
     while (arrayFinalizer != nullptr)
     {

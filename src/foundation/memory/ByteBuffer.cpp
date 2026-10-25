@@ -71,16 +71,17 @@ void* ByteBuffer::Data() const
 
 void ByteBuffer::Resize(std::uint64_t newSize)
 {
-    if (newSize <= size_)
+    if (newSize <= capacity_)
     {
         size_ = newSize;
         return;
     }
 
     void* newBuffer = malloc(newSize);
+    DRE_ASSERT(newBuffer != nullptr, "ByteBuffer: failed to allocate memory.");
 
     if (buffer_) {
-        std::memcpy(newBuffer, buffer_, newSize);
+        std::memcpy(newBuffer, buffer_, size_);
         free(buffer_);
     }
 

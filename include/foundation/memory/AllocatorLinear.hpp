@@ -38,7 +38,7 @@ public:
     inline T* Alloc(TArgs&&... args)
     {
         T* ptr = reinterpret_cast<T*>(Alloc(sizeof(T), alignof(T)));
-        return new (ptr) T{ args... };
+        return new (ptr) T{ std::forward<TArgs>(args)... };
     }
 
     inline U64 MemorySize() const
@@ -103,6 +103,9 @@ public:
     }
 
     AllocatorLinear(AllocatorLinear&& rhs)
+        : m_Memory{ nullptr }
+        , m_Size{ 0 }
+        , m_NextFree{ nullptr }
     {
         operator=(DRE_MOVE(rhs));
     }

@@ -74,9 +74,14 @@ template<DRE::U32 SIZE>
 class LinearOffsetAllocator
 {
 public:
+    LinearOffsetAllocator()
+    {
+        Reset();
+    }
+
     DRE::U32 Allocate(DRE::U32 count)
     {
-        DRE_ASSERT((nextFree_ + count) < SIZE, "LinearOffsetAllocator has no free space left.");
+        DRE_ASSERT((nextFree_ + count) <= SIZE, "LinearOffsetAllocator has no free space left.");
 
         DRE::U32 result = nextFree_;
         nextFree_ += count;

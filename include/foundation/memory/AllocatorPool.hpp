@@ -57,6 +57,13 @@ public:
         DRE_ASSERT(m_Size != 0, "AllocatorPool: received null size.");
         DRE_ASSERT(IsValidChunkAlignment(), "AllocatorPool: invalid chunk alignment (NPOT).");
         DRE_ASSERT(IsValidChunkSize(), "AllocatorPool: invalid chunk size (SIZE <= sizeof(void*) or not aligned).");
+        DRE_ASSERT(m_Size > m_PoolChunkAlignment, "AllocatorPool: memory size is smaller than chunk alignment.");
+
+        if (m_Size <= m_PoolChunkAlignment || firstFreeChunk >= ChunksCount())
+        {
+            DRE_ASSERT(firstFreeChunk < ChunksCount(), "AllocatorPool: no free chunks to put in free-list.");
+            return;
+        }
 
         // prepearing free-list
         void* const startChunk = DRE::PtrAdd(ChunksStart(), firstFreeChunk * m_PoolChunkSize);
@@ -95,6 +102,11 @@ public:
     }
 
     AllocatorPool(AllocatorPool&& rhs)
+        : m_Memory{ nullptr }
+        , m_Size{ 0 }
+        , m_PoolChunkSize{ 0 }
+        , m_PoolChunkAlignment{ 0 }
+        , m_NextFreeChunk{ nullptr }
     {
         operator=(DRE_MOVE(rhs));
     }

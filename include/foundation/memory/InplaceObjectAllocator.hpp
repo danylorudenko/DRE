@@ -83,6 +83,7 @@ private:
     DRE_DEBUG_ONLY(U32 m_ElementsInUseDebug;)
 
     static_assert(sizeof(m_Storage[0]) == sizeof(T));
+    static_assert(sizeof(T) >= sizeof(void*), "InplaceObjectAllocator: T must be able to hold a free-list pointer.");
 
 };
 
