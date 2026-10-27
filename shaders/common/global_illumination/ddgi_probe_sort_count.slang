@@ -3,6 +3,7 @@
 
 [[vk::binding(0, 3)]] RWStructuredBuffer<DDGIProbeEncodedData> ddgiProbeData;
 [[vk::binding(1, 3)]] RWStructuredBuffer<BucketCounts> bucketCounts;
+[[vk::binding(2, 3)]] ConstantBuffer<DDGIConstantBuffer> ddgiCB;
 
 groupshared uint s_Buckets[DDGI_RADIX_SORT_BUCKET_COUNT];
 
@@ -24,6 +25,11 @@ void countCS(uint groupID : SV_GroupID, uint3 GTid : SV_GroupThreadID)
     for (uint i = 0; i < iterationsOverRegion; i++)
     {
         uint inputID = regionStart + i * 256 + GTid.x;
+        if (inputID >= ddgiCB.totalProbeCount)
+        {
+            continue;
+        }
+
         DDGIProbeData probeData = DecodeProbeData(ddgiProbeData[inputID]);
         uint key = GetProbeSortingKey(probeData);
 
@@ -37,6 +43,6 @@ void countCS(uint groupID : SV_GroupID, uint3 GTid : SV_GroupThreadID)
 
     if (GTid.x < DDGI_RADIX_SORT_BUCKET_COUNT)
     {
-        InterlockedAdd(bucketCounts[groupID].buckets[GTid.x], s_Buckets[GTid.x]);
+        bucketCounts[groupID].buckets[GTid.x] = s_Buckets[GTid.x];
     }
 }

@@ -265,7 +265,7 @@ DDGIProbeNeighborhood GetProbeNeighborhood(float3 worldPosition, in DDGIConstant
 
 uint GetProbeSortingKey(DDGIProbeData probeData)
 {
-    return asuint(probeData.position.x + probeData.position.y + probeData.position.z);
+    return asuint(probeData.updateWeight);
 }
 
 

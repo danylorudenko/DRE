@@ -212,9 +212,9 @@ void Pipeline::Descriptor::SetComputeShader(ShaderModule const& computeShader, D
     shaderStages_[SHADER_STAGE_SLOT_COMPUTE].entryPoint = computeShader.GetEntryPoint();
     shaderStageMask_ |= (1 << SHADER_STAGE_SLOT_COMPUTE);
 
-    workgroupSize_[0] = workgroupSize[0];
-    workgroupSize_[1] = workgroupSize[1];
-    workgroupSize_[2] = workgroupSize[2];
+    workgroupSize_.dims[0] = workgroupSize[0];
+    workgroupSize_.dims[1] = workgroupSize[1];
+    workgroupSize_.dims[2] = workgroupSize[2];
 }
 
 void Pipeline::Descriptor::SetLayout(PipelineLayout const* layout)

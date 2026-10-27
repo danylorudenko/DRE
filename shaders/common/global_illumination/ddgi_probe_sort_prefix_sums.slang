@@ -10,7 +10,8 @@
 [numthreads(DDGI_RADIX_SORT_BUCKET_COUNT, 1, 1)]
 void prefixSumsCS(uint3 DTid : SV_DispatchThreadID)
 {
-    uint workGroupCount = ddgiCB.totalProbeCount / globalPushConstant.value_uint.y; // ensure that it's multiple of 256 on CPU
+    uint regionSize = globalPushConstant.value_uint.y; // ensure that it's multiple of 256 on CPU
+    uint workGroupCount = (ddgiCB.totalProbeCount + regionSize - 1) / regionSize;
 
     // just filling first 16 elements of the prefix sum array, as we have only 16 buckets
     groupPrefixSums[0].sums[DTid.x] = 0;

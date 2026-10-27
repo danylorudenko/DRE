@@ -108,6 +108,8 @@ void GraphResourcesManager::CreateResources(VKW::Context& context)
         GraphTexture& graphTexture = m_StorageTextures.Emplace(*pair.key);
         graphTexture.info = info;
         graphTexture.id = *pair.key;
+        graphTexture.pingPongStart = 0;
+        DRE_ASSERT((info.flags & (GraphResourceFlags::TEMPORAL | GraphResourceFlags::PING_PONG)) != (GraphResourceFlags::TEMPORAL | GraphResourceFlags::PING_PONG), "TEMPORAL and PING_PONG flags are mutually exclusive.");
 
         DRE::String64 subkey0 = *pair.key;
         if (info.flags & GraphResourceFlags::TEMPORAL)
@@ -121,11 +123,11 @@ void GraphResourcesManager::CreateResources(VKW::Context& context)
         VKW::ImageResourceView* view = m_Device->GetResourcesController()->ViewImageAs(image, &range);
         VKW::TextureDescriptorIndex globalDescriptor = m_Device->GetDescriptorManager()->AllocateTextureDescriptor(view);
 
-        Texture& texture0 = graphTexture.temporalStorage.EmplaceBack(Texture{ m_Device, image, view, globalDescriptor });
+        Texture& texture0 = graphTexture.multiStorage.EmplaceBack(Texture{ m_Device, image, view, globalDescriptor });
         InitResource(context, info, texture0);
 
         // temporal brother
-        if (info.flags & GraphResourceFlags::TEMPORAL)
+        if (info.flags & (GraphResourceFlags::TEMPORAL | GraphResourceFlags::PING_PONG))
         {
             DRE::String64 subkey1 = *pair.key;
             subkey1.Append("_1");
@@ -136,7 +138,7 @@ void GraphResourcesManager::CreateResources(VKW::Context& context)
             VKW::ImageResourceView* temporalView = m_Device->GetResourcesController()->ViewImageAs(temporalImage, &temporalRange);
             VKW::TextureDescriptorIndex temporalDescriptor = m_Device->GetDescriptorManager()->AllocateTextureDescriptor(temporalView);
 
-            Texture& texture1 = graphTexture.temporalStorage.EmplaceBack(Texture{ m_Device, temporalImage, temporalView, temporalDescriptor });
+            Texture& texture1 = graphTexture.multiStorage.EmplaceBack(Texture{ m_Device, temporalImage, temporalView, temporalDescriptor });
             InitResource(context, info, texture1);
         }
     });
@@ -162,6 +164,8 @@ void GraphResourcesManager::CreateResources(VKW::Context& context)
         GraphBuffer& graphBuffer = m_StorageBuffers.Emplace(*pair.key);
         graphBuffer.info = info;
         graphBuffer.id = *pair.key;
+        graphBuffer.pingPongStart = 0;
+        DRE_ASSERT((info.flags & (GraphResourceFlags::TEMPORAL | GraphResourceFlags::PING_PONG)) != (GraphResourceFlags::TEMPORAL | GraphResourceFlags::PING_PONG), "TEMPORAL and PING_PONG flags are mutually exclusive.");
 
         DRE::String64 subkey0 = *pair.key;
         if (info.flags & GraphResourceFlags::TEMPORAL)
@@ -170,16 +174,16 @@ void GraphResourcesManager::CreateResources(VKW::Context& context)
         }
 
         VKW::BufferResource* buffer = m_Device->GetResourcesController()->CreateBuffer(info.size0, usage, subkey0);
-        StorageBuffer& storageBuffer0 = graphBuffer.temporalStorage.EmplaceBack(StorageBuffer{ m_Device, buffer });
+        StorageBuffer& storageBuffer0 = graphBuffer.multiStorage.EmplaceBack(StorageBuffer{ m_Device, buffer });
         InitResource(context, info, storageBuffer0);
 
         // temporal brother
-        if (info.flags & GraphResourceFlags::TEMPORAL)
+        if (info.flags & (GraphResourceFlags::TEMPORAL | GraphResourceFlags::PING_PONG))
         {
             DRE::String64 subkey1 = *pair.key;
             subkey1.Append("_1");
             VKW::BufferResource* temporalBuffer = m_Device->GetResourcesController()->CreateBuffer(info.size0, usage, subkey1);
-            StorageBuffer& storageBuffer1 = graphBuffer.temporalStorage.EmplaceBack(StorageBuffer{ m_Device, temporalBuffer });
+            StorageBuffer& storageBuffer1 = graphBuffer.multiStorage.EmplaceBack(StorageBuffer{ m_Device, temporalBuffer });
             InitResource(context, info, storageBuffer1);
         }
     });
@@ -234,28 +238,42 @@ StorageBuffer* GraphResourcesManager::GetBuffer(char const* id)
 {
     GraphBuffer* resource = m_StorageBuffers.Find(id).value;
     DRE_ASSERT((resource->info.flags & GraphResourceFlags::TEMPORAL) == 0, "Attempt to access buffer via regular accessor with temporal flag.");
-    return &resource->temporalStorage[0];
+    return &resource->multiStorage[resource->pingPongStart % 2];
 }
 
 Texture* GraphResourcesManager::GetTexture(char const* id)
 {
     GraphTexture* resource = m_StorageTextures.Find(id).value;
     DRE_ASSERT((resource->info.flags & GraphResourceFlags::TEMPORAL) == 0, "Attempt to access texture via regular accessor with temporal flag.");
-    return &resource->temporalStorage[0];
+    return &resource->multiStorage[resource->pingPongStart % 2];
 }
 
 StorageBuffer* GraphResourcesManager::GetTemporalBuffer(char const* id, FrameID frameID)
 {
     GraphBuffer* resource = m_StorageBuffers.Find(id).value;
     DRE_ASSERT((resource->info.flags & GraphResourceFlags::TEMPORAL) != 0, "Attempt to access buffer via temporal accessor with no temporal flag.");
-    return &resource->temporalStorage[frameID];
+    return &resource->multiStorage[frameID];
 }
 
 Texture* GraphResourcesManager::GetTemporalTexture(char const* id, FrameID frameID)
 {
     GraphTexture* resource = m_StorageTextures.Find(id).value;
     DRE_ASSERT((resource->info.flags & GraphResourceFlags::TEMPORAL) != 0, "Attempt to access texture via temporal accessor with no temporal flag.");
-    return &resource->temporalStorage[frameID];
+    return &resource->multiStorage[frameID];
+}
+
+GraphResourcesManager::GraphBuffer* GraphResourcesManager::GetPingPongBuffer(char const* id)
+{
+    GraphBuffer* resource = m_StorageBuffers.Find(id).value;
+    DRE_ASSERT((resource->info.flags & GraphResourceFlags::PING_PONG) != 0, "Attempt to access buffer via ping-pong accessor with no ping-pong flag.");
+    return resource;
+}
+
+GraphResourcesManager::GraphTexture* GraphResourcesManager::GetPingPongTexture(char const* id)
+{
+    GraphTexture* resource = m_StorageTextures.Find(id).value;
+    DRE_ASSERT((resource->info.flags & GraphResourceFlags::PING_PONG) != 0, "Attempt to access texture via ping-pong accessor with no ping-pong flag.");
+    return resource;
 }
 
 GraphResourcesManager::AccumulatedInfo const* GraphResourcesManager::GetAccumulatedBufferInfo(char const* id)

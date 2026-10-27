@@ -44,6 +44,9 @@ public:
     Texture*                        GetTexture(char const* id);
     StorageBuffer*                  GetBuffer(char const* id);
 
+    GraphResourcesManager::GraphTexture* GetPingPongTexture(char const* id);
+    GraphResourcesManager::GraphBuffer*  GetPingPongBuffer(char const* id);
+
     Texture*                        GetTemporalTextureCurrent(char const* id);
     Texture*                        GetTemporalTextureHistory(char const* id);
 

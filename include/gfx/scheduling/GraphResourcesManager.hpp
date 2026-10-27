@@ -28,9 +28,9 @@ public:
         VKW::Format         format  = VKW::FORMAT_UNDEFINED;
         DRE::U32            size0   = 0;
         DRE::U32            size1   = 0;
-        DRE::U32            mipCount   = 0;
+        DRE::U32            mipCount = 0;
         DRE::U32            depth   = 0;
-        DRE::U32            flags = GraphResourceFlags::NONE;
+        DRE::U32            flags   = GraphResourceFlags::NONE;
 
         inline bool operator==(AccumulatedInfo const& rhs)
         {
@@ -48,14 +48,16 @@ public:
     struct GraphBuffer
     {
         DRE::String64 id;
-        DRE::InplaceVector<StorageBuffer, 2> temporalStorage;
+        DRE::U8 pingPongStart;
+        DRE::InplaceVector<StorageBuffer, 2> multiStorage;
         AccumulatedInfo info;
     };
 
     struct GraphTexture
     {
         DRE::String64 id;
-        DRE::InplaceVector<Texture, 2> temporalStorage;
+        DRE::U8 pingPongStart;
+        DRE::InplaceVector<Texture, 2> multiStorage;
         AccumulatedInfo info;
     };
 
@@ -74,6 +76,9 @@ public:
 
     StorageBuffer*  GetBuffer    (char const* id);
     Texture*        GetTexture   (char const* id);
+
+    GraphBuffer*    GetPingPongBuffer(char const* id);
+    GraphTexture*   GetPingPongTexture(char const* id);
 
     StorageBuffer*  GetTemporalBuffer(char const* id, FrameID frameID);
     Texture*        GetTemporalTexture(char const* id, FrameID frameID);

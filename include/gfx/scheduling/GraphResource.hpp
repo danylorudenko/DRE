@@ -9,7 +9,8 @@ enum GraphResourceFlags : DRE::U32
     NONE                = 0,
     TEMPORAL            = (1 << 0),
     INIT_CLEAR_ZERO     = (1 << 1),
-    INIT_CLEAR_ONE      = (1 << 2)
+    INIT_CLEAR_ONE      = (1 << 2),
+    PING_PONG           = (1 << 3)
 };
 
 //////////////////////////////////////
@@ -51,7 +52,6 @@ enum class BufferID
     DDGI_ProbeSortCounts,
     DDGI_ProbeSortGroupPrefixSums,
     DDGI_ProbeSortGlobalPrefixSum,
-    DDGI_ProbeDataReordered,
     DDGI_ProbeSampleBuffer,
     DebugPassDDGIProbeIndirectArgs,
     DebugDrawBuffer,

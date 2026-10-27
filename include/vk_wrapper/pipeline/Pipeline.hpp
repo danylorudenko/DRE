@@ -84,7 +84,7 @@ public:
         inline DRE::String64 const& GetShaderStageName(ShaderStageSlot slot) const { return shaderStages_[slot].shaderName; }
         inline DRE::String64 const& GetShaderStageEntryPoint(ShaderStageSlot slot) const { return shaderStages_[slot].entryPoint; }
 
-        inline WorkgroupSize GetWorkgroupSize() const { return workgroupSize_; }
+        inline WorkgroupSize const& GetWorkgroupSize() const { return workgroupSize_; }
 
         void SetPipelineType        (PipelineType type);
         void SetVertexShader        (ShaderModule const& vertexModule);
@@ -179,7 +179,7 @@ public:
 
     inline Descriptor&              GetDescriptor() { return descriptor_; }
 
-    inline WorkgroupSize            GetWorkgroupSize() const { return descriptor_.GetWorkgroupSize(); }
+    inline WorkgroupSize const&     GetWorkgroupSize() const { return descriptor_.GetWorkgroupSize(); }
 
 private:
     ImportTable*            table_;

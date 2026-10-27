@@ -3,18 +3,11 @@
 
 [[vk::binding(0, 3)]] RWStructuredBuffer<DDGIProbeEncodedData> ddgiProbeData;
 [[vk::binding(1, 3)]] StructuredBuffer<PrefixSums> groupPrefixSums;
-[[vk::binding(2, 3)]] RWStructuredBuffer<DDGIProbeEncodedData> ddgiProbeDataReordered;
+[[vk::binding(2, 3)]] StructuredBuffer<PrefixSums> globalPrefixSums;
+[[vk::binding(3, 3)]] RWStructuredBuffer<DDGIProbeEncodedData> ddgiProbeDataReordered;
+[[vk::binding(4, 3)]] ConstantBuffer<DDGIConstantBuffer> ddgiCB;
 
-
-//groupshared uint s_LocalBucketCounts[DDGI_RADIX_SORT_BUCKET_COUNT];
-//groupshared uint s_LocalPackedBucketCounts[DDGI_RADIX_SORT_BUCKET_COUNT / 4];
-//groupshared uint s_LocalBucketPrefixSums[DDGI_RADIX_SORT_BUCKET_COUNT];
-//groupshared uint s_LocalProbeOffsets[256];
-
-//groupshared uint s_LocalKeyAccumulator[DDGI_RADIX_SORT_BUCKET_COUNT];
-
-//groupshared uint4 itemOffsetTrackers;
-
+/////////////////////////////////////////
 uint UnpackKeyValue(in uint4 packedStorage, in uint key)
 {
     uint keyValue = (packedStorage[key / 4] >> (8 * (key % 4))) & 0xFF;
@@ -27,33 +20,8 @@ void IncrementPackedKeyValue(inout uint4 packedStorage, in uint key, in uint inc
     packedStorage[key / 4] += packedIncrement;
 }
 
-void IncrementPackedKeyAtomic(inout uint4 packedStorage, in uint key, in uint increment = 1)
-{
-    uint packedIncrement = increment << (8 * (key % 4));
-    InterlockedAdd(packedStorage[key / 4], packedIncrement);
-}
 
-
-uint4 PackKeyValues(in uint keyValues[DDGI_RADIX_SORT_BUCKET_COUNT])
-{
-    uint4 packedStorage = {};
-    for (uint i = 0; i < DDGI_RADIX_SORT_BUCKET_COUNT; i++)
-    {
-        uint packedIncrement = keyValues[i] << (8 * (i % 4));
-        packedStorage[i / 4] += packedIncrement;
-    }
-
-    return packedStorage;
-}
-
-void UnpackKeyValues(in uint4 packedKeyValues, inout uint keyValues[DDGI_RADIX_SORT_BUCKET_COUNT])
-{
-    for (uint i = 0; i < DDGI_RADIX_SORT_BUCKET_COUNT; i++)
-    {
-        keyValues[i] = UnpackKeyValue(packedKeyValues, i);
-    }
-}
-
+/////////////////////////////////////////////////
 groupshared uint s_CurrentBucketOffsets[DDGI_RADIX_SORT_BUCKET_COUNT];
 
 groupshared uint4 s_PerWaveBucketCountsPacked[256 / 32];
@@ -61,13 +29,15 @@ groupshared uint4 s_PerWaveBucketCountsPacked[256 / 32];
 groupshared uint s_IterationBucketCounts[DDGI_RADIX_SORT_BUCKET_COUNT];
 groupshared uint s_IterationBucketStartOffsets[DDGI_RADIX_SORT_BUCKET_COUNT];
 
-groupshared DDGIProbeEncodedData localSortedProbes[256];
-groupshared uint localSortedProbesKeys[256];
+groupshared DDGIProbeEncodedData s_LocalSortedProbes[256];
+groupshared uint s_LocalSortedProbesKeys[256];
 
+/////////////////////////////////////////////////
 [shader("compute")]
 [numthreads(256, 1, 1)]
 void reorderCS(uint groupID : SV_GroupID, uint3 GTid : SV_GroupThreadID)
 {
+    // fetch what are the offsets of the items inside their key-bucket for this Workgroup
     if (GTid.x < DDGI_RADIX_SORT_BUCKET_COUNT)
     {
         s_CurrentBucketOffsets[GTid.x] = groupPrefixSums[groupID].sums[GTid.x];
@@ -88,20 +58,31 @@ void reorderCS(uint groupID : SV_GroupID, uint3 GTid : SV_GroupThreadID)
             s_IterationBucketCounts[GTid.x] = 0;
         }
 
-        uint4 waveBucketCounts;
-        uint4 waveOffsetsInsideBuckets;
+        GroupMemoryBarrierWithGroupSync();
+
+        uint4 waveBucketCounts = uint4(0,0,0,0);
 
         uint inputID = regionStart + i * 256 + GTid.x;
-        DDGIProbeData probeData = DecodeProbeData(ddgiProbeData[inputID]);
-        uint key =  GetProbeSortingKey(probeData);
-        key = (key >> (sortingPass * 4)) & 0xF;
+        bool isLaneValid = inputID < ddgiCB.totalProbeCount;
 
-        IncrementPackedKeyValue(waveBucketCounts, key);
-        InterlockedAdd(s_IterationBucketCounts[key], 1);
+        DDGIProbeEncodedData probeEncodedData = (DDGIProbeEncodedData)0;
+        uint key = 0;
+        if (isLaneValid)
+        {
+            probeEncodedData = ddgiProbeData[inputID];
+            DDGIProbeData probeData = DecodeProbeData(probeEncodedData);
+            key = GetProbeSortingKey(probeData);
+            key = (key >> (sortingPass * 4)) & 0xF;
 
-        waveOffsetsInsideBuckets = WavePrefixSum(waveBucketCounts);
+            IncrementPackedKeyValue(waveBucketCounts, key);
+            InterlockedAdd(s_IterationBucketCounts[key], 1);
+        }
+
+        // offsets for each item inside their bucket for this wave (rank inside wave)
+        uint4 waveOffsetsInsideBuckets = WavePrefixSum(waveBucketCounts);
         waveBucketCounts = WaveActiveSum(waveBucketCounts);
 
+        // save how many items in each bucket for this wave
         if (WaveIsFirstLane())
         {
             s_PerWaveBucketCountsPacked[waveId] = waveBucketCounts;
@@ -109,15 +90,18 @@ void reorderCS(uint groupID : SV_GroupID, uint3 GTid : SV_GroupThreadID)
 
         GroupMemoryBarrierWithGroupSync();
 
+        // prefix-sum ranks of previous waves, so we get workgroup-level rank
         uint4 prevWavesOffsetsInsideBuckets = uint4(0,0,0,0);
         for (uint w = 0; w < waveId; w++)
         {
             prevWavesOffsetsInsideBuckets += s_PerWaveBucketCountsPacked[w];
         }
 
+        // these are final group-level ranks for each item inside their bucket
         uint4 groupOffsetsInsideBuckets = prevWavesOffsetsInsideBuckets + waveOffsetsInsideBuckets;
         uint offsetInsideBucket = UnpackKeyValue(groupOffsetsInsideBuckets, key); // rank inside bucket
 
+        // this is a group-level prefix sum (offset for each bucket start)
         if (GTid.x < DDGI_RADIX_SORT_BUCKET_COUNT)
         {
             s_IterationBucketStartOffsets[GTid.x] = WavePrefixSum(s_IterationBucketCounts[GTid.x]);
@@ -125,21 +109,31 @@ void reorderCS(uint groupID : SV_GroupID, uint3 GTid : SV_GroupThreadID)
 
         GroupMemoryBarrierWithGroupSync();
 
-
+        // group-level bucket start + rank inside bucket
         uint localSortedID = s_IterationBucketStartOffsets[key] + offsetInsideBucket;
 
-        localSortedProbes[localSortedID] = ddgiProbeData[inputID];
-        localSortedProbesKeys[localSortedID] = key;
+        // do a "local sort" and cache what key was stored here
+        if (isLaneValid)
+        {
+            s_LocalSortedProbes[localSortedID] = probeEncodedData;
+            s_LocalSortedProbesKeys[localSortedID] = key; // this key is required so we later can lookup start of the bucket for this item
+        }
 
         GroupMemoryBarrierWithGroupSync();
 
+        if (isLaneValid)
+        {
+            uint outputKeyForThread = s_LocalSortedProbesKeys[GTid.x];
+            uint localDistanceFromBucketStart = GTid.x - s_IterationBucketStartOffsets[outputKeyForThread];
 
-        uint outputKeyForThread = localSortedProbesKeys[GTid.x];
-        uint localDistanceFromBucketStart = GTid.x - s_IterationBucketStartOffsets[outputKeyForThread];
+            // global start of the bucket + group-level offset inside bucket + local rank of item inside bucket
+            uint finalDestination = globalPrefixSums[0].sums[outputKeyForThread] + s_CurrentBucketOffsets[outputKeyForThread] + localDistanceFromBucketStart;
+            ddgiProbeDataReordered[finalDestination] = s_LocalSortedProbes[GTid.x];
+        }
 
-        uint finalDestination = s_CurrentBucketOffsets[outputKeyForThread] + localDistanceFromBucketStart;
-        ddgiProbeDataReordered[finalDestination] = localSortedProbes[GTid.x];
+        GroupMemoryBarrierWithGroupSync();
 
+        // since we do multiple iterations in one workgroup, save work that we did in current iteration
         if (GTid.x < DDGI_RADIX_SORT_BUCKET_COUNT)
         {
             s_CurrentBucketOffsets[GTid.x] += s_IterationBucketCounts[GTid.x];

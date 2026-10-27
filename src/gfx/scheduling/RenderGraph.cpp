@@ -60,6 +60,16 @@ StorageBuffer* RenderGraph::GetBuffer(char const* id)
     return m_ResourcesManager.GetBuffer(id);
 }
 
+GraphResourcesManager::GraphTexture* RenderGraph::GetPingPongTexture(char const* id)
+{
+    return m_ResourcesManager.GetPingPongTexture(id);
+}
+
+GraphResourcesManager::GraphBuffer* RenderGraph::GetPingPongBuffer(char const* id)
+{
+    return m_ResourcesManager.GetPingPongBuffer(id);
+}
+
 Texture* RenderGraph::GetTemporalTextureCurrent(char const* id)
 {
     return m_ResourcesManager.GetTemporalTexture(id, m_GraphicsManager->GetCurrentFrameID());
