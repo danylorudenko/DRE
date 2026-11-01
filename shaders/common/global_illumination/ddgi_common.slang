@@ -89,7 +89,7 @@ struct DDGISample
 {
     float3 radiance;
     float distance;
-    float2 octDirection;
+    float3 direction;
 };
 
 struct DDGIProbeSamples

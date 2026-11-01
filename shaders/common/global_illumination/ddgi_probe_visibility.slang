@@ -3,7 +3,7 @@
 #include "common/lighting/lighting.slang"
 
 [[vk::binding(0, 3)]] ConstantBuffer<DDGIConstantBuffer>        ddgiCB;
-[[vk::binding(1, 3)]] RWStructuredBuffer<DDGIProbeSamples>      ddgiSampleBuffer;
+[[vk::binding(1, 3)]] StructuredBuffer<DDGIProbeSamples>        ddgiSampleBuffer;
 [[vk::binding(2, 3)]] RWTexture2D<float2>                       ddgiAtlasVisibility;
 [[vk::binding(3, 3)]] Texture2D<float2>                         ddgiAtlasVisibilityHistory;
 [[vk::binding(4, 3)]] StructuredBuffer<DDGIProbeEncodedData>    ddgiProbeData;
@@ -11,6 +11,7 @@
 
 // dispatched as (sortedSlot, probeTileX, probeTileY) workgroups
 [require(spvRayQueryKHR)]
+[require(spvGroupNonUniformBallot)]
 [shader("compute")]
 [numthreads(8, 8, 1)]
 void mainCS(uint3 groupID : SV_GroupID, uint3 GTid : SV_GroupThreadID)
@@ -30,7 +31,7 @@ void mainCS(uint3 groupID : SV_GroupID, uint3 GTid : SV_GroupThreadID)
         return;
     }
 
-    uint probeIndex = sortedProbeIndices[sortedSlot];
+    uint probeIndex = WaveReadLaneFirst(sortedProbeIndices[sortedSlot]);
     uint2 atlasPixel = GetProbeAtlasProbeStart(probeIndex, probeResolution, ddgiCB.probeGridDimentions) + pixelInProbe;
 
     // probe was not traced this frame, carry history over to the current atlas
@@ -40,7 +41,6 @@ void mainCS(uint3 groupID : SV_GroupID, uint3 GTid : SV_GroupThreadID)
         return;
     }
 
-    DDGIProbeData probeData = DecodeProbeData(ddgiProbeData[probeIndex]);
     DDGIProbeSamples probeGBuffer = ddgiSampleBuffer[probeIndex];
 
     float4 uvRect = GetProbeAtlasUVRect(probeIndex, ddgiCB.probeVisibilityResolution, ddgiCB.probeGridDimentions);
@@ -55,8 +55,7 @@ void mainCS(uint3 groupID : SV_GroupID, uint3 GTid : SV_GroupThreadID)
     for (int i = 0; i < probeGBuffer.sampleCount; i++)
     {
         DDGISample sample = probeGBuffer.samples[i];
-        float3 sampleDir = OctahedronDecode(sample.octDirection);
-        float sampleWeight = pow(saturate(dot(probePixelNormal, sampleDir)), 50.0f);
+        float sampleWeight = pow(saturate(dot(probePixelNormal, sample.direction)), 50.0f);
 
         float clampedDistance = min(sample.distance, GetVisibilityDistanceClamp(ddgiCB));
 

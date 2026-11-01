@@ -261,16 +261,17 @@ bool ShaderDBImpl::CompileShaderFile(DRE::String128 const& path)
         "spvGroupNonUniformBallot",     // WaveIsFirstLane, WaveActiveBallot, ...
     };
 
-    for (char const* capabilityName : globalCapabilities)
-    {
-        SlangCapabilityID const capabilityID = m_SlangGlobalSession->findCapability(capabilityName);
-        DRE_ASSERT(capabilityID != SLANG_CAPABILITY_UNKNOWN, "Unknown slang capability name");
-
-        auto& entry = optionEntries.EmplaceBack();
-        entry.name = slang::CompilerOptionName::Capability;
-        entry.value.kind = slang::CompilerOptionValueKind::Int;
-        entry.value.intValue0 = static_cast<DRE::S32>(capabilityID);
-    }
+    // let's specify these in shaders themselves, so that IDE parser works correctly
+    //for (char const* capabilityName : globalCapabilities)
+    //{
+    //    SlangCapabilityID const capabilityID = m_SlangGlobalSession->findCapability(capabilityName);
+    //    DRE_ASSERT(capabilityID != SLANG_CAPABILITY_UNKNOWN, "Unknown slang capability name");
+    //
+    //    auto& entry = optionEntries.EmplaceBack();
+    //    entry.name = slang::CompilerOptionName::Capability;
+    //    entry.value.kind = slang::CompilerOptionValueKind::Int;
+    //    entry.value.intValue0 = static_cast<DRE::S32>(capabilityID);
+    //}
     {
         auto& entry = optionEntries.EmplaceBack();
         entry.name = slang::CompilerOptionName::PreserveParameters;

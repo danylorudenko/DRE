@@ -33,7 +33,7 @@ void AddTracedSample(inout uint rayCounter, uint probeIndex, in DDGIProbeData pr
     DDGISample sample;
     sample.radiance = sampleDirectRadiance.finalRadiance + sampleIndirect.finalRadiance;
     sample.distance = rayT;
-    sample.octDirection = OctahedronEncode(rayDir);
+    sample.direction = rayDir;
 
     uint3 probeIndex3D = GetProbe3DIndex(ddgiCB.probeGridDimentions, probeIndex);
     if (ddgiCB.debugDrawRays != 0 && all(probeIndex3D == ddgiCB.debugProbeFocus))
@@ -50,7 +50,7 @@ void AddBackfaceSample(inout uint rayCounter, uint probeIndex, float3 rayDir)
     DDGISample sample;
     sample.radiance = float3(0, 0, 0);
     sample.distance = 0.0f;
-    sample.octDirection = OctahedronEncode(rayDir);
+    sample.direction = rayDir;
 
     uint sampleIndex = rayCounter++;
     ddgiSampleBuffer[probeIndex].samples[sampleIndex] = sample;
@@ -62,7 +62,7 @@ void AddSkySample(inout uint rayCounter, uint probeIndex, float3 rayDir, float r
     //sample.radiance = float3(135.0, 206.0, 235.0) / 255.0;
     sample.radiance = float3(0,0,0);
     sample.distance = rayT;
-    sample.octDirection = OctahedronEncode(rayDir);
+    sample.direction = rayDir;
 
     uint sampleIndex = rayCounter++;
     ddgiSampleBuffer[probeIndex].samples[sampleIndex] = sample;
