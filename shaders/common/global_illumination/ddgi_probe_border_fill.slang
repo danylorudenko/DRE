@@ -3,6 +3,7 @@
 
 [[vk::binding(0, 3)]] ConstantBuffer<DDGIConstantBuffer>    ddgiCB;
 [[vk::binding(1, 3)]] RWTexture2D                           ddgiAtlas;
+[[vk::binding(2, 3)]] StructuredBuffer<uint>                sortedProbeIndicies;
 
 void FillFullRow(uint rowLength, uint4 probeRect, bool topRow, bool debugFill)
 {
@@ -43,16 +44,16 @@ void FillFullRow(uint rowLength, uint4 probeRect, bool topRow, bool debugFill)
 
 
 [shader("compute")]
-[numthreads(4, 4, 4)]
+[numthreads(32, 1, 1)]
 void mainCS(uint3 DTid : SV_DispatchThreadID)
 {
-    if (any(DTid >= ddgiCB.probeGridDimentions))
+    if (DTid.x >= ddgiCB.tracedProbeCount)
         return;
 
     bool isVisibilityPass = (globalPushConstant.value_uint.x & DDGI_VISIBILITY_FILL_PASS_BIT) != 0;
 
     uint2 probeResolution = isVisibilityPass ? ddgiCB.probeVisibilityResolution : ddgiCB.probeIrradianceResolution;
-    uint probeIndex = GetProbeIndex(ddgiCB.probeGridDimentions, DTid);
+    uint probeIndex = sortedProbeIndicies[DTid.x];
     uint4 probeRect = GetDDGIProbeRect(probeIndex, probeResolution, ddgiCB.probeGridDimentions);
 
     bool debugFill = (ddgiCB.debugHighlightProbeTile != 0) && all(GetProbe3DIndex(ddgiCB.probeGridDimentions, probeIndex) == ddgiCB.debugProbeFocus);

@@ -1,11 +1,12 @@
-#include "shaders_common.slang"
+#include "common/shaders_common.slang"
 #include "common/global_illumination/ddgi_common.slang"
 
-[[vk::binding(0, 3)]] RWStructuredBuffer<DDGIProbeEncodedData> ddgiProbeData;
+[[vk::binding(0, 3)]] StructuredBuffer<uint> probeIndices;
 [[vk::binding(1, 3)]] StructuredBuffer<PrefixSums> groupPrefixSums;
 [[vk::binding(2, 3)]] StructuredBuffer<PrefixSums> globalPrefixSums;
-[[vk::binding(3, 3)]] RWStructuredBuffer<DDGIProbeEncodedData> ddgiProbeDataReordered;
+[[vk::binding(3, 3)]] RWStructuredBuffer<uint> probeIndicesReordered;
 [[vk::binding(4, 3)]] ConstantBuffer<DDGIConstantBuffer> ddgiCB;
+[[vk::binding(5, 3)]] StructuredBuffer<DDGIProbeEncodedData> ddgiProbeData;
 
 /////////////////////////////////////////
 uint UnpackKeyValue(in uint4 packedStorage, in uint key)
@@ -29,7 +30,7 @@ groupshared uint4 s_PerWaveBucketCountsPacked[256 / 32];
 groupshared uint s_IterationBucketCounts[DDGI_RADIX_SORT_BUCKET_COUNT];
 groupshared uint s_IterationBucketStartOffsets[DDGI_RADIX_SORT_BUCKET_COUNT];
 
-groupshared DDGIProbeEncodedData s_LocalSortedProbes[256];
+groupshared uint s_LocalSortedProbeIndices[256];
 groupshared uint s_LocalSortedProbesKeys[256];
 
 /////////////////////////////////////////////////
@@ -65,12 +66,12 @@ void reorderCS(uint groupID : SV_GroupID, uint3 GTid : SV_GroupThreadID)
         uint inputID = regionStart + i * 256 + GTid.x;
         bool isLaneValid = inputID < ddgiCB.totalProbeCount;
 
-        DDGIProbeEncodedData probeEncodedData = (DDGIProbeEncodedData)0;
+        uint probeIndex = 0;
         uint key = 0;
         if (isLaneValid)
         {
-            probeEncodedData = ddgiProbeData[inputID];
-            DDGIProbeData probeData = DecodeProbeData(probeEncodedData);
+            probeIndex = probeIndices[inputID];
+            DDGIProbeData probeData = DecodeProbeData(ddgiProbeData[probeIndex]);
             key = GetProbeSortingKey(probeData);
             key = (key >> (sortingPass * 4)) & 0xF;
 
@@ -115,7 +116,7 @@ void reorderCS(uint groupID : SV_GroupID, uint3 GTid : SV_GroupThreadID)
         // do a "local sort" and cache what key was stored here
         if (isLaneValid)
         {
-            s_LocalSortedProbes[localSortedID] = probeEncodedData;
+            s_LocalSortedProbeIndices[localSortedID] = probeIndex;
             s_LocalSortedProbesKeys[localSortedID] = key; // this key is required so we later can lookup start of the bucket for this item
         }
 
@@ -128,7 +129,7 @@ void reorderCS(uint groupID : SV_GroupID, uint3 GTid : SV_GroupThreadID)
 
             // global start of the bucket + group-level offset inside bucket + local rank of item inside bucket
             uint finalDestination = globalPrefixSums[0].sums[outputKeyForThread] + s_CurrentBucketOffsets[outputKeyForThread] + localDistanceFromBucketStart;
-            ddgiProbeDataReordered[finalDestination] = s_LocalSortedProbes[GTid.x];
+            probeIndicesReordered[finalDestination] = s_LocalSortedProbeIndices[GTid.x];
         }
 
         GroupMemoryBarrierWithGroupSync();

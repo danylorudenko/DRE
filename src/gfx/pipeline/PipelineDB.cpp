@@ -58,6 +58,7 @@ void PipelineDB::CreateDefaultPipelines()
         CreateComputePipeline("ddgi_probe_prime",               "ddgi_probe_management.slang_primeProbesCS");
         CreateComputePipeline("ddgi_probe_update",              "ddgi_probe_management.slang_probeUpdateCS");
         CreateComputePipeline("ddgi_probe_trace",               "ddgi_probe_trace.slang_mainCS");
+        CreateComputePipeline("ddgi_probe_sort_init",           "ddgi_probe_sort_init.slang_initIndicesCS");
         CreateComputePipeline("ddgi_probe_sort_count",          "ddgi_probe_sort_count.slang_countCS");
         CreateComputePipeline("ddgi_probe_sort_prefix_sums",    "ddgi_probe_sort_prefix_sums.slang_prefixSumsCS");
         CreateComputePipeline("ddgi_probe_sort_reorder",        "ddgi_probe_sort_reorder.slang_reorderCS");
@@ -475,7 +476,7 @@ void PipelineDB::AddGlobalLayouts(VKW::PipelineLayout::Descriptor& descriptor)
         descriptor.Add(&allocator->GetGlobalSetLayout(i));
     }
 
-    descriptor.AddPushConstant(4, VKW::DESCRIPTOR_STAGE_ALL);
+    descriptor.AddPushConstant(VKW::CONSTANTS::GLOBAL_PUSH_CONSTANT_SIZE, VKW::DESCRIPTOR_STAGE_ALL);
 }
 
 VKW::PipelineLayout* PipelineDB::CreatePipelineLayout(char const* name, VKW::PipelineLayout::Descriptor const& descriptor)
@@ -484,7 +485,7 @@ VKW::PipelineLayout* PipelineDB::CreatePipelineLayout(char const* name, VKW::Pip
     DRE_ASSERT(descriptor.GetLayout(1) == &m_Device->GetDescriptorManager()->GetGlobalSetLayout(1), "Invalid global layout in PipelineDB.");
     DRE_ASSERT(descriptor.GetLayout(2) == &m_Device->GetDescriptorManager()->GetGlobalSetLayout(2), "Invalid global layout in PipelineDB.");
     DRE_ASSERT(descriptor.GetPushConstantsCount() == 1, "Each pipeline must have a push constant");
-    DRE_ASSERT(descriptor.GetPushConstant(0).size == 4, "Default size for push constant must be 4");
+    DRE_ASSERT(descriptor.GetPushConstant(0).size == VKW::CONSTANTS::GLOBAL_PUSH_CONSTANT_SIZE, "Push constant size must match VKW::CONSTANTS::GLOBAL_PUSH_CONSTANT_SIZE");
     DRE_ASSERT(descriptor.GetPushConstant(0).stageFlags == VKW::HELPER::DescriptorStageToVK(VKW::DESCRIPTOR_STAGE_ALL), "DescriptorStage for push constant must be VKW::DESCRIPTOR_STAGE_ALL");
 
     return &(m_PipelineLayouts.Emplace(name, m_Device->GetFuncTable(), m_Device->GetLogicalDevice(), descriptor));

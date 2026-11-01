@@ -251,11 +251,25 @@ bool ShaderDBImpl::CompileShaderFile(DRE::String128 const& path)
     //shaderTypeMacro.name = GetShaderTypeDefineString(type);
     //shaderTypeMacro.value = "1";
 
-    DRE::InplaceVector<slang::CompilerOptionEntry, 3> optionEntries;
+    DRE::InplaceVector<slang::CompilerOptionEntry, 8> optionEntries;
+
+    // Capabilities beyond the base spirv_1_5 profile. Capability IDs are not stable across slang versions,
+    // so they are looked up by name. Each capability is a separate Capability entry.
+    char const* const globalCapabilities[] =
     {
-        //auto& entry = optionEntries.EmplaceBack();
-        //entry.name = slang::CompilerOptionName::Capability;
-        //entry.value.intValue0 = slang::spvRayQuery
+        "spvGroupNonUniformArithmetic", // WavePrefixSum, WaveActiveSum, ...
+        "spvGroupNonUniformBallot",     // WaveIsFirstLane, WaveActiveBallot, ...
+    };
+
+    for (char const* capabilityName : globalCapabilities)
+    {
+        SlangCapabilityID const capabilityID = m_SlangGlobalSession->findCapability(capabilityName);
+        DRE_ASSERT(capabilityID != SLANG_CAPABILITY_UNKNOWN, "Unknown slang capability name");
+
+        auto& entry = optionEntries.EmplaceBack();
+        entry.name = slang::CompilerOptionName::Capability;
+        entry.value.kind = slang::CompilerOptionValueKind::Int;
+        entry.value.intValue0 = static_cast<DRE::S32>(capabilityID);
     }
     {
         auto& entry = optionEntries.EmplaceBack();

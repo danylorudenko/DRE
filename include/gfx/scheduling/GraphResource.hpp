@@ -49,6 +49,7 @@ enum class BufferID
     ID_None,
     BulletInstances,
     DDGI_ProbeData,
+    DDGI_ProbeSortedIndices,
     DDGI_ProbeSortCounts,
     DDGI_ProbeSortGroupPrefixSums,
     DDGI_ProbeSortGlobalPrefixSum,

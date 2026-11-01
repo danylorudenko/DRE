@@ -8,6 +8,7 @@
 [[vk::binding(0, 3)]] ConstantBuffer<DDGIConstantBuffer>        ddgiCB;
 [[vk::binding(1, 3)]] RWStructuredBuffer<DDGIProbeSamples>      ddgiSampleBuffer;
 [[vk::binding(2, 3)]] RWStructuredBuffer<DDGIProbeEncodedData>  ddgiProbeData;
+[[vk::binding(3, 3)]] StructuredBuffer<uint>                    sortedProbeIndices;
 
 void AddTracedSample(inout uint rayCounter, uint probeIndex, in DDGIProbeData probeData, float3 rayDir, float rayT, float3 hitPosition, S_INSTANCE* hitInstance, float2 hitGeometryUV, float3x3 TBN)
 {
@@ -151,13 +152,15 @@ void TraceProbeRay(inout uint rayCounter, inout bool hitValidSurface, in DDGIPro
 
 [require(spvRayQueryKHR)]
 [shader("compute")]
-[numthreads(4, 4, 4)]
+[numthreads(64, 1, 1)]
 void mainCS(uint3 DTid : SV_DispatchThreadID)
 {
-    if (any(DTid >= ddgiCB.probeGridDimentions))
+    // trace only the most important probes, sorted index LUT has them first
+    uint sortedSlot = DTid.x;
+    if (sortedSlot >= ddgiCB.tracedProbeCount)
         return;
 
-    uint probeIndex = GetProbeIndex(ddgiCB.probeGridDimentions, DTid);
+    uint probeIndex = sortedProbeIndices[sortedSlot];
     DDGIProbeData probeData = DecodeProbeData(ddgiProbeData[probeIndex]);
 
     uint probeSeed = probeIndex + GetFrameNumber();

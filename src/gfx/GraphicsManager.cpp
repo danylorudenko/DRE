@@ -37,7 +37,7 @@ static constexpr std::uint32_t C_PERSISTENT_STORAGE_SIZE    = 1024 * 1024 * 16;
 
 GraphicsManager* g_GraphicsManager = nullptr;
 
-GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::IOManager* ioManager, IO::ShaderDB* shaderDB, bool debug, DRE::U32 validationBreakSeverity)
+GraphicsManager::GraphicsManager(HINSTANCE hInstance, SYS::Window* window, IO::IOManager* ioManager, IO::ShaderDB* shaderDB, bool debug, DRE::S32 validationBreakSeverity)
     : m_MainWindow{ window }
     , m_Device{ hInstance, window->NativeHandle(), debug, validationBreakSeverity }
     , m_MainContext{ m_Device.GetFuncTable(), m_Device.GetMainQueue(), &DRE::g_FrameScratchAllocator }

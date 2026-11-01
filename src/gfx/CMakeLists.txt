@@ -96,6 +96,7 @@ set(GFX_SHADER_LIST
 	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_management.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_lighting.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_sort_count.slang"
+	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_sort_init.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_sort_prefix_sums.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_sort_reorder.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_visibility.slang"

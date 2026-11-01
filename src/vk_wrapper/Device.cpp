@@ -8,7 +8,7 @@
 namespace VKW
 {
 
-Device::Device(HINSTANCE hInstance, HWND hwnd, bool debug, DRE::U32 validationBreakSeverity)
+Device::Device(HINSTANCE hInstance, HWND hwnd, bool debug, DRE::S32 validationBreakSeverity)
     : vulkanLibrary_{}
     , table_{}
 {

@@ -28,9 +28,11 @@ public:
 
     void Initialize(Data::GeometryLibrary* geometryLibrary);
 
-    glm::uvec3          GetProbeCount3D          () const;
-    DRE::U32            GetProbeTotalCount       () const;
-    DRE::U32            GetProbeDataBufferSize   () const;
+    glm::uvec3          GetProbeCount3D         () const;
+    DRE::U32            GetProbeTotalCount      () const;
+    DRE::U32            GetProbeDataBufferSize  () const;
+    DRE::U32            GetProbeLUTBufferSize   () const;
+    DRE::U32            GetTracedProbeCount     () const;
 
     DRE::U32            GetProbeResolutionIrradiance() const;
     glm::uvec2          GetProbeAtlasIrradianceDimentions() const;

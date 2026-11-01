@@ -20,7 +20,7 @@ constexpr bool C_COMPILE_HLSL_PARALLEL = false; // don't turn on while HLSL infr
 ////////////////
 
 //////////////////////////////////////////
-DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* title, DRE::U32 windowWidth, DRE::U32 windowHeight, DRE::U32 buffering, bool vkDebug, DRE::U32 validationBreakSeverity, bool imguiEnabled)
+DREApplicationDelegate::DREApplicationDelegate(HINSTANCE instance, char const* title, DRE::U32 windowWidth, DRE::U32 windowHeight, DRE::U32 buffering, bool vkDebug, DRE::S32 validationBreakSeverity, bool imguiEnabled)
     : m_MainWindow {
         instance,
         title,

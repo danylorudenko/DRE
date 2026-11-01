@@ -17,7 +17,8 @@ void primeProbesCS(uint3 DTid : SV_DispatchThreadID)
         probeData.position = probesCoordinateStart + ddgiCB.probesWorldDistance.xyz * float3(DTid);
         probeData.framesSinceUpdate = SLANG_U16_MAX;
         probeData.isActive = true;
-        probeData.updateWeight = PcgHash(probeIndex) * (1.0 / float(0xFFFFFFFFu)); // temporary random weights to test sorting
+        uint weightSeed = probeIndex; // PcgHash advances its argument, so don't pass probeIndex itself
+        probeData.updateWeight = PcgHash(weightSeed) * (1.0 / float(0xFFFFFFFFu)); // temporary random weights to test sorting
         probeData.irradianceMean = 0.0;
 
         ddgiProbeData[probeIndex] = EncodeProbeData(probeData);

@@ -53,7 +53,7 @@ struct DDGIConstantBuffer
 
     DDGIProbeEncodedData* ddgiProbeData;
     uint totalProbeCount;
-    uint pad4;
+    uint tracedProbeCount; // first N probes of the sorted index LUT are updated this frame
 
     float4 probesWorldDistance; // w - max from x,y,z
 
@@ -263,9 +263,10 @@ DDGIProbeNeighborhood GetProbeNeighborhood(float3 worldPosition, in DDGIConstant
 }
 
 
+// key is inverted so that ascending radix sort puts highest weights first
 uint GetProbeSortingKey(DDGIProbeData probeData)
 {
-    return asuint(probeData.updateWeight);
+    return ~asuint(probeData.updateWeight);
 }
 
 

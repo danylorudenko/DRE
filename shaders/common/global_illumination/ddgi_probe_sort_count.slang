@@ -1,9 +1,10 @@
-#include "shaders_common.slang"
+#include "common/shaders_common.slang"
 #include "common/global_illumination/ddgi_common.slang"
 
-[[vk::binding(0, 3)]] RWStructuredBuffer<DDGIProbeEncodedData> ddgiProbeData;
+[[vk::binding(0, 3)]] StructuredBuffer<uint> probeIndices;
 [[vk::binding(1, 3)]] RWStructuredBuffer<BucketCounts> bucketCounts;
 [[vk::binding(2, 3)]] ConstantBuffer<DDGIConstantBuffer> ddgiCB;
+[[vk::binding(3, 3)]] StructuredBuffer<DDGIProbeEncodedData> ddgiProbeData;
 
 groupshared uint s_Buckets[DDGI_RADIX_SORT_BUCKET_COUNT];
 
@@ -30,7 +31,7 @@ void countCS(uint groupID : SV_GroupID, uint3 GTid : SV_GroupThreadID)
             continue;
         }
 
-        DDGIProbeData probeData = DecodeProbeData(ddgiProbeData[inputID]);
+        DDGIProbeData probeData = DecodeProbeData(ddgiProbeData[probeIndices[inputID]]);
         uint key = GetProbeSortingKey(probeData);
 
         uint sortingPass = globalPushConstant.value_uint.x;

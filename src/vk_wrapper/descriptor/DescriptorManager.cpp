@@ -209,7 +209,7 @@ void DescriptorManager::CreateGlobalDescriptorLayouts()
     layoutDesc.Add(globalSetLayouts_ + 0);
     layoutDesc.Add(globalSetLayouts_ + 1);
     layoutDesc.Add(globalSetLayouts_ + 2);
-    layoutDesc.AddPushConstant(16, DESCRIPTOR_STAGE_ALL);
+    layoutDesc.AddPushConstant(CONSTANTS::GLOBAL_PUSH_CONSTANT_SIZE, DESCRIPTOR_STAGE_ALL);
 
     globalPipelineLayout_ = VKW::PipelineLayout{ table_, device_, layoutDesc };
 }

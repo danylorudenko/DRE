@@ -30,7 +30,7 @@ class DREApplicationDelegate
     , public NonMovable
 {
 public:
-    DREApplicationDelegate(HINSTANCE instance, char const* title, DRE::U32 windowWidth, DRE::U32 windowHeight, DRE::U32 buffering, bool vkDebug, DRE::U32 validationBreakSeverity, bool imguiEnabled);
+    DREApplicationDelegate(HINSTANCE instance, char const* title, DRE::U32 windowWidth, DRE::U32 windowHeight, DRE::U32 buffering, bool vkDebug, DRE::S32 validationBreakSeverity, bool imguiEnabled);
     
     virtual void start() override;
     virtual void update() override;

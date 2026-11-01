@@ -1,4 +1,4 @@
-#include "shaders_common.slang"
+#include "common/shaders_common.slang"
 #include "common/global_illumination/ddgi_common.slang"
 
 [[vk::binding(0, 3)]] RWStructuredBuffer<BucketCounts> groupBucketCount;

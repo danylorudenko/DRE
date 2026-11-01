@@ -14,7 +14,7 @@
 namespace VKW
 {
 
-DRE::U32 Instance::s_BreakOnSeverity = DRE_U32_MAX;
+DRE::S32 Instance::s_BreakOnSeverity = DRE_U32_MAX;
 
 Instance::Instance()
     : instance_{ VK_NULL_HANDLE }

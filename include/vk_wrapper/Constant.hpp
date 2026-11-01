@@ -23,6 +23,7 @@ std::uint32_t constexpr TEXTURE_DESCRIPTOR_HEAP_SIZE = 1024;
 std::uint16_t constexpr MAX_SET_LAYOUT_MEMBERS      = 6;
 std::uint16_t constexpr MAX_PIPELINE_LAYOUT_MEMBERS = 6;
 std::uint8_t  constexpr MAX_PUSH_CONSTANTS          = 1;
+std::uint8_t  constexpr GLOBAL_PUSH_CONSTANT_SIZE   = 16; // must match GlobalPushConstant in shaders_common.slang
 
 }
 
