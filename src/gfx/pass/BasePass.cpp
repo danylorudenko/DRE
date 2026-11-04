@@ -24,9 +24,4 @@ BasePass::~BasePass()
 {
 }
 
-glm::uvec3 BasePass::GetComputeGroupCount(glm::uvec3 const& totalSize, glm::uvec3 const& groupSize)
-{
-    return (totalSize + groupSize - 1u) / groupSize;
-}
-
 }

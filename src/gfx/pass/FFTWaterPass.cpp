@@ -77,9 +77,10 @@ void FFTButterflyGenPass::Render(RenderGraph& graph, VKW::Context& context)
     context.CmdBindComputeDescriptorSets(pipelineEntry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
     
     std::uint32_t stagesCount = std::uint32_t(glm::log2(float(C_WATER_DIM)));
-    std::uint32_t group_dims[2] = { 8, 8 };
     context.CmdBindComputePipeline(pipelineEntry->GetPipeline());
-    context.CmdDispatch(std::max(stagesCount / group_dims[0], 1u), C_WATER_DIM / group_dims[1], 1);
+
+    glm::uvec3 const dispatchSize = VKW::CalculateDispatchSize(pipelineEntry->GetPipeline()->GetWorkgroupSize(), glm::uvec3(stagesCount, C_WATER_DIM, 1));
+    context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
 }
 
 
@@ -121,9 +122,10 @@ void FFTWaterH0GenPass::Render(RenderGraph& graph, VKW::Context& context)
 
     context.CmdBindComputeDescriptorSets(pipelineEntry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
     
-    std::uint32_t group_dims[2] = { 8, 8 };
     context.CmdBindComputePipeline(pipelineEntry->GetPipeline());
-    context.CmdDispatch(C_WATER_DIM / group_dims[0], C_WATER_DIM / group_dims[1], 1);
+
+    glm::uvec3 const dispatchSize = VKW::CalculateDispatchSize(pipelineEntry->GetPipeline()->GetWorkgroupSize(), glm::uvec3(C_WATER_DIM, C_WATER_DIM, 1));
+    context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
 }
 
 
@@ -168,9 +170,10 @@ void FFTWaterHxtGenPass::Render(RenderGraph& graph, VKW::Context& context)
 
     context.CmdBindComputeDescriptorSets(pipelineEntry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
 
-    std::uint32_t group_dims[2] = { 8, 8 };
     context.CmdBindComputePipeline(pipelineEntry->GetPipeline());
-    context.CmdDispatch(C_WATER_DIM / group_dims[0], C_WATER_DIM / group_dims[1], 1);
+
+    glm::uvec3 const dispatchSize = VKW::CalculateDispatchSize(pipelineEntry->GetPipeline()->GetWorkgroupSize(), glm::uvec3(C_WATER_DIM, C_WATER_DIM, 1));
+    context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
 }
 
 
@@ -223,6 +226,8 @@ void FFTWaterFFTPass::Render(RenderGraph& graph, VKW::Context& context)
 
     context.CmdBindComputePipeline(pipelineEntry->GetPipeline());
 
+    glm::uvec3 const dispatchSize = VKW::CalculateDispatchSize(pipelineEntry->GetPipeline()->GetWorkgroupSize(), glm::uvec3(C_WATER_DIM, C_WATER_DIM, 1));
+
     g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, fftButterfly->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE);
 
 
@@ -249,7 +254,7 @@ void FFTWaterFFTPass::Render(RenderGraph& graph, VKW::Context& context)
             g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, input->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE);
             g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, output->GetShaderView()->parentResource_, VKW::RESOURCE_ACCESS_SHADER_WRITE, VKW::STAGE_COMPUTE);
 
-            context.CmdDispatch(C_WATER_DIM / 8, C_WATER_DIM / 8, 1);
+            context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
 
             DRE_SWAP(input, output);
         }
@@ -300,9 +305,10 @@ void FFTInvPermutationPass::Render(RenderGraph& graph, VKW::Context& context)
 
     context.CmdBindComputeDescriptorSets(pipelineEntry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
 
-    std::uint32_t group_dims[2] = { 8, 8 };
     context.CmdBindComputePipeline(pipelineEntry->GetPipeline());
-    context.CmdDispatch(C_WATER_DIM / group_dims[0], C_WATER_DIM / group_dims[1], 1);
+
+    glm::uvec3 const dispatchSize = VKW::CalculateDispatchSize(pipelineEntry->GetPipeline()->GetWorkgroupSize(), glm::uvec3(C_WATER_DIM, C_WATER_DIM, 1));
+    context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
 }
 
 }

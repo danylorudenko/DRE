@@ -103,12 +103,8 @@ void LightingPass::Render(RenderGraph& graph, VKW::Context& context)
     std::uint32_t renderWidth = g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth;
     std::uint32_t renderHeight = g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight;
 
-    constexpr std::uint32_t groupSizeX = 8;
-    constexpr std::uint32_t groupSizeY = 8;
-    std::uint32_t dispatchX = (renderWidth + groupSizeX - 1) / groupSizeX;
-    std::uint32_t dispatchY = (renderHeight + groupSizeY - 1) / groupSizeY;
-
-    context.CmdDispatch(dispatchX, dispatchY, 1);
+    glm::uvec3 const dispatchSize = VKW::CalculateDispatchSize(entry->GetPipeline()->GetWorkgroupSize(), glm::uvec3(renderWidth, renderHeight, 1));
+    context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
 }
 
 }

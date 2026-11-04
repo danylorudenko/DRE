@@ -54,9 +54,8 @@ void ColorEncodingPass::Render(RenderGraph& graph, VKW::Context& context)
     context.CmdBindComputePipeline(pipelineEntry->GetPipeline());
 
     glm::uvec2 rtSize{ g_GraphicsManager->GetGraphicsSettings().m_RenderingWidth, g_GraphicsManager->GetGraphicsSettings().m_RenderingHeight };
-    glm::uvec2 const groupSize{ 8, 8 };
-    glm::uvec2 const dispatchSize = rtSize / groupSize + glm::uvec2{ 1, 1 };
-    context.CmdDispatch(dispatchSize.x, dispatchSize.y, 1);
+    glm::uvec3 const dispatchSize = VKW::CalculateDispatchSize(pipelineEntry->GetPipeline()->GetWorkgroupSize(), glm::uvec3(rtSize, 1));
+    context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
 }
 
 }

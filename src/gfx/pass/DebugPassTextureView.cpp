@@ -98,8 +98,7 @@ void DebugPassTextureView::Render(RenderGraph& graph, VKW::Context& context)
     context.CmdBindComputeDescriptorSets(pipelineEntry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
     context.CmdBindComputePipeline(pipelineEntry->GetPipeline());
 
-    glm::uvec3 const textureViewerGroupSize{ 8, 8, 1 };
-    glm::uvec3 const dispatchSize = GetComputeGroupCount(glm::uvec3(outputImageSize, 1), textureViewerGroupSize);
+    glm::uvec3 const dispatchSize = VKW::CalculateDispatchSize(pipelineEntry->GetPipeline()->GetWorkgroupSize(), glm::uvec3(outputImageSize, 1));
     context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
 }
 

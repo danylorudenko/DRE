@@ -28,9 +28,6 @@ public:
     virtual void RegisterResources  (RenderGraph& graph) = 0;
     virtual void Initialize         (RenderGraph& graph) = 0;
     virtual void Render             (RenderGraph& graph, VKW::Context& context) = 0;
-
-    /////////////////////////
-    static glm::uvec3 GetComputeGroupCount(glm::uvec3 const& totalSize, glm::uvec3 const& groupSize);
 };
 
 }

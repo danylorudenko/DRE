@@ -24,7 +24,7 @@ int main()
 
     application->run();
 
-    application->~Application();;
+    application->~Application();
     appDelegate->~DREApplicationDelegate();
 
     DRE::TerminateGlobalMemory();

@@ -163,8 +163,7 @@ void DDGIProbePrimePass::Render(RenderGraph& graph, VKW::Context& context)
 
     glm::uvec3 const ddgiProbeDimentions = g_GraphicsManager->GetDDGI().GetProbeCount3D();
 
-    glm::uvec3 GROUP_SIZE{ 4, 4, 4, };
-    glm::uvec3 dispatchSize = (ddgiProbeDimentions + GROUP_SIZE - 1u) / GROUP_SIZE;
+    glm::uvec3 const dispatchSize = VKW::CalculateDispatchSize(entry->GetPipeline()->GetWorkgroupSize(), ddgiProbeDimentions);
     context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
 
     probeDataPrimed = true;
@@ -449,8 +448,10 @@ void DDGIProbeLightingPass::Render(RenderGraph& graph, VKW::Context& context)
     DRE::U32 const probeCount = ddgi.GetProbeTotalCount();
     DRE_ASSERT(probeCount <= 65535, "DDGI probe count exceeds guaranteed max workgroup count.");
 
-    DRE::U32 const tilesPerProbe = (ddgi.GetProbeResolutionIrradiance() + 7) / 8;
-    context.CmdDispatch(probeCount, tilesPerProbe, tilesPerProbe);
+    DRE::U32 const resolution = ddgi.GetProbeResolutionIrradiance();
+    VKW::WorkgroupSize const& workgroupSize = entry->GetPipeline()->GetWorkgroupSize();
+    glm::uvec3 const tiles = VKW::CalculateDispatchSize(workgroupSize, glm::uvec3(workgroupSize.dims[0], resolution, resolution));
+    context.CmdDispatch(probeCount, tiles.y, tiles.z);
 }
 
 
@@ -513,8 +514,10 @@ void DDGIProbeVisibilityPass::Render(RenderGraph& graph, VKW::Context& context)
     DRE::U32 const probeCount = ddgi.GetProbeTotalCount();
     DRE_ASSERT(probeCount <= 65535, "DDGI probe count exceeds guaranteed max workgroup count.");
 
-    DRE::U32 const tilesPerProbe = (ddgi.GetProbeResolutionVisibility() + 7) / 8;
-    context.CmdDispatch(probeCount, tilesPerProbe, tilesPerProbe);
+    DRE::U32 const resolution = ddgi.GetProbeResolutionVisibility();
+    VKW::WorkgroupSize const& workgroupSize = entry->GetPipeline()->GetWorkgroupSize();
+    glm::uvec3 const tiles = VKW::CalculateDispatchSize(workgroupSize, glm::uvec3(workgroupSize.dims[0], resolution, resolution));
+    context.CmdDispatch(probeCount, tiles.y, tiles.z);
 }
 
 
@@ -569,10 +572,9 @@ void DDGIProbeBorderFillPass::Render(RenderGraph& graph, VKW::Context& context)
         DRE::U32 flags = /*DDGI_VISIBILITY_FILL_PASS_BIT*/0;
         context.CmdPushConstants(entry->GetLayout(), VKW::DESCRIPTOR_STAGE_ALL, 0, sizeof(DRE::U32), &flags);
 
-        glm::uvec3 const probeCount = ddgi.GetProbeCount3D();
-        glm::uvec3 const groupSize{ 4, 4, 4 };
-
-        glm::uvec3 const dispatchSize = (probeCount + groupSize - 1u) / groupSize;
+        // 1D over the sorted probe LUT, only traced probes are filled
+        glm::uvec3 const threadDims{ ddgi.GetTracedProbeCount(), 1, 1 };
+        glm::uvec3 const dispatchSize = VKW::CalculateDispatchSize(entry->GetPipeline()->GetWorkgroupSize(), threadDims);
         context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
     }
     {
@@ -589,10 +591,9 @@ void DDGIProbeBorderFillPass::Render(RenderGraph& graph, VKW::Context& context)
         DRE::U32 flags = DDGI_VISIBILITY_FILL_PASS_BIT;
         context.CmdPushConstants(entry->GetLayout(), VKW::DESCRIPTOR_STAGE_ALL, 0, sizeof(DRE::U32), &flags);
 
-        glm::uvec3 const probeCount = ddgi.GetProbeCount3D();
-        glm::uvec3 const groupSize{ 4, 4, 4 };
-
-        glm::uvec3 const dispatchSize = (probeCount + groupSize - 1u) / groupSize;
+        // 1D over the sorted probe LUT, only traced probes are filled
+        glm::uvec3 const threadDims{ ddgi.GetTracedProbeCount(), 1, 1 };
+        glm::uvec3 const dispatchSize = VKW::CalculateDispatchSize(entry->GetPipeline()->GetWorkgroupSize(), threadDims);
         context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
     }
 }
@@ -666,8 +667,7 @@ void DebugPassDDGIProbeDisplay::Render(RenderGraph& graph, VKW::Context& context
 
         context.CmdBindComputeDescriptorSets(indirectFillEntry->GetLayout(), indirectBinder.GetTargetSetID(), 1, &indirectBinder.GetDescriptorSet());
 
-        glm::uvec3 const probeDebugGroupSize{ 4, 4, 4 };
-        glm::uvec3 const probeDebugDispatchSize = GetComputeGroupCount(g_GraphicsManager->GetDDGI().GetProbeCount3D(), probeDebugGroupSize);
+        glm::uvec3 const probeDebugDispatchSize = VKW::CalculateDispatchSize(indirectFillEntry->GetPipeline()->GetWorkgroupSize(), g_GraphicsManager->GetDDGI().GetProbeCount3D());
         context.CmdBindPipeline(VKW::BindPoint::Compute, indirectFillEntry->GetPipeline());
         context.CmdDispatch(probeDebugDispatchSize.x, probeDebugDispatchSize.y, probeDebugDispatchSize.z);
     }

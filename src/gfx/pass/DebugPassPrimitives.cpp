@@ -80,7 +80,7 @@ void DebugPassDrawPrimitives::Render(RenderGraph& graph, VKW::Context& context)
             context.CmdFillBuffer(indirectArgs->GetResource(), 0, sizeof(DrawIndirectCommand) * uint(DebugDrawCommandType::COUNT), 0);
         }
 
-        DRE::U32 constexpr countGroupCount = DEBUG_DRAW_COMMAND_CAPACITY / 64;
+        glm::uvec3 const commandThreadCount{ DEBUG_DRAW_COMMAND_CAPACITY, 1, 1 };
         {
             DRE_GPU_SCOPE(DebugPrimitivesCountPrimitives);
 
@@ -99,7 +99,9 @@ void DebugPassDrawPrimitives::Render(RenderGraph& graph, VKW::Context& context)
             countBinder.FlushDescriptorWrites();
             context.CmdBindComputeDescriptorSets(countEntry->GetLayout(), countBinder.GetTargetSetID(), 1, &countBinder.GetDescriptorSet());
             context.CmdBindComputePipeline(countEntry->GetPipeline());
-            context.CmdDispatch(countGroupCount, 1, 1);
+
+            glm::uvec3 const dispatchSize = VKW::CalculateDispatchSize(countEntry->GetPipeline()->GetWorkgroupSize(), commandThreadCount);
+            context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
         }
 
         {
@@ -118,7 +120,9 @@ void DebugPassDrawPrimitives::Render(RenderGraph& graph, VKW::Context& context)
             sortBinder.FlushDescriptorWrites();
             context.CmdBindComputeDescriptorSets(sortEntry->GetLayout(), sortBinder.GetTargetSetID(), 1, &sortBinder.GetDescriptorSet());
             context.CmdBindComputePipeline(sortEntry->GetPipeline());
-            context.CmdDispatch(countGroupCount, 1, 1);
+
+            glm::uvec3 const dispatchSize = VKW::CalculateDispatchSize(sortEntry->GetPipeline()->GetWorkgroupSize(), commandThreadCount);
+            context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
 
             context.CmdMemoryDependency(
                 VKW::RESOURCE_ACCESS_GENERIC_RW, VKW::STAGE_COMPUTE,
