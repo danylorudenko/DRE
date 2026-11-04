@@ -6,12 +6,11 @@
 
 struct PassUniform
 {
-    float4 useEncoded_exposure;
+    float4 useEncoded;
 };
 [[vk::binding(2, 3)]] ConstantBuffer<PassUniform> passUniform;
 
-float GetUseEncoded() { return passUniform.useEncoded_exposure.x; }
-float GetExposure() { return passUniform.useEncoded_exposure.y; }
+float GetUseEncoded() { return passUniform.useEncoded.x; }
 
 
 float3 ACESFilm(float3 x)
@@ -31,7 +30,7 @@ void mainCS(uint3 DTid : SV_DispatchThreadID)
     int2 coords = int2(DTid.xy);
 
     float3 linearColor = linearRT[coords].rgb;
-    float3 encoded = ACESFilm(linearColor * GetExposure());
+    float3 encoded = ACESFilm(linearColor * GetGlobalExposureCompensation());
 
     float3 result = lerp(linearColor, encoded, GetUseEncoded());
 

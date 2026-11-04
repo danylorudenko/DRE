@@ -90,8 +90,9 @@ PSInput mainVS(DREVertex input)
     float4 env_map_sample = { 0 };
     //float4 env_map_sample = envMap.Sample(GetSamplerLinear(), uv);
 
+    float3 sunDir = float3(0, 1, 0);
     float3 world_norm = mul(instanceUniform.model_mat, float4(norm, 0.0)).xyz;
-    float3 refracted_light = refract(GetSunLightDir(), world_norm, REF_INDEX);
+    float3 refracted_light = refract(sunDir, world_norm, REF_INDEX);
     float2 uv_refract_dir = (mul(passUniform.light_ViewProjM, float4(refracted_light, 0.0)).xy) / GetViewportSize();
     float3 ray_pos = env_map_sample.xyz;
     float2 sample_uv = uv;

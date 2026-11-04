@@ -17,7 +17,7 @@ struct GlobalUniforms
     float4 Jitter;
 
     uint2 cursorPos;
-    uint pad0;
+    float globalExposureCompensation;
     uint pad1;
 
     float4x4 ViewM;
@@ -35,8 +35,6 @@ struct GlobalUniforms
     float4x4 PreviProjJittM;
     float4x4 PrevViewProjM;
     float4x4 PreviViewProjM;
-
-    float4 SunLightDir;
 
     uint blueNoiseTextureID;
     uint whiteNoiseTextureID;
@@ -68,6 +66,7 @@ uint        GetFrameNumber() { return g_GlobalUniforms.FrameNumber; }
 float2      GetJitter() { return g_GlobalUniforms.Jitter.xy; }
 
 uint2       GetCursorPos() { return g_GlobalUniforms.cursorPos; }
+float       GetGlobalExposureCompensation() { return g_GlobalUniforms.globalExposureCompensation; }
 
 float4x4    GetCameraViewM() { return g_GlobalUniforms.ViewM; }
 float4x4    GetCameraInvViewM() { return g_GlobalUniforms.iViewM; }
@@ -82,8 +81,6 @@ float4x4    GetPrevCameraProjM() { return g_GlobalUniforms.PrevProjM; }
 float4x4    GetPrevCameraInvProjM() { return g_GlobalUniforms.PreviProjM; }
 float4x4    GetPrevCameraViewProjM() { return g_GlobalUniforms.PrevViewProjM; }
 float4x4    GetPrevCameraInvViewProjM() { return g_GlobalUniforms.PreviViewProjM; }
-
-float3      GetSunLightDir() { return g_GlobalUniforms.SunLightDir.xyz; }
 
 uint        GetBlueNoiseTextureId() { return g_GlobalUniforms.blueNoiseTextureID; }
 uint        GetWhiteNoiseTextureId() { return g_GlobalUniforms.whiteNoiseTextureID; }

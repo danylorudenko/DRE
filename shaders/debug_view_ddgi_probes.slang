@@ -87,7 +87,7 @@ float4 drawPS(PSInput input) : SV_Target0
             ddgiCB.probeIrradianceResolution,
             ddgiCB.probeGridDimentions);
 
-        return float4(radiance, 1.0);
+        return float4(radiance * GetGlobalExposureCompensation(), 1.0);
     }
     else if (ddgiCB.visualizationMode == DDGI_VISUALIZATION_MODE_UV)
     {

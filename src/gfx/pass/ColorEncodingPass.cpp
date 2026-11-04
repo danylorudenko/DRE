@@ -1,7 +1,6 @@
 #include <gfx\pass\ColorEncodingPass.hpp>
 
 #include <gfx\GraphicsManager.hpp>
-#include <gfx\Photometric.hpp>
 #include <gfx\scheduling\RenderGraph.hpp>
 
 namespace GFX
@@ -38,8 +37,7 @@ void ColorEncodingPass::Render(RenderGraph& graph, VKW::Context& context)
 
     UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(glm::vec4));
     float const useACES = g_GraphicsManager->GetGraphicsSettings().m_UseACESEncoding ? 1.0f : 0.0f;
-    float const exposureCompensation = CalculateExposureCompensation(g_GraphicsManager->GetGraphicsSettings().m_TargetEV);
-    uniform.WriteMember140(glm::vec4{ useACES, exposureCompensation, 0.0f, 0.0f });
+    uniform.WriteMember140(glm::vec4{ useACES, 0.0f, 0.0f, 0.0f });
     uniform.FlushWrites();
 
     PipelineEntry* pipelineEntry = g_GraphicsManager->GetPipelineDB().GetEntry("color_encode");

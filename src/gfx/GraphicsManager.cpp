@@ -18,6 +18,8 @@
 #include <gfx\pass\EditorPass.hpp>
 #include <gfx\pass\DDGI.hpp>
 
+#include <gfx\Photometric.hpp>
+
 #include <engine\io\IOManager.hpp>
 #include <engine\scene\Scene.hpp>
 #include <engine\data\GeometryLibrary.hpp>
@@ -180,6 +182,7 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     globalUniform.Jitter           = glm::vec4{ taaJitter, 0.0f, 0.0f };
 
     globalUniform.cursorPos        = glm::uvec2{ cursorPos };
+    globalUniform.globalExposureCompensation = CalculateExposureCompensation(GetGraphicsSettings().m_TargetEV);
 
     globalUniform.ViewM            = m_MainView.GetViewM();
     globalUniform.iViewM           = m_MainView.GetInvViewM();
@@ -198,8 +201,6 @@ void GraphicsManager::PrepareGlobalData(VKW::Context& context, WORLD::Scene& sce
     globalUniform.blueNoiseTextureID    = m_TextureBank.FindTexture("blue_noise_256")->GetShaderGlobalDescriptor().id_;
     globalUniform.whiteNoiseTextureID   = m_TextureBank.FindTexture("white_noise_256")->GetShaderGlobalDescriptor().id_;
     globalUniform.debugDrawEnabled      = m_Settings.m_DebugDrawEnabled ? 1u : 0u;
-
-    globalUniform.SunLightDir      = glm::vec4{ sunLight.GetForward(), 0.0f };
 
     globalUniform.lightsCount           = glm::uvec4{ m_LightsManager.GetCount(), 0u, 0u, 0u};
     globalUniform.LightBuffer           = reinterpret_cast<S_LIGHT*>(m_LightsManager.GetBufferAddress());

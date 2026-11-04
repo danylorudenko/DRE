@@ -240,7 +240,7 @@ PSOutput mainPS(PSInput input)
     normalMap = (normalMap * 2.0 - 1.0);
     float3 n = normalize(mul(input.TBN, normalMap));
 
-    float3 l = -GetSunLightDir();
+    float3 l = float3(0, 1, 0);
     float3 v = normalize(GetCameraPos() - input.wpos);
     float3 h = normalize(l + v);
 
