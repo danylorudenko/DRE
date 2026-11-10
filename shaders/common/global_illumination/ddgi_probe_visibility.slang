@@ -21,30 +21,29 @@ void mainCS(uint3 groupID : SV_GroupID, uint3 GTid : SV_GroupThreadID)
         return;
 
     uint2 probeResolution = ddgiCB.probeVisibilityResolution;
-    uint2 pixelInProbe = groupID.yz * 8 + GTid.xy;
-    if (any(pixelInProbe >= probeResolution))
+    uint2 targetPixel = groupID.yz * 8 + GTid.xy;
+    if (any(targetPixel >= probeResolution))
         return;
 
-    // test for the edge rows/columns
-    if (any(pixelInProbe == 0) || any(pixelInProbe == probeResolution - 1))
-    {
-        return;
-    }
+    uint2 sourcePixel = GetSourcePixelForBorderLocal(targetPixel, ddgiCB.probeVisibilityResolution);
 
     uint probeIndex = WaveReadLaneFirst(sortedProbeIndices[sortedSlot]);
-    uint2 atlasPixel = GetProbeAtlasProbeStart(probeIndex, probeResolution, ddgiCB.probeGridDimentions) + pixelInProbe;
+
+    uint2 probeStart = GetProbeAtlasProbeStart(probeIndex, probeResolution, ddgiCB.probeGridDimentions);
+    uint2 sourceAtlasPixel = probeStart + sourcePixel;
+    uint2 targetAtlasPixel = probeStart + targetPixel;
 
     // probe was not traced this frame, carry history over to the current atlas
     if (sortedSlot >= ddgiCB.tracedProbeCount)
     {
-        ddgiAtlasVisibility[atlasPixel] = ddgiAtlasVisibilityHistory[atlasPixel].xy;
+        ddgiAtlasVisibility[targetAtlasPixel] = ddgiAtlasVisibilityHistory[sourceAtlasPixel].xy;
         return;
     }
 
     DDGIProbeSamples probeGBuffer = ddgiSampleBuffer[probeIndex];
 
     float4 uvRect = GetProbeAtlasUVRect(probeIndex, ddgiCB.probeVisibilityResolution, ddgiCB.probeGridDimentions);
-    float2 atlasUV = float2(atlasPixel + 0.5) / float2(GetProbeAtlasResolution(ddgiCB.probeVisibilityResolution, ddgiCB.probeGridDimentions));
+    float2 atlasUV = float2(sourceAtlasPixel + 0.5) / float2(GetProbeAtlasResolution(ddgiCB.probeVisibilityResolution, ddgiCB.probeGridDimentions));
     float2 probeUV = (atlasUV - uvRect.xy) / (uvRect.zw - uvRect.xy);
 
     float3 probePixelNormal = OctahedronDecode(probeUV);
@@ -63,7 +62,7 @@ void mainCS(uint3 groupID : SV_GroupID, uint3 GTid : SV_GroupThreadID)
         accumulatedWeight += sampleWeight;
     }
 
-    float2 resultDistances = ddgiAtlasVisibilityHistory[atlasPixel].xy;
+    float2 resultDistances = ddgiAtlasVisibilityHistory[targetAtlasPixel].xy;
     if (accumulatedWeight > 0)
     {
         accumulatedDistances /= accumulatedWeight;
@@ -71,6 +70,6 @@ void mainCS(uint3 groupID : SV_GroupID, uint3 GTid : SV_GroupThreadID)
         resultDistances = accumulatedDistances * ddgiCB.updateRate + resultDistances * (1.0 - ddgiCB.updateRate);
     }
 
-    ddgiAtlasVisibility[atlasPixel] = resultDistances;
+    ddgiAtlasVisibility[targetAtlasPixel] = resultDistances;
 
 }

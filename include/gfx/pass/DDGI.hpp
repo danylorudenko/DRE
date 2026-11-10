@@ -50,7 +50,7 @@ private:
     GlobalGeometry::GeometryGPU* m_ProbeDebugSphereGPU;
 };
 
-class DDGIProbeTracePass : public BasePass
+class DDGIProbeTracePass final : public BasePass
 {
 public:
     virtual PassID  GetID               () const override;
@@ -60,7 +60,7 @@ public:
     virtual void    Render              (RenderGraph& graph, VKW::Context& context) override;
 };
 
-class DDGIProbeBorderFillPass : public BasePass
+class DDGIProbeUpdatePass final : public BasePass
 {
 public:
     virtual PassID  GetID               () const override;
@@ -70,7 +70,7 @@ public:
     virtual void    Render              (RenderGraph& graph, VKW::Context& context) override;
 };
 
-class DDGIProbeLightingPass : public BasePass
+class DDGIProbeLightingPass final : public BasePass
 {
 public:
     virtual PassID  GetID               () const override;
@@ -80,7 +80,7 @@ public:
     virtual void    Render              (RenderGraph& graph, VKW::Context& context) override;
 };
 
-class DDGIProbeVisibilityPass : public BasePass
+class DDGIProbeVisibilityPass final : public BasePass
 {
 public:
     virtual PassID  GetID               () const override;
@@ -90,7 +90,7 @@ public:
     virtual void    Render              (RenderGraph& graph, VKW::Context& context) override;
 };
 
-class DDGIProbePrimePass : public BasePass
+class DDGIProbePrimePass final : public BasePass
 {
 public:
     virtual PassID  GetID               () const override;
@@ -110,7 +110,7 @@ public:
     virtual void    Render              (RenderGraph& graph, VKW::Context& context) override;
 };
 
-class DebugPassDDGIProbeDisplay : public BasePass
+class DebugPassDDGIProbeDisplay final : public BasePass
 {
 public:
     virtual PassID  GetID               () const override;

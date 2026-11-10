@@ -20,8 +20,6 @@
 #define DDGI_RAY_DISTRIBUTION_STABLE 0
 #define DDGI_RAY_DISTRIBUTION_RANDOM 1
 
-#define DDGI_VISIBILITY_FILL_PASS_BIT 0x1 // otherwise irradiance pass
-
 #define DDGI_RADIX_SORT_BITS_PER_PASS 4
 #define DDGI_RADIX_SORT_BUCKET_COUNT (1 << DDGI_RADIX_SORT_BITS_PER_PASS)
 
@@ -267,6 +265,15 @@ DDGIProbeNeighborhood GetProbeNeighborhood(float3 worldPosition, in DDGIConstant
 uint GetProbeSortingKey(DDGIProbeData probeData)
 {
     return ~asuint(probeData.updateWeight);
+}
+
+// used for mirroring border pixels of the probe
+uint2 GetSourcePixelForBorderLocal(uint2 pixel, uint2 probeResolution)
+{
+    uint2 maxPixel = probeResolution - 1;
+    bool2 isBorder = (pixel == 0) | (pixel == maxPixel);
+    uint2 sourcePixel = select(isBorder.yx, maxPixel - pixel, pixel); // border on X should mirror y coord and vice versa
+    return clamp(sourcePixel, 1, maxPixel - 1); // clamp to interiors
 }
 
 

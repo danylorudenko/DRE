@@ -52,7 +52,6 @@ void PipelineDB::CreateDefaultPipelines()
         CreateComputePipeline("debug_view_texture", "debug_view_texture.slang_mainCS");
 
         // DDGI
-        CreateComputePipeline("ddgi_probe_border_fill",         "ddgi_probe_border_fill.slang_mainCS");
         CreateComputePipeline("ddgi_probe_lighting",            "ddgi_probe_lighting.slang_mainCS");
         CreateComputePipeline("ddgi_probe_visibility",          "ddgi_probe_visibility.slang_mainCS");
         CreateComputePipeline("ddgi_probe_prime",               "ddgi_probe_management.slang_primeProbesCS");

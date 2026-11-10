@@ -521,81 +521,43 @@ void DDGIProbeVisibilityPass::Render(RenderGraph& graph, VKW::Context& context)
 }
 
 
-
 ////////////////////////////////////////////////
-PassID DDGIProbeBorderFillPass::GetID() const
+PassID DDGIProbeUpdatePass::GetID() const
 {
-    return PassID::DDGIProbeBorderFill;
+    return PassID::DDGIProbeUpdate;
 }
 
-void DDGIProbeBorderFillPass::RegisterResources(RenderGraph& graph)
+void DDGIProbeUpdatePass::RegisterResources(RenderGraph& graph)
 {
     DDGI& ddgi = g_GraphicsManager->GetDDGI();
-    glm::uvec2 const irradianceDims = ddgi.GetProbeAtlasIrradianceDimentions();
-    glm::uvec2 const visibilityDims = ddgi.GetProbeAtlasVisibilityDimentions();
-
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_ProbeIrradiance), VKW::FORMAT_R16G16B16A16_FLOAT, irradianceDims.x, irradianceDims.y, VKW::RESOURCE_ACCESS_SHADER_RW, GraphResourceFlags::TEMPORAL | GraphResourceFlags::INIT_CLEAR_ZERO);
-    graph.RegisterTexture(this, RESOURCE_ID(TextureID::DDGI_AtlasVisibility), VKW::FORMAT_R16G16_FLOAT, visibilityDims.x, visibilityDims.y, VKW::RESOURCE_ACCESS_SHADER_RW, GraphResourceFlags::TEMPORAL | GraphResourceFlags::INIT_CLEAR_ZERO);
-    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeSortedIndices), ddgi.GetProbeLUTBufferSize(), VKW::RESOURCE_ACCESS_SHADER_READ, GraphResourceFlags::PING_PONG);
+    graph.RegisterStorageBuffer(this, RESOURCE_ID(BufferID::DDGI_ProbeData), ddgi.GetProbeDataBufferSize(), VKW::RESOURCE_ACCESS_SHADER_RW);
 }
 
-void DDGIProbeBorderFillPass::Render(RenderGraph& graph, VKW::Context& context)
+void DDGIProbeUpdatePass::Render(RenderGraph& graph, VKW::Context& context)
 {
-    DRE_GPU_SCOPE(DDGIProbeBorderFill);
+    DRE_GPU_SCOPE(DDGIProbeUpdate);
 
     DDGI& ddgi = g_GraphicsManager->GetDDGI();
 
-    Texture* atlasIrradiance = graph.GetTemporalTextureCurrent(RESOURCE_ID(TextureID::DDGI_ProbeIrradiance));
-    Texture* atlasVisibility = graph.GetTemporalTextureCurrent(RESOURCE_ID(TextureID::DDGI_AtlasVisibility));
-    StorageBuffer* sortedIndicies = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeSortedIndices));
+    StorageBuffer* ddgiProbeData = graph.GetBuffer(RESOURCE_ID(BufferID::DDGI_ProbeData));
 
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, atlasIrradiance->GetResource(), VKW::RESOURCE_ACCESS_SHADER_RW, VKW::STAGE_COMPUTE);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, atlasVisibility->GetResource(), VKW::RESOURCE_ACCESS_SHADER_RW, VKW::STAGE_COMPUTE);
-    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, sortedIndicies->GetResource(), VKW::RESOURCE_ACCESS_SHADER_READ, VKW::STAGE_COMPUTE);
+    g_GraphicsManager->GetDependencyManager().ResourceBarrier(context, ddgiProbeData->GetResource(), VKW::RESOURCE_ACCESS_SHADER_RW, VKW::STAGE_COMPUTE);
 
-    UniformProxy proxy = graph.AllocateUniform(GetID(), context, sizeof(DDGIConstantBuffer));
-    proxy.WriteMember140(ddgi.GetConstantBuffer(graph));
-    proxy.FlushWrites();
+    UniformProxy uniform = graph.AllocateUniform(GetID(), context, sizeof(DDGIConstantBuffer));
+    uniform.WriteMember140(ddgi.GetConstantBuffer(graph));
+    uniform.FlushWrites();
 
-    PipelineEntry* entry = g_GraphicsManager->GetPipelineDB().GetEntry("ddgi_probe_border_fill");
-    {
-        DRE_GPU_SCOPE(DDGIProbeBorderFillRadiance);
-        ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(entry, 0);
-        binder.AddUniform(0, &proxy);
-        binder.AddStorageTexture(1, atlasIrradiance);
-        binder.AddStorageBuffer(2, sortedIndicies);
-        binder.FlushDescriptorWrites();
+    PipelineEntry* entry = g_GraphicsManager->GetPipelineDB().GetEntry("ddgi_probe_update");
+    ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(entry, 0);
+    binder.AddUniform(0, &uniform);
+    binder.AddStorageBuffer(1, ddgiProbeData);
+    binder.FlushDescriptorWrites();
 
-        context.CmdBindComputePipeline(entry->GetPipeline());
-        context.CmdBindComputeDescriptorSets(entry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
+    context.CmdBindComputePipeline(entry->GetPipeline());
+    context.CmdBindComputeDescriptorSets(entry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
 
-        DRE::U32 flags = /*DDGI_VISIBILITY_FILL_PASS_BIT*/0;
-        context.CmdPushConstants(entry->GetLayout(), VKW::DESCRIPTOR_STAGE_ALL, 0, sizeof(DRE::U32), &flags);
-
-        // 1D over the sorted probe LUT, only traced probes are filled
-        glm::uvec3 const threadDims{ ddgi.GetTracedProbeCount(), 1, 1 };
-        glm::uvec3 const dispatchSize = VKW::CalculateDispatchSize(entry->GetPipeline()->GetWorkgroupSize(), threadDims);
-        context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
-    }
-    {
-        DRE_GPU_SCOPE(DDGIProbeBorderFillVisibility);
-        ResourceBinder binder = g_GraphicsManager->CreateResourceBinder(entry, 0);
-        binder.AddUniform(0, &proxy);
-        binder.AddStorageTexture(1, atlasVisibility);
-        binder.AddStorageBuffer(2, sortedIndicies);
-        binder.FlushDescriptorWrites();
-
-        //context.CmdBindComputePipeline(entry->GetPipeline()); the pipeline is the same
-        context.CmdBindComputeDescriptorSets(entry->GetLayout(), binder.GetTargetSetID(), 1, &binder.GetDescriptorSet());
-
-        DRE::U32 flags = DDGI_VISIBILITY_FILL_PASS_BIT;
-        context.CmdPushConstants(entry->GetLayout(), VKW::DESCRIPTOR_STAGE_ALL, 0, sizeof(DRE::U32), &flags);
-
-        // 1D over the sorted probe LUT, only traced probes are filled
-        glm::uvec3 const threadDims{ ddgi.GetTracedProbeCount(), 1, 1 };
-        glm::uvec3 const dispatchSize = VKW::CalculateDispatchSize(entry->GetPipeline()->GetWorkgroupSize(), threadDims);
-        context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
-    }
+    glm::uvec3 const dispatchSize = VKW::CalculateDispatchSize(entry->GetPipeline()->GetWorkgroupSize(), ddgi.GetProbeCount3D());
+    context.CmdDispatch(dispatchSize.x, dispatchSize.y, dispatchSize.z);
 }
 
 

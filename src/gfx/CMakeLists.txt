@@ -92,7 +92,6 @@ set(GFX_SOURCE_LIST
 
 set(GFX_SHADER_LIST
 	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_common.slang"
-	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_border_fill.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_management.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_lighting.slang"
 	"${DRE_SOURCE_DIR}/shaders/common/global_illumination/ddgi_probe_sort_count.slang"

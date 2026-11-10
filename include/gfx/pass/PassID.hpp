@@ -26,7 +26,7 @@ enum class PassID
     DDGIProbePrime,
     DDGIProbeSort,
     DDGIProbeTrace,
-    DDGIProbeBorderFill,
+    DDGIProbeUpdate,
     DDGIProbeLighting,
     DDGIProbeVisibility,
     DebugDDGIProbeDisplay,
